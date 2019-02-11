@@ -6,7 +6,7 @@
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "hi");
+    sf::RenderWindow window(sf::VideoMode(1200, 800), "hi");
 
     sf::Texture font_atlas;
 
@@ -18,19 +18,37 @@ int main()
 
     ImGuiFreeType::BuildFontAtlas(font_atlas, io.Fonts, 0, 1);
 
-    assert(font != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
 
-    //assert(font->ConfigData.size() != 0);
+    style.FrameRounding = 0;
+    style.WindowRounding = 0;
+    style.ChildRounding = 0;
+    style.ChildBorderSize = 0;
+    style.FrameBorderSize = 0;
+    //style.PopupBorderSize = 0;
+    //style.WindowBorderSize = 0;
+
+    assert(font != nullptr);
 
     sf::Clock imgui_delta;
 
-    while(1)
+    while(window.isOpen())
     {
         sf::Event event;
 
         while(window.pollEvent(event))
         {
             ImGui::SFML::ProcessEvent(event);
+
+            if(event.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+
+            if(event.type == sf::Event::Resized)
+            {
+                window.create(sf::VideoMode(event.size.width, event.size.height), "hi");
+            }
         }
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
