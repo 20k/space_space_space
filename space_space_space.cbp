@@ -59,6 +59,7 @@
 		<Unit filename="deps/networking/networking.hpp" />
 		<Unit filename="deps/networking/serialisable.cpp" />
 		<Unit filename="deps/networking/serialisable.hpp" />
+		<Unit filename="format.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="ship_components.cpp" />
 		<Unit filename="ship_components.hpp" />

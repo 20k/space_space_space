@@ -3,6 +3,7 @@
 #include <imgui/imgui.h>
 #include <imgui-sfml/imgui-SFML.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
+#include "ship_components.hpp"
 
 int main()
 {
@@ -30,6 +31,53 @@ int main()
 
     assert(font != nullptr);
 
+    ship test_ship;
+
+    component thruster, warp, shields, laser, sensor, comms, sysrepair, armour, ls, coolant, power_generator;
+
+    thruster.add(component_info::POWER, -1);
+    thruster.add(component_info::THRUST, 1);
+
+    warp.add(component_info::POWER, -1);
+    warp.add(component_info::WARP, 0.5, 10);
+
+    shields.add(component_info::SHIELDS, 0.5, 10);
+    shields.add(component_info::POWER, -1);
+
+    laser.add(component_info::POWER, -1);
+    laser.add(component_info::WEAPONS, 1);
+
+    sensor.add(component_info::POWER, -1);
+    sensor.add(component_info::SENSORS, 1);
+
+    comms.add(component_info::POWER, -0.5);
+    comms.add(component_info::COMMS, 1);
+
+    sysrepair.add(component_info::POWER, -1);
+    sysrepair.add(component_info::SYSTEM, 1);
+
+    armour.add(component_info::ARMOUR, 1, 10);
+    armour.add(component_info::POWER, -0.5);
+
+    ls.add(component_info::POWER, -1);
+    ls.add(component_info::LIFE_SUPPORT, 1, 5);
+
+    coolant.add(component_info::COOLANT, 1, 20);
+
+    power_generator.add(component_info::POWER, 20, 50);
+
+    test_ship.add(thruster);
+    test_ship.add(warp);
+    test_ship.add(shields);
+    test_ship.add(laser);
+    test_ship.add(sensor);
+    test_ship.add(comms);
+    test_ship.add(sysrepair);
+    test_ship.add(armour);
+    test_ship.add(ls);
+    test_ship.add(coolant);
+    test_ship.add(power_generator);
+
     sf::Clock imgui_delta;
 
     while(window.isOpen())
@@ -56,6 +104,16 @@ int main()
         ImGui::Begin("Hi");
 
         ImGui::Text("Test");
+
+        ImGui::End();
+
+        ImGui::Begin("Test Ship");
+
+        std::string str = test_ship.show_components();
+
+        ImGui::Text(str.c_str());
+
+        ImGui::Text(test_ship.show_resources().c_str());
 
         ImGui::End();
 
