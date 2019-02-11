@@ -53,8 +53,10 @@ struct component
 
     std::string long_name;
 
+    double last_sat = 1;
+
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
-    void apply(double efficiency, double dt_s, std::vector<double>& res);
+    void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);
 
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
@@ -75,6 +77,9 @@ struct ship
     void tick(double dt_s);
 
     void add(const component& c);
+
+    std::vector<double> get_sat_percentage();
+    std::vector<double> get_produced(double dt_s, const std::vector<double>& sat_in);
 
     //std::string show_components();
     std::string show_resources();

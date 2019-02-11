@@ -34,8 +34,8 @@ std::string to_string_with(T a_value, int forced_dp = 1, bool sign = false)
     {
         if(a_value > 0)
             found_sign = "+";
-        if(a_value < 0)
-            found_sign = "-";
+        //if(a_value < 0)
+        //    found_sign = "-";
     }
 
     std::string fstr = std::to_string(a_value);

@@ -69,13 +69,15 @@ int main()
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 5);
-    ls.add(component_info::HP, 0, 5);
+    ls.add(component_info::HP, 0.1, 5);
 
     coolant.add(component_info::COOLANT, 1, 20);
     coolant.add(component_info::HP, 0, 1);
 
     power_generator.add(component_info::POWER, 20, 50);
     power_generator.add(component_info::HP, 0, 10);
+
+    power_generator.info[1].held = 0;
 
     test_ship.add(thruster);
     test_ship.add(warp);
@@ -90,9 +92,12 @@ int main()
     test_ship.add(power_generator);
 
     sf::Clock imgui_delta;
+    sf::Clock frametime_delta;
 
     while(window.isOpen())
     {
+        double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
+
         sf::Event event;
 
         while(window.pollEvent(event))
@@ -111,6 +116,8 @@ int main()
         }
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
+
+        test_ship.tick(frametime_dt);
 
         ImGui::Begin("Hi");
 
