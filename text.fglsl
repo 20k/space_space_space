@@ -1,0 +1,153 @@
+#version 330
+
+uniform sampler2D texture;
+uniform int check_use;
+
+layout(location = 0, index = 0) out vec4 outputColor0;
+layout(location = 0, index = 1) out vec4 outputColor1;
+
+
+float luminance(vec3 val)
+{
+    return 0.299f*val.x + 0.587f*val.y + 0.114f*val.z;
+}
+
+float coverage(vec3 val)
+{
+    return (val.x + val.y + val.z) / 3.f;
+}
+
+/*float luminance(vec3 val)
+{
+    return 0.2126 * val.x + 0.7152 * val.y + 0.0722 * val.z;
+}*/
+
+vec3 get_rgb_of_lum(float lum)
+{
+    return vec3(0.299f * lum, 0.587f * lum, 0.114f * lum);
+}
+
+vec3 rgb_to_yuv(vec3 val)
+{
+    float R = val.x;
+    float G = val.y;
+    float B = val.z;
+
+    float Y = 0.299*R + 0.587*G + 0.114*B;
+    float U = 0.492*(B-Y);
+    float V = 0.877*(R-Y);
+
+    return vec3(Y, U, V);
+}
+
+vec3 yuv_to_rgb(vec3 val)
+{
+    float Y = val.x;
+    float U = val.y;
+    float V = val.z;
+
+    float R = Y + 1.140*V;
+    float G = Y - 0.395*U - 0.581*V;
+    float B = Y + 2.032*U;
+
+    return vec3(R, G, B);
+}
+
+float linear_to_srgb_s(float C_lin)
+{
+    if (C_lin <= 0.0031308)
+        return C_lin * 12.92;
+    else
+        return 1.055 * pow(C_lin, 1.0 / 2.4) - 0.055;
+}
+
+float srgb_to_linear_s(float C_srgb)
+{
+    if(C_srgb <= 0.04045)
+    {
+        return C_srgb / 12.92;
+    }
+    else
+    {
+        return pow((C_srgb + 0.055) / 1.055, 2.4);
+    }
+}
+
+vec4 linear_to_srgb(vec4 i)
+{
+    i.x = linear_to_srgb_s(i.x);
+    i.y = linear_to_srgb_s(i.y);
+    i.z = linear_to_srgb_s(i.z);
+    i.w = linear_to_srgb_s(i.w);
+
+    return i;
+}
+
+vec4 srgb_to_linear(vec4 i)
+{
+    i.x = srgb_to_linear_s(i.x);
+    i.y = srgb_to_linear_s(i.y);
+    i.z = srgb_to_linear_s(i.z);
+    i.w = srgb_to_linear_s(i.w);
+
+    return i;
+}
+
+float safe_div(float a, float b)
+{
+    if(abs(b) < 0.00001f)
+        return 0;
+
+    return a / b;
+}
+
+void main()
+{
+    vec4 in_col4 = gl_Color;
+    vec3 in_col = in_col4.xyz;
+    vec3 tex_col = texture2D(texture, gl_TexCoord[0].xy).xyz;
+
+    if(check_use == 0)
+    {
+        //gl_FragColor = vec4(in_col * tex_col, in_col4.a);
+
+        vec4 res = vec4(in_col * tex_col, in_col4.a);
+
+        outputColor0 = res;
+        return;
+    }
+
+    vec3 post_mult = tex_col * in_col;
+
+    float expected_change = luminance(in_col) * luminance(tex_col);
+    float real_change = luminance(post_mult);
+
+    float luminance_error = expected_change - real_change;
+
+    float in_lum = luminance(in_col);
+    float pm_lum = luminance(post_mult);
+
+    float in_div = in_lum >= 0.00001 ? 1/in_lum : 0;
+    float pm_div = pm_lum >= 0.00001 ? 1/pm_lum : 0;
+
+    vec3 colour_to_use = mix(in_col * in_div, post_mult * pm_div, pm_lum);
+
+    ///the error is in / luminance(post_mult)
+    ///it means that very dim pixels are being scaled way up
+    ///maybe investigate if its the blend mode giving me grief
+    vec3 fin = post_mult + luminance_error * colour_to_use;
+
+    vec3 decomposed_tex;
+
+    decomposed_tex.x = safe_div(fin.x, in_col.x);
+    decomposed_tex.y = safe_div(fin.y, in_col.y);
+    decomposed_tex.z = safe_div(fin.z, in_col.z);
+
+    //gl_FragColor = vec4(fin, 1);
+
+    vec4 output_0 = vec4(in_col4.xyz, 1);
+    vec4 output_1 = vec4(decomposed_tex.xyz * in_col4.aaa, 1);
+
+    outputColor0 = output_0;
+    outputColor1 = output_1;
+}
