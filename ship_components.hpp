@@ -18,6 +18,7 @@ namespace component_info
         ARMOUR,
         LIFE_SUPPORT,
         COOLANT,
+        CREW,
         POWER,
         COUNT
     };
@@ -34,6 +35,7 @@ namespace component_info
         "Armour",
         "Oxygen",
         "Coolant",
+        "Crew",
         "Power",
     };
 }
@@ -61,6 +63,17 @@ struct component
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
 
+    bool has(component_info::does_type type)
+    {
+        for(auto& i : info)
+        {
+            if(i.type == type)
+                return true;
+        }
+
+        return false;
+    }
+
     std::vector<double> get_needed();
     std::vector<double> get_capacity();
     std::vector<double> get_held();
@@ -80,6 +93,8 @@ struct ship
 
     std::vector<double> get_sat_percentage();
     std::vector<double> get_produced(double dt_s, const std::vector<double>& sat_in);
+
+    std::vector<double> last_sat_percentage;
 
     //std::string show_components();
     std::string show_resources();

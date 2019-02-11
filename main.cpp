@@ -33,7 +33,7 @@ int main()
 
     ship test_ship;
 
-    component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator;
+    component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -74,10 +74,22 @@ int main()
     coolant.add(component_info::COOLANT, 1, 20);
     coolant.add(component_info::HP, 0, 1);
 
-    power_generator.add(component_info::POWER, 20, 50);
+    power_generator.add(component_info::POWER, 5, 50);
     power_generator.add(component_info::HP, 0, 10);
 
     power_generator.info[1].held = 0;
+    power_generator.info[0].held = 0;
+
+    ///need to add the ability for systems to start depleting if they have insufficient
+    ///consumption
+    ///or... maybe we just cheat and add a crew death component that's offset by crew replenishment?
+    crew.add(component_info::POWER, 1, 5);
+    crew.add(component_info::HP, 0.2, 10);
+    crew.add(component_info::LIFE_SUPPORT, -0.5, 1);
+    crew.add(component_info::COMMS, 0.1);
+    crew.add(component_info::CREW, 0.01, 100);
+    crew.add(component_info::CREW, -0.01); ///passive death on no o2
+
 
     test_ship.add(thruster);
     test_ship.add(warp);
@@ -90,6 +102,7 @@ int main()
     test_ship.add(ls);
     test_ship.add(coolant);
     test_ship.add(power_generator);
+    test_ship.add(crew);
 
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;

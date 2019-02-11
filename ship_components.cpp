@@ -7,6 +7,10 @@
 
 ship::ship()
 {
+    last_sat_percentage.resize(component_info::COUNT);
+
+    for(auto& i : last_sat_percentage)
+        i = 1;
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -193,8 +197,16 @@ std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& a
 
         for(does& d : c.info)
         {
+            if(d.recharge > 0)
+                continue;
+
             min_sat = std::min(all_sat[d.type], min_sat);
         }
+
+        /*if(c.has(component_info::CREW))
+        {
+            printf("Min sat %lf\n", min_sat);
+        }*/
 
         for(does& d : c.info)
         {
@@ -240,7 +252,6 @@ std::vector<double> ship::get_sat_percentage()
                                                           return c.get_held();
                                                       });
 
-
     //std::cout << "needed " << resource_status[component_info::POWER] << std::endl;
 
     std::vector<double> sats;
@@ -254,11 +265,13 @@ std::vector<double> ship::get_sat_percentage()
         if(all_needed[i] >= -0.00001)
             continue;
 
-        sats[i] = fabs((resource_status[i] + all_produced[i]) / all_needed[i]);
+        sats[i] = fabs((resource_status[i]) / all_needed[i]);
 
         if(sats[i] > 1)
             sats[i] = 1;
     }
+
+    //std::cout << "theoretical power = " << sats[component_info::POWER] * all_produced[component_info::POWER] + all_needed[component_info::POWER] << std::endl;
 
     return sats;
 }
@@ -271,6 +284,8 @@ void ship::tick(double dt_s)
                                                       });
 
     std::vector<double> all_sat = get_sat_percentage();
+
+    std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
 
     std::vector<double> produced_resources = get_produced(dt_s, all_sat);
 
@@ -294,6 +309,8 @@ void ship::tick(double dt_s)
     {
         c.deplete_me(diff);
     }
+
+    last_sat_percentage = all_sat;
 }
 
 void ship::add(const component& c)
