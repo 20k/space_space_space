@@ -78,6 +78,8 @@ struct component
     std::vector<double> get_capacity();
     std::vector<double> get_held();
 
+    double get_sat(const std::vector<double>& sat);
+
     void deplete_me(std::vector<double>& diff);
 };
 

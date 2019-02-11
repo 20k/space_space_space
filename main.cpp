@@ -74,7 +74,7 @@ int main()
     coolant.add(component_info::COOLANT, 1, 20);
     coolant.add(component_info::HP, 0, 1);
 
-    power_generator.add(component_info::POWER, 5, 50);
+    power_generator.add(component_info::POWER, 10, 50);
     power_generator.add(component_info::HP, 0, 10);
 
     power_generator.info[1].held = 0;
@@ -83,7 +83,7 @@ int main()
     ///need to add the ability for systems to start depleting if they have insufficient
     ///consumption
     ///or... maybe we just cheat and add a crew death component that's offset by crew replenishment?
-    crew.add(component_info::POWER, 1, 5);
+    //crew.add(component_info::POWER, 1, 5);
     crew.add(component_info::HP, 0.2, 10);
     crew.add(component_info::LIFE_SUPPORT, -0.5, 1);
     crew.add(component_info::COMMS, 0.1);

@@ -193,20 +193,14 @@ std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& a
 
         assert(max_hp > 0);
 
-        double min_sat = 1;
 
-        for(does& d : c.info)
-        {
-            if(d.recharge > 0)
-                continue;
-
-            min_sat = std::min(all_sat[d.type], min_sat);
-        }
 
         /*if(c.has(component_info::CREW))
         {
             printf("Min sat %lf\n", min_sat);
         }*/
+
+        double min_sat = c.get_sat(all_sat);
 
         for(does& d : c.info)
         {
@@ -220,6 +214,21 @@ std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& a
     }
 
     return produced_resources;
+}
+
+double component::get_sat(const std::vector<double>& sat)
+{
+    double min_sat = 1;
+
+    for(does& d : info)
+    {
+        if(d.recharge > 0)
+            continue;
+
+        min_sat = std::min(sat[d.type], min_sat);
+    }
+
+    return min_sat;
 }
 
 std::vector<double> ship::get_sat_percentage()
@@ -243,7 +252,7 @@ std::vector<double> ship::get_sat_percentage()
                 all_needed[d.type] += d.recharge * (hp / max_hp);
 
             if(d.recharge > 0)
-                all_produced[d.type] += d.recharge * (hp / max_hp);
+                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage);
         }
     }
 
@@ -265,7 +274,7 @@ std::vector<double> ship::get_sat_percentage()
         if(all_needed[i] >= -0.00001)
             continue;
 
-        sats[i] = fabs((resource_status[i]) / all_needed[i]);
+        sats[i] = fabs((resource_status[i] + all_produced[i]) / all_needed[i]);
 
         if(sats[i] > 1)
             sats[i] = 1;
@@ -285,7 +294,7 @@ void ship::tick(double dt_s)
 
     std::vector<double> all_sat = get_sat_percentage();
 
-    std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
+    //std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
 
     std::vector<double> produced_resources = get_produced(dt_s, all_sat);
 
