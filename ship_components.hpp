@@ -8,13 +8,13 @@ namespace component_info
 {
     enum does_type
     {
+        HP,
         THRUST,
         WARP,
         SHIELDS,
         WEAPONS,
         SENSORS,
         COMMS,
-        SYSTEM, ///repair
         ARMOUR,
         LIFE_SUPPORT,
         COOLANT,
@@ -24,13 +24,13 @@ namespace component_info
 
     static inline std::vector<std::string> dname
     {
+        "HP",
         "Thrust",
         "Warp",
         "Shield",
         "Weapons",
         "Sensors",
         "Comms",
-        "System",
         "Armour",
         "Oxygen",
         "Coolant",
@@ -41,6 +41,7 @@ namespace component_info
 struct does
 {
     double capacity = 0;
+    double held = 0;
     double recharge = 0;
 
     component_info::does_type type = component_info::COUNT;
@@ -49,8 +50,6 @@ struct does
 struct component
 {
     std::vector<does> info;
-    double hp = 1;
-    double max_hp = 1;
 
     std::string long_name;
 
@@ -62,12 +61,14 @@ struct component
 
     std::vector<double> get_needed();
     std::vector<double> get_capacity();
+    std::vector<double> get_held();
+
+    void deplete_me(std::vector<double>& diff);
 };
 
 struct ship
 {
     std::vector<component> components;
-    std::vector<double> resource_status;
 
     ship();
 
@@ -75,7 +76,7 @@ struct ship
 
     void add(const component& c);
 
-    std::string show_components();
+    //std::string show_components();
     std::string show_resources();
 
     template<typename T, typename U>

@@ -7,7 +7,6 @@
 
 ship::ship()
 {
-    resource_status.resize(component_info::COUNT);
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -25,6 +24,7 @@ void component::add(component_info::does_type type, double amount, double capaci
     d.type = type;
     d.recharge = amount;
     d.capacity = capacity;
+    d.held = d.capacity;
 
     info.push_back(d);
 }
@@ -35,6 +35,11 @@ double component::satisfied_percentage(double dt_s, const std::vector<double>& r
 
     std::vector<double> needed;
     needed.resize(component_info::COUNT);
+
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
 
     for(does& d : info)
     {
@@ -67,6 +72,11 @@ void component::apply(double efficiency, double dt_s, std::vector<double>& res)
 {
     assert(res.size() == component_info::COUNT);
 
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
+
     for(does& d : info)
     {
         res[d.type] += d.recharge * efficiency * dt_s * (hp / max_hp);
@@ -77,6 +87,11 @@ std::vector<double> component::get_needed()
 {
     std::vector<double> needed;
     needed.resize(component_info::COUNT);
+
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
 
     for(does& d : info)
     {
@@ -99,13 +114,71 @@ std::vector<double> component::get_capacity()
     return needed;
 }
 
+std::vector<double> component::get_held()
+{
+    std::vector<double> needed;
+    needed.resize(component_info::COUNT);
+
+    for(does& d : info)
+    {
+        needed[d.type] += d.held;
+    }
+
+    return needed;
+}
+
+void component::deplete_me(std::vector<double>& diff)
+{
+    for(does& d : info)
+    {
+        double my_held = d.held;
+        double my_cap = d.capacity;
+
+        double change = diff[d.type];
+
+        double next = my_held + change;
+
+        if(next < 0)
+            next = 0;
+
+        if(next > my_cap)
+            next = my_cap;
+
+        double real = next - my_held;
+
+        diff[d.type] -= real;
+
+        d.held = next;
+    }
+}
+
 void ship::tick(double dt_s)
 {
+    std::vector<double> resource_status = sum<double>([](component& c)
+                                                      {
+                                                          return c.get_held();
+                                                      });
+
+    std::vector<double> next_resource_status = resource_status;
+
     for(component& c : components)
     {
-        double sat_percent = c.satisfied_percentage(dt_s, resource_status);
+        double sat_percent = c.satisfied_percentage(dt_s, next_resource_status);
 
-        c.apply(sat_percent, dt_s, resource_status);
+        c.apply(sat_percent, dt_s, next_resource_status);
+    }
+
+    std::vector<double> diff;
+    diff.resize(component_info::COUNT);
+
+    for(int i=0; i < (int)component_info::COUNT; i++)
+    {
+        diff[i] = next_resource_status[i] - resource_status[i];
+    }
+
+    for(component& c : components)
+    {
+        c.deplete_me(diff);
     }
 }
 
@@ -114,7 +187,7 @@ void ship::add(const component& c)
     components.push_back(c);
 }
 
-std::string ship::show_components()
+/*std::string ship::show_components()
 {
     std::vector<std::string> strings;
 
@@ -135,7 +208,7 @@ std::string ship::show_components()
     }
 
     return ret;
-}
+}*/
 
 std::string ship::show_resources()
 {
@@ -193,10 +266,25 @@ std::string ship::show_resources()
     std::vector<std::string> cur;
     cur.push_back("Cur");
 
-    for(auto& i : resource_status)
+    /*for(auto& i : resource_status)
+    {
+        cur.push_back(to_string_with(i, 1));
+    }*/
+
+    std::vector<double> cur_held = sum<double>
+                                    ([](component& c)
+                                     {
+                                         return c.get_held();
+                                     });
+
+    for(auto& i : cur_held)
     {
         cur.push_back(to_string_with(i, 1));
     }
+
+    assert(strings.size() == status.size());
+    assert(strings.size() == cur.size());
+    assert(strings.size() == caps.size());
 
     std::string ret;
 
