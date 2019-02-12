@@ -728,7 +728,7 @@ void ship::take_damage(double amount)
     {
         int next = dist(rng);
 
-        if(next >= components.size())
+        if(next >= (int)components.size())
         {
             printf("What? Next!\n");
             continue;
