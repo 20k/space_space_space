@@ -93,6 +93,8 @@ int main()
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
+    warp.add(component_info::WARP, -0.1);
+    warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
 
     shields.add(component_info::SHIELDS, 0.5, 10);

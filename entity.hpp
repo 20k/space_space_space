@@ -2,6 +2,7 @@
 #define ENTITY_HPP_INCLUDED
 
 #include <vec/vec.hpp>
+#include <networking/serialisable.hpp>
 
 namespace sf
 {
