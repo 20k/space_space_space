@@ -54,6 +54,8 @@ int main()
 
     laser.add_on_use(component_info::CAPACITOR, -10);
 
+    laser.info[3].held = 0;
+
     sensor.add(component_info::POWER, -1);
     sensor.add(component_info::SENSORS, 1);
     sensor.add(component_info::HP, 0, 1);
