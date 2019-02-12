@@ -385,6 +385,11 @@ void ship::tick(double dt_s)
             if(c.can_use(next_resource_status))
             {
                 c.use(next_resource_status);
+
+                projectile* l = parent->make_new<projectile>();
+                l->position = position;
+                l->rotation = rotation;
+                l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
             }
 
             c.try_use = false;
@@ -693,4 +698,9 @@ void ship::fire()
             c.try_use = true;
         }
     }
+}
+
+projectile::projectile()
+{
+    init_rectangular({0.2, 1});
 }

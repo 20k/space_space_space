@@ -8,6 +8,8 @@ namespace sf
     struct RenderWindow;
 }
 
+struct entity_manager;
+
 struct entity
 {
     vec2f position = {0,0};
@@ -41,6 +43,9 @@ struct entity
 
     vec2f get_world_pos(int vertex_id);
     bool point_within(vec2f point);
+
+    entity_manager* get_parent();
+    entity_manager* parent = nullptr;
 };
 
 struct entity_manager
@@ -53,6 +58,7 @@ struct entity_manager
         T* e = new T(std::forward<U>(u)...);
 
         entities.push_back(e);
+        e->parent = this;
 
         return e;
     }

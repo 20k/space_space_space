@@ -164,8 +164,11 @@ struct ship : entity
     void fire();
 
     double data_track_elapsed_s = 0;
+};
 
-    //entity e;
+struct projectile : entity
+{
+    projectile();
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED
