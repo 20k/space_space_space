@@ -88,6 +88,20 @@ struct component
         return false;
     }
 
+    does& get(component_info::does_type type)
+    {
+        if(!has(type))
+            throw std::runtime_error("rip get");
+
+        for(auto& d : info)
+        {
+            if(d.type == type)
+                return d;
+        }
+
+        throw std::runtime_error("rg2");
+    }
+
     std::vector<double> get_needed();
     std::vector<double> get_capacity();
     std::vector<double> get_held();
@@ -162,6 +176,7 @@ struct ship : entity
     void apply_rotation_force(float force);
 
     void fire();
+    void take_damage(double amount);
 
     double data_track_elapsed_s = 0;
 };

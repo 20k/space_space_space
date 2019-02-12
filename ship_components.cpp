@@ -391,7 +391,8 @@ void ship::tick(double dt_s)
                 projectile* l = parent->make_new<projectile>();
                 l->position = position;
                 l->rotation = rotation;
-                l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
+                l->velocity = (vec2f){0, 1}.rot(rotation) * 100;
+                //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
                 l->phys_ignore.push_back(id);
             }
 
@@ -672,6 +673,80 @@ void ship::tick_pre_phys(double dt_s)
     //e.tick_phys(dt_s);
 }
 
+double apply_to_does(double amount, does& d)
+{
+    double prev = d.held;
+
+    double next = prev + amount;
+
+    if(next < 0)
+        next = 0;
+
+    if(next > d.capacity)
+        next = d.capacity;
+
+    d.held = next;
+
+    return next - prev;
+}
+
+void ship::take_damage(double amount)
+{
+    double remaining = -amount;
+
+    for(component& c : components)
+    {
+        if(c.has(component_info::SHIELDS))
+        {
+            does& d = c.get(component_info::SHIELDS);
+
+            double diff = apply_to_does(remaining, d);
+
+            remaining -= diff;
+        }
+    }
+
+    for(component& c : components)
+    {
+        if(c.has(component_info::ARMOUR))
+        {
+            does& d = c.get(component_info::ARMOUR);
+
+            double diff = apply_to_does(remaining, d);
+
+            remaining -= diff;
+        }
+    }
+
+    std::minstd_rand0 rng;
+    rng.seed(std::random_device()());
+    std::uniform_int_distribution<int> dist(0, (int)components.size() - 1);
+
+    int max_vals = 100;
+
+    for(int i=0; i < max_vals && fabs(remaining) > 0.00001; i++)
+    {
+        int next = dist(rng);
+
+        if(next >= components.size())
+        {
+            printf("What? Next!\n");
+            continue;
+        }
+
+        component& c = components[next];
+
+        if(c.has(component_info::HP))
+        {
+            does& d = c.get(component_info::HP);
+
+            double diff = apply_to_does(remaining, d);
+
+            remaining -= diff;
+        }
+    }
+}
+
 #if 0
 void ship::render(sf::RenderWindow& window)
 {
@@ -710,5 +785,10 @@ projectile::projectile()
 
 void projectile::on_collide(entity_manager& em, entity& other)
 {
-    std::cout << "hi there\n";
+    if(dynamic_cast<ship*>(&other))
+    {
+        dynamic_cast<ship*>(&other)->take_damage(11);
+    }
+
+    cleanup = true;
 }

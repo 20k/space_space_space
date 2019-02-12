@@ -120,7 +120,7 @@ int main()
     sysrepair.add(component_info::SYSTEM, 1);
     sysrepair.add(component_info::HP, 0.1, 1);*/
 
-    armour.add(component_info::ARMOUR, 1, 10);
+    armour.add(component_info::ARMOUR, 0.1, 10);
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
 
@@ -215,6 +215,7 @@ int main()
 
         entities.tick(frametime_dt);
         entities.render(window);
+        entities.cleanup();
 
         ImGui::Begin("Hi");
 
@@ -229,6 +230,16 @@ int main()
         //ImGui::Text(str.c_str());
 
         ImGui::Text(test_ship->show_resources().c_str());
+
+        ImGui::End();
+
+        ImGui::Begin("Test Ship2");
+
+        //std::string str = test_ship.show_components();
+
+        //ImGui::Text(str.c_str());
+
+        ImGui::Text(test_ship2->show_resources().c_str());
 
         ImGui::End();
 
