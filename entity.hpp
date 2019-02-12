@@ -12,6 +12,12 @@ struct entity_manager;
 
 struct entity
 {
+    size_t id = 0;
+    bool cleanup = false;
+    bool collides = true;
+
+    std::vector<size_t> phys_ignore;
+
     vec2f position = {0,0};
     vec2f velocity = {0,0};
     vec2f control_force = {0,0};
@@ -46,11 +52,19 @@ struct entity
 
     entity_manager* get_parent();
     entity_manager* parent = nullptr;
+
+    virtual void on_collide(entity_manager& em, entity& other){}
+
+    virtual ~entity(){}
 };
+
+bool collides(entity& e1, entity& e2);
 
 struct entity_manager
 {
     std::vector<entity*> entities;
+
+    static inline size_t gid = 0;
 
     template<typename T, typename... U>
     T* make_new(U&&... u)
@@ -59,6 +73,7 @@ struct entity_manager
 
         entities.push_back(e);
         e->parent = this;
+        e->id = gid++;
 
         return e;
     }
@@ -79,6 +94,36 @@ struct entity_manager
         {
             e->tick_phys(dt_s);
         }
+
+        for(int i=0; i < (int)entities.size(); i++)
+        {
+            if(!entities[i]->collides)
+                continue;
+
+            vec2f p1 = entities[i]->position;
+            float r1 = entities[i]->approx_rad;
+
+            for(int j = 0; j < (int)entities.size(); j++)
+            {
+                if(entities[j]->collides)
+                {
+                    if(j <= i)
+                        continue;
+                }
+
+                vec2f p2 = entities[j]->position;
+                float r2 = entities[j]->approx_rad;
+
+                if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
+                    continue;
+
+                if(collides(*entities[i], *entities[j]))
+                {
+                    entities[i]->on_collide(*this, *entities[j]);
+                    entities[j]->on_collide(*this, *entities[i]);
+                }
+            }
+        }
     }
 
     void render(sf::RenderWindow& window)
@@ -86,6 +131,23 @@ struct entity_manager
         for(entity* e : entities)
         {
             e->render(window);
+        }
+    }
+
+    void cleanup()
+    {
+        for(int i=0; i < (int)entities.size(); i++)
+        {
+            if(entities[i]->cleanup)
+            {
+                entity* ptr = entities[i];
+
+                entities.erase(entities.begin() + i);
+
+                delete ptr;
+                i--;
+                continue;
+            }
         }
     }
 };

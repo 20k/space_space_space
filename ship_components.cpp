@@ -390,6 +390,7 @@ void ship::tick(double dt_s)
                 l->position = position;
                 l->rotation = rotation;
                 l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
+                l->phys_ignore.push_back(id);
             }
 
             c.try_use = false;

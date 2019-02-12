@@ -1,6 +1,49 @@
 #include "entity.hpp"
 #include <SFML/Graphics.hpp>
 
+bool collides(entity& e1, entity& e2)
+{
+    for(auto& i : e1.phys_ignore)
+    {
+        if(i == e2.id)
+            return false;
+    }
+
+    for(auto& i : e2.phys_ignore)
+    {
+        if(i == e1.id)
+            return false;
+    }
+
+    for(int i=0; i < (int)e1.vert_dist.size(); i++)
+    {
+        vec2f p = e1.get_world_pos(i);
+
+        if(e2.point_within(p))
+        {
+            return true;
+        }
+    }
+
+    if(e2.point_within(e1.position))
+        return true;
+
+    for(int i=0; i < (int)e2.vert_dist.size(); i++)
+    {
+        vec2f p = e2.get_world_pos(i);
+
+        if(e1.point_within(p))
+        {
+            return true;
+        }
+    }
+
+    if(e1.point_within(e2.position))
+        return true;
+
+    return false;
+}
+
 void entity::init_rectangular(vec2f dim)
 {
     float corner_rads = dim.length();
