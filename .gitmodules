@@ -10,3 +10,6 @@
 [submodule "deps/freetype2"]
 	path = deps/freetype2
 	url = https://github.com/ubawurinna/freetype-windows-binaries
+[submodule "deps/vec"]
+	path = deps/vec
+	url = https://github.com/20k/funvectormaths

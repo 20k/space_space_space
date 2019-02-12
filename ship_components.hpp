@@ -4,6 +4,12 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <vec/vec.hpp>
+
+namespace sf
+{
+    struct RenderWindow;
+}
 
 namespace component_info
 {
@@ -112,6 +118,8 @@ struct ship
     ship();
 
     void tick(double dt_s);
+    void tick_move(double dt_s);
+    void render(sf::RenderWindow& win);
 
     void add(const component& c);
 
@@ -148,7 +156,18 @@ struct ship
 
     void advanced_ship_display();
 
+    void apply_force(vec2f dir);
+    void apply_rotation_force(float force);
+
     double data_track_elapsed_s = 0;
+
+    vec2f position = {0,0};
+    vec2f velocity = {0,0};
+    vec2f control_input = {0,0};
+
+    float rotation = 0;
+    float angular_velocity = 0;
+    float control_angular_velocity = 0;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

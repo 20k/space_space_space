@@ -6,6 +6,7 @@
 #include <iostream>
 #include <imgui/imgui.h>
 #include "imGuiX.h"
+#include <SFML/Graphics.hpp>
 
 ship::ship()
 {
@@ -625,4 +626,75 @@ void ship::advanced_ship_display()
     }
 
     ImGui::End();
+}
+
+void ship::apply_force(vec2f dir)
+{
+    control_input += dir.rot(rotation);
+}
+
+void ship::apply_rotation_force(float force)
+{
+    control_angular_velocity += force;
+}
+
+void ship::tick_move(double dt_s)
+{
+    double thrust = get_produced(dt_s, last_sat_percentage)[component_info::THRUST] * 1000;
+
+    //std::cout << "thrust " << thrust << std::endl;
+
+    ///so to convert from angular to velocity multiply by this
+    double velocity_thrust_ratio = 20;
+
+    ///need to take into account mass
+    velocity += control_input * dt_s * thrust * velocity_thrust_ratio;
+    position += velocity * dt_s;
+    control_input = {0,0};
+
+    angular_velocity += control_angular_velocity * dt_s * thrust;
+    rotation += angular_velocity * dt_s;
+    control_angular_velocity = 0;
+
+    ///drag ps
+    double angular_drag = M_PI/8;
+
+    float sign = signum(angular_velocity);
+
+    if(fabs(angular_velocity) < fabs(sign))
+    {
+        sign = angular_velocity;
+    }
+
+    angular_velocity -= sign * angular_drag * dt_s;
+
+    double velocity_drag = angular_drag * velocity_thrust_ratio;
+
+    vec2f fsign = signum(velocity);
+
+    for(int i=0; i < 2; i++)
+    {
+        if(fabs(velocity.v[i]) < fabs(fsign.v[i]))
+        {
+            fsign.v[i] = velocity.v[i];
+        }
+    }
+
+    velocity = velocity - fsign * velocity_drag * dt_s;
+}
+
+void ship::render(sf::RenderWindow& win)
+{
+    sf::RectangleShape shape;
+    shape.setSize(sf::Vector2f(4, 10));
+    shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+
+    shape.setFillColor(sf::Color(0,0,0,255));
+    shape.setOutlineColor(sf::Color(255,255,255,255));
+    shape.setOutlineThickness(2);
+
+    shape.setPosition(position.x(), position.y());
+    shape.setRotation(r2d(rotation));
+
+    win.draw(shape);
 }

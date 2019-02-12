@@ -7,7 +7,10 @@
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(1200, 800), "hi");
+    sf::ContextSettings sett;
+    sett.antialiasingLevel = 8;
+
+    sf::RenderWindow window(sf::VideoMode(1200, 800), "hi", sf::Style::Default, sett);
 
     sf::Texture font_atlas;
 
@@ -82,8 +85,8 @@ int main()
     power_generator.add(component_info::POWER, 10, 50);
     power_generator.add(component_info::HP, 0, 10);
 
-    power_generator.info[1].held = 0;
-    power_generator.info[0].held = 0;
+    //power_generator.info[1].held = 0;
+    //power_generator.info[0].held = 0;
 
     ///need to add the ability for systems to start depleting if they have insufficient
     ///consumption
@@ -109,8 +112,12 @@ int main()
     test_ship.add(power_generator);
     test_ship.add(crew);
 
+    test_ship.position = {400, 400};
+
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
+
+    sf::Keyboard key;
 
     while(window.isOpen())
     {
@@ -135,7 +142,22 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
+        float forward_vel = 0;
+
+        forward_vel += key.isKeyPressed(sf::Keyboard::W);
+        forward_vel -= key.isKeyPressed(sf::Keyboard::S);
+
+        float angular_vel = 0;
+
+        angular_vel += key.isKeyPressed(sf::Keyboard::D);
+        angular_vel -= key.isKeyPressed(sf::Keyboard::A);
+
+        test_ship.apply_force({0, forward_vel});
+        test_ship.apply_rotation_force(angular_vel);
+
         test_ship.tick(frametime_dt);
+        test_ship.tick_move(frametime_dt);
+        test_ship.render(window);
 
         ImGui::Begin("Hi");
 
