@@ -168,6 +168,12 @@ struct ship
     float rotation = 0;
     float angular_velocity = 0;
     float control_angular_velocity = 0;
+
+    std::vector<float> vert_dist;
+    std::vector<float> vert_angle;
+    std::vector<vec3f> vert_cols;
+
+    float approx_rad = 1.f;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED
