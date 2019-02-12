@@ -6,6 +6,8 @@
 #include <map>
 #include <vec/vec.hpp>
 
+#include "entity.hpp"
+
 namespace sf
 {
     struct RenderWindow;
@@ -161,19 +163,7 @@ struct ship
 
     double data_track_elapsed_s = 0;
 
-    vec2f position = {0,0};
-    vec2f velocity = {0,0};
-    vec2f control_input = {0,0};
-
-    float rotation = 0;
-    float angular_velocity = 0;
-    float control_angular_velocity = 0;
-
-    std::vector<float> vert_dist;
-    std::vector<float> vert_angle;
-    std::vector<vec3f> vert_cols;
-
-    float approx_rad = 1.f;
+    entity e;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

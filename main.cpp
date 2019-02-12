@@ -112,7 +112,7 @@ int main()
     test_ship.add(power_generator);
     test_ship.add(crew);
 
-    test_ship.position = {400, 400};
+    test_ship.e.position = {400, 400};
 
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;

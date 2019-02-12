@@ -1,0 +1,121 @@
+#include "entity.hpp"
+#include <SFML/Graphics.hpp>
+
+void entity::init_rectangular(vec2f dim)
+{
+    float corner_rads = dim.length();
+
+    vert_angle.resize(4);
+    vert_dist.resize(4);
+    vert_cols.resize(4);
+
+    for(auto& i : vert_dist)
+    {
+        i = corner_rads;
+    }
+
+    float offset_angle = atan2(dim.y(), dim.x());
+
+    vert_angle[0] = -offset_angle;
+    vert_angle[1] = offset_angle;
+    vert_angle[2] = -offset_angle + M_PI;
+    vert_angle[3] = offset_angle + M_PI;
+
+    for(auto& i : vert_cols)
+    {
+        i = {1,1,1};
+    }
+
+    approx_rad = corner_rads;
+}
+
+void entity::apply_inputs(double dt_s, double velocity_mult, double angular_mult)
+{
+    velocity += control_force * dt_s * velocity_mult;
+    angular_velocity += control_angular_force * dt_s * angular_mult;
+
+    control_force = {0,0};
+    control_angular_force = 0;
+}
+
+void entity::tick_phys(double dt_s)
+{
+    ///need to take into account mass
+    position += velocity * dt_s;
+    rotation += angular_velocity * dt_s;
+
+    if(drag)
+    {
+        float sign = signum(angular_velocity);
+
+        if(fabs(angular_velocity) < fabs(sign))
+        {
+            sign = angular_velocity;
+        }
+
+        angular_velocity -= sign * angular_drag * dt_s;
+
+        vec2f fsign = signum(velocity);
+
+        for(int i=0; i < 2; i++)
+        {
+            if(fabs(velocity.v[i]) < fabs(fsign.v[i]))
+            {
+                fsign.v[i] = velocity.v[i];
+            }
+        }
+
+        velocity = velocity - fsign * velocity_drag * dt_s;
+    }
+}
+
+void entity::render(sf::RenderWindow& window)
+{
+    float thickness = 0.75f;
+    float scale = 2;
+
+    //vec3f lcol = col * 255.f;
+
+    for(int i=0; i<(int)vert_dist.size(); i++)
+    {
+        int cur = i;
+        int next = (i + 1) % vert_dist.size();
+
+        vec3f lcol = vert_cols[cur] * 255;
+
+        float d1 = vert_dist[cur];
+        float d2 = vert_dist[next];
+
+        float a1 = vert_angle[cur];
+        float a2 = vert_angle[next];
+
+        a1 += rotation;
+        a2 += rotation;
+
+        vec2f l1 = d1 * (vec2f) {cosf(a1), sinf(a1)} * scale;
+        vec2f l2 = d2 * (vec2f) {cosf(a2), sinf(a2)} * scale;
+
+        l1 += position;
+        l2 += position;
+
+        vec2f perp = perpendicular((l2 - l1).norm());
+
+        sf::Vertex v[4];
+
+        vec2f ov = perp * scale * thickness;
+
+        v[0].position = sf::Vector2f(l1.x() - ov.x()/2.f, l1.y() - ov.y()/2.f);
+        v[1].position = sf::Vector2f(l2.x() - ov.x()/2.f, l2.y() - ov.y()/2.f);
+        v[2].position = sf::Vector2f(l2.x() + ov.x()/2.f, l2.y() + ov.y()/2.f);
+        v[3].position = sf::Vector2f(l1.x() + ov.x()/2.f, l1.y() + ov.y()/2.f);
+
+        sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z());
+
+        v[0].color = scol;
+        v[1].color = scol;
+        v[2].color = scol;
+        v[3].color = scol;
+
+        window.draw(v, 4, sf::Quads);
+    }
+}

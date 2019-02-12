@@ -17,37 +17,16 @@ ship::ship()
 
     vec2f dim = {1, 2};
 
-    float corner_rads = dim.length();
+    e.init_rectangular(dim);
 
-    vert_angle.resize(4);
-    vert_dist.resize(4);
-    vert_cols.resize(4);
-
-    for(auto& i : vert_dist)
-    {
-        i = corner_rads;
-    }
-
-    float offset_angle = atan2(dim.y(), dim.x());
-
-    vert_angle[0] = -offset_angle;
-    vert_angle[1] = offset_angle;
-    vert_angle[2] = -offset_angle + M_PI;
-    vert_angle[3] = offset_angle + M_PI;
-
-    for(auto& i : vert_cols)
-    {
-        i = {1,1,1};
-    }
-
-    approx_rad = corner_rads;
-
-    for(auto& i : vert_cols)
+    for(auto& i : e.vert_cols)
     {
         i = {0.5, 1, 0.5};
     }
 
-    vert_cols[3] = {1, 0.2, 0.2};
+    e.vert_cols[3] = {1, 0.2, 0.2};
+
+    e.drag = true;
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -664,12 +643,12 @@ void ship::advanced_ship_display()
 
 void ship::apply_force(vec2f dir)
 {
-    control_input += dir.rot(rotation);
+    e.control_force += dir.rot(e.rotation);
 }
 
 void ship::apply_rotation_force(float force)
 {
-    control_angular_velocity += force;
+    e.control_angular_force += force;
 }
 
 void ship::tick_move(double dt_s)
@@ -681,40 +660,8 @@ void ship::tick_move(double dt_s)
     ///so to convert from angular to velocity multiply by this
     double velocity_thrust_ratio = 20;
 
-    ///need to take into account mass
-    velocity += control_input * dt_s * thrust * velocity_thrust_ratio;
-    position += velocity * dt_s;
-    control_input = {0,0};
-
-    angular_velocity += control_angular_velocity * dt_s * thrust;
-    rotation += angular_velocity * dt_s;
-    control_angular_velocity = 0;
-
-    ///drag ps
-    double angular_drag = M_PI/8;
-
-    float sign = signum(angular_velocity);
-
-    if(fabs(angular_velocity) < fabs(sign))
-    {
-        sign = angular_velocity;
-    }
-
-    angular_velocity -= sign * angular_drag * dt_s;
-
-    double velocity_drag = angular_drag * velocity_thrust_ratio;
-
-    vec2f fsign = signum(velocity);
-
-    for(int i=0; i < 2; i++)
-    {
-        if(fabs(velocity.v[i]) < fabs(fsign.v[i]))
-        {
-            fsign.v[i] = velocity.v[i];
-        }
-    }
-
-    velocity = velocity - fsign * velocity_drag * dt_s;
+    e.apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
+    e.tick_phys(dt_s);
 }
 
 void ship::render(sf::RenderWindow& window)
@@ -732,51 +679,5 @@ void ship::render(sf::RenderWindow& window)
 
     win.draw(shape);*/
 
-    float thickness = 0.75f;
-    float scale = 2;
-
-    //vec3f lcol = col * 255.f;
-
-    for(int i=0; i<(int)vert_dist.size(); i++)
-    {
-        int cur = i;
-        int next = (i + 1) % vert_dist.size();
-
-        vec3f lcol = vert_cols[cur] * 255;
-
-        float d1 = vert_dist[cur];
-        float d2 = vert_dist[next];
-
-        float a1 = vert_angle[cur];
-        float a2 = vert_angle[next];
-
-        a1 += rotation;
-        a2 += rotation;
-
-        vec2f l1 = d1 * (vec2f) {cosf(a1), sinf(a1)} * scale;
-        vec2f l2 = d2 * (vec2f) {cosf(a2), sinf(a2)} * scale;
-
-        l1 += position;
-        l2 += position;
-
-        vec2f perp = perpendicular((l2 - l1).norm());
-
-        sf::Vertex v[4];
-
-        vec2f ov = perp * scale * thickness;
-
-        v[0].position = sf::Vector2f(l1.x() - ov.x()/2.f, l1.y() - ov.y()/2.f);
-        v[1].position = sf::Vector2f(l2.x() - ov.x()/2.f, l2.y() - ov.y()/2.f);
-        v[2].position = sf::Vector2f(l2.x() + ov.x()/2.f, l2.y() + ov.y()/2.f);
-        v[3].position = sf::Vector2f(l1.x() + ov.x()/2.f, l1.y() + ov.y()/2.f);
-
-        sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z());
-
-        v[0].color = scol;
-        v[1].color = scol;
-        v[2].color = scol;
-        v[3].color = scol;
-
-        window.draw(v, 4, sf::Quads);
-    }
+    e.render(window);
 }

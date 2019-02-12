@@ -49,6 +49,8 @@
 			<Add option="-lws2_32" />
 			<Add option="-lmswsock" />
 		</Linker>
+		<Unit filename="ImGuiX.cpp" />
+		<Unit filename="ImGuiX.h" />
 		<Unit filename="deps/imgui-sfml/imgui-SFML.cpp" />
 		<Unit filename="deps/imgui/imgui.cpp" />
 		<Unit filename="deps/imgui/imgui_demo.cpp" />
@@ -59,6 +61,8 @@
 		<Unit filename="deps/networking/networking.hpp" />
 		<Unit filename="deps/networking/serialisable.cpp" />
 		<Unit filename="deps/networking/serialisable.hpp" />
+		<Unit filename="entity.cpp" />
+		<Unit filename="entity.hpp" />
 		<Unit filename="format.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="ship_components.cpp" />
