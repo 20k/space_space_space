@@ -11,7 +11,7 @@ namespace sf
 
 struct entity_manager;
 
-struct entity
+struct entity : serialisable
 {
     size_t id = 0;
     bool cleanup = false;
@@ -57,6 +57,18 @@ struct entity
     virtual void on_collide(entity_manager& em, entity& other){}
 
     virtual ~entity(){}
+
+    void serialise(nlohmann::json& data, bool encode)
+    {
+        DO_SERIALISE(id);
+        DO_SERIALISE(cleanup);
+        DO_SERIALISE(position);
+        DO_SERIALISE(velocity);
+
+        DO_SERIALISE(vert_dist);
+        DO_SERIALISE(vert_angle);
+        DO_SERIALISE(vert_cols);
+    }
 };
 
 bool collides(entity& e1, entity& e2);
