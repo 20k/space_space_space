@@ -21,6 +21,7 @@ namespace component_info
         COOLANT,
         CREW,
         POWER,
+        CAPACITOR, ///weapons
         COUNT
     };
 
@@ -38,6 +39,7 @@ namespace component_info
         "Coolant",
         "Crew",
         "Power",
+        "Capacitor",
     };
 }
 
@@ -53,6 +55,7 @@ struct does
 struct component
 {
     std::vector<does> info;
+    std::vector<does> activate_requirements;
 
     std::string long_name;
 
@@ -63,6 +66,8 @@ struct component
 
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
+
+    void add_on_use(component_info::does_type, double amount);
 
     bool has(component_info::does_type type)
     {
@@ -82,6 +87,11 @@ struct component
     double get_sat(const std::vector<double>& sat);
 
     void deplete_me(std::vector<double>& diff);
+
+    bool can_use(const std::vector<double>& res);
+    void use(std::vector<double>& res);
+
+    bool try_use = false;
 };
 
 struct data_tracker

@@ -35,6 +35,16 @@ void component::add(component_info::does_type type, double amount, double capaci
     info.push_back(d);
 }
 
+void component::add_on_use(component_info::does_type type, double amount)
+{
+    does d;
+    d.type = type;
+    d.capacity = amount;
+    d.held = 0;
+
+    activate_requirements.push_back(d);
+}
+
 double component::satisfied_percentage(double dt_s, const std::vector<double>& res)
 {
     assert(res.size() == component_info::COUNT);
@@ -181,6 +191,30 @@ void component::deplete_me(std::vector<double>& diff)
 
         d.held = next;
     }
+}
+
+bool component::can_use(const std::vector<double>& res)
+{
+    for(does& d : activate_requirements)
+    {
+        if(d.capacity >= 0)
+            continue;
+
+        if(fabs(d.capacity) > res[d.type])
+            return false;
+    }
+
+    return true;
+}
+
+void component::use(std::vector<double>& res)
+{
+    for(does& d : activate_requirements)
+    {
+        res[d.type] += d.capacity;
+    }
+
+    try_use = false;
 }
 
 std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& all_sat)
@@ -330,6 +364,19 @@ void ship::tick(double dt_s)
         next_resource_status[i] = resource_status[i] + produced_resources[i];
     }
 
+    for(component& c : components)
+    {
+        if(c.try_use)
+        {
+            if(c.can_use(next_resource_status))
+            {
+                c.use(next_resource_status);
+            }
+
+            c.try_use = false;
+        }
+    }
+
     std::vector<double> diff;
     diff.resize(component_info::COUNT);
 
@@ -359,6 +406,7 @@ void ship::tick(double dt_s)
             component_info::SHIELDS,
             component_info::COOLANT,
             component_info::POWER,
+            component_info::CAPACITOR
         };
 
         for(auto& type : tracked)
@@ -505,7 +553,7 @@ void ship::advanced_ship_display()
         if(i.second.vsat.size() == 0)
             continue;
 
-        std::string name_1 = component_info::dname[i.first];
+        /*std::string name_1 = component_info::dname[i.first];
         std::string name_2 = component_info::dname[i.first];
 
         std::vector<std::string> names{name_1, name_2};
@@ -517,7 +565,7 @@ void ship::advanced_ship_display()
         cols.push_back(ImColor(255, 128, 128, 255));
         cols.push_back(ImColor(128, 128, 255, 255));
 
-        ImGuiX::PlotMultiEx(ImGuiPlotType_Lines, label.c_str(), names, cols, {i.second.vsat, i.second.vheld}, 0, 1, ImVec2(0,0));
+        ImGuiX::PlotMultiEx(ImGuiPlotType_Lines, label.c_str(), names, cols, {i.second.vsat, i.second.vheld}, 0, 1, ImVec2(0,0));*/
 
         //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, 1);
         //ImGui::PlotLines(name_1.c_str(), &i.second.vsat[0], i.second.vsat.size(), 0, nullptr, 0, 1);
@@ -525,6 +573,55 @@ void ship::advanced_ship_display()
         //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
 
         //ImGui::PlotLines(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
+    }
+
+    ImGui::Columns(2);
+
+    ImGui::Text("Stored");
+
+    for(auto& i : data_track)
+    {
+        if(i.second.vheld.size() == 0)
+            continue;
+
+        std::string name_1 = component_info::dname[i.first];
+
+        ImGui::PlotLines(name_1.c_str(), &i.second.vheld[0], i.second.vheld.size(), 0, nullptr, 0, get_capacity()[i.first], ImVec2(0, 0));
+    }
+
+    ImGui::NextColumn();
+
+    ImGui::Text("Satisfied");
+
+    for(auto& i : data_track)
+    {
+        if(i.second.vsat.size() == 0)
+            continue;
+
+        if(i.first == component_info::CAPACITOR)
+        {
+            ImGui::NewLine();
+            continue;
+        }
+
+        std::string name_1 = component_info::dname[i.first];
+
+        ImGui::PlotLines(name_1.c_str(), &i.second.vsat[0], i.second.vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
+    }
+
+    ImGui::EndColumns();
+
+    for(component& c : components)
+    {
+        if(c.has(component_info::WEAPONS))
+        {
+            ImGui::Button("Fire");
+
+            if(ImGui::IsItemClicked())
+            {
+                c.try_use = true;
+            }
+        }
     }
 
     ImGui::End();

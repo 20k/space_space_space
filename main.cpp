@@ -50,6 +50,9 @@ int main()
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
+    laser.add(component_info::CAPACITOR, 1, 20);
+
+    laser.add_on_use(component_info::CAPACITOR, -10);
 
     sensor.add(component_info::POWER, -1);
     sensor.add(component_info::SENSORS, 1);
