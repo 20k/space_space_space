@@ -5,6 +5,52 @@
 #include <imgui/misc/freetype/imgui_freetype.h>
 #include "ship_components.hpp"
 
+template<sf::Keyboard::Key k, int n, int c>
+bool once()
+{
+    static bool last;
+
+    sf::Keyboard key;
+
+    if(key.isKeyPressed(k) && !last)
+    {
+        last = true;
+
+        return true;
+    }
+
+    if(!key.isKeyPressed(k))
+    {
+        last = false;
+    }
+
+    return false;
+}
+
+template<sf::Mouse::Button b, int n, int c>
+bool once()
+{
+    static bool last;
+
+    sf::Mouse mouse;
+
+    if(mouse.isButtonPressed(b) && !last)
+    {
+        last = true;
+
+        return true;
+    }
+
+    if(!mouse.isButtonPressed(b))
+    {
+        last = false;
+    }
+
+    return false;
+}
+
+#define ONCE_MACRO(x) once<x, __LINE__, __COUNTER__>()
+
 int main()
 {
     sf::ContextSettings sett;
@@ -57,7 +103,7 @@ int main()
 
     laser.add_on_use(component_info::CAPACITOR, -10);
 
-    laser.info[3].held = 0;
+    //laser.info[3].held = 0;
 
     sensor.add(component_info::POWER, -1);
     sensor.add(component_info::SENSORS, 1);
@@ -175,6 +221,10 @@ int main()
 
         ImGui::End();
 
+        if(ONCE_MACRO(sf::Keyboard::Space))
+        {
+            test_ship.fire();
+        }
 
         test_ship.advanced_ship_display();
 

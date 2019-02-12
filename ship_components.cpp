@@ -681,3 +681,14 @@ void ship::render(sf::RenderWindow& window)
 
     e.render(window);
 }
+
+void ship::fire()
+{
+    for(component& c : components)
+    {
+        if(c.has(component_info::WEAPONS))
+        {
+            c.try_use = true;
+        }
+    }
+}

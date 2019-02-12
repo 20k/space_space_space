@@ -161,6 +161,8 @@ struct ship
     void apply_force(vec2f dir);
     void apply_rotation_force(float force);
 
+    void fire();
+
     double data_track_elapsed_s = 0;
 
     entity e;
