@@ -163,6 +163,11 @@ int main()
 
     test_ship->position = {400, 400};
 
+    ship* test_ship2 = entities.make_new<ship>(*test_ship);
+
+    test_ship2->position = {600, 400};
+
+
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
 

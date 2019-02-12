@@ -169,6 +169,8 @@ struct ship : entity
 struct projectile : entity
 {
     projectile();
+
+    void on_collide(entity_manager& em, entity& other) override;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

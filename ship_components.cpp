@@ -24,6 +24,8 @@ ship::ship()
         i = {0.5, 1, 0.5};
     }
 
+    scale = 4;
+
     vert_cols[3] = {1, 0.2, 0.2};
 
     drag = true;
@@ -704,4 +706,9 @@ void ship::fire()
 projectile::projectile()
 {
     init_rectangular({0.2, 1});
+}
+
+void projectile::on_collide(entity_manager& em, entity& other)
+{
+    std::cout << "hi there\n";
 }
