@@ -72,7 +72,6 @@ void entity::tick_phys(double dt_s)
 void entity::render(sf::RenderWindow& window)
 {
     float thickness = 0.75f;
-    float scale = 2;
 
     //vec3f lcol = col * 255.f;
 
@@ -118,4 +117,57 @@ void entity::render(sf::RenderWindow& window)
 
         window.draw(v, 4, sf::Quads);
     }
+}
+
+
+vec2f entity::get_world_pos(int id)
+{
+    return (vec2f){cosf(vert_angle[id] + rotation), sinf(vert_angle[id] + rotation)} * vert_dist[id] * scale + position;
+}
+
+bool entity::point_within(vec2f point)
+{
+    int lside = 0;
+    int rside = 0;
+
+    //debug_circle->setPosition(point.x(), point.y());
+    //debug_window->draw(*debug_circle);
+
+    vec2f last_pos = get_world_pos(0);
+
+    for(int i=0; i < (int)vert_dist.size(); i++)
+    {
+        int cur = i;
+        int next = (i + 1) % (int)vert_dist.size();
+
+        vec2f p1 = last_pos;
+        vec2f p2 = get_world_pos(next);
+
+        last_pos = p2;
+
+        //debug_circle->setPosition(p1.x(), p1.y());
+        //debug_window->draw(*debug_circle);
+        //debug_circle->setPosition(p2.x(), p2.y());
+        //debug_window->draw(*debug_circle);
+
+        if(is_left_side(p1, p2, point))
+        {
+            lside++;
+        }
+        else
+        {
+            rside++;
+        }
+
+        if(lside != 0 && rside != 0)
+            return false;
+    }
+
+    if(lside > 0 && rside == 0)
+        return true;
+
+    if(rside > 0 && lside == 0)
+        return true;
+
+    return false;
 }

@@ -34,6 +34,11 @@ struct entity
 
     double angular_drag = M_PI/8;
     double velocity_drag = angular_drag * 20;
+
+    float scale = 2;
+
+    vec2f get_world_pos(int vertex_id);
+    bool point_within(vec2f point);
 };
 
 #endif // ENTITY_HPP_INCLUDED
