@@ -17,16 +17,16 @@ ship::ship()
 
     vec2f dim = {1, 2};
 
-    e.init_rectangular(dim);
+    init_rectangular(dim);
 
-    for(auto& i : e.vert_cols)
+    for(auto& i : vert_cols)
     {
         i = {0.5, 1, 0.5};
     }
 
-    e.vert_cols[3] = {1, 0.2, 0.2};
+    vert_cols[3] = {1, 0.2, 0.2};
 
-    e.drag = true;
+    drag = true;
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -643,15 +643,15 @@ void ship::advanced_ship_display()
 
 void ship::apply_force(vec2f dir)
 {
-    e.control_force += dir.rot(e.rotation);
+    control_force += dir.rot(rotation);
 }
 
 void ship::apply_rotation_force(float force)
 {
-    e.control_angular_force += force;
+    control_angular_force += force;
 }
 
-void ship::tick_move(double dt_s)
+void ship::tick_pre_phys(double dt_s)
 {
     double thrust = get_produced(dt_s, last_sat_percentage)[component_info::THRUST] * 1000;
 
@@ -660,10 +660,11 @@ void ship::tick_move(double dt_s)
     ///so to convert from angular to velocity multiply by this
     double velocity_thrust_ratio = 20;
 
-    e.apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
-    e.tick_phys(dt_s);
+    apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
+    //e.tick_phys(dt_s);
 }
 
+#if 0
 void ship::render(sf::RenderWindow& window)
 {
     /*sf::RectangleShape shape;
@@ -681,6 +682,7 @@ void ship::render(sf::RenderWindow& window)
 
     e.render(window);
 }
+#endif // 0
 
 void ship::fire()
 {

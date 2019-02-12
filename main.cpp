@@ -4,6 +4,7 @@
 #include <imgui-sfml/imgui-SFML.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 #include "ship_components.hpp"
+#include "entity.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -80,7 +81,9 @@ int main()
 
     assert(font != nullptr);
 
-    ship test_ship;
+    entity_manager entities;
+
+    ship* test_ship = entities.make_new<ship>();
 
     component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
 
@@ -145,20 +148,20 @@ int main()
     crew.add(component_info::CREW, -0.01); ///passive death on no o2
 
 
-    test_ship.add(thruster);
-    test_ship.add(warp);
-    test_ship.add(shields);
-    test_ship.add(laser);
-    test_ship.add(sensor);
-    test_ship.add(comms);
+    test_ship->add(thruster);
+    test_ship->add(warp);
+    test_ship->add(shields);
+    test_ship->add(laser);
+    test_ship->add(sensor);
+    test_ship->add(comms);
     //test_ship.add(sysrepair);
-    test_ship.add(armour);
-    test_ship.add(ls);
-    test_ship.add(coolant);
-    test_ship.add(power_generator);
-    test_ship.add(crew);
+    test_ship->add(armour);
+    test_ship->add(ls);
+    test_ship->add(coolant);
+    test_ship->add(power_generator);
+    test_ship->add(crew);
 
-    test_ship.e.position = {400, 400};
+    test_ship->position = {400, 400};
 
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
@@ -198,12 +201,15 @@ int main()
         angular_vel += key.isKeyPressed(sf::Keyboard::D);
         angular_vel -= key.isKeyPressed(sf::Keyboard::A);
 
-        test_ship.apply_force({0, forward_vel});
-        test_ship.apply_rotation_force(angular_vel);
+        test_ship->apply_force({0, forward_vel});
+        test_ship->apply_rotation_force(angular_vel);
 
-        test_ship.tick(frametime_dt);
-        test_ship.tick_move(frametime_dt);
-        test_ship.render(window);
+        //test_ship.tick(frametime_dt);
+        //test_ship.tick_move(frametime_dt);
+        //test_ship.render(window);
+
+        entities.tick(frametime_dt);
+        entities.render(window);
 
         ImGui::Begin("Hi");
 
@@ -217,16 +223,16 @@ int main()
 
         //ImGui::Text(str.c_str());
 
-        ImGui::Text(test_ship.show_resources().c_str());
+        ImGui::Text(test_ship->show_resources().c_str());
 
         ImGui::End();
 
         if(ONCE_MACRO(sf::Keyboard::Space))
         {
-            test_ship.fire();
+            test_ship->fire();
         }
 
-        test_ship.advanced_ship_display();
+        test_ship->advanced_ship_display();
 
         ImGui::SFML::Render(window);
         window.display();

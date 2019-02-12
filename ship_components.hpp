@@ -111,7 +111,7 @@ struct data_tracker
     void add(double sat, double held);
 };
 
-struct ship
+struct ship : entity
 {
     std::vector<component> components;
 
@@ -119,9 +119,9 @@ struct ship
 
     ship();
 
-    void tick(double dt_s);
-    void tick_move(double dt_s);
-    void render(sf::RenderWindow& win);
+    void tick(double dt_s) override;
+    void tick_pre_phys(double dt_s) override;
+    //void render(sf::RenderWindow& win);
 
     void add(const component& c);
 
@@ -165,7 +165,7 @@ struct ship
 
     double data_track_elapsed_s = 0;
 
-    entity e;
+    //entity e;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

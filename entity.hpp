@@ -29,7 +29,9 @@ struct entity
 
     bool drag = false;
 
+    virtual void tick(double dt_s) {};
     void tick_phys(double dt_s);
+    virtual void tick_pre_phys(double dt_s){}
     void apply_inputs(double dt_s, double velocity_mult, double angular_mult);
 
     double angular_drag = M_PI/8;
@@ -39,6 +41,47 @@ struct entity
 
     vec2f get_world_pos(int vertex_id);
     bool point_within(vec2f point);
+};
+
+struct entity_manager
+{
+    std::vector<entity*> entities;
+
+    template<typename T, typename... U>
+    T* make_new(U&&... u)
+    {
+        T* e = new T(std::forward<U>(u)...);
+
+        entities.push_back(e);
+
+        return e;
+    }
+
+    void tick(double dt_s)
+    {
+        for(entity* e : entities)
+        {
+            e->tick(dt_s);
+        }
+
+        for(entity* e : entities)
+        {
+            e->tick_pre_phys(dt_s);
+        }
+
+        for(entity* e : entities)
+        {
+            e->tick_phys(dt_s);
+        }
+    }
+
+    void render(sf::RenderWindow& window)
+    {
+        for(entity* e : entities)
+        {
+            e->render(window);
+        }
+    }
 };
 
 #endif // ENTITY_HPP_INCLUDED
