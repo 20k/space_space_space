@@ -148,6 +148,9 @@ int main()
 
         ImGui::End();
 
+
+        test_ship.advanced_ship_display();
+
         ImGui::SFML::Render(window);
         window.display();
         window.clear();

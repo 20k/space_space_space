@@ -64,7 +64,7 @@ std::string format(std::string to_format, const std::vector<std::string>& all_st
 
     for(auto& i : all_strings)
     {
-        if(i.length() > len)
+        if((int)i.length() > len)
             len = i.length();
     }
 
@@ -84,7 +84,7 @@ std::string obfuscate(const std::string& str, bool should_obfuscate)
 
     std::string ret = str;
 
-    for(int i=0; i<ret.length(); i++)
+    for(int i=0; i<(int)ret.length(); i++)
     {
         if(isalnum(ret[i]))
         {

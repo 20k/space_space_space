@@ -4,6 +4,8 @@
 #include <math.h>
 #include "format.hpp"
 #include <iostream>
+#include <imgui/imgui.h>
+#include "imGuiX.h"
 
 ship::ship()
 {
@@ -285,6 +287,28 @@ std::vector<double> ship::get_sat_percentage()
     return sats;
 }
 
+template<typename T>
+void add_to_vector(double val, T& in, int max_data)
+{
+    in.push_back(val);
+
+    while((int)in.size() < max_data)
+    {
+        in.insert(in.begin(), 0);
+    }
+
+    while((int)in.size() > max_data)
+    {
+        in.erase(in.begin());
+    }
+}
+
+void data_tracker::add(double sat, double held)
+{
+    add_to_vector(sat, vsat, max_data);
+    add_to_vector(held, vheld, max_data);
+}
+
 void ship::tick(double dt_s)
 {
     std::vector<double> resource_status = sum<double>([](component& c)
@@ -320,6 +344,33 @@ void ship::tick(double dt_s)
     }
 
     last_sat_percentage = all_sat;
+
+
+
+    data_track_elapsed_s += dt_s;
+
+    double time_between_datapoints_s = 0.1;
+
+    if(data_track_elapsed_s >= time_between_datapoints_s)
+    {
+        std::vector<component_info::does_type> tracked
+        {
+            component_info::WARP,
+            component_info::SHIELDS,
+            component_info::COOLANT,
+            component_info::POWER,
+        };
+
+        for(auto& type : tracked)
+        {
+            double held = resource_status[type];
+            double sat = all_sat[type];
+
+            data_track[type].add(sat, held);
+        }
+
+        data_track_elapsed_s -= time_between_datapoints_s;
+    }
 }
 
 void ship::add(const component& c)
@@ -434,4 +485,47 @@ std::string ship::show_resources()
     }
 
     return ret;
+}
+
+std::vector<double> ship::get_capacity()
+{
+    return sum<double>
+           ([](component& c)
+           {
+              return c.get_capacity();
+           });
+}
+
+void ship::advanced_ship_display()
+{
+    ImGui::Begin("Advanced Ship");
+
+    for(auto& i : data_track)
+    {
+        if(i.second.vsat.size() == 0)
+            continue;
+
+        std::string name_1 = component_info::dname[i.first];
+        std::string name_2 = component_info::dname[i.first];
+
+        std::vector<std::string> names{name_1, name_2};
+
+        std::string label = "hi";
+
+        std::vector<ImColor> cols;
+
+        cols.push_back(ImColor(255, 128, 128, 255));
+        cols.push_back(ImColor(128, 128, 255, 255));
+
+        ImGuiX::PlotMultiEx(ImGuiPlotType_Lines, label.c_str(), names, cols, {i.second.vsat, i.second.vheld}, 0, 1, ImVec2(0,0));
+
+        //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, 1);
+        //ImGui::PlotLines(name_1.c_str(), &i.second.vsat[0], i.second.vsat.size(), 0, nullptr, 0, 1);
+
+        //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
+
+        //ImGui::PlotLines(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
+    }
+
+    ImGui::End();
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace component_info
 {
@@ -83,9 +84,20 @@ struct component
     void deplete_me(std::vector<double>& diff);
 };
 
+struct data_tracker
+{
+    std::vector<float> vsat;
+    std::vector<float> vheld;
+    int max_data = 500;
+
+    void add(double sat, double held);
+};
+
 struct ship
 {
     std::vector<component> components;
+
+    std::map<component_info::does_type, data_tracker> data_track;
 
     ship();
 
@@ -95,6 +107,8 @@ struct ship
 
     std::vector<double> get_sat_percentage();
     std::vector<double> get_produced(double dt_s, const std::vector<double>& sat_in);
+
+    std::vector<double> get_capacity();
 
     std::vector<double> last_sat_percentage;
 
@@ -121,6 +135,10 @@ struct ship
 
         return ret;
     }
+
+    void advanced_ship_display();
+
+    double data_track_elapsed_s = 0;
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED
