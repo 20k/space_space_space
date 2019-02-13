@@ -25,12 +25,16 @@ struct client_renderable : serialisable
 
     void serialise(nlohmann::json& data, bool encode)
     {
+        //if(!encode)
+
         DO_SERIALISE(position);
         DO_SERIALISE(rotation);
 
         DO_SERIALISE(vert_dist);
         DO_SERIALISE(vert_angle);
         DO_SERIALISE(vert_cols);
+        //if(!encode)
+        //    std::cout <<" VCOL " << vert_cols[0].x() << std::endl;
 
         DO_SERIALISE(approx_rad);
         DO_SERIALISE(scale);
@@ -91,7 +95,7 @@ struct entity : serialisable
 
 bool collides(entity& e1, entity& e2);
 
-struct entity_manager
+struct entity_manager : serialisable
 {
     std::vector<entity*> entities;
 
@@ -181,11 +185,23 @@ struct entity_manager
             }
         }
     }
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(entities);
+    }
 };
 
-struct client_entities
+struct client_entities : serialisable
 {
-    std::vector<client_renderable> renderables;
+    std::vector<client_renderable> entities;
+
+    void render(sf::RenderWindow& win);
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(entities);
+    }
 };
 
 #endif // ENTITY_HPP_INCLUDED

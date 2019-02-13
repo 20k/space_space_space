@@ -24,7 +24,7 @@ ship::ship()
         i = {0.5, 1, 0.5};
     }
 
-    r.scale = 4;
+    r.scale = 2;
 
     r.vert_cols[3] = {1, 0.2, 0.2};
 

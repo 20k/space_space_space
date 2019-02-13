@@ -214,3 +214,11 @@ bool entity::point_within(vec2f point)
 
     return false;
 }
+
+void client_entities::render(sf::RenderWindow& win)
+{
+    for(client_renderable& i : entities)
+    {
+        i.render(win);
+    }
+}

@@ -6,6 +6,7 @@
 #include "ship_components.hpp"
 #include "entity.hpp"
 #include <windows.h>
+#include <networking/networking.hpp>
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -55,6 +56,9 @@ bool once()
 
 void server_thread()
 {
+    connection conn;
+    conn.host("127.0.0.1", 11000);
+
     entity_manager entities;
 
     ship* test_ship = entities.make_new<ship>();
@@ -154,12 +158,24 @@ void server_thread()
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;
 
+        /*nlohmann::json dat;
+        entities.serialise(dat, true);*/
+
+        auto clients = conn.clients();
+
+        for(auto& i : clients)
+        {
+            conn.writes_to(entities, i);
+        }
+
         Sleep(10);
     }
 }
 
 int main()
 {
+    std::thread(server_thread).detach();
+
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
 
@@ -277,6 +293,10 @@ int main()
     test_ship2->position = {600, 400};
     #endif // 0
 
+    connection conn;
+    conn.connect("127.0.0.1", 11000);
+
+    client_entities renderables;
 
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
@@ -305,6 +325,14 @@ int main()
         }
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
+
+        if(conn.has_read())
+        {
+            renderables = conn.reads_from<client_entities>().data;
+            conn.pop_read();
+        }
+
+        renderables.render(window);
 
         #if 0
         float forward_vel = 0;
