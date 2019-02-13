@@ -481,7 +481,16 @@ int main()
         test_ship->advanced_ship_display();
         #endif // 0
 
+        for(ship& s : model.ships)
+        {
+            ImGui::Begin(std::to_string(s.network_owner).c_str());
 
+            ImGui::Text(s.show_resources().c_str());
+
+            ImGui::End();
+
+            s.advanced_ship_display();
+        }
 
         ImGui::SFML::Render(window);
         window.display();

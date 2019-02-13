@@ -200,6 +200,7 @@ struct ship : virtual entity, virtual serialisable
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
+        DO_SERIALISE(network_owner);
         DO_SERIALISE(components);
         DO_SERIALISE(last_sat_percentage);
     }
