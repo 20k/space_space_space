@@ -74,8 +74,11 @@ void client_renderable::init_rectangular(vec2f dim)
 
 void entity::apply_inputs(double dt_s, double velocity_mult, double angular_mult)
 {
-    velocity += control_force * dt_s * velocity_mult;
-    angular_velocity += control_angular_force * dt_s * angular_mult;
+    //velocity += control_force * dt_s * velocity_mult;
+    //angular_velocity += control_angular_force * dt_s * angular_mult;
+
+    velocity += control_force * velocity_mult;
+    angular_velocity += control_angular_force * angular_mult;
 
     control_force = {0,0};
     control_angular_force = 0;

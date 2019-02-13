@@ -152,6 +152,8 @@ void server_thread()
 
     sf::Clock clk;
 
+    std::map<uint64_t, sf::Clock> control_elapsed;
+
     while(1)
     {
         entities.tick(frametime_dt);
@@ -179,8 +181,10 @@ void server_thread()
 
                 if(s && s->network_owner == read.id)
                 {
-                    s->apply_force(read.data.direction);
-                    s->apply_rotation_force(read.data.rotation);
+                    double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
+
+                    s->apply_force(read.data.direction * time);
+                    s->apply_rotation_force(read.data.rotation * time);
                 }
             }
 
@@ -365,7 +369,7 @@ int main()
         angular_vel += key.isKeyPressed(sf::Keyboard::D);
         angular_vel -= key.isKeyPressed(sf::Keyboard::A);
 
-        cinput.direction = {0, forward_vel};
+        cinput.direction = (vec2f){0, forward_vel};
         cinput.rotation = angular_vel;
 
         //std::cout << cinput.direction << std::endl;
