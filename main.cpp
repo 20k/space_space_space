@@ -361,6 +361,8 @@ int main()
         ImGui::SFML::Render(window);
         window.display();
         window.clear();
+
+        //Sleep(1);
     }
 
     return 0;

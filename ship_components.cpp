@@ -662,7 +662,7 @@ void ship::apply_rotation_force(float force)
 
 void ship::tick_pre_phys(double dt_s)
 {
-    double thrust = get_produced(dt_s, last_sat_percentage)[component_info::THRUST] * 1000;
+    double thrust = get_produced(1, last_sat_percentage)[component_info::THRUST] * 2;
 
     //std::cout << "thrust " << thrust << std::endl;
 
