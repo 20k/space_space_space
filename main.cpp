@@ -185,6 +185,11 @@ void server_thread()
 
                     s->apply_force(read.data.direction * time);
                     s->apply_rotation_force(read.data.rotation * time);
+
+                    if(read.data.fired)
+                    {
+                        s->fire();
+                    }
                 }
             }
 
@@ -371,6 +376,11 @@ int main()
 
         cinput.direction = (vec2f){0, forward_vel};
         cinput.rotation = angular_vel;
+
+        if(ONCE_MACRO(sf::Keyboard::Space))
+        {
+            cinput.fired = true;
+        }
 
         //std::cout << cinput.direction << std::endl;
 
