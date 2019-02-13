@@ -127,6 +127,8 @@ struct data_tracker
 
 struct ship : entity
 {
+    size_t network_owner = 0;
+
     std::vector<component> components;
 
     std::map<component_info::does_type, data_tracker> data_track;

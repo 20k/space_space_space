@@ -204,4 +204,16 @@ struct client_entities : serialisable
     }
 };
 
+struct client_input : serialisable
+{
+    vec2f direction = {0,0};
+    float rotation = 0;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(direction);
+        DO_SERIALISE(rotation);
+    }
+};
+
 #endif // ENTITY_HPP_INCLUDED

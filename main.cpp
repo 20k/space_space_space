@@ -144,6 +144,7 @@ void server_thread()
     test_ship->r.position = {400, 400};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
+    test_ship2->network_owner = 1;
 
     test_ship2->r.position = {600, 400};
 
@@ -166,6 +167,24 @@ void server_thread()
         for(auto& i : clients)
         {
             conn.writes_to(entities, i);
+        }
+
+        while(conn.has_read())
+        {
+            writes_data<client_input> read = conn.reads_from<client_input>();
+
+            for(entity* e : entities.entities)
+            {
+                ship* s = dynamic_cast<ship*>(e);
+
+                if(s && s->network_owner == read.id)
+                {
+                    s->apply_force(read.data.direction);
+                    s->apply_rotation_force(read.data.rotation);
+                }
+            }
+
+            conn.pop_read();
         }
 
         Sleep(10);
@@ -334,6 +353,31 @@ int main()
 
         renderables.render(window);
 
+        client_input cinput;
+
+        float forward_vel = 0;
+
+        forward_vel += key.isKeyPressed(sf::Keyboard::W);
+        forward_vel -= key.isKeyPressed(sf::Keyboard::S);
+
+        float angular_vel = 0;
+
+        angular_vel += key.isKeyPressed(sf::Keyboard::D);
+        angular_vel -= key.isKeyPressed(sf::Keyboard::A);
+
+        cinput.direction = {0, forward_vel};
+        cinput.rotation = angular_vel;
+
+        //std::cout << cinput.direction << std::endl;
+
+        conn.writes_to(cinput, -1);
+
+        //nlohmann::json testdat = serialise(cinput);
+
+        //std::cout << "writing " << testdat.dump() << std::endl;
+
+        //conn.write_to({(uint64_t)-1, testdat.dump()});
+
         #if 0
         float forward_vel = 0;
 
@@ -396,7 +440,7 @@ int main()
         window.display();
         window.clear();
 
-        //Sleep(1);
+        Sleep(10);
     }
 
     return 0;
