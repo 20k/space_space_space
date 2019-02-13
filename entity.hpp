@@ -44,7 +44,7 @@ struct client_renderable : serialisable
     void render(sf::RenderWindow& window);
 };
 
-struct entity : serialisable
+struct entity : virtual serialisable
 {
     size_t id = 0;
     bool cleanup = false;
@@ -80,7 +80,7 @@ struct entity : serialisable
 
     virtual ~entity(){}
 
-    void serialise(nlohmann::json& data, bool encode)
+    void serialise(nlohmann::json& data, bool encode) override
     {
         /*DO_SERIALISE(position);
         DO_SERIALISE(rotation);

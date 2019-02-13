@@ -51,16 +51,24 @@ namespace component_info
     };
 }
 
-struct does
+struct does : serialisable
 {
     double capacity = 0;
     double held = 0;
     double recharge = 0;
 
     component_info::does_type type = component_info::COUNT;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(capacity);
+        DO_SERIALISE(held);
+        DO_SERIALISE(recharge);
+        DO_SERIALISE(type);
+    }
 };
 
-struct component
+struct component : serialisable
 {
     std::vector<does> info;
     std::vector<does> activate_requirements;
@@ -68,6 +76,14 @@ struct component
     std::string long_name;
 
     double last_sat = 1;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(info);
+        DO_SERIALISE(activate_requirements);
+        DO_SERIALISE(long_name);
+        DO_SERIALISE(last_sat);
+    }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
     void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);
@@ -125,7 +141,7 @@ struct data_tracker
     void add(double sat, double held);
 };
 
-struct ship : entity
+struct ship : virtual entity, virtual serialisable
 {
     size_t network_owner = 0;
 
@@ -181,6 +197,12 @@ struct ship : entity
     void take_damage(double amount);
 
     double data_track_elapsed_s = 0;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(components);
+        DO_SERIALISE(last_sat_percentage);
+    }
 };
 
 struct projectile : entity
@@ -188,6 +210,18 @@ struct projectile : entity
     projectile();
 
     void on_collide(entity_manager& em, entity& other) override;
+};
+
+struct data_model : serialisable
+{
+    std::vector<ship> ships;
+    std::vector<client_renderable> renderables;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(ships);
+        DO_SERIALISE(renderables);
+    }
 };
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

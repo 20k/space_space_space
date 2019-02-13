@@ -57,7 +57,9 @@ bool once()
 void server_thread()
 {
     connection conn;
-    conn.host("127.0.0.1", 11000);
+    conn.host("192.168.0.54", 11000);
+
+    data_model model;
 
     entity_manager entities;
 
@@ -164,12 +166,12 @@ void server_thread()
         /*nlohmann::json dat;
         entities.serialise(dat, true);*/
 
-        auto clients = conn.clients();
+        /*auto clients = conn.clients();
 
         for(auto& i : clients)
         {
             conn.writes_to(entities, i);
-        }
+        }*/
 
         while(conn.has_read())
         {
@@ -194,6 +196,32 @@ void server_thread()
             }
 
             conn.pop_read();
+        }
+
+        std::vector<ship> ships;
+        std::vector<client_renderable> renderables;
+
+        for(entity* e : entities.entities)
+        {
+            ship* s = dynamic_cast<ship*>(e);
+
+            if(s)
+            {
+                ships.push_back(*s);
+            }
+
+            renderables.push_back(e->r);
+        }
+
+
+        model.ships = ships;
+        model.renderables = renderables;
+
+        auto clients = conn.clients();
+
+        for(auto& i : clients)
+        {
+            conn.writes_to(model, i);
         }
 
         Sleep(10);
@@ -322,8 +350,9 @@ int main()
     #endif // 0
 
     connection conn;
-    conn.connect("127.0.0.1", 11000);
+    conn.connect("192.168.0.54", 11000);
 
+    data_model model;
     client_entities renderables;
 
     sf::Clock imgui_delta;
@@ -356,8 +385,12 @@ int main()
 
         while(conn.has_read())
         {
-            renderables = conn.reads_from<client_entities>().data;
+            //std::cout << conn.read() << std::endl;
+            model = conn.reads_from<data_model>().data;
+            //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
+
+            renderables.entities = model.renderables;
         }
 
         renderables.render(window);
