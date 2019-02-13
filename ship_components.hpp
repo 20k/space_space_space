@@ -7,6 +7,8 @@
 #include <vec/vec.hpp>
 
 #include "entity.hpp"
+#include "networking/networking.hpp"
+#include <memory>
 
 namespace sf
 {
@@ -132,13 +134,20 @@ struct component : serialisable
     bool try_use = false;
 };
 
-struct data_tracker
+struct data_tracker : serialisable
 {
-    std::vector<float> vsat;
-    std::vector<float> vheld;
+    delta_container<std::vector<float>> vsat;
+    delta_container<std::vector<float>> vheld;
     int max_data = 500;
 
     void add(double sat, double held);
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(vsat);
+        DO_SERIALISE(vheld);
+        DO_SERIALISE(max_data);
+    }
 };
 
 struct ship : virtual entity, virtual serialisable
@@ -147,7 +156,12 @@ struct ship : virtual entity, virtual serialisable
 
     std::vector<component> components;
 
-    std::map<component_info::does_type, data_tracker> data_track;
+    //std::map<component_info::does_type, data_tracker> data_track;
+
+    ///so we want a diff wrapper type
+    //std::vector<data_tracker> data_track;
+
+    persistent<std::vector<data_tracker>> data_track;
 
     ship();
 
@@ -200,6 +214,7 @@ struct ship : virtual entity, virtual serialisable
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
+        DO_SERIALISE(data_track);
         DO_SERIALISE(network_owner);
         DO_SERIALISE(components);
         DO_SERIALISE(last_sat_percentage);
@@ -213,9 +228,10 @@ struct projectile : entity
     void on_collide(entity_manager& em, entity& other) override;
 };
 
+template<typename T>
 struct data_model : serialisable
 {
-    std::vector<ship> ships;
+    std::vector<T> ships;
     std::vector<client_renderable> renderables;
 
     virtual void serialise(nlohmann::json& data, bool encode) override

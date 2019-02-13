@@ -59,7 +59,7 @@ void server_thread()
     connection conn;
     conn.host("192.168.0.54", 11000);
 
-    data_model model;
+    data_model<ship*> model;
 
     entity_manager entities;
 
@@ -146,9 +146,12 @@ void server_thread()
     test_ship->r.position = {400, 400};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
+    //test_ship2->data_track.pid = get_next_persistent_id();
+    std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
     test_ship2->network_owner = 1;
 
     test_ship2->r.position = {600, 400};
+
 
     double frametime_dt = 1;
 
@@ -198,7 +201,7 @@ void server_thread()
             conn.pop_read();
         }
 
-        std::vector<ship> ships;
+        std::vector<ship*> ships;
         std::vector<client_renderable> renderables;
 
         for(entity* e : entities.entities)
@@ -207,12 +210,11 @@ void server_thread()
 
             if(s)
             {
-                ships.push_back(*s);
+                ships.push_back(s);
             }
 
             renderables.push_back(e->r);
         }
-
 
         model.ships = ships;
         model.renderables = renderables;
@@ -352,13 +354,15 @@ int main()
     connection conn;
     conn.connect("192.168.0.54", 11000);
 
-    data_model model;
+    data_model<ship> model;
     client_entities renderables;
 
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
 
     sf::Keyboard key;
+
+    std::map<uint64_t, ship> network_ships;
 
     while(window.isOpen())
     {
@@ -386,7 +390,7 @@ int main()
         while(conn.has_read())
         {
             //std::cout << conn.read() << std::endl;
-            model = conn.reads_from<data_model>().data;
+            model = conn.reads_from<data_model<ship>>().data;
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
 

@@ -29,6 +29,8 @@ ship::ship()
     r.vert_cols[3] = {1, 0.2, 0.2};
 
     drag = true;
+
+    data_track->resize(component_info::COUNT);
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -340,12 +342,13 @@ std::vector<double> ship::get_sat_percentage()
 template<typename T>
 void add_to_vector(double val, T& in, int max_data)
 {
-    in.push_back(val);
-
-    while((int)in.size() < max_data)
+    while((int)in.size() < max_data - 1)
     {
-        in.insert(in.begin(), 0);
+        in.push_back(0);
+        //in.insert(in.begin(), 0);
     }
+
+    in.push_back(val);
 
     while((int)in.size() > max_data)
     {
@@ -416,7 +419,6 @@ void ship::tick(double dt_s)
     last_sat_percentage = all_sat;
 
 
-
     data_track_elapsed_s += dt_s;
 
     double time_between_datapoints_s = 0.1;
@@ -437,7 +439,9 @@ void ship::tick(double dt_s)
             double held = resource_status[type];
             double sat = all_sat[type];
 
-            data_track[type].add(sat, held);
+            //std::cout << "dtrack size " << (*data_track).size() << std::endl;
+
+            (*data_track)[type].add(sat, held);
         }
 
         data_track_elapsed_s -= time_between_datapoints_s;
@@ -571,9 +575,10 @@ void ship::advanced_ship_display()
 {
     ImGui::Begin("Advanced Ship");
 
+    #if 0
     for(auto& i : data_track)
     {
-        if(i.second.vsat.size() == 0)
+        if(i.vsat.size() == 0)
             continue;
 
         /*std::string name_1 = component_info::dname[i.first];
@@ -597,39 +602,44 @@ void ship::advanced_ship_display()
 
         //ImGui::PlotLines(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
     }
+    #endif // 0
 
     ImGui::Columns(2);
 
     ImGui::Text("Stored");
 
-    for(auto& i : data_track)
+    //for(auto& i : data_track)
+
+    for(int kk=0; kk < (int)data_track->size(); kk++)
     {
-        if(i.second.vheld.size() == 0)
+        if((*data_track)[kk].vheld.size() == 0)
             continue;
 
-        std::string name_1 = component_info::dname[i.first];
+        std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &i.second.vheld[0], i.second.vheld.size(), 0, nullptr, 0, get_capacity()[i.first], ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(*data_track)[kk].vheld[0], (*data_track)[kk].vheld.size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
     }
 
     ImGui::NextColumn();
 
     ImGui::Text("Satisfied");
 
-    for(auto& i : data_track)
+    //for(auto& i : data_track)
+
+    for(int kk=0; kk < (int)data_track->size(); kk++)
     {
-        if(i.second.vsat.size() == 0)
+        if((*data_track)[kk].vsat.size() == 0)
             continue;
 
-        if(i.first == component_info::CAPACITOR)
+        if(kk == component_info::CAPACITOR)
         {
             ImGui::NewLine();
             continue;
         }
 
-        std::string name_1 = component_info::dname[i.first];
+        std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &i.second.vsat[0], i.second.vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(*data_track)[kk].vsat[0], (*data_track)[kk].vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
     }
 
     ImGui::EndColumns();
