@@ -349,7 +349,7 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
-        if(conn.has_read())
+        while(conn.has_read())
         {
             renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
