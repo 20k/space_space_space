@@ -137,11 +137,11 @@ void server_thread()
     test_ship->add(power_generator);
     test_ship->add(crew);
 
-    test_ship->position = {400, 400};
+    test_ship->r.position = {400, 400};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
 
-    test_ship2->position = {600, 400};
+    test_ship2->r.position = {600, 400};
 
     double frametime_dt = 1;
 
@@ -187,6 +187,7 @@ int main()
 
     assert(font != nullptr);
 
+    #if 0
     entity_manager entities;
 
     ship* test_ship = entities.make_new<ship>();
@@ -274,6 +275,7 @@ int main()
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
 
     test_ship2->position = {600, 400};
+    #endif // 0
 
 
     sf::Clock imgui_delta;
@@ -304,6 +306,7 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
+        #if 0
         float forward_vel = 0;
 
         forward_vel += key.isKeyPressed(sf::Keyboard::W);
@@ -357,6 +360,9 @@ int main()
         }
 
         test_ship->advanced_ship_display();
+        #endif // 0
+
+
 
         ImGui::SFML::Render(window);
         window.display();

@@ -17,16 +17,16 @@ ship::ship()
 
     vec2f dim = {1, 2};
 
-    init_rectangular(dim);
+    r.init_rectangular(dim);
 
-    for(auto& i : vert_cols)
+    for(auto& i : r.vert_cols)
     {
         i = {0.5, 1, 0.5};
     }
 
-    scale = 4;
+    r.scale = 4;
 
-    vert_cols[3] = {1, 0.2, 0.2};
+    r.vert_cols[3] = {1, 0.2, 0.2};
 
     drag = true;
 }
@@ -389,9 +389,9 @@ void ship::tick(double dt_s)
                 c.use(next_resource_status);
 
                 projectile* l = parent->make_new<projectile>();
-                l->position = position;
-                l->rotation = rotation;
-                l->velocity = (vec2f){0, 1}.rot(rotation) * 100;
+                l->r.position = r.position;
+                l->r.rotation = r.rotation;
+                l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
                 //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
                 l->phys_ignore.push_back(id);
             }
@@ -652,7 +652,7 @@ void ship::advanced_ship_display()
 
 void ship::apply_force(vec2f dir)
 {
-    control_force += dir.rot(rotation);
+    control_force += dir.rot(r.rotation);
 }
 
 void ship::apply_rotation_force(float force)
@@ -780,7 +780,7 @@ void ship::fire()
 
 projectile::projectile()
 {
-    init_rectangular({0.2, 1});
+    r.init_rectangular({0.2, 1});
 }
 
 void projectile::on_collide(entity_manager& em, entity& other)

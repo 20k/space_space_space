@@ -15,7 +15,7 @@ bool collides(entity& e1, entity& e2)
             return false;
     }
 
-    for(int i=0; i < (int)e1.vert_dist.size(); i++)
+    for(int i=0; i < (int)e1.r.vert_dist.size(); i++)
     {
         vec2f p = e1.get_world_pos(i);
 
@@ -25,10 +25,10 @@ bool collides(entity& e1, entity& e2)
         }
     }
 
-    if(e2.point_within(e1.position))
+    if(e2.point_within(e1.r.position))
         return true;
 
-    for(int i=0; i < (int)e2.vert_dist.size(); i++)
+    for(int i=0; i < (int)e2.r.vert_dist.size(); i++)
     {
         vec2f p = e2.get_world_pos(i);
 
@@ -38,13 +38,13 @@ bool collides(entity& e1, entity& e2)
         }
     }
 
-    if(e1.point_within(e2.position))
+    if(e1.point_within(e2.r.position))
         return true;
 
     return false;
 }
 
-void entity::init_rectangular(vec2f dim)
+void client_renderable::init_rectangular(vec2f dim)
 {
     float corner_rads = dim.length();
 
@@ -84,8 +84,8 @@ void entity::apply_inputs(double dt_s, double velocity_mult, double angular_mult
 void entity::tick_phys(double dt_s)
 {
     ///need to take into account mass
-    position += velocity * dt_s;
-    rotation += angular_velocity * dt_s;
+    r.position += velocity * dt_s;
+    r.rotation += angular_velocity * dt_s;
 
     if(drag)
     {
@@ -112,7 +112,7 @@ void entity::tick_phys(double dt_s)
     }
 }
 
-void entity::render(sf::RenderWindow& window)
+void client_renderable::render(sf::RenderWindow& window)
 {
     float thickness = 0.75f;
 
@@ -165,7 +165,7 @@ void entity::render(sf::RenderWindow& window)
 
 vec2f entity::get_world_pos(int id)
 {
-    return (vec2f){cosf(vert_angle[id] + rotation), sinf(vert_angle[id] + rotation)} * vert_dist[id] * scale + position;
+    return (vec2f){cosf(r.vert_angle[id] + r.rotation), sinf(r.vert_angle[id] + r.rotation)} * r.vert_dist[id] * r.scale + r.position;
 }
 
 bool entity::point_within(vec2f point)
@@ -178,10 +178,10 @@ bool entity::point_within(vec2f point)
 
     vec2f last_pos = get_world_pos(0);
 
-    for(int i=0; i < (int)vert_dist.size(); i++)
+    for(int i=0; i < (int)r.vert_dist.size(); i++)
     {
         int cur = i;
-        int next = (i + 1) % (int)vert_dist.size();
+        int next = (i + 1) % (int)r.vert_dist.size();
 
         vec2f p1 = last_pos;
         vec2f p2 = get_world_pos(next);

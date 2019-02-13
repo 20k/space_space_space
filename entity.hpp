@@ -11,6 +11,35 @@ namespace sf
 
 struct entity_manager;
 
+struct client_renderable : serialisable
+{
+    vec2f position = {0,0};
+    float rotation = 0;
+
+    std::vector<float> vert_dist;
+    std::vector<float> vert_angle;
+    std::vector<vec3f> vert_cols;
+
+    float approx_rad = 0;
+    float scale = 2;
+
+    void serialise(nlohmann::json& data, bool encode)
+    {
+        DO_SERIALISE(position);
+        DO_SERIALISE(rotation);
+
+        DO_SERIALISE(vert_dist);
+        DO_SERIALISE(vert_angle);
+        DO_SERIALISE(vert_cols);
+
+        DO_SERIALISE(approx_rad);
+        DO_SERIALISE(scale);
+    }
+
+    void init_rectangular(vec2f dim);
+    void render(sf::RenderWindow& window);
+};
+
 struct entity : serialisable
 {
     size_t id = 0;
@@ -19,22 +48,13 @@ struct entity : serialisable
 
     std::vector<size_t> phys_ignore;
 
-    vec2f position = {0,0};
+    client_renderable r;
+
     vec2f velocity = {0,0};
     vec2f control_force = {0,0};
 
-    float rotation = 0;
     float angular_velocity = 0;
     float control_angular_force = 0;
-
-    std::vector<float> vert_dist;
-    std::vector<float> vert_angle;
-    std::vector<vec3f> vert_cols;
-
-    void init_rectangular(vec2f dim);
-    void render(sf::RenderWindow& window);
-
-    float approx_rad = 0;
 
     bool drag = false;
 
@@ -45,8 +65,6 @@ struct entity : serialisable
 
     double angular_drag = M_PI/8;
     double velocity_drag = angular_drag * 20;
-
-    float scale = 2;
 
     vec2f get_world_pos(int vertex_id);
     bool point_within(vec2f point);
@@ -60,14 +78,14 @@ struct entity : serialisable
 
     void serialise(nlohmann::json& data, bool encode)
     {
-        DO_SERIALISE(id);
-        DO_SERIALISE(cleanup);
-        DO_SERIALISE(position);
-        DO_SERIALISE(velocity);
+        /*DO_SERIALISE(position);
+        DO_SERIALISE(rotation);
 
         DO_SERIALISE(vert_dist);
         DO_SERIALISE(vert_angle);
-        DO_SERIALISE(vert_cols);
+        DO_SERIALISE(vert_cols);*/
+
+        r.serialise(data, encode);
     }
 };
 
@@ -113,8 +131,8 @@ struct entity_manager
             if(!entities[i]->collides)
                 continue;
 
-            vec2f p1 = entities[i]->position;
-            float r1 = entities[i]->approx_rad;
+            vec2f p1 = entities[i]->r.position;
+            float r1 = entities[i]->r.approx_rad;
 
             for(int j = 0; j < (int)entities.size(); j++)
             {
@@ -124,8 +142,8 @@ struct entity_manager
                         continue;
                 }
 
-                vec2f p2 = entities[j]->position;
-                float r2 = entities[j]->approx_rad;
+                vec2f p2 = entities[j]->r.position;
+                float r2 = entities[j]->r.approx_rad;
 
                 if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
                     continue;
@@ -143,7 +161,7 @@ struct entity_manager
     {
         for(entity* e : entities)
         {
-            e->render(window);
+            e->r.render(window);
         }
     }
 
@@ -163,6 +181,11 @@ struct entity_manager
             }
         }
     }
+};
+
+struct client_entities
+{
+    std::vector<client_renderable> renderables;
 };
 
 #endif // ENTITY_HPP_INCLUDED
