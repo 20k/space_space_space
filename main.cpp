@@ -146,7 +146,8 @@ void server_thread()
     test_ship->r.position = {400, 400};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
-    //test_ship2->data_track.pid = get_next_persistent_id();
+    test_ship2->data_track.pid = get_next_persistent_id();
+    test_ship2->data_track->resize(component_info::COUNT);
     std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
     test_ship2->network_owner = 1;
 
@@ -393,6 +394,8 @@ int main()
             model = conn.reads_from<data_model<ship>>().data;
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
+
+            //std::cout << "pid " << model.ships[1].data_track.pid << std::endl;
 
             renderables.entities = model.renderables;
         }
