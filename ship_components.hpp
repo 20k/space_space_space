@@ -136,8 +136,8 @@ struct component : serialisable
 
 struct data_tracker : serialisable
 {
-    persistent<delta_container<std::vector<float>>> vsat;
-    persistent<delta_container<std::vector<float>>> vheld;
+    delta_container<std::vector<float>> vsat;
+    delta_container<std::vector<float>> vheld;
     int max_data = 500;
 
     void add(double sat, double held);
