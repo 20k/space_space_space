@@ -57,7 +57,7 @@ void radar_field::add_packet(frequency_packet packet, vec2f absolute_location)
 {
     vec2f relative_loc = absolute_location - offset;
 
-    if(relative_loc.x() < 0 || relative_loc.y() < 0 || relative_loc.x() >= dim.x() || relative_loc.y() >= dim.y())
+    if(relative_loc.x() < 1 || relative_loc.y() < 1 || relative_loc.x() >= dim.x() - 1 || relative_loc.y() >= dim.y() - 1)
         return;
 
     vec2f cell_floor = floor(relative_loc);
@@ -65,4 +65,15 @@ void radar_field::add_packet(frequency_packet packet, vec2f absolute_location)
     packet.origin = relative_loc;
 
     std::array<frequency_packet, 4> distributed = distribute_packet(relative_loc - cell_floor, packet);
+
+    double my_freq_frac = (packet.frequency - MIN_FREQ) / (MAX_FREQ - MIN_FREQ);
+
+    int band = my_freq_frac * FREQUENCY_BUCKETS;
+
+    band = clamp(band, 0, FREQUENCY_BUCKETS-1);
+
+    freq[(int)cell_floor.y()][(int)cell_floor.x()].buckets[band].packets.push_back(distributed[0]);
+    freq[(int)cell_floor.y() + 1][(int)cell_floor.x()].buckets[band].packets.push_back(distributed[1]);
+    freq[(int)cell_floor.y()][(int)cell_floor.x() + 1].buckets[band].packets.push_back(distributed[2]);
+    freq[(int)cell_floor.y() + 1][(int)cell_floor.x() + 1].buckets[band].packets.push_back(distributed[3]);
 }

@@ -62,6 +62,13 @@ void server_thread()
 
     data_model<ship*> model;
 
+    #define SERVER_VIEW
+    #ifdef SERVER_VIEW
+
+    sf::RenderWindow debug(sf::VideoMode(800, 600), "debug");
+
+    #endif // SERVER_VIEW
+
     entity_manager entities;
 
     ship* test_ship = entities.make_new<ship>();
@@ -184,6 +191,13 @@ void server_thread()
             conn.writes_to(entities, i);
         }*/
 
+        sf::Event event;
+
+        while(debug.pollEvent(event))
+        {
+
+        }
+
         while(conn.has_read())
         {
             writes_data<client_input> read = conn.reads_from<client_input>();
@@ -233,6 +247,15 @@ void server_thread()
         {
             conn.writes_to(model, i);
         }
+
+        #ifdef SERVER_VIEW
+
+        entities.render(debug);
+
+        debug.display();
+        debug.clear();
+
+        #endif // SERVER_VIEW
 
         Sleep(10);
     }
@@ -399,6 +422,7 @@ int main()
 
         frequency_packet test;
         test.intensity = 1;
+        test.frequency = 10;
 
         std::array<frequency_packet, 4> res = distribute_packet(mfrac, test);
 

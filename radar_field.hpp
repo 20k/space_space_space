@@ -6,6 +6,8 @@
 #include <vector>
 
 #define FREQUENCY_BUCKETS 100
+#define MIN_FREQ 1
+#define MAX_FREQ 10000
 
 struct frequency_packet
 {

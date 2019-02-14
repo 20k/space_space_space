@@ -148,12 +148,12 @@ struct data_tracker : serialisable
         DO_SERIALISE(vheld);
         DO_SERIALISE(max_data);
 
-        while(vsat.size() > max_data)
+        while((int)vsat.size() > max_data)
         {
             vsat.erase(vsat.begin());
         }
 
-        while(vheld.size() > max_data)
+        while((int)vheld.size() > max_data)
         {
             vheld.erase(vheld.begin());
         }
