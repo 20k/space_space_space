@@ -136,8 +136,8 @@ struct component : serialisable
 
 struct data_tracker : serialisable
 {
-    delta_container<std::vector<float>> vsat;
-    delta_container<std::vector<float>> vheld;
+    persistent<delta_container<std::vector<float>>> vsat;
+    persistent<delta_container<std::vector<float>>> vheld;
     int max_data = 500;
 
     void add(double sat, double held);
@@ -161,7 +161,7 @@ struct ship : virtual entity, virtual serialisable
     ///so we want a diff wrapper type
     //std::vector<data_tracker> data_track;
 
-    persistent<std::vector<data_tracker>> data_track;
+    std::vector<persistent<data_tracker>> data_track;
 
     ship();
 

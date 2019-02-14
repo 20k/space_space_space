@@ -30,7 +30,7 @@ ship::ship()
 
     drag = true;
 
-    data_track->resize(component_info::COUNT);
+    data_track.resize(component_info::COUNT);
 }
 
 void component::add(component_info::does_type type, double amount)
@@ -342,17 +342,17 @@ std::vector<double> ship::get_sat_percentage()
 template<typename T>
 void add_to_vector(double val, T& in, int max_data)
 {
-    while((int)in.size() < max_data - 1)
+    while((int)in->size() < max_data - 1)
     {
-        in.push_back(0);
+        in->push_back(0);
         //in.insert(in.begin(), 0);
     }
 
-    in.push_back(val);
+    in->push_back(val);
 
-    while((int)in.size() > max_data)
+    while((int)in->size() > max_data)
     {
-        in.erase(in.begin());
+        in->erase(in->begin());
     }
 }
 
@@ -419,6 +419,7 @@ void ship::tick(double dt_s)
     last_sat_percentage = all_sat;
 
 
+
     data_track_elapsed_s += dt_s;
 
     double time_between_datapoints_s = 0.1;
@@ -441,7 +442,7 @@ void ship::tick(double dt_s)
 
             //std::cout << "dtrack size " << (*data_track).size() << std::endl;
 
-            (*data_track)[type].add(sat, held);
+            data_track[type]->add(sat, held);
         }
 
         data_track_elapsed_s -= time_between_datapoints_s;
@@ -610,14 +611,14 @@ void ship::advanced_ship_display()
 
     //for(auto& i : data_track)
 
-    for(int kk=0; kk < (int)data_track->size(); kk++)
+    for(int kk=0; kk < (int)data_track.size(); kk++)
     {
-        if((*data_track)[kk].vheld.size() == 0)
+        if(data_track[kk]->vheld->size() == 0)
             continue;
 
         std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &(*data_track)[kk].vheld[0], (*data_track)[kk].vheld.size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(*data_track[kk]->vheld)[0], data_track[kk]->vheld->size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
     }
 
     ImGui::NextColumn();
@@ -626,9 +627,9 @@ void ship::advanced_ship_display()
 
     //for(auto& i : data_track)
 
-    for(int kk=0; kk < (int)data_track->size(); kk++)
+    for(int kk=0; kk < (int)data_track.size(); kk++)
     {
-        if((*data_track)[kk].vsat.size() == 0)
+        if((data_track)[kk]->vsat->size() == 0)
             continue;
 
         if(kk == component_info::CAPACITOR)
@@ -639,7 +640,7 @@ void ship::advanced_ship_display()
 
         std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &(*data_track)[kk].vsat[0], (*data_track)[kk].vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(*data_track[kk]->vsat)[0], data_track[kk]->vsat->size(), 0, nullptr, 0, 1, ImVec2(0, 0));
     }
 
     ImGui::EndColumns();
