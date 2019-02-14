@@ -77,7 +77,7 @@ void server_thread()
     warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
 
-    shields.add(component_info::SHIELDS, 0.5, 100);
+    shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -1);
     shields.add(component_info::HP, 0, 5);
 
@@ -102,7 +102,7 @@ void server_thread()
     sysrepair.add(component_info::SYSTEM, 1);
     sysrepair.add(component_info::HP, 0.1, 1);*/
 
-    armour.add(component_info::ARMOUR, 0.01, 100);
+    armour.add(component_info::ARMOUR, 0.01, 30);
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
 
