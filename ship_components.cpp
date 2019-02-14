@@ -426,15 +426,6 @@ void ship::tick(double dt_s)
 
     if(data_track_elapsed_s >= time_between_datapoints_s)
     {
-        std::vector<component_info::does_type> tracked
-        {
-            component_info::WARP,
-            component_info::SHIELDS,
-            component_info::COOLANT,
-            component_info::POWER,
-            component_info::CAPACITOR
-        };
-
         for(auto& type : tracked)
         {
             double held = resource_status[type];
@@ -574,7 +565,7 @@ std::vector<double> ship::get_capacity()
 
 void ship::advanced_ship_display()
 {
-    ImGui::Begin("Advanced Ship");
+    ImGui::Begin(("Advanced Ship" + std::to_string(network_owner)).c_str());
 
     #if 0
     for(auto& i : data_track)
@@ -611,7 +602,8 @@ void ship::advanced_ship_display()
 
     //for(auto& i : data_track)
 
-    for(int kk=0; kk < (int)data_track.size(); kk++)
+    //for(int kk=0; kk < (int)data_track.size(); kk++)
+    for(auto& kk : tracked)
     {
         if(data_track[kk]->vheld.size() == 0)
             continue;
@@ -627,7 +619,7 @@ void ship::advanced_ship_display()
 
     //for(auto& i : data_track)
 
-    for(int kk=0; kk < (int)data_track.size(); kk++)
+    for(auto& kk : tracked)
     {
         if((data_track)[kk]->vsat.size() == 0)
             continue;

@@ -166,6 +166,17 @@ struct ship : virtual entity, virtual serialisable
 
     std::vector<component> components;
 
+    std::vector<component_info::does_type> tracked
+    {
+        component_info::WARP,
+        component_info::SHIELDS,
+        component_info::ARMOUR,
+        component_info::HP,
+        component_info::COOLANT,
+        component_info::POWER,
+        component_info::CAPACITOR
+    };
+
     //std::map<component_info::does_type, data_tracker> data_track;
 
     ///so we want a diff wrapper type
