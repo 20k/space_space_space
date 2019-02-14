@@ -107,7 +107,7 @@ void server_thread()
     armour.add(component_info::HP, 0, 10);
 
     ls.add(component_info::POWER, -1);
-    ls.add(component_info::LIFE_SUPPORT, 1, 5);
+    ls.add(component_info::LIFE_SUPPORT, 1, 20);
     ls.add(component_info::HP, 0.01, 5);
 
     coolant.add(component_info::COOLANT, 1, 20);
