@@ -77,14 +77,14 @@ void server_thread()
     warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
 
-    shields.add(component_info::SHIELDS, 0.5, 10);
+    shields.add(component_info::SHIELDS, 0.5, 100);
     shields.add(component_info::POWER, -1);
     shields.add(component_info::HP, 0, 5);
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 1, 20);
+    laser.add(component_info::CAPACITOR, 1.5, 20);
 
     laser.add_on_use(component_info::CAPACITOR, -10);
 
@@ -102,7 +102,7 @@ void server_thread()
     sysrepair.add(component_info::SYSTEM, 1);
     sysrepair.add(component_info::HP, 0.1, 1);*/
 
-    armour.add(component_info::ARMOUR, 0.1, 10);
+    armour.add(component_info::ARMOUR, 0.01, 100);
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
 
