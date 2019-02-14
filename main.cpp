@@ -7,6 +7,7 @@
 #include "entity.hpp"
 #include <windows.h>
 #include <networking/networking.hpp>
+#include "radar_field.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -368,6 +369,7 @@ int main()
     sf::Clock frametime_delta;
 
     sf::Keyboard key;
+    sf::Mouse mouse;
 
     std::map<uint64_t, ship> network_ships;
 
@@ -391,6 +393,20 @@ int main()
                 window.create(sf::VideoMode(event.size.width, event.size.height), "hi");
             }
         }
+
+        vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
+        vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
+
+        frequency_packet test;
+        test.intensity = 1;
+
+        std::array<frequency_packet, 4> res = distribute_packet(mfrac, test);
+
+        /*std::cout << "tl " << res[0].intensity << std::endl;
+        std::cout << "bl " << res[1].intensity << std::endl;
+        std::cout << "tr " << res[2].intensity << std::endl;
+        std::cout << "br " << res[3].intensity << std::endl;
+        std::cout << "\n";*/
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 

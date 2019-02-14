@@ -65,6 +65,8 @@
 		<Unit filename="entity.hpp" />
 		<Unit filename="format.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="radar_field.cpp" />
+		<Unit filename="radar_field.hpp" />
 		<Unit filename="ship_components.cpp" />
 		<Unit filename="ship_components.hpp" />
 		<Extensions>
