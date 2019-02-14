@@ -94,24 +94,33 @@ void entity::tick_phys(double dt_s)
     {
         float sign = signum(angular_velocity);
 
-        if(fabs(angular_velocity) < fabs(sign))
+        /*if(fabs(angular_velocity) < fabs(sign))
         {
             sign = angular_velocity;
-        }
+        }*/
 
         angular_velocity -= sign * angular_drag * dt_s;
 
+        if(signum(angular_velocity) != sign)
+            angular_velocity = 0;
+
         vec2f fsign = signum(velocity);
 
-        for(int i=0; i < 2; i++)
+        /*for(int i=0; i < 2; i++)
         {
             if(fabs(velocity.v[i]) < fabs(fsign.v[i]))
             {
                 fsign.v[i] = velocity.v[i];
             }
-        }
+        }*/
 
         velocity = velocity - fsign * velocity_drag * dt_s;
+
+        if(signum(velocity).x() != fsign.x())
+            velocity.x() = 0;
+
+        if(signum(velocity).y() != fsign.y())
+            velocity.y() = 0;
     }
 }
 
