@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <optional>
 #include <SFML/System/Clock.hpp>
 
@@ -55,7 +56,9 @@ struct frequencies
 {
     //std::vector<frequency_packet> packets;
 
-    std::map<uint32_t, frequency_packet> packets;
+    //std::vector<std::pair<uint32_t, frequency_packet>> packets;
+
+    std::unordered_map<uint32_t, frequency_packet> packets;
 };
 
 std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet packet);
@@ -135,10 +138,10 @@ struct radar_field
 
     radar_field(vec2f target);
 
-    void add_packet(frequency_packet p, vec2f absolute_location, bool update_origin = true);
-    void add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, vec2f absolute_location, bool update_origin = true, bool distribute = true) const;
+    void add_packet(const frequency_packet& p, vec2f absolute_location, bool update_origin = true);
+    void add_packet_to(std::vector<std::vector<frequencies>>& field, const frequency_packet& p, vec2f absolute_location, bool update_origin = true, bool distribute = true) const;
 
-    void add_raw_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, int x, int y) const;
+    void add_raw_packet_to(std::vector<std::vector<frequencies>>& field, const frequency_packet& p, int x, int y) const;
 
     float get_intensity_at(int idx, int idy);
     float get_intensity_at_of(int idx, int idy, uint32_t pid);

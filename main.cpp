@@ -206,6 +206,14 @@ void server_thread()
             radar.add_packet(pack, {mouse.getPosition(debug).x, mouse.getPosition(debug).y});
         }
 
+        if(ONCE_MACRO(sf::Keyboard::L))
+        {
+            for(int i=0; i < 100; i++)
+            {
+                radar.add_packet(pack, {i + 200,200});
+            }
+        }
+
         for(entity* e : entities.entities)
         {
             ship* s = dynamic_cast<ship*>(e);

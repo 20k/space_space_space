@@ -31,6 +31,51 @@ float cross2d(vec2f p1, vec2f p2)
     return p1.x() * p2.y() - p1.y() * p2.x();
 }
 
+std::map<std::string, double> info_dump;
+
+struct info_dumper
+{
+    std::string name;
+
+    info_dumper(const std::string& _name) : name(_name)
+    {
+
+    }
+
+    void add(double d)
+    {
+        info_dump[name] += d;
+    }
+};
+
+struct profile_dumper
+{
+    sf::Clock clk;
+    std::string name;
+
+    static void dump()
+    {
+        for(auto& i : info_dump)
+        {
+            std::cout << i.first << " " << i.second << std::endl;
+        }
+
+        info_dump.clear();
+    }
+
+    profile_dumper(const std::string& _name) : name(_name)
+    {
+
+    }
+
+    ~profile_dumper()
+    {
+        info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
+
+        //std::cout << name << " " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+    }
+};
+
 ///rel is [0 -> 1]
 
 ///[0, 2]
@@ -68,7 +113,7 @@ std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet pa
     return ret;
 }
 
-void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet packet, vec2f absolute_location, bool update_origin, bool distribute) const
+void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, const frequency_packet& in_packet, vec2f absolute_location, bool update_origin, bool distribute) const
 {
     vec2f relative_loc = (absolute_location - offset) * dim / target_dim;
 
@@ -76,6 +121,8 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
         return;
 
     vec2f cell_floor = floor(relative_loc);
+
+    frequency_packet packet = in_packet;
 
     if(update_origin)
     {
@@ -106,24 +153,45 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
     freq[(int)cell_floor.y()][(int)cell_floor.x() + 1].buckets[band].packets.push_back(distributed[2]);
     freq[(int)cell_floor.y() + 1][(int)cell_floor.x() + 1].buckets[band].packets.push_back(distributed[3]);*/
 
-    add_raw_packet_to(field, distributed[0], cell_floor.x(), cell_floor.y());
-    add_raw_packet_to(field, distributed[1], cell_floor.x(), cell_floor.y()+1);
-    add_raw_packet_to(field, distributed[2], cell_floor.x()+1, cell_floor.y());
-    add_raw_packet_to(field, distributed[3], cell_floor.x()+1, cell_floor.y()+1);
+    if(distribute)
+    {
+        add_raw_packet_to(field, distributed[0], cell_floor.x(), cell_floor.y());
+        add_raw_packet_to(field, distributed[1], cell_floor.x(), cell_floor.y()+1);
+        add_raw_packet_to(field, distributed[2], cell_floor.x()+1, cell_floor.y());
+        add_raw_packet_to(field, distributed[3], cell_floor.x()+1, cell_floor.y()+1);
+    }
 
-    for(int i=-1; i < 2; i++)
+    std::vector<vec2i> distrib_positions
+    {
+        {0, 1},
+        {0, -1},
+        {-1,  0},
+        {1,  0}
+    };
+
+    //if(!distribute)
+    {
+        distrib_positions.push_back({1, 1});
+        distrib_positions.push_back({1, -1});
+        distrib_positions.push_back({-1, 1});
+        distrib_positions.push_back({-1, -1});
+    }
+
+    /*for(int i=-1; i < 2; i++)
     {
         for(int j=-1; j < 2; j++)
-        {
-            frequency_packet null_packet = packet;
+        {*/
 
-            if(distribute)
-                null_packet.intensity = 0;
-            else
-                null_packet.intensity = packet.intensity;
+    for(vec2i pos : distrib_positions)
+    {
+        frequency_packet null_packet = packet;
 
-            add_raw_packet_to(field, null_packet, cell_floor.x() + i, cell_floor.y() + j);
-        }
+        if(distribute)
+            null_packet.intensity = 0;
+        else
+            null_packet.intensity = packet.intensity;
+
+        add_raw_packet_to(field, null_packet, cell_floor.x() + pos.x(), cell_floor.y() + pos.y());
     }
 
     /*field[(int)cell_floor.y()][(int)cell_floor.x()].packets.push_back(distributed[0]);
@@ -134,15 +202,17 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
     //std::cout << "packet 2 " << cell_floor << std::endl;
 }
 
-void radar_field::add_packet(frequency_packet packet, vec2f absolute_location, bool update_origin)
+void radar_field::add_packet(const frequency_packet& packet, vec2f absolute_location, bool update_origin)
 {
     add_packet_to(freq, packet, absolute_location, update_origin);
 }
 
-void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, int x, int y) const
+void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field, const frequency_packet& p, int x, int y) const
 {
     if(x < 0 || y < 0 || x >= dim.x() || y >= dim.y())
         return;
+
+    profile_dumper arpt("arpt");
 
     /*for(frequency_packet& existing : field[y][x].packets)
     {
@@ -153,13 +223,27 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
         }
     }*/
 
+    //std::cout << "psize " << field[y][x].packets.size() << std::endl;
+
+
+
+    //info_dumper id("tfield " + std::to_string(y) + "|" + std::to_string(x));
+
+    //id.add(field[y][x].packets.size());
+
     if(field[y][x].packets.find(p.id) != field[y][x].packets.end())
     {
         //field[y][x].packets[p.id].intensity += p.intensity;
         return;
     }
 
-    //field[y][x].packets.push_back(p);
+    /*for(auto& i : field[y][x].packets)
+    {
+        if(i.first == p.id)
+            return;
+    }*/
+
+    //field[y][x].packets.push_back({p.id, p});
 
     field[y][x].packets[p.id] = p;
 }
@@ -309,6 +393,17 @@ float radar_field::get_intensity_at_of(int x, int y, uint32_t pid)
 
     frequency_packet& packet = freq[y][x].packets[pid];
 
+    /*frequency_packet packet;
+
+    for(auto& i : freq[y][x].packets)
+    {
+        if(i.first == pid)
+        {
+            packet = i.second;
+            break;
+        }
+    }*/
+
     for(auto& spair : collisions[y][x].packets)
     {
         if(spair.second.collides_with == packet.id)
@@ -358,6 +453,8 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
     float light_propagation = 1;
 
+    //profile_dumper prop("tick_raw");
+
     ///so
     ///every tick we propagate propagation amount over light distance
     ///so ok. Lets model it as a packet?
@@ -394,6 +491,8 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
     ///so each point in space represents a piece of the analytic solution that isn't cancelled, ie the point of discretising the grid
     ///is to keep track of collisions
 
+    profile_dumper dump("Full loop");
+
     for(int y=1; y < dim.y() - 2; y++)
     {
         for(int x=1; x < dim.x() - 2; x++)
@@ -410,10 +509,14 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
             //for(frequency_packet& pack : packs)
             for(auto& ppair : packs)
             {
+                profile_dumper pack_loop("pack_loop");
+
                 frequency_packet& pack = ppair.second;
 
                 if(collides)
                 {
+                    profile_dumper coll_loop("coll_loop");
+
                     if(get_intensity_at_of(x, y, pack.id) <= 0.00000001f)
                         continue;
                 }
@@ -461,6 +564,8 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 if(collides)
                 {
+                    profile_dumper coll_check("coll_check");
+
                     /*bool make_collide = collideables[y][x];
 
                     if(make_collide)
@@ -592,6 +697,8 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                     }
                 }
 
+                profile_dumper packet_add("packet_add");
+
                 /*vec2f origin = pack.origin;
 
                 vec2f propagation_direction = (real_pos - origin).norm();
@@ -612,6 +719,8 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
         }
     }
 
+    profile_dumper::dump();
+
     return next;
 }
 
@@ -623,8 +732,8 @@ void radar_field::tick(double dt_s)
 
     std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
 
-    freq = next;
-    collisions = next_collide;
+    freq = std::move(next);
+    collisions = std::move(next_collide);
 
     std::cout << "elapsed_ms " << clk.getElapsedTime().asMicroseconds() / 1000 << std::endl;
 
@@ -638,7 +747,7 @@ void radar_field::tick(double dt_s)
     }
 }
 
-std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id)
+/*std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id)
 {
     if(pos.x() < 1 || pos.y() < 1 || pos.x() >= dim.x() - 2 || pos.y() >= dim.y() - 2)
         return {{0, 0}};
@@ -736,7 +845,7 @@ std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& char
 
     //vec2f line_1 = bottom_coordinate - top_coordinate;
     //vec2f line_2 = right_coordinate - left_coordinate;
-}
+}*/
 
 vec2f radar_field::index_to_position(int x, int y)
 {
