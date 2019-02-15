@@ -163,12 +163,6 @@ void radar_field::render(sf::RenderWindow& win)
             vec2f real_pos = index_to_position(x, y);
 
             //circle.setRadius(1);
-
-            float total_intensity = get_intensity_at(x, y);
-
-            if(total_intensity == 0)
-                continue;
-
             /*for(auto& ppair : collisions[y][x].packets)
             {
                 vec2f real = index_to_position(x, y);
@@ -178,6 +172,11 @@ void radar_field::render(sf::RenderWindow& win)
 
                 win.draw(circle);
             }*/
+
+            float total_intensity = get_intensity_at(x, y);
+
+            if(total_intensity == 0)
+                continue;
 
             circle.setRadius(total_intensity);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
@@ -357,11 +356,6 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                     for(auto& i : collideables[y][x])
                     {
                         largest_cross = std::max(largest_cross, i.get_cross_section(my_angle));
-                    }
-
-                    if(collideables[y][x].size() > 0)
-                    {
-                        std::cout << "hello " << largest_cross << std::endl;
                     }
 
                     if(largest_cross > 0)
