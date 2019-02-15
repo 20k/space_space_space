@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <optional>
+#include <SFML/System/Clock.hpp>
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1
@@ -61,6 +62,51 @@ std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet pa
 
 using frequency_chart = std::vector<std::vector<frequencies>>;
 
+struct ignore_data
+{
+    uint32_t id = -1;
+    sf::Clock clk;
+};
+
+struct collideable_ignore
+{
+    std::vector<ignore_data> to_ignore;
+
+    void ignore(uint32_t id)
+    {
+        for(auto& i : to_ignore)
+        {
+            if(i.id == id)
+            {
+                i.clk.restart();
+                return;
+            }
+        }
+
+        to_ignore.push_back({id});
+    }
+
+    bool ignored(uint32_t id)
+    {
+        for(int i=0; i < (int)to_ignore.size(); i++)
+        {
+            if(to_ignore[i].id == id && to_ignore[i].clk.getElapsedTime().asMilliseconds() < 500)
+            {
+                return true;
+            }
+
+            if(to_ignore[i].clk.getElapsedTime().asMilliseconds() >= 500)
+            {
+                to_ignore.erase(to_ignore.begin() + i);
+                i--;
+                continue;
+            }
+        }
+
+        return false;
+    }
+};
+
 struct rcollideable
 {
     vec2f dim = {0,0};
@@ -77,7 +123,9 @@ struct radar_field
     std::vector<std::vector<frequencies>> collisions;
     std::vector<std::vector<std::vector<rcollideable>>> collideables;
 
-    std::map<uint32_t, std::vector<uint32_t>> ignore_map;
+    std::map<uint32_t, collideable_ignore> ignore_map;
+
+    //std::map<uint32_t, ignore_status> ignore_map;
 
     vec2f offset = {0,0};
     vec2f dim = {100,100};

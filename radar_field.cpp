@@ -449,20 +449,26 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                             }
                         }*/
 
-                        for(auto& j : ignore_map[i.uid])
+                        /*for(auto& j : ignore_map[i.uid])
                         {
-                            if(j == pack.id)
+                            if(j.skips(pack.id))
                             {
                                 ignore = true;
                                 break;
                             }
 
-                            if(j == pack.transient_id)
+                            if(j.skips(pack.transient_id))
                             {
                                 ignore = true;
                                 break;
                             }
-                        }
+                        }*/
+
+                        /*if(ignore_map[i.uid].skips(pack.id) || ignore_map[i.uid].skips(pack.transient_id))
+                            ignore = true;*/
+
+                        if(ignore_map[i.uid].ignored(pack.id))
+                            ignore = true;
 
                         if(ignore)
                             break;
@@ -527,8 +533,13 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                         for(auto& r : collideables[y][x])
                         {
-                            ignore_map[r.uid].push_back(reflect.id);
-                            ignore_map[r.uid].push_back(pack.id);
+                            //ignore_map[r.uid].add(reflect.id);
+                            //ignore_map[r.uid].push_back(pack.id);
+                            //ignore_map[r.uid].add_for(pack.id, 500);
+
+                            ignore_map[r.uid].ignore(reflect.id);
+                            ignore_map[r.uid].ignore(pack.id);
+
                             //ignore_map[r.uid].push_back(pack.transient_id);
 
                             //reflect.ignore_list.push_back(r.uid);
