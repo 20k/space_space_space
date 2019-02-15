@@ -619,8 +619,7 @@ void radar_field::tick(double dt_s)
 {
     sf::Clock clk;
 
-    std::vector<std::vector<frequencies>> first = freq;
-    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, first, true);
+    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, freq, true);
 
     std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
 
