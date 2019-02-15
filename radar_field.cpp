@@ -9,6 +9,12 @@ radar_field::radar_field(vec2f target)
         i.resize(dim.x());
     }
 
+    collisions.resize(dim.y());
+    for(auto& i : collisions)
+    {
+        i.resize(dim.x());
+    }
+
     target_dim = target;
 }
 
@@ -178,8 +184,8 @@ void radar_field::render(sf::RenderWindow& win)
             if(total_intensity == 0)
                 continue;
 
-            //circle.setRadius(total_intensity);
-            //circle.setOrigin(circle.getRadius(), circle.getRadius());
+            circle.setRadius(total_intensity);
+            circle.setOrigin(circle.getRadius(), circle.getRadius());
 
             circle.setPosition(real_pos.x(), real_pos.y());
 
@@ -188,10 +194,9 @@ void radar_field::render(sf::RenderWindow& win)
     }
 }
 
-void radar_field::tick(double dt_s)
+frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first)
 {
-    std::vector<std::vector<frequencies>> first = freq;
-    std::vector<std::vector<frequencies>> next;
+    frequency_chart next;
 
     next.resize(dim.y());
 
@@ -202,8 +207,6 @@ void radar_field::tick(double dt_s)
 
     float light_distance_per_tick = 1.5;
     float light_propagation = 1;
-
-    sf::Clock clk;
 
     ///so
     ///every tick we propagate propagation amount over light distance
@@ -313,6 +316,16 @@ void radar_field::tick(double dt_s)
             }
         }
     }
+
+    return next;
+}
+
+void radar_field::tick(double dt_s)
+{
+    sf::Clock clk;
+
+    std::vector<std::vector<frequencies>> first = freq;
+    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, first);
 
     freq = next;
 

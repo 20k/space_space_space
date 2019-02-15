@@ -57,6 +57,7 @@ using frequency_chart = std::vector<std::vector<frequencies>>;
 struct radar_field
 {
     std::vector<std::vector<frequencies>> freq;
+    std::vector<std::vector<frequencies>> collisions;
 
     vec2f offset = {0,0};
     vec2f dim = {100,100};
@@ -71,6 +72,7 @@ struct radar_field
 
     void render(sf::RenderWindow& win);
     void tick(double dt_s);
+    frequency_chart tick_raw(double dt_s, frequency_chart& next);
 
     vec2f index_to_position(int x, int y);
 
