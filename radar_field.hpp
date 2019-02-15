@@ -193,7 +193,9 @@ struct alt_radar_field
     vec2f target_dim;
 
     std::vector<alt_frequency_packet> packets;
-    std::vector<alt_frequency_packet> subtractive_packets;
+    //std::vector<alt_frequency_packet> subtractive_packets;
+    std::map<uint32_t, std::vector<alt_frequency_packet>> subtractive_packets;
+
     std::vector<alt_collideable> collideables;
 
     std::map<uint32_t, std::map<uint32_t, sf::Clock>> ignore_map;

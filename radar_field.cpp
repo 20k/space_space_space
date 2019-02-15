@@ -960,7 +960,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 collide_packet.start_angle = relative_pos.angle();
                 collide_packet.restrict_angle = my_fraction * 2 * M_PI;
 
-                subtractive_packets.push_back(collide_packet);
+                subtractive_packets[packet.id].push_back(collide_packet);
 
 
                 vec2f packet_vector = collide.pos - packet.origin;
@@ -990,9 +990,13 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         packet.iterations++;
     }
 
-    for(alt_frequency_packet& packet : subtractive_packets)
+    //for(alt_frequency_packet& packet : subtractive_packets)
+    for(auto& i : subtractive_packets)
     {
-        packet.iterations++;
+        for(alt_frequency_packet& packet : i.second)
+        {
+            packet.iterations++;
+        }
     }
 
     pdump.dump();
@@ -1016,7 +1020,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
         return 0;
 
-    for(alt_frequency_packet& shadow : subtractive_packets)
+    for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
     {
         float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
         float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
@@ -1089,7 +1093,7 @@ void alt_radar_field::render(sf::RenderWindow& win)
         win.draw(shape);
     }*/
 
-    for(alt_frequency_packet& packet : subtractive_packets)
+    /*for(alt_frequency_packet& packet : subtractive_packets)
     {
         float real_distance = packet.iterations * speed_of_light_per_tick;
 
@@ -1103,12 +1107,12 @@ void alt_radar_field::render(sf::RenderWindow& win)
         shape.setPointCount(100);
 
         win.draw(shape);
-    }
+    }*/
 
 
-    for(int y=0; y < target_dim.y(); y+=30)
+    for(int y=0; y < target_dim.y(); y+=10)
     {
-        for(int x=0; x < target_dim.x(); x+=30)
+        for(int x=0; x < target_dim.x(); x+=10)
         {
             float intensity = get_intensity_at({x, y});
 
@@ -1118,10 +1122,20 @@ void alt_radar_field::render(sf::RenderWindow& win)
             if(intensity > 5)
                 intensity = 5;
 
+            float ffrac = 1;
+
+            if(intensity < 1)
+            {
+                ffrac = intensity;
+                intensity = 1;
+            }
+
+            float fcol = 255 * ffrac;
+
             sf::CircleShape shape;
             shape.setRadius(intensity);
             shape.setPosition(x, y);
-            shape.setFillColor(sf::Color(255, 255, 255, 255));
+            shape.setFillColor(sf::Color(fcol, fcol, fcol, fcol));
             shape.setOrigin(shape.getRadius(), shape.getRadius());
 
             win.draw(shape);
