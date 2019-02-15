@@ -196,6 +196,8 @@ struct alt_radar_field
     std::vector<alt_frequency_packet> subtractive_packets;
     std::vector<alt_collideable> collideables;
 
+    std::map<uint32_t, std::map<uint32_t, sf::Clock>> ignore_map;
+
     float speed_of_light_per_tick = 1.5;
 
     alt_radar_field(vec2f in);
@@ -207,6 +209,7 @@ struct alt_radar_field
     void render(sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);
+    float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet);
 };
 
 #endif // RADAR_FIELD_HPP_INCLUDED

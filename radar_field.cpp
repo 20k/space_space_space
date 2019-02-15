@@ -933,6 +933,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
+            //if(ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000 < 500)
+            //    continue;
+
             vec2f relative_pos = collide.pos - packet.origin;
 
             float len = relative_pos.length();
@@ -969,71 +972,71 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     }
 }
 
+float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
+{
+    float real_distance = packet.iterations * speed_of_light_per_tick;
+    float my_angle = (pos - packet.origin).angle();
+
+    vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+
+    vec2f packet_position = packet_vector + packet.origin;
+    vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
+
+    float distance_to_packet = (pos - packet_position).length();
+
+    float my_distance_to_packet = (pos - packet.origin).length();
+    float my_packet_angle = (pos - packet.origin).angle();
+
+    for(alt_frequency_packet& shadow : subtractive_packets)
+    {
+        float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
+        float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
+
+        float shadow_my_angle = (pos - shadow.origin).angle();
+
+        vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
+        vec2f shadow_position = shadow_vector + shadow.origin;
+        vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
+
+        float distance_to_shadow = (pos - shadow_position).length();
+
+        if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
+            return 0;
+
+        /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
+        {
+            shadowed = true;
+            continue;
+        }*/
+
+        if(distance_to_shadow <= shadow.packet_wavefront_width)
+        {
+            return 0;
+        }
+    }
+
+    if(distance_to_packet > packet.packet_wavefront_width)
+    {
+        return 0;
+    }
+    else
+    {
+        if(my_distance_to_packet > 0.0001)
+            return packet.intensity / (my_distance_to_packet * my_distance_to_packet);
+        else
+            return packet.intensity;
+    }
+
+    return 0;
+}
+
 float alt_radar_field::get_intensity_at(vec2f pos)
 {
     float total_intensity = 0;
 
     for(alt_frequency_packet& packet : packets)
     {
-        float real_distance = packet.iterations * speed_of_light_per_tick;
-        float my_angle = (pos - packet.origin).angle();
-
-        vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
-
-        vec2f packet_position = packet_vector + packet.origin;
-        vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
-
-        float distance_to_packet = (pos - packet_position).length();
-
-        float my_distance_to_packet = (pos - packet.origin).length();
-        float my_packet_angle = (pos - packet.origin).angle();
-
-        bool shadowed = false;
-
-        for(alt_frequency_packet& shadow : subtractive_packets)
-        {
-            float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
-            float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
-
-            float shadow_my_angle = (pos - shadow.origin).angle();
-
-            vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
-            vec2f shadow_position = shadow_vector + shadow.origin;
-            vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
-
-            float distance_to_shadow = (pos - shadow_position).length();
-
-            if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
-                continue;
-
-            /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
-            {
-                shadowed = true;
-                continue;
-            }*/
-
-            if(distance_to_shadow <= shadow.packet_wavefront_width)
-            {
-                shadowed = true;
-                break;
-            }
-        }
-
-        if(shadowed)
-            continue;
-
-
-        if(distance_to_packet > packet.packet_wavefront_width)
-        {
-            continue;
-        }
-        else
-        {
-            if(my_distance_to_packet > 0.0001)
-                total_intensity += packet.intensity / (my_distance_to_packet * my_distance_to_packet);
-            else
-                total_intensity += packet.intensity;
-        }
+        total_intensity += get_intensity_at_of(pos, packet);
     }
 
     return total_intensity;
