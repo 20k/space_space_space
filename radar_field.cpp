@@ -103,7 +103,7 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
 {
     for(frequency_packet& existing : field[y][x].packets)
     {
-        if(existing.frequency == p.frequency && existing.origin == p.origin)
+        if(existing.frequency == p.frequency && existing.origin == p.origin && existing.iterations == p.iterations)
         {
             existing.intensity += p.intensity;
             return;
@@ -169,7 +169,7 @@ void radar_field::tick(double dt_s)
         i.resize(dim.x());
     }
 
-    float light_distance_per_tick = 0.2;
+    float light_distance_per_tick = 0.5;
     float light_propagation = 1;
 
     ///so
@@ -219,7 +219,7 @@ void radar_field::tick(double dt_s)
 
             vec2f index_position = index_to_position(x, y);
 
-            float packet_wavefront_width = 1.5;
+            float packet_wavefront_width = 0.5;
 
             for(frequency_packet& pack : packs)
             {
@@ -251,7 +251,8 @@ void radar_field::tick(double dt_s)
 
                 frequency_packet nextp = pack;
 
-                nextp.intensity = intensity;
+                nextp.intensity = 2;
+                //nextp.intensity = intensity;
                 nextp.iterations++;
 
                 add_packet_to(next, nextp, next_location, false);
