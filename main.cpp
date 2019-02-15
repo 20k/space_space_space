@@ -174,6 +174,11 @@ void server_thread()
 
     std::map<uint64_t, sf::Clock> control_elapsed;
 
+    radar_field radar({1000, 1000});
+
+    sf::Mouse mouse;
+    sf::Keyboard key;
+
     while(1)
     {
         entities.tick(frametime_dt);
@@ -190,6 +195,18 @@ void server_thread()
         {
             conn.writes_to(entities, i);
         }*/
+
+        frequency_packet pack;
+        pack.intensity = 5;
+        pack.frequency = 100;
+
+        //if(key.isKeyPressed(sf::Keyboard::K))
+        if(ONCE_MACRO(sf::Keyboard::K))
+        {
+            radar.add_packet(pack, {mouse.getPosition(debug).x, mouse.getPosition(debug).y});
+        }
+
+        radar.tick(frametime_dt);
 
         sf::Event event;
 
@@ -251,6 +268,8 @@ void server_thread()
         #ifdef SERVER_VIEW
 
         entities.render(debug);
+
+        radar.render(debug);
 
         debug.display();
         debug.clear();
