@@ -212,7 +212,7 @@ void server_thread()
 
             if(s)
             {
-                radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position);
+                radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position, s->id);
             }
         }
 

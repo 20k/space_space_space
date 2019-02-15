@@ -31,6 +31,8 @@ struct frequency_packet
     int iterations = 0;
     float restrict_angle = 2 * M_PI;
     float start_angle = 0;
+
+    std::vector<uint32_t> ignore_list;
 };
 
 /*struct frequency_band
@@ -59,6 +61,7 @@ struct rcollideable
 {
     vec2f dim = {0,0};
     float angle = 0;
+    uint32_t uid = 0;
 
     float get_cross_section(float angle);
 };
@@ -69,6 +72,8 @@ struct radar_field
     std::vector<std::vector<frequencies>> freq;
     std::vector<std::vector<frequencies>> collisions;
     std::vector<std::vector<std::vector<rcollideable>>> collideables;
+
+    std::map<uint32_t, std::vector<uint32_t>> ignore_map;
 
     vec2f offset = {0,0};
     vec2f dim = {100,100};
@@ -90,7 +95,7 @@ struct radar_field
 
     std::optional<vec2f> get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id);
 
-    void add_simple_collideable(float angle, vec2f dim, vec2f location);
+    void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
 
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };
