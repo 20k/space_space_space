@@ -68,7 +68,7 @@ std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet pa
     return ret;
 }
 
-void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet packet, vec2f absolute_location, bool update_origin) const
+void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet packet, vec2f absolute_location, bool update_origin, bool distribute) const
 {
     vec2f relative_loc = (absolute_location - offset) * dim / target_dim;
 
@@ -83,7 +83,17 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
         packet.id = frequency_packet::gid++;
     }
 
-    std::array<frequency_packet, 4> distributed = distribute_packet(relative_loc - cell_floor, packet);
+    std::array<frequency_packet, 4> distributed;
+
+    if(distribute)
+        distributed = distribute_packet(relative_loc - cell_floor, packet);
+    else
+    {
+        for(auto& i : distributed)
+        {
+            i = packet;
+        }
+    }
 
     double my_freq_frac = (packet.frequency - MIN_FREQ) / (MAX_FREQ - MIN_FREQ);
 
@@ -106,7 +116,11 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
         for(int j=-1; j < 2; j++)
         {
             frequency_packet null_packet = packet;
-            null_packet.intensity = 0;
+
+            if(distribute)
+                null_packet.intensity = 0;
+            else
+                null_packet.intensity = packet.intensity;
 
             add_raw_packet_to(field, null_packet, cell_floor.x() + i, cell_floor.y() + j);
         }
@@ -141,7 +155,7 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
 
     if(field[y][x].packets.find(p.id) != field[y][x].packets.end())
     {
-        field[y][x].packets[p.id].intensity += p.intensity;
+        //field[y][x].packets[p.id].intensity += p.intensity;
         return;
     }
 
@@ -188,6 +202,9 @@ void radar_field::render(sf::RenderWindow& win)
             if(total_intensity == 0)
                 continue;
 
+            if(total_intensity > 10)
+                total_intensity = 10;
+
             circle.setRadius(total_intensity);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
 
@@ -209,7 +226,7 @@ float radar_field::get_intensity_at(int x, int y)
 
         for(auto& ppair : freq[y][x].packets)
         {
-            auto packet = ppair.second;
+            frequency_packet& packet = ppair.second;
 
             bool ignore = false;
 
@@ -225,7 +242,23 @@ float radar_field::get_intensity_at(int x, int y)
             if(ignore)
                 continue;
 
-            total_intensity += packet.intensity;
+            vec2f real_position = index_to_position(x, y);
+
+            float distance_to_packet = (real_position - packet.origin).length();
+
+            //std::cout << "distance " << distance_to_packet << std::endl;
+
+            //std::cout << "pit " << packet.intensity << std::endl;
+
+            if(distance_to_packet <= 0.0001)
+            {
+                total_intensity += packet.intensity;
+            }
+            else
+            {
+                total_intensity += packet.intensity / (distance_to_packet);
+            }
+
 
             /*sf::CircleShape origin;
             origin.setRadius(5);
@@ -386,14 +419,14 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                     for(auto& i : collideables[y][x])
                     {
-                        for(auto& j : pack.ignore_list)
+                        /*for(auto& j : pack.ignore_list)
                         {
                             if(j == i.uid)
                             {
                                 ignore = true;
                                 break;
                             }
-                        }
+                        }*/
 
                         for(auto& j : ignore_map[i.uid])
                         {
@@ -458,7 +491,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                         frequency_packet reflect = pack;
                         reflect.id = frequency_packet::gid++;
 
-                        reflect.intensity = 5;
+                        reflect.intensity = pack.intensity;
                         reflect.origin = pack.origin + packet_vector * 2 - packet_vector.norm() * 10;
                         //reflect.start_angle = -my_angle;
                         reflect.start_angle = (index_position - reflect.origin).angle();
@@ -473,7 +506,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                         }
 
                         //add_packet_to(next, reflect, next_location, false);
-                        add_packet_to(next, reflect, packet_position - packet_vector.norm() * 10, false);
+                        add_packet_to(next, reflect, packet_position - packet_vector.norm() * 10, false, false);
                         continue;
                     }
                 }
@@ -486,12 +519,13 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 frequency_packet nextp = pack;
 
-                nextp.intensity = wavecentre_distance;
+                //nextp.intensity = wavecentre_distance;
+                nextp.intensity = pack.intensity;
                 //nextp.intensity = 1;
                 //nextp.intensity = intensity;
                 nextp.iterations++;
 
-                add_packet_to(next, nextp, next_location, false);
+                add_packet_to(next, nextp, next_location, false, false);
             }
         }
     }

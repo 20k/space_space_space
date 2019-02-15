@@ -33,7 +33,7 @@ struct frequency_packet
     float restrict_angle = 2 * M_PI;
     float start_angle = 0;
 
-    std::vector<uint32_t> ignore_list;
+    //std::vector<uint32_t> ignore_list;
 };
 
 /*struct frequency_band
@@ -83,7 +83,7 @@ struct radar_field
     radar_field(vec2f target);
 
     void add_packet(frequency_packet p, vec2f absolute_location, bool update_origin = true);
-    void add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, vec2f absolute_location, bool update_origin = true) const;
+    void add_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, vec2f absolute_location, bool update_origin = true, bool distribute = true) const;
 
     void add_raw_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, int x, int y) const;
 
