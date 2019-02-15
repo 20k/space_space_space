@@ -306,8 +306,6 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
 
-
-
                 vec2f packet_position = packet_vector + pack.origin;
                 vec2f packet_angle = (vec2f){1, 0}.rot(pack.start_angle);
 
