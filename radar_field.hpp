@@ -4,6 +4,8 @@
 #include <vec/vec.hpp>
 #include <array>
 #include <vector>
+#include <map>
+#include <optional>
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1
@@ -16,6 +18,10 @@ namespace sf
 
 struct frequency_packet
 {
+    uint32_t id = -1;
+
+    static inline uint32_t gid = 0;
+
     ///{1, 0}
     float frequency = 0;
     //float direction = 0;
@@ -25,11 +31,11 @@ struct frequency_packet
     int iterations = 0;
 };
 
-struct frequency_band
+/*struct frequency_band
 {
     float band = 0; ///?
     std::vector<frequency_packet> packets;
-};
+};*/
 
 /*struct frequencies
 {
@@ -38,10 +44,14 @@ struct frequency_band
 
 struct frequencies
 {
-    std::vector<frequency_packet> packets;
+    //std::vector<frequency_packet> packets;
+
+    std::map<uint32_t, frequency_packet> packets;
 };
 
 std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet packet);
+
+using frequency_chart = std::vector<std::vector<frequencies>>;
 
 ///for one playspace
 struct radar_field
@@ -63,6 +73,8 @@ struct radar_field
     void tick(double dt_s);
 
     vec2f index_to_position(int x, int y);
+
+    std::optional<vec2f> get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id);
 
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };

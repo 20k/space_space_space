@@ -66,7 +66,10 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
     vec2f cell_floor = floor(relative_loc);
 
     if(update_origin)
+    {
         packet.origin = absolute_location;
+        packet.id = frequency_packet::gid++;
+    }
 
     std::array<frequency_packet, 4> distributed = distribute_packet(relative_loc - cell_floor, packet);
 
@@ -115,16 +118,24 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
     if(x < 0 || y < 0 || x >= dim.x() || y >= dim.y())
         return;
 
-    for(frequency_packet& existing : field[y][x].packets)
+    /*for(frequency_packet& existing : field[y][x].packets)
     {
-        if(existing.frequency == p.frequency && existing.origin == p.origin && existing.iterations == p.iterations)
+        if(existing.frequency == p.frequency && existing.origin == p.origin && existing.iterations == p.iterations && existing.id == p.id)
         {
             existing.intensity += p.intensity;
             return;
         }
+    }*/
+
+    if(field[y][x].packets.find(p.id) != field[y][x].packets.end())
+    {
+        field[y][x].packets[p.id].intensity += p.intensity;
+        return;
     }
 
-    field[y][x].packets.push_back(p);
+    //field[y][x].packets.push_back(p);
+
+    field[y][x].packets[p.id] = p;
 }
 
 void radar_field::render(sf::RenderWindow& win)
@@ -145,8 +156,12 @@ void radar_field::render(sf::RenderWindow& win)
 
             //for(frequency_band& band : freq[y][x].buckets)
             {
-                for(frequency_packet& packet : freq[y][x].packets)
+                //for(frequency_packet& packet : freq[y][x].packets)
+
+                for(auto& ppair : freq[y][x].packets)
                 {
+                    auto packet = ppair.second;
+
                     total_intensity += packet.intensity;
 
                     /*sf::CircleShape origin;
@@ -228,7 +243,9 @@ void radar_field::tick(double dt_s)
     {
         for(int x=1; x < dim.x() - 2; x++)
         {
-            std::vector<frequency_packet>& packs = first[y][x].packets;
+            //std::vector<frequency_packet>& packs = first[y][x].packets;
+
+            auto& packs = first[y][x].packets;
 
             //if(packs.size() != 0)
             //    std::cout << "packs " << packs.size() << std::endl;
@@ -237,22 +254,36 @@ void radar_field::tick(double dt_s)
 
             float packet_wavefront_width = 0.5;
 
-            for(frequency_packet& pack : packs)
+            //for(frequency_packet& pack : packs)
+            for(auto& ppair : packs)
             {
+                auto& pack = ppair.second;
+
                 float real_distance = pack.iterations * light_distance_per_tick;
                 float my_angle = (index_position - pack.origin).angle();
 
                 vec2f packet_position = (vec2f){real_distance, 0}.rot(my_angle) + pack.origin;
 
+                /*std::optional<vec2f> apos = get_approximate_location(first, {x, y}, pack.id);
+
+                if(apos.has_value())
+                    std::cout << "approx of " << *apos << " real " << packet_position << std::endl;*/
+
+                /*std::optional<vec2f> apos = get_approximate_location(first, {x, y}, pack.id);
+
+                if(!apos)
+                    continue;
+
+                packet_position = *apos;*/
+
                 float distance_to_real_packet = (index_position - packet_position).length();
 
-                float intensity = packet_wavefront_width - distance_to_real_packet;
+                float wavecentre_distance = packet_wavefront_width - distance_to_real_packet;
 
                 //std::cout << "intensity " << intensity << std::endl;
 
-                if(fabs(intensity) < 0)
+                if(fabs(wavecentre_distance) < 0)
                     continue;
-
 
 
                 /*vec2f origin = pack.origin;
@@ -267,7 +298,7 @@ void radar_field::tick(double dt_s)
 
                 frequency_packet nextp = pack;
 
-                nextp.intensity = 2;
+                nextp.intensity = 1;
                 //nextp.intensity = intensity;
                 nextp.iterations++;
 
@@ -277,6 +308,106 @@ void radar_field::tick(double dt_s)
     }
 
     freq = next;
+}
+
+std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id)
+{
+    if(pos.x() < 1 || pos.y() < 1 || pos.x() >= dim.x() - 2 || pos.y() >= dim.y() - 2)
+        return {{0, 0}};
+
+    int ix = floor(pos.x());
+    int iy = floor(pos.y());
+
+    frequency_packet& tl = chart[iy][ix].packets[packet_id];
+    frequency_packet& tr = chart[iy][ix+1].packets[packet_id];
+    frequency_packet& bl = chart[iy+1][ix].packets[packet_id];
+    frequency_packet& br = chart[iy+1][ix+1].packets[packet_id];
+
+    ///so... given these corner points, we want to find the point which is 1?
+    ///no, we want to do bilinear interpolation where the corners form the weights?
+
+    if(tl.intensity <= 0 && br.intensity <= 0 && bl.intensity <= 0 && br.intensity <= 0)
+        return std::nullopt;
+
+    float tx1_i = tl.intensity;
+    float tx2_i = tr.intensity;
+
+    float t_i_frac = 0.5;
+
+    if(fabs(tx1_i + tx2_i) > 0.0001f)
+    {
+        t_i_frac = (tx1_i) / (tx1_i + tx2_i);
+    }
+
+    float bx1_i = bl.intensity;
+    float bx2_i = br.intensity;
+
+    float b_i_frac = 0.5;
+
+    if(fabs(bx1_i + bx2_i) > 0.0001f)
+        b_i_frac = (bx1_i) / (bx1_i + bx2_i);
+
+
+    ///so we have a point along the top along the top x axis, and a point along the bottom along the bottom x axis
+
+    ///remember that we want to 1 - these things to get weightings
+
+    ///so, we have one straight line from bottom to top right?
+
+    vec2f top_coordinate = {1.f - t_i_frac, 0};
+    vec2f bottom_coordinate = {1.f - b_i_frac, 1};
+
+    float ly1_i = tl.intensity;
+    float ly2_i = bl.intensity;
+
+    float l_i_frac = 0.5;
+
+    if(fabs(ly1_i + ly2_i) > 0.0001f)
+    {
+        l_i_frac = (ly1_i) / (ly1_i + ly2_i);
+    }
+
+    float ry1_i = tr.intensity;
+    float ry2_i = br.intensity;
+
+    float r_i_frac = 0.5;
+
+    if(fabs(ry1_i + ry2_i) > 0.0001f)
+    {
+        r_i_frac = (ry1_i) / (ry1_i + ry2_i);
+    }
+
+    vec2f left_coordinate = {0, 1 - l_i_frac};
+    vec2f right_coordinate = {1, 1 - r_i_frac};
+
+
+    float x1 = top_coordinate.x();
+    float x2 = bottom_coordinate.x();
+
+    float y1 = top_coordinate.y();
+    float y2 = bottom_coordinate.y();
+
+    float x3 = left_coordinate.x();
+    float x4 = right_coordinate.x();
+
+    float y3 = left_coordinate.y();
+    float y4 = right_coordinate.y();
+
+
+    //printf("%f %f %f %f %f %f %f %f\n", x1, x2, x3, x4, y1, y2, y3, y4);
+
+
+    float px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+    float py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+    vec2f relative_fraction = (vec2f){px, py} + pos;
+
+    return (relative_fraction * target_dim / dim) + offset;
+
+    //return (vec2f){px, py};
+
+    //vec2f line_1 = bottom_coordinate - top_coordinate;
+    //vec2f line_2 = right_coordinate - left_coordinate;
 }
 
 vec2f radar_field::index_to_position(int x, int y)
