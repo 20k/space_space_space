@@ -179,6 +179,8 @@ void server_thread()
     sf::Mouse mouse;
     sf::Keyboard key;
 
+    uint32_t iterations = 0;
+
     while(1)
     {
         entities.tick(frametime_dt);
@@ -224,7 +226,9 @@ void server_thread()
             }
         }
 
-        radar.tick(frametime_dt);
+        radar.tick(frametime_dt, iterations);
+
+        iterations++;
 
         sf::Event event;
 

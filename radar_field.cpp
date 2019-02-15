@@ -70,7 +70,7 @@ struct profile_dumper
 
     ~profile_dumper()
     {
-        //info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
+        info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
 
         //std::cout << name << " " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
     }
@@ -242,11 +242,11 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
         return;
     }*/
 
-    /*for(auto& i : field[y][x].packets)
+    for(auto& i : field[y][x].packets)
     {
-        if(i.first == p.id)
+        if(i.id == p.id)
             return;
-    }*/
+    }
 
     field[y][x].packets.push_back(p);
 
@@ -255,6 +255,8 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
 
 void radar_field::prune(frequency_chart& in)
 {
+    //profile_dumper prun("prune");
+
     for(int y=0; y < dim.y(); y++)
     {
         for(int x=0; x < dim.x(); x++)
@@ -418,22 +420,11 @@ float radar_field::get_intensity_at(int x, int y)
 }
 
 ///make sure to time correct this!
-float radar_field::get_intensity_at_of(int x, int y, uint32_t pid)
+float radar_field::get_intensity_at_of(int x, int y, const frequency_packet& packet)
 {
     float total_intensity = 0;
 
     //frequency_packet& packet = freq[y][x].packets[pid];
-
-    frequency_packet packet;
-
-    for(auto& i : freq[y][x].packets)
-    {
-        if(i.id == pid)
-        {
-            packet = i;
-            break;
-        }
-    }
 
     for(auto& spair : collisions[y][x].packets)
     {
@@ -471,7 +462,7 @@ float rcollideable::get_cross_section(float angle)
     return dim.max_elem() * 5;
 }
 
-frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool collides)
+frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool collides, uint32_t iterations)
 {
     frequency_chart next;
 
@@ -540,15 +531,15 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
             //for(frequency_packet& pack : packs)
             for(auto& ppair : packs)
             {
-                profile_dumper pack_loop("pack_loop");
+                //profile_dumper pack_loop("pack_loop");
 
                 frequency_packet& pack = ppair;
 
                 if(collides)
                 {
-                    profile_dumper coll_loop("coll_loop");
+                    //profile_dumper coll_loop("coll_loop");
 
-                    if(get_intensity_at_of(x, y, pack.id) <= 0.00000001f)
+                    if(get_intensity_at_of(x, y, pack) <= 0.00000001f)
                         continue;
                 }
 
@@ -595,7 +586,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 if(collides)
                 {
-                    profile_dumper coll_check("coll_check");
+                    //profile_dumper coll_check("coll_check");
 
                     /*bool make_collide = collideables[y][x];
 
@@ -728,7 +719,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                     }
                 }
 
-                profile_dumper packet_add("packet_add");
+                //profile_dumper packet_add("packet_add");
 
                 /*vec2f origin = pack.origin;
 
@@ -755,16 +746,16 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
     return next;
 }
 
-void radar_field::tick(double dt_s)
+void radar_field::tick(double dt_s, uint32_t iterations)
 {
     sf::Clock clk;
 
-    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, freq, true);
+    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, freq, true, iterations);
 
-    std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
+    std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false, iterations);
 
-    prune(next);
-    prune(next_collide);
+    //prune(next);
+    //prune(next_collide);
 
     freq = std::move(next);
     collisions = std::move(next_collide);
