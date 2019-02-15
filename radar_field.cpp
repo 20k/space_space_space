@@ -894,3 +894,83 @@ void radar_field::add_simple_collideable(float angle, vec2f ship_dim, vec2f real
 
     collideables[iy][ix].push_back(rcollide);
 }
+
+alt_radar_field::alt_radar_field(vec2f in)
+{
+    target_dim = in;
+}
+
+void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
+{
+    freq.origin = pos;
+
+    packets.push_back(freq);
+}
+
+void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid)
+{
+    alt_collideable rc;
+    rc.angle = angle;
+    rc.dim = dim;
+    rc.uid = uid;
+    rc.pos = location;
+
+    collideables.push_back(rc);
+}
+
+void alt_radar_field::tick(double dt_s, uint32_t iterations)
+{
+    for(alt_frequency_packet& packet : packets)
+    {
+        packet.iterations++;
+    }
+}
+
+float alt_radar_field::get_intensity_at(vec2f pos)
+{
+    float total_intensity = 0;
+
+    for(alt_frequency_packet& packet : packets)
+    {
+        vec2f index_position = pos;
+
+        float real_distance = packet.iterations * speed_of_light_per_tick;
+        float my_angle = (index_position - packet.origin).angle();
+
+        vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+
+        vec2f packet_position = packet_vector + packet.origin;
+
+        float distance_to_packet = (packet_position - packet.origin).length();
+
+        if(distance_to_packet <= 0.0001)
+        {
+            total_intensity += packet.intensity;
+        }
+        else
+        {
+            total_intensity += packet.intensity / (distance_to_packet * distance_to_packet);
+        }
+    }
+
+    return total_intensity;
+}
+
+void alt_radar_field::render(sf::RenderWindow& win)
+{
+    for(alt_frequency_packet& packet : packets)
+    {
+        float real_distance = packet.iterations * speed_of_light_per_tick;
+
+        sf::CircleShape shape;
+        shape.setRadius(real_distance);
+        shape.setPosition(packet.origin.x(), packet.origin.y());
+        shape.setOutlineThickness(packet.packet_wavefront_width);
+        shape.setFillColor(sf::Color(0,0,0,0));
+        shape.setOutlineColor(sf::Color(255, 255, 255, 255));
+        shape.setOrigin(shape.getRadius(), shape.getRadius());
+        shape.setPointCount(100);
+
+        win.draw(shape);
+    }
+}

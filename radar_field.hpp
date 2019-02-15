@@ -160,4 +160,46 @@ struct radar_field
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };
 
+///every packet is unique
+struct alt_frequency_packet
+{
+    double frequency = 0;
+    float intensity = 0;
+    vec2f origin = {0,0};
+
+    int iterations = 0;
+    float restrict_angle = 2 * M_PI;
+    float start_angle = 0;
+
+    float packet_wavefront_width = 7.5;
+};
+
+struct alt_collideable
+{
+    vec2f dim = {0,0};
+    float angle = 0;
+    uint32_t uid = 0;
+    vec2f pos = {0,0};
+};
+
+struct alt_radar_field
+{
+    vec2f target_dim;
+
+    std::vector<alt_frequency_packet> packets;
+    std::vector<alt_collideable> collideables;
+
+    float speed_of_light_per_tick = 1.5;
+
+    alt_radar_field(vec2f in);
+
+    void add_packet(alt_frequency_packet freq, vec2f pos);
+    void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
+
+    void tick(double dt_s, uint32_t iterations);
+    void render(sf::RenderWindow& win);
+
+    float get_intensity_at(vec2f pos);
+};
+
 #endif // RADAR_FIELD_HPP_INCLUDED
