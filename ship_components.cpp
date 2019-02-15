@@ -7,6 +7,7 @@
 #include <imgui/imgui.h>
 #include "imGuiX.h"
 #include <SFML/Graphics.hpp>
+#include "radar_field.hpp"
 
 ship::ship()
 {
@@ -397,6 +398,17 @@ void ship::tick(double dt_s)
                 l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
                 //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
                 l->phys_ignore.push_back(id);
+
+                alt_radar_field& radar = get_radar_field();
+
+                alt_frequency_packet em;
+                em.id = alt_frequency_packet::gid++;
+                em.frequency = 1000;
+                em.intensity = 50000;
+
+                radar.ignore_map[em.id][id].restart();
+
+                radar.add_packet_raw(em, r.position);
             }
 
             c.try_use = false;

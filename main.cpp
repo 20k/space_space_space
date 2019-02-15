@@ -69,6 +69,8 @@ void server_thread()
 
     #endif // SERVER_VIEW
 
+    //alt_radar_field radar({800, 800});
+
     entity_manager entities;
 
     ship* test_ship = entities.make_new<ship>();
@@ -174,12 +176,12 @@ void server_thread()
 
     std::map<uint64_t, sf::Clock> control_elapsed;
 
-    alt_radar_field radar({800, 800});
-
     sf::Mouse mouse;
     sf::Keyboard key;
 
     uint32_t iterations = 0;
+
+    alt_radar_field& radar = get_radar_field();
 
     while(1)
     {
@@ -269,6 +271,15 @@ void server_thread()
                     if(read.data.fired)
                     {
                         s->fire();
+
+                        /*alt_frequency_packet em;
+                        em.id = alt_frequency_packet::gid++;
+                        em.frequency = 1000;
+                        em.intensity = 50000;
+
+                        radar.ignore_map[em.id][s->id].restart();
+
+                        radar.add_packet_raw(em, s->r.position);*/
                     }
                 }
             }

@@ -160,6 +160,8 @@ struct data_tracker : serialisable
     }
 };
 
+struct alt_radar_field;
+
 struct ship : virtual entity, virtual serialisable
 {
     size_t network_owner = 0;

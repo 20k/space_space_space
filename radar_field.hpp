@@ -223,7 +223,7 @@ struct alt_radar_field
 
     std::vector<alt_collideable> collideables;
 
-    std::map<uint32_t, std::map<uint32_t, sf::Clock>> ignore_map;
+    std::map<uint32_t, std::map<uint32_t, hacky_clock>> ignore_map;
 
     float speed_of_light_per_tick = 10.5;
 
@@ -243,5 +243,13 @@ struct alt_radar_field
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 };
+
+inline
+alt_radar_field& get_radar_field()
+{
+    static alt_radar_field radar({800, 800});
+
+    return radar;
+}
 
 #endif // RADAR_FIELD_HPP_INCLUDED
