@@ -205,8 +205,18 @@ void radar_field::render(sf::RenderWindow& win)
             if(total_intensity > 10)
                 total_intensity = 10;
 
+            float ffrac = 1;
+
+            if(total_intensity < 1)
+            {
+                ffrac = total_intensity;
+                total_intensity = 1;
+            }
+
             circle.setRadius(total_intensity);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
+
+            circle.setFillColor(sf::Color(255 * ffrac, 255 * ffrac, 255 * ffrac, 255));
 
             circle.setPosition(real_pos.x(), real_pos.y());
 
@@ -215,6 +225,7 @@ void radar_field::render(sf::RenderWindow& win)
     }
 }
 
+///make sure to time correct this!
 float radar_field::get_intensity_at(int x, int y)
 {
     float total_intensity = 0;
@@ -242,9 +253,22 @@ float radar_field::get_intensity_at(int x, int y)
             if(ignore)
                 continue;
 
-            vec2f real_position = index_to_position(x, y);
+            vec2f index_position = index_to_position(x, y);
 
-            float distance_to_packet = (real_position - packet.origin).length();
+            /*
+
+            vec2f packet_real = packet.origin + light_move_per_tick * packet.iterations;
+
+            float distance_to_packet = (real_position - packet.origin).length();*/
+
+            float real_distance = packet.iterations * light_move_per_tick;
+            float my_angle = (index_position - packet.origin).angle();
+
+            vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+
+            vec2f packet_position = packet_vector + packet.origin;
+
+            float distance_to_packet = (packet_position - packet.origin).length();
 
             //std::cout << "distance " << distance_to_packet << std::endl;
 
@@ -256,7 +280,7 @@ float radar_field::get_intensity_at(int x, int y)
             }
             else
             {
-                total_intensity += packet.intensity / (distance_to_packet);
+                total_intensity += packet.intensity / (distance_to_packet * distance_to_packet);
             }
 
 
@@ -298,7 +322,6 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
         i.resize(dim.x());
     }
 
-    float light_distance_per_tick = 1.5;
     float light_propagation = 1;
 
     ///so
@@ -350,14 +373,12 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
             vec2f index_position = index_to_position(x, y);
 
-            float packet_wavefront_width = 7.5;
-
             //for(frequency_packet& pack : packs)
             for(auto& ppair : packs)
             {
                 frequency_packet& pack = ppair.second;
 
-                float real_distance = pack.iterations * light_distance_per_tick;
+                float real_distance = pack.iterations * light_move_per_tick;
                 float my_angle = (index_position - pack.origin).angle();
 
                 vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
@@ -382,7 +403,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 float distance_to_real_packet = (index_position - packet_position).length();
 
-                float wavecentre_distance = packet_wavefront_width - distance_to_real_packet;
+                float wavecentre_distance = pack.packet_wavefront_width - distance_to_real_packet;
 
                 //std::cout << "intensity " << intensity << std::endl;
 
@@ -394,7 +415,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 vec2f propagation_direction = (packet_position - pack.origin).norm();
 
-                vec2f next_location = packet_position + propagation_direction * light_distance_per_tick;
+                vec2f next_location = packet_position + propagation_direction * light_move_per_tick;
 
                 //std::cout << "intens " << intensity << std::endl;
 
@@ -435,6 +456,12 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                                 ignore = true;
                                 break;
                             }
+
+                            if(j == pack.transient_id)
+                            {
+                                ignore = true;
+                                break;
+                            }
                         }
 
                         if(ignore)
@@ -459,7 +486,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                         cpack.start_angle = my_angle;
                         cpack.restrict_angle = my_fraction * 2 * M_PI;
-                        cpack.iterations++;
+                        //cpack.iterations++;
 
                         //collisions[y][x].packets[cpack.id] = cpack;
 
@@ -490,6 +517,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                         frequency_packet reflect = pack;
                         reflect.id = frequency_packet::gid++;
+                        //reflect.transient_id = frequency_packet::gid++;
 
                         reflect.intensity = pack.intensity;
                         reflect.origin = pack.origin + packet_vector * 2 - packet_vector.norm() * 10;
@@ -501,6 +529,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                         {
                             ignore_map[r.uid].push_back(reflect.id);
                             ignore_map[r.uid].push_back(pack.id);
+                            //ignore_map[r.uid].push_back(pack.transient_id);
 
                             //reflect.ignore_list.push_back(r.uid);
                         }
@@ -515,9 +544,10 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 vec2f propagation_direction = (real_pos - origin).norm();
 
-                vec2f location = real_pos + propagation_direction * light_propagation * light_distance_per_tick;*/
+                vec2f location = real_pos + propagation_direction * light_propagation * light_move_per_tick;*/
 
                 frequency_packet nextp = pack;
+                //nextp.transient_id = pack.iterations + pow(2, 30);
 
                 //nextp.intensity = wavecentre_distance;
                 nextp.intensity = pack.intensity;

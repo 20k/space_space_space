@@ -197,7 +197,7 @@ void server_thread()
         }*/
 
         frequency_packet pack;
-        pack.intensity = 500;
+        pack.intensity = 50000;
         pack.frequency = 100;
 
         //if(key.isKeyPressed(sf::Keyboard::K))

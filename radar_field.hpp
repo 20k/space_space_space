@@ -19,6 +19,7 @@ namespace sf
 struct frequency_packet
 {
     uint32_t id = -1;
+    uint32_t transient_id = -1;
     uint32_t collides_with = -1;
 
     static inline uint32_t gid = 0;
@@ -32,6 +33,8 @@ struct frequency_packet
     int iterations = 0;
     float restrict_angle = 2 * M_PI;
     float start_angle = 0;
+
+    float packet_wavefront_width = 7.5;
 
     //std::vector<uint32_t> ignore_list;
 };
@@ -79,6 +82,8 @@ struct radar_field
     vec2f offset = {0,0};
     vec2f dim = {100,100};
     vec2f target_dim = {0,0};
+
+    float light_move_per_tick = 1.5;
 
     radar_field(vec2f target);
 
