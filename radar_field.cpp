@@ -924,6 +924,18 @@ void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f locat
     collideables.push_back(rc);
 }
 
+bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
+{
+    float real_distance = packet.iterations * speed_of_light_per_tick;
+
+    if(packet.iterations == 0)
+        return false;
+
+    float real_intensity = packet.intensity / (real_distance * real_distance);
+
+    return real_intensity < 0.1f;
+}
+
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
     profile_dumper pdump("newtick");
@@ -937,7 +949,24 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
-            if(ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000 < 500)
+            if((ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000.) < 500)
+                continue;
+
+            vec2f packet_to_collide = collide.pos - packet.origin;
+
+            /*vec2f packet_vector = (vec2f){current_radius, 0}.rot(packet_to_collide.angle());
+
+            vec2f packet_position = packet_vector + packet.origin;
+            vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
+
+            float distance_to_packet = (pos - packet_position).length();
+
+            float my_distance_to_packet = (pos - packet.origin).length();
+            float my_packet_angle = (pos - packet.origin).angle();*/
+
+            vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
+
+            if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
                 continue;
 
             vec2f relative_pos = collide.pos - packet.origin;
@@ -983,6 +1012,27 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
+    for(auto it = packets.begin(); it != packets.end();)
+    {
+        if(packet_expired(*it))
+        {
+            std::cout << "erase\n";
+
+            auto f_it = subtractive_packets.find(it->id);
+
+            if(f_it != subtractive_packets.end())
+            {
+                subtractive_packets.erase(f_it);
+            }
+
+            it = packets.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
+
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
     for(alt_frequency_packet& packet : packets)
@@ -1000,6 +1050,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     }
 
     pdump.dump();
+
+    collideables.clear();
 }
 
 float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
@@ -1109,6 +1161,9 @@ void alt_radar_field::render(sf::RenderWindow& win)
         win.draw(shape);
     }*/
 
+    std::cout << packets.size() << std::endl;
+
+    sf::CircleShape shape;
 
     for(int y=0; y < target_dim.y(); y+=10)
     {
@@ -1132,7 +1187,6 @@ void alt_radar_field::render(sf::RenderWindow& win)
 
             float fcol = 255 * ffrac;
 
-            sf::CircleShape shape;
             shape.setRadius(intensity);
             shape.setPosition(x, y);
             shape.setFillColor(sf::Color(fcol, fcol, fcol, fcol));
