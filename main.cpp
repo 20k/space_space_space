@@ -240,6 +240,16 @@ void server_thread()
             conn.pop_read();
         }
 
+        for(entity* e : entities.entities)
+        {
+            ship* s = dynamic_cast<ship*>(e);
+
+            if(s)
+            {
+                radar.add_simple_collideable(s->r.position);
+            }
+        }
+
         std::vector<ship*> ships;
         std::vector<client_renderable> renderables;
 

@@ -455,3 +455,16 @@ vec2f radar_field::index_to_position(int x, int y)
 {
     return ((vec2f){(float)x, (float)y} * target_dim / dim) + offset;
 }
+
+void radar_field::add_simple_collideable(vec2f real_position)
+{
+    vec2f idx = (real_position - offset) * dim / target_dim;
+
+    int ix = floor(idx.x());
+    int iy = floor(idx.y());
+
+    if(ix < 0 || iy < 0 || ix >= dim.x() || iy >= dim.y())
+        return;
+
+    collideables[iy][ix] = 1;
+}
