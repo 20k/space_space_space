@@ -926,6 +926,8 @@ void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f locat
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
+    profile_dumper pdump("newtick");
+
     for(alt_frequency_packet& packet : packets)
     {
         float current_radius = packet.iterations * speed_of_light_per_tick;
@@ -933,8 +935,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
-            //if(ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000 < 500)
-            //    continue;
+            if(ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000 < 500)
+                continue;
 
             vec2f relative_pos = collide.pos - packet.origin;
 
@@ -957,6 +959,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 collide_packet.restrict_angle = my_fraction * 2 * M_PI;
 
                 subtractive_packets.push_back(collide_packet);
+
+                ignore_map[packet.id][collide.uid].restart();
             }
         }
     }
@@ -970,6 +974,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     {
         packet.iterations++;
     }
+
+    pdump.dump();
 }
 
 float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
@@ -1001,7 +1007,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
         float distance_to_shadow = (pos - shadow_position).length();
 
         if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
-            return 0;
+            continue;
 
         /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
         {
