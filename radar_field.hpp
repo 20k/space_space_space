@@ -56,9 +56,9 @@ struct frequencies
 {
     //std::vector<frequency_packet> packets;
 
-    //std::vector<std::pair<uint32_t, frequency_packet>> packets;
+    std::vector<frequency_packet> packets;
 
-    std::unordered_map<uint32_t, frequency_packet> packets;
+    //std::unordered_map<uint32_t, frequency_packet> packets;
 };
 
 std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet packet);
@@ -148,6 +148,8 @@ struct radar_field
     void render(sf::RenderWindow& win);
     void tick(double dt_s);
     frequency_chart tick_raw(double dt_s, frequency_chart& next, bool collides);
+
+    void prune(frequency_chart& in);
 
     vec2f index_to_position(int x, int y);
 

@@ -70,7 +70,7 @@ struct profile_dumper
 
     ~profile_dumper()
     {
-        info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
+        //info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
 
         //std::cout << name << " " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
     }
@@ -212,7 +212,7 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
     if(x < 0 || y < 0 || x >= dim.x() || y >= dim.y())
         return;
 
-    profile_dumper arpt("arpt");
+    //profile_dumper arpt("arpt");
 
     /*for(frequency_packet& existing : field[y][x].packets)
     {
@@ -231,11 +231,16 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
 
     //id.add(field[y][x].packets.size());
 
-    if(field[y][x].packets.find(p.id) != field[y][x].packets.end())
+    /*for(auto& i : field[y][x].packets)
+    {
+        std::cout << "i.first " << i.first << " cnt " << field[y][x].packets.size() << std::endl;
+    }*/
+
+    /*if(field[y][x].packets.find(p.id) != field[y][x].packets.end())
     {
         //field[y][x].packets[p.id].intensity += p.intensity;
         return;
-    }
+    }*/
 
     /*for(auto& i : field[y][x].packets)
     {
@@ -243,9 +248,35 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
             return;
     }*/
 
-    //field[y][x].packets.push_back({p.id, p});
+    field[y][x].packets.push_back(p);
 
-    field[y][x].packets[p.id] = p;
+    //field[y][x].packets[p.id] = p;
+}
+
+void radar_field::prune(frequency_chart& in)
+{
+    for(int y=0; y < dim.y(); y++)
+    {
+        for(int x=0; x < dim.x(); x++)
+        {
+            std::map<uint32_t, frequency_packet> good_map;
+
+            for(auto& i : in[y][x].packets)
+            {
+                if(good_map.find(i.id) != good_map.end())
+                    continue;
+
+                good_map[i.id] = i;
+            }
+
+            in[y][x].packets.clear();
+
+            for(auto& i : good_map)
+            {
+                in[y][x].packets.push_back(i.second);
+            }
+        }
+    }
 }
 
 void radar_field::render(sf::RenderWindow& win)
@@ -321,13 +352,13 @@ float radar_field::get_intensity_at(int x, int y)
 
         for(auto& ppair : freq[y][x].packets)
         {
-            frequency_packet& packet = ppair.second;
+            frequency_packet& packet = ppair;
 
             bool ignore = false;
 
             for(auto& spair : collisions[y][x].packets)
             {
-                if(spair.second.collides_with == packet.id)
+                if(spair.collides_with == packet.id)
                 {
                     ignore = true;
                     break;
@@ -391,22 +422,22 @@ float radar_field::get_intensity_at_of(int x, int y, uint32_t pid)
 {
     float total_intensity = 0;
 
-    frequency_packet& packet = freq[y][x].packets[pid];
+    //frequency_packet& packet = freq[y][x].packets[pid];
 
-    /*frequency_packet packet;
+    frequency_packet packet;
 
     for(auto& i : freq[y][x].packets)
     {
-        if(i.first == pid)
+        if(i.id == pid)
         {
-            packet = i.second;
+            packet = i;
             break;
         }
-    }*/
+    }
 
     for(auto& spair : collisions[y][x].packets)
     {
-        if(spair.second.collides_with == packet.id)
+        if(spair.collides_with == packet.id)
         {
             return 0;
         }
@@ -511,7 +542,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
             {
                 profile_dumper pack_loop("pack_loop");
 
-                frequency_packet& pack = ppair.second;
+                frequency_packet& pack = ppair;
 
                 if(collides)
                 {
@@ -731,6 +762,9 @@ void radar_field::tick(double dt_s)
     std::vector<std::vector<frequencies>> next = tick_raw(dt_s, freq, true);
 
     std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
+
+    prune(next);
+    prune(next_collide);
 
     freq = std::move(next);
     collisions = std::move(next_collide);
