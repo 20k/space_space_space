@@ -65,7 +65,7 @@ void server_thread()
     #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
-    sf::RenderWindow debug(sf::VideoMode(800, 600), "debug");
+    sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
 
     #endif // SERVER_VIEW
 
@@ -174,7 +174,7 @@ void server_thread()
 
     std::map<uint64_t, sf::Clock> control_elapsed;
 
-    radar_field radar({1000, 1000});
+    radar_field radar({800, 800});
 
     sf::Mouse mouse;
     sf::Keyboard key;

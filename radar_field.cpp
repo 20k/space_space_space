@@ -270,10 +270,6 @@ float radar_field::get_intensity_at(int x, int y)
 
             float distance_to_packet = (packet_position - packet.origin).length();
 
-            //std::cout << "distance " << distance_to_packet << std::endl;
-
-            //std::cout << "pit " << packet.intensity << std::endl;
-
             if(distance_to_packet <= 0.0001)
             {
                 total_intensity += packet.intensity;
@@ -302,6 +298,44 @@ float radar_field::get_intensity_at(int x, int y)
 
     //if(subtractive_intensity > 0)
     //    return 0;
+
+    return total_intensity;
+}
+
+///make sure to time correct this!
+float radar_field::get_intensity_at_of(int x, int y, uint32_t pid)
+{
+    float total_intensity = 0;
+
+    frequency_packet& packet = freq[y][x].packets[pid];
+
+    for(auto& spair : collisions[y][x].packets)
+    {
+        if(spair.second.collides_with == packet.id)
+        {
+            return 0;
+        }
+    }
+
+    vec2f index_position = index_to_position(x, y);
+
+    float real_distance = packet.iterations * light_move_per_tick;
+    float my_angle = (index_position - packet.origin).angle();
+
+    vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+
+    vec2f packet_position = packet_vector + packet.origin;
+
+    float distance_to_packet = (packet_position - packet.origin).length();
+
+    if(distance_to_packet <= 0.0001)
+    {
+        total_intensity += packet.intensity;
+    }
+    else
+    {
+        total_intensity += packet.intensity / (distance_to_packet * distance_to_packet);
+    }
 
     return total_intensity;
 }
@@ -377,6 +411,12 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
             for(auto& ppair : packs)
             {
                 frequency_packet& pack = ppair.second;
+
+                if(collides)
+                {
+                    if(get_intensity_at_of(x, y, pack.id) <= 0.00000001f)
+                        continue;
+                }
 
                 float real_distance = pack.iterations * light_move_per_tick;
                 float my_angle = (index_position - pack.origin).angle();
@@ -525,6 +565,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                         reflect.id = frequency_packet::gid++;
                         //reflect.transient_id = frequency_packet::gid++;
 
+                        ///maybe intensity should be distributed here to avoid energy increase
                         reflect.intensity = pack.intensity;
                         reflect.origin = pack.origin + packet_vector * 2 - packet_vector.norm() * 10;
                         //reflect.start_angle = -my_angle;

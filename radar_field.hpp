@@ -141,6 +141,7 @@ struct radar_field
     void add_raw_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, int x, int y) const;
 
     float get_intensity_at(int idx, int idy);
+    float get_intensity_at_of(int idx, int idy, uint32_t pid);
     void render(sf::RenderWindow& win);
     void tick(double dt_s);
     frequency_chart tick_raw(double dt_s, frequency_chart& next, bool collides);
