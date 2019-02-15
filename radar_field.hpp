@@ -187,6 +187,7 @@ struct alt_radar_field
     vec2f target_dim;
 
     std::vector<alt_frequency_packet> packets;
+    std::vector<alt_frequency_packet> subtractive_packets;
     std::vector<alt_collideable> collideables;
 
     float speed_of_light_per_tick = 1.5;

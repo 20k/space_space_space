@@ -932,24 +932,27 @@ float alt_radar_field::get_intensity_at(vec2f pos)
 
     for(alt_frequency_packet& packet : packets)
     {
-        vec2f index_position = pos;
-
         float real_distance = packet.iterations * speed_of_light_per_tick;
-        float my_angle = (index_position - packet.origin).angle();
+        float my_angle = (pos - packet.origin).angle();
 
         vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
 
         vec2f packet_position = packet_vector + packet.origin;
 
-        float distance_to_packet = (packet_position - packet.origin).length();
+        float distance_to_packet = (pos - packet_position).length();
 
-        if(distance_to_packet <= 0.0001)
+        float my_distance_to_packet = (pos - packet.origin).length();
+
+        if(distance_to_packet > packet.packet_wavefront_width)
         {
-            total_intensity += packet.intensity;
+            continue;
         }
         else
         {
-            total_intensity += packet.intensity / (distance_to_packet * distance_to_packet);
+            if(my_distance_to_packet > 0.0001)
+                total_intensity += packet.intensity / (my_distance_to_packet * my_distance_to_packet);
+            else
+                total_intensity += packet.intensity;
         }
     }
 
@@ -958,7 +961,7 @@ float alt_radar_field::get_intensity_at(vec2f pos)
 
 void alt_radar_field::render(sf::RenderWindow& win)
 {
-    for(alt_frequency_packet& packet : packets)
+    /*for(alt_frequency_packet& packet : packets)
     {
         float real_distance = packet.iterations * speed_of_light_per_tick;
 
@@ -972,5 +975,27 @@ void alt_radar_field::render(sf::RenderWindow& win)
         shape.setPointCount(100);
 
         win.draw(shape);
+    }*/
+
+    for(int y=0; y < target_dim.y(); y+=10)
+    {
+        for(int x=0; x < target_dim.x(); x+=10)
+        {
+            float intensity = get_intensity_at({x, y});
+
+            if(intensity == 0)
+                continue;
+
+            if(intensity > 5)
+                intensity = 5;
+
+            sf::CircleShape shape;
+            shape.setRadius(intensity);
+            shape.setPosition(x, y);
+            shape.setFillColor(sf::Color(255, 255, 255, 255));
+            shape.setOrigin(shape.getRadius(), shape.getRadius());
+
+            win.draw(shape);
+        }
     }
 }
