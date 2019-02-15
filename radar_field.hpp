@@ -19,6 +19,7 @@ namespace sf
 struct frequency_packet
 {
     uint32_t id = -1;
+    uint32_t collides_with = -1;
 
     static inline uint32_t gid = 0;
 

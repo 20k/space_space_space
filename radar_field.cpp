@@ -201,7 +201,7 @@ void radar_field::render(sf::RenderWindow& win)
 float radar_field::get_intensity_at(int x, int y)
 {
     float total_intensity = 0;
-    float subtractive_intensity = 0;
+    //float subtractive_intensity = 0;
 
     //for(frequency_band& band : freq[y][x].buckets)
     {
@@ -210,6 +210,20 @@ float radar_field::get_intensity_at(int x, int y)
         for(auto& ppair : freq[y][x].packets)
         {
             auto packet = ppair.second;
+
+            bool ignore = false;
+
+            for(auto& spair : collisions[y][x].packets)
+            {
+                if(spair.second.collides_with == packet.id)
+                {
+                    ignore = true;
+                    break;
+                }
+            }
+
+            if(ignore)
+                continue;
 
             total_intensity += packet.intensity;
 
@@ -223,14 +237,14 @@ float radar_field::get_intensity_at(int x, int y)
             win.draw(origin);*/
         }
 
-        for(auto& ppair : collisions[y][x].packets)
+        /*for(auto& ppair : collisions[y][x].packets)
         {
             subtractive_intensity += ppair.second.intensity;
-        }
+        }*/
     }
 
-    if(subtractive_intensity > 0)
-        return 0;
+    //if(subtractive_intensity > 0)
+    //    return 0;
 
     return total_intensity;
 }
@@ -408,6 +422,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                         frequency_packet cpack = pack;
                         cpack.id = frequency_packet::gid++;
+                        cpack.collides_with = pack.id;
 
                         cpack.start_angle = my_angle;
                         cpack.restrict_angle = my_fraction * 2 * M_PI;
@@ -456,8 +471,6 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                             //reflect.ignore_list.push_back(r.uid);
                         }
-
-                        std::cout << "REFL\n";
 
                         //add_packet_to(next, reflect, next_location, false);
                         add_packet_to(next, reflect, packet_position - packet_vector.norm() * 10, false);
