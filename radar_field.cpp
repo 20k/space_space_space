@@ -158,31 +158,20 @@ void radar_field::render(sf::RenderWindow& win)
 
             //circle.setRadius(1);
 
-            float total_intensity = 0;
-
-            //for(frequency_band& band : freq[y][x].buckets)
-            {
-                //for(frequency_packet& packet : freq[y][x].packets)
-
-                for(auto& ppair : freq[y][x].packets)
-                {
-                    auto packet = ppair.second;
-
-                    total_intensity += packet.intensity;
-
-                    /*sf::CircleShape origin;
-                    origin.setRadius(5);
-                    origin.setFillColor(sf::Color(255, 0, 0, 255));
-
-                    origin.setPosition(packet.origin.x(), packet.origin.y());
-                    origin.setOrigin(origin.getRadius(), origin.getRadius());
-
-                    win.draw(origin);*/
-                }
-            }
+            float total_intensity = get_intensity_at(x, y);
 
             if(total_intensity == 0)
                 continue;
+
+            /*for(auto& ppair : collisions[y][x].packets)
+            {
+                vec2f real = index_to_position(x, y);
+
+                circle.setPosition(real.x(), real.y());
+                circle.setRadius(5);
+
+                win.draw(circle);
+            }*/
 
             circle.setRadius(total_intensity);
             circle.setOrigin(circle.getRadius(), circle.getRadius());
@@ -192,6 +181,43 @@ void radar_field::render(sf::RenderWindow& win)
             win.draw(circle);
         }
     }
+}
+
+float radar_field::get_intensity_at(int x, int y)
+{
+    float total_intensity = 0;
+    float subtractive_intensity = 0;
+
+    //for(frequency_band& band : freq[y][x].buckets)
+    {
+        //for(frequency_packet& packet : freq[y][x].packets)
+
+        for(auto& ppair : freq[y][x].packets)
+        {
+            auto packet = ppair.second;
+
+            total_intensity += packet.intensity;
+
+            /*sf::CircleShape origin;
+            origin.setRadius(5);
+            origin.setFillColor(sf::Color(255, 0, 0, 255));
+
+            origin.setPosition(packet.origin.x(), packet.origin.y());
+            origin.setOrigin(origin.getRadius(), origin.getRadius());
+
+            win.draw(origin);*/
+        }
+
+        for(auto& ppair : collisions[y][x].packets)
+        {
+            subtractive_intensity += ppair.second.intensity;
+        }
+    }
+
+    if(subtractive_intensity > 0)
+        return 0;
+
+    return total_intensity;
 }
 
 frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool collides)
@@ -262,7 +288,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
             //for(frequency_packet& pack : packs)
             for(auto& ppair : packs)
             {
-                auto& pack = ppair.second;
+                frequency_packet& pack = ppair.second;
 
                 float real_distance = pack.iterations * light_distance_per_tick;
                 float my_angle = (index_position - pack.origin).angle();
@@ -302,6 +328,21 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 //std::cout << "intens " << intensity << std::endl;
 
+                if(collides)
+                {
+                    bool make_collide = collideables[y][x];
+
+                    if(make_collide)
+                    {
+                        frequency_packet cpack = pack;
+                        cpack.id = frequency_packet::gid++;
+
+                        cpack.start_angle = my_angle;
+                        cpack.restrict_angle = M_PI / 32; ///use real object size
+
+                        collisions[y][x].packets[cpack.id] = cpack;
+                    }
+                }
 
                 /*vec2f origin = pack.origin;
 
@@ -338,6 +379,7 @@ void radar_field::tick(double dt_s)
     std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
 
     freq = next;
+    collisions = next_collide;
 
     std::cout << "elapsed_ms " << clk.getElapsedTime().asMicroseconds() / 1000 << std::endl;
 
