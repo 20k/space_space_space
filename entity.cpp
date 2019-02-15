@@ -70,6 +70,7 @@ void client_renderable::init_rectangular(vec2f dim)
     }
 
     approx_rad = corner_rads;
+    approx_dim = dim;
 }
 
 void entity::apply_inputs(double dt_s, double velocity_mult, double angular_mult)

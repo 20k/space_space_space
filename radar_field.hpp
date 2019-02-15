@@ -55,12 +55,20 @@ std::array<frequency_packet, 4> distribute_packet(vec2f rel, frequency_packet pa
 
 using frequency_chart = std::vector<std::vector<frequencies>>;
 
+struct rcollideable
+{
+    vec2f dim = {0,0};
+    float angle = 0;
+
+    float get_cross_section(float angle);
+};
+
 ///for one playspace
 struct radar_field
 {
     std::vector<std::vector<frequencies>> freq;
     std::vector<std::vector<frequencies>> collisions;
-    std::vector<std::vector<int>> collideables;
+    std::vector<std::vector<std::vector<rcollideable>>> collideables;
 
     vec2f offset = {0,0};
     vec2f dim = {100,100};
@@ -82,7 +90,7 @@ struct radar_field
 
     std::optional<vec2f> get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id);
 
-    void add_simple_collideable(vec2f real_position);
+    void add_simple_collideable(float angle, vec2f dim, vec2f location);
 
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };

@@ -15,6 +15,12 @@ radar_field::radar_field(vec2f target)
         i.resize(dim.x());
     }
 
+    collideables.resize(dim.y());
+    for(auto& i : collideables)
+    {
+        i.resize(dim.x());
+    }
+
     target_dim = target;
 }
 
@@ -220,6 +226,11 @@ float radar_field::get_intensity_at(int x, int y)
     return total_intensity;
 }
 
+float rcollideable::get_cross_section(float angle)
+{
+    return dim.max_elem() * 5;
+}
+
 frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool collides)
 {
     frequency_chart next;
@@ -330,7 +341,7 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                 if(collides)
                 {
-                    bool make_collide = collideables[y][x];
+                    /*bool make_collide = collideables[y][x];
 
                     if(make_collide)
                     {
@@ -339,6 +350,36 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
 
                         cpack.start_angle = my_angle;
                         cpack.restrict_angle = M_PI / 32; ///use real object size
+
+                        collisions[y][x].packets[cpack.id] = cpack;
+                    }*/
+
+                    float largest_cross = 0;
+
+                    for(auto& i : collideables[y][x])
+                    {
+                        largest_cross = std::max(largest_cross, i.get_cross_section(my_angle));
+                    }
+
+                    if(collideables[y][x].size() > 0)
+                    {
+                        std::cout << "hello " << largest_cross << std::endl;
+                    }
+
+                    if(largest_cross > 0)
+                    {
+                        float circle_circumference = 2 * M_PI * real_distance;
+
+                        if(circle_circumference < 0.00001)
+                            continue;
+
+                        float my_fraction = largest_cross / circle_circumference;
+
+                        frequency_packet cpack = pack;
+                        cpack.id = frequency_packet::gid++;
+
+                        cpack.start_angle = my_angle;
+                        cpack.restrict_angle = my_fraction * 2 * M_PI;
 
                         collisions[y][x].packets[cpack.id] = cpack;
                     }
@@ -498,7 +539,7 @@ vec2f radar_field::index_to_position(int x, int y)
     return ((vec2f){(float)x, (float)y} * target_dim / dim) + offset;
 }
 
-void radar_field::add_simple_collideable(vec2f real_position)
+void radar_field::add_simple_collideable(float angle, vec2f ship_dim, vec2f real_position)
 {
     vec2f idx = (real_position - offset) * dim / target_dim;
 
@@ -508,5 +549,9 @@ void radar_field::add_simple_collideable(vec2f real_position)
     if(ix < 0 || iy < 0 || ix >= dim.x() || iy >= dim.y())
         return;
 
-    collideables[iy][ix] = 1;
+    rcollideable rcollide;
+    rcollide.dim = ship_dim;
+    rcollide.angle = angle;
+
+    collideables[iy][ix].push_back(rcollide);
 }

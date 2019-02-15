@@ -23,6 +23,8 @@ struct client_renderable : serialisable
     float approx_rad = 0;
     float scale = 2;
 
+    vec2f approx_dim = {0,0};
+
     void serialise(nlohmann::json& data, bool encode)
     {
         //if(!encode)
