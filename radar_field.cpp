@@ -913,6 +913,13 @@ void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
     packets.push_back(freq);
 }
 
+void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
+{
+    freq.origin = pos;
+
+    packets.push_back(freq);
+}
+
 void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid)
 {
     alt_collideable rc;
@@ -949,7 +956,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
-            if((ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000.) < 500)
+            if((ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000.) < 200)
                 continue;
 
             vec2f packet_to_collide = collide.pos - packet.origin;
@@ -1016,7 +1023,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     {
         if(packet_expired(*it))
         {
-            std::cout << "erase\n";
+            //std::cout << "erase\n";
 
             auto f_it = subtractive_packets.find(it->id);
 
@@ -1109,7 +1116,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
         if(my_distance_to_packet > 0.0001)
             return packet.intensity / (my_distance_to_packet * my_distance_to_packet);
         else
-            return packet.intensity;
+            return packet.intensity / (0.0001 * 0.0001);
     }
 
     return 0;
@@ -1129,7 +1136,8 @@ float alt_radar_field::get_intensity_at(vec2f pos)
 
 void alt_radar_field::render(sf::RenderWindow& win)
 {
-    /*for(alt_frequency_packet& packet : packets)
+    #if 0
+    for(alt_frequency_packet& packet : packets)
     {
         float real_distance = packet.iterations * speed_of_light_per_tick;
 
@@ -1143,6 +1151,36 @@ void alt_radar_field::render(sf::RenderWindow& win)
         shape.setPointCount(100);
 
         win.draw(shape);
+
+        /*for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
+        {
+            vec2f pos = shadow.origin;
+
+            float distance = shadow.iterations * speed_of_light_per_tick;
+
+            float angle = shadow.start_angle;
+
+            float min_angle = shadow.start_angle - shadow.restrict_angle;
+            float max_angle = shadow.start_angle + shadow.restrict_angle;
+
+            vec2f d1 = (vec2f){distance, 0}.rot(min_angle) + pos;
+            vec2f d2 = (vec2f){distance, 0}.rot(max_angle) + pos;
+
+            sf::RectangleShape rshape;
+            rshape.setSize({(d1 - d2).length(), 5});
+            rshape.setRotation(r2d((d2 - d1).angle()));
+            rshape.setPosition(d1.x(), d1.y());
+
+            rshape.setFillColor(sf::Color(0,0,0,255));
+
+            win.draw(rshape);
+        }*/
+    }
+    #endif // 0
+
+    /*for(alt_frequency_packet& packet : packets)
+    {
+        float subdiv =
     }*/
 
     /*for(alt_frequency_packet& packet : subtractive_packets)
@@ -1165,9 +1203,9 @@ void alt_radar_field::render(sf::RenderWindow& win)
 
     sf::CircleShape shape;
 
-    for(int y=0; y < target_dim.y(); y+=10)
+    for(int y=0; y < target_dim.y(); y+=20)
     {
-        for(int x=0; x < target_dim.x(); x+=10)
+        for(int x=0; x < target_dim.x(); x+=20)
         {
             float intensity = get_intensity_at({x, y});
 

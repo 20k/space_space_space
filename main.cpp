@@ -206,6 +206,7 @@ void server_thread()
         alt_pack.intensity = 50000;
         alt_pack.frequency = 1000;
 
+
         //if(key.isKeyPressed(sf::Keyboard::K))
         if(ONCE_MACRO(sf::Keyboard::K))
         {
@@ -227,6 +228,15 @@ void server_thread()
             if(s)
             {
                 radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position, s->id);
+
+                alt_frequency_packet heat;
+                heat.id = alt_frequency_packet::gid++;
+                heat.frequency = 50;
+                heat.intensity = 500;
+
+                radar.ignore_map[heat.id][s->id].restart();
+
+                radar.add_packet_raw(heat, s->r.position);
             }
         }
 

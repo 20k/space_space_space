@@ -188,6 +188,31 @@ struct alt_collideable
     float get_cross_section(float angle);
 };
 
+struct hacky_clock
+{
+    bool once = true;
+    sf::Clock clk;
+
+    auto getElapsedTime()
+    {
+        if(once)
+        {
+            return sf::milliseconds(1000000);
+        }
+        else
+        {
+            return clk.getElapsedTime();
+        }
+    }
+
+    auto restart()
+    {
+        once = false;
+
+        return clk.restart();
+    }
+};
+
 struct alt_radar_field
 {
     vec2f target_dim;
@@ -200,11 +225,12 @@ struct alt_radar_field
 
     std::map<uint32_t, std::map<uint32_t, sf::Clock>> ignore_map;
 
-    float speed_of_light_per_tick = 1.5;
+    float speed_of_light_per_tick = 10.5;
 
     alt_radar_field(vec2f in);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
+    void add_packet_raw(alt_frequency_packet freq, vec2f pos);
     void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
 
     bool packet_expired(alt_frequency_packet& packet);
@@ -214,6 +240,8 @@ struct alt_radar_field
 
     float get_intensity_at(vec2f pos);
     float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet);
+
+    bool angle_valid(alt_frequency_packet& packet, float angle);
 };
 
 #endif // RADAR_FIELD_HPP_INCLUDED
