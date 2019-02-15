@@ -413,7 +413,9 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool 
                         cpack.restrict_angle = my_fraction * 2 * M_PI;
                         cpack.iterations++;
 
-                        collisions[y][x].packets[cpack.id] = cpack;
+                        //collisions[y][x].packets[cpack.id] = cpack;
+
+                        add_packet_to(collisions, cpack, index_position, false);
 
 
                         ///spawn reflection
