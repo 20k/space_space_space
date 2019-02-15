@@ -928,6 +928,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
     profile_dumper pdump("newtick");
 
+    std::vector<alt_frequency_packet> speculative_packets;
+
     for(alt_frequency_packet& packet : packets)
     {
         float current_radius = packet.iterations * speed_of_light_per_tick;
@@ -960,10 +962,28 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
                 subtractive_packets.push_back(collide_packet);
 
+
+                vec2f packet_vector = collide.pos - packet.origin;
+
+
+                alt_frequency_packet reflect = packet;
+                reflect.id = alt_frequency_packet::gid++;
+
+                ///maybe intensity should be distributed here to avoid energy increase
+                reflect.intensity = packet.intensity;
+                reflect.origin = packet.origin + packet_vector * 2;
+                reflect.start_angle = (collide.pos - reflect.origin).angle();
+                reflect.restrict_angle = my_fraction * 2 * M_PI;
+
+                speculative_packets.push_back(reflect);
+
                 ignore_map[packet.id][collide.uid].restart();
+                ignore_map[reflect.id][collide.uid].restart();
             }
         }
     }
+
+    packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -992,6 +1012,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
 
     float my_distance_to_packet = (pos - packet.origin).length();
     float my_packet_angle = (pos - packet.origin).angle();
+
+    if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
+        return 0;
 
     for(alt_frequency_packet& shadow : subtractive_packets)
     {
@@ -1083,9 +1106,9 @@ void alt_radar_field::render(sf::RenderWindow& win)
     }
 
 
-    for(int y=0; y < target_dim.y(); y+=10)
+    for(int y=0; y < target_dim.y(); y+=30)
     {
-        for(int x=0; x < target_dim.x(); x+=10)
+        for(int x=0; x < target_dim.x(); x+=30)
         {
             float intensity = get_intensity_at({x, y});
 
