@@ -86,6 +86,17 @@ void radar_field::add_packet_to(std::vector<std::vector<frequencies>>& field, fr
     add_raw_packet_to(field, distributed[2], cell_floor.x()+1, cell_floor.y());
     add_raw_packet_to(field, distributed[3], cell_floor.x()+1, cell_floor.y()+1);
 
+    for(int i=-1; i < 2; i++)
+    {
+        for(int j=-1; j < 2; j++)
+        {
+            frequency_packet null_packet = packet;
+            null_packet.intensity = 0;
+
+            add_raw_packet_to(field, null_packet, cell_floor.x() + i, cell_floor.y() + j);
+        }
+    }
+
     /*field[(int)cell_floor.y()][(int)cell_floor.x()].packets.push_back(distributed[0]);
     field[(int)cell_floor.y() + 1][(int)cell_floor.x()].packets.push_back(distributed[1]);
     field[(int)cell_floor.y()][(int)cell_floor.x() + 1].packets.push_back(distributed[2]);
@@ -101,6 +112,9 @@ void radar_field::add_packet(frequency_packet packet, vec2f absolute_location, b
 
 void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field, frequency_packet p, int x, int y) const
 {
+    if(x < 0 || y < 0 || x >= dim.x() || y >= dim.y())
+        return;
+
     for(frequency_packet& existing : field[y][x].packets)
     {
         if(existing.frequency == p.frequency && existing.origin == p.origin && existing.iterations == p.iterations)
@@ -116,6 +130,8 @@ void radar_field::add_raw_packet_to(std::vector<std::vector<frequencies>>& field
 void radar_field::render(sf::RenderWindow& win)
 {
     sf::CircleShape circle;
+    circle.setRadius(2);
+    circle.setOrigin(circle.getRadius(), circle.getRadius());
 
     for(int y=0; y < (int)freq.size(); y++)
     {
@@ -147,10 +163,10 @@ void radar_field::render(sf::RenderWindow& win)
             if(total_intensity == 0)
                 continue;
 
-            circle.setRadius(total_intensity);
+            //circle.setRadius(total_intensity);
 
             circle.setPosition(real_pos.x(), real_pos.y());
-            circle.setOrigin(circle.getRadius(), circle.getRadius());
+            //circle.setOrigin(circle.getRadius(), circle.getRadius());
 
             win.draw(circle);
         }
@@ -169,7 +185,7 @@ void radar_field::tick(double dt_s)
         i.resize(dim.x());
     }
 
-    float light_distance_per_tick = 0.5;
+    float light_distance_per_tick = 1.5;
     float light_propagation = 1;
 
     ///so
