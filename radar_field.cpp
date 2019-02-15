@@ -179,9 +179,9 @@ void radar_field::render(sf::RenderWindow& win)
                 continue;
 
             //circle.setRadius(total_intensity);
+            //circle.setOrigin(circle.getRadius(), circle.getRadius());
 
             circle.setPosition(real_pos.x(), real_pos.y());
-            //circle.setOrigin(circle.getRadius(), circle.getRadius());
 
             win.draw(circle);
         }
@@ -202,6 +202,8 @@ void radar_field::tick(double dt_s)
 
     float light_distance_per_tick = 1.5;
     float light_propagation = 1;
+
+    sf::Clock clk;
 
     ///so
     ///every tick we propagate propagation amount over light distance
@@ -252,7 +254,7 @@ void radar_field::tick(double dt_s)
 
             vec2f index_position = index_to_position(x, y);
 
-            float packet_wavefront_width = 0.5;
+            float packet_wavefront_width = 5.5;
 
             //for(frequency_packet& pack : packs)
             for(auto& ppair : packs)
@@ -282,8 +284,12 @@ void radar_field::tick(double dt_s)
 
                 //std::cout << "intensity " << intensity << std::endl;
 
-                if(fabs(wavecentre_distance) < 0)
+                if((wavecentre_distance) < 0)
                     continue;
+
+                float intensity = wavecentre_distance;
+
+                //std::cout << "intens " << intensity << std::endl;
 
 
                 /*vec2f origin = pack.origin;
@@ -298,7 +304,8 @@ void radar_field::tick(double dt_s)
 
                 frequency_packet nextp = pack;
 
-                nextp.intensity = 1;
+                nextp.intensity = wavecentre_distance;
+                //nextp.intensity = 1;
                 //nextp.intensity = intensity;
                 nextp.iterations++;
 
@@ -308,6 +315,8 @@ void radar_field::tick(double dt_s)
     }
 
     freq = next;
+
+    std::cout << "elapsed_ms " << clk.getElapsedTime().asMicroseconds() / 1000 << std::endl;
 }
 
 std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id)
@@ -326,7 +335,7 @@ std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& char
     ///so... given these corner points, we want to find the point which is 1?
     ///no, we want to do bilinear interpolation where the corners form the weights?
 
-    if(tl.intensity <= 0 && br.intensity <= 0 && bl.intensity <= 0 && br.intensity <= 0)
+    if(tl.intensity <= 0 && br.intensity <= 0 && bl.intensity <= 0 && tr.intensity <= 0)
         return std::nullopt;
 
     float tx1_i = tl.intensity;
