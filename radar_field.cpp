@@ -895,6 +895,11 @@ void radar_field::add_simple_collideable(float angle, vec2f ship_dim, vec2f real
     collideables[iy][ix].push_back(rcollide);
 }
 
+float alt_collideable::get_cross_section(float angle)
+{
+    return dim.max_elem() * 5;
+}
+
 alt_radar_field::alt_radar_field(vec2f in)
 {
     target_dim = in;
@@ -903,6 +908,7 @@ alt_radar_field::alt_radar_field(vec2f in)
 void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
+    freq.id = alt_frequency_packet::gid++;
 
     packets.push_back(freq);
 }
@@ -922,6 +928,43 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
     for(alt_frequency_packet& packet : packets)
     {
+        float current_radius = packet.iterations * speed_of_light_per_tick;
+        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+
+        for(alt_collideable& collide : collideables)
+        {
+            vec2f relative_pos = collide.pos - packet.origin;
+
+            float len = relative_pos.length();
+
+            if(len < next_radius && len >= current_radius)
+            {
+                alt_frequency_packet collide_packet = packet;
+                collide_packet.id_block = packet.id;
+                collide_packet.id = alt_frequency_packet::gid++;
+
+                float circle_circumference = 2 * M_PI * len;
+
+                if(circle_circumference < 0.00001)
+                    continue;
+
+                float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
+
+                collide_packet.start_angle = relative_pos.angle();
+                collide_packet.restrict_angle = my_fraction * 2 * M_PI;
+
+                subtractive_packets.push_back(collide_packet);
+            }
+        }
+    }
+
+    for(alt_frequency_packet& packet : packets)
+    {
+        packet.iterations++;
+    }
+
+    for(alt_frequency_packet& packet : subtractive_packets)
+    {
         packet.iterations++;
     }
 }
@@ -938,10 +981,47 @@ float alt_radar_field::get_intensity_at(vec2f pos)
         vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
 
         vec2f packet_position = packet_vector + packet.origin;
+        vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
         float distance_to_packet = (pos - packet_position).length();
 
         float my_distance_to_packet = (pos - packet.origin).length();
+        float my_packet_angle = (pos - packet.origin).angle();
+
+        bool shadowed = false;
+
+        for(alt_frequency_packet& shadow : subtractive_packets)
+        {
+            float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
+            float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
+
+            float shadow_my_angle = (pos - shadow.origin).angle();
+
+            vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
+            vec2f shadow_position = shadow_vector + shadow.origin;
+            vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
+
+            float distance_to_shadow = (pos - shadow_position).length();
+
+            if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
+                continue;
+
+            /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
+            {
+                shadowed = true;
+                continue;
+            }*/
+
+            if(distance_to_shadow <= shadow.packet_wavefront_width)
+            {
+                shadowed = true;
+                break;
+            }
+        }
+
+        if(shadowed)
+            continue;
+
 
         if(distance_to_packet > packet.packet_wavefront_width)
         {
@@ -976,6 +1056,23 @@ void alt_radar_field::render(sf::RenderWindow& win)
 
         win.draw(shape);
     }*/
+
+    for(alt_frequency_packet& packet : subtractive_packets)
+    {
+        float real_distance = packet.iterations * speed_of_light_per_tick;
+
+        sf::CircleShape shape;
+        shape.setRadius(real_distance);
+        shape.setPosition(packet.origin.x(), packet.origin.y());
+        shape.setOutlineThickness(packet.packet_wavefront_width);
+        shape.setFillColor(sf::Color(0,0,0,0));
+        shape.setOutlineColor(sf::Color(128, 128, 128, 128));
+        shape.setOrigin(shape.getRadius(), shape.getRadius());
+        shape.setPointCount(100);
+
+        win.draw(shape);
+    }
+
 
     for(int y=0; y < target_dim.y(); y+=10)
     {

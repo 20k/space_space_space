@@ -172,6 +172,10 @@ struct alt_frequency_packet
     float start_angle = 0;
 
     float packet_wavefront_width = 7.5;
+
+    uint32_t id = 0;
+    uint32_t id_block = 0;
+    static inline uint32_t gid = 0;
 };
 
 struct alt_collideable
@@ -180,6 +184,8 @@ struct alt_collideable
     float angle = 0;
     uint32_t uid = 0;
     vec2f pos = {0,0};
+
+    float get_cross_section(float angle);
 };
 
 struct alt_radar_field
