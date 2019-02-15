@@ -194,7 +194,7 @@ void radar_field::render(sf::RenderWindow& win)
     }
 }
 
-frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first)
+frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first, bool collides)
 {
     frequency_chart next;
 
@@ -267,7 +267,15 @@ frequency_chart radar_field::tick_raw(double dt_s, frequency_chart& first)
                 float real_distance = pack.iterations * light_distance_per_tick;
                 float my_angle = (index_position - pack.origin).angle();
 
-                vec2f packet_position = (vec2f){real_distance, 0}.rot(my_angle) + pack.origin;
+                vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+
+
+
+                vec2f packet_position = packet_vector + pack.origin;
+                vec2f packet_angle = (vec2f){1, 0}.rot(pack.start_angle);
+
+                if(angle_between_vectors(packet_vector, packet_angle) > pack.restrict_angle && real_distance > 20)
+                    continue;
 
                 /*std::optional<vec2f> apos = get_approximate_location(first, {x, y}, pack.id);
 
@@ -325,11 +333,22 @@ void radar_field::tick(double dt_s)
     sf::Clock clk;
 
     std::vector<std::vector<frequencies>> first = freq;
-    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, first);
+    std::vector<std::vector<frequencies>> next = tick_raw(dt_s, first, true);
+
+    std::vector<std::vector<frequencies>> next_collide = tick_raw(dt_s, collisions, false);
 
     freq = next;
 
     std::cout << "elapsed_ms " << clk.getElapsedTime().asMicroseconds() / 1000 << std::endl;
+
+    collideables.clear();
+
+    collideables.resize(dim.y());
+
+    for(auto& i : collideables)
+    {
+        i.resize(dim.x());
+    }
 }
 
 std::optional<vec2f> radar_field::get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id)

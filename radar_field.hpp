@@ -29,6 +29,8 @@ struct frequency_packet
     vec2f origin = {0,0};
 
     int iterations = 0;
+    float restrict_angle = 2 * M_PI;
+    float start_angle = 0;
 };
 
 /*struct frequency_band
@@ -58,6 +60,7 @@ struct radar_field
 {
     std::vector<std::vector<frequencies>> freq;
     std::vector<std::vector<frequencies>> collisions;
+    std::vector<std::vector<int>> collideables;
 
     vec2f offset = {0,0};
     vec2f dim = {100,100};
@@ -72,11 +75,13 @@ struct radar_field
 
     void render(sf::RenderWindow& win);
     void tick(double dt_s);
-    frequency_chart tick_raw(double dt_s, frequency_chart& next);
+    frequency_chart tick_raw(double dt_s, frequency_chart& next, bool collides);
 
     vec2f index_to_position(int x, int y);
 
     std::optional<vec2f> get_approximate_location(frequency_chart& chart, vec2f pos, uint32_t packet_id);
+
+    void add_simple_collideable(vec2f real_position);
 
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };
