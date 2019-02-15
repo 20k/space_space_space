@@ -232,13 +232,10 @@ void server_thread()
                 radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position, s->id);
 
                 alt_frequency_packet heat;
-                heat.id = alt_frequency_packet::gid++;
                 heat.frequency = 50;
                 heat.intensity = 500;
 
-                radar.ignore_map[heat.id][s->id].restart();
-
-                radar.add_packet_raw(heat, s->r.position);
+                radar.emit(heat, s->r.position, s->id);
             }
         }
 
@@ -271,15 +268,6 @@ void server_thread()
                     if(read.data.fired)
                     {
                         s->fire();
-
-                        /*alt_frequency_packet em;
-                        em.id = alt_frequency_packet::gid++;
-                        em.frequency = 1000;
-                        em.intensity = 50000;
-
-                        radar.ignore_map[em.id][s->id].restart();
-
-                        radar.add_packet_raw(em, s->r.position);*/
                     }
                 }
             }

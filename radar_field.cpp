@@ -931,6 +931,15 @@ void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f locat
     collideables.push_back(rc);
 }
 
+void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, uint32_t uid)
+{
+    freq.id = alt_frequency_packet::gid++;
+
+    ignore_map[freq.id][uid].restart();
+
+    add_packet_raw(freq, pos);
+}
+
 bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 {
     float real_distance = packet.iterations * speed_of_light_per_tick;

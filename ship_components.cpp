@@ -402,13 +402,10 @@ void ship::tick(double dt_s)
                 alt_radar_field& radar = get_radar_field();
 
                 alt_frequency_packet em;
-                em.id = alt_frequency_packet::gid++;
                 em.frequency = 1000;
                 em.intensity = 50000;
 
-                radar.ignore_map[em.id][id].restart();
-
-                radar.add_packet_raw(em, r.position);
+                radar.emit(em, r.position, id);
             }
 
             c.try_use = false;

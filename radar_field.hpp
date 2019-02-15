@@ -233,6 +233,8 @@ struct alt_radar_field
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
     void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
 
+    void emit(alt_frequency_packet freq, vec2f pos, uint32_t uid);
+
     bool packet_expired(alt_frequency_packet& packet);
 
     void tick(double dt_s, uint32_t iterations);
