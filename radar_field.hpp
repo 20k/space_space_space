@@ -171,7 +171,7 @@ struct alt_frequency_packet
     float restrict_angle = 2 * M_PI;
     float start_angle = 0;
 
-    float packet_wavefront_width = 10;
+    float packet_wavefront_width = 20;
 
     uint32_t id = 0;
     uint32_t id_block = 0;
@@ -225,7 +225,7 @@ struct alt_radar_field
 
     std::map<uint32_t, std::map<uint32_t, hacky_clock>> ignore_map;
 
-    float speed_of_light_per_tick = 10.5;
+    float speed_of_light_per_tick = 5.5;
 
     alt_radar_field(vec2f in);
 
