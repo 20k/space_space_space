@@ -1122,10 +1122,14 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     }
     else
     {
-        if(my_distance_to_packet > 0.0001)
-            return packet.intensity / (my_distance_to_packet * my_distance_to_packet);
+        float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / packet.packet_wavefront_width;
+
+        float err = 0.01;
+
+        if(my_distance_to_packet > err)
+            return ivdistance * packet.intensity / (my_distance_to_packet * my_distance_to_packet);
         else
-            return packet.intensity / (0.0001 * 0.0001);
+            return ivdistance * packet.intensity / (err * err);
     }
 
     return 0;

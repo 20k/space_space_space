@@ -171,7 +171,7 @@ struct alt_frequency_packet
     float restrict_angle = 2 * M_PI;
     float start_angle = 0;
 
-    float packet_wavefront_width = 7.5;
+    float packet_wavefront_width = 10;
 
     uint32_t id = 0;
     uint32_t id_block = 0;
