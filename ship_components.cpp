@@ -824,7 +824,7 @@ asteroid::asteroid()
     }
 
     r.approx_rad = max_rad;
-    r.approx_dim = {max_rad, max_rad};
+    r.approx_dim = {max_rad*2, max_rad*2};
 }
 
 void asteroid::tick(double dt_s)
