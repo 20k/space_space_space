@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <optional>
 #include <SFML/System/Clock.hpp>
+#include <networking/serialisable.hpp>
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1
@@ -157,6 +158,7 @@ struct radar_field
 
     void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
 
+
     //vec2f get_absolute_approximate_location(std::vector<std::vector<frequencies>>& freqs, )
 };
 
@@ -176,6 +178,8 @@ struct alt_frequency_packet
     uint32_t id = 0;
     uint32_t id_block = 0;
     static inline uint32_t gid = 0;
+
+    uint32_t emitted_by = -1;
 };
 
 struct alt_collideable
@@ -213,6 +217,21 @@ struct hacky_clock
     }
 };
 
+struct alt_radar_sample : serialisable
+{
+    vec2f location;
+
+    std::vector<float> frequencies;
+    std::vector<float> intensities;
+
+    virtual void serialise(nlohmann::json& data, bool encode)
+    {
+        DO_SERIALISE(location);
+        DO_SERIALISE(frequencies);
+        DO_SERIALISE(intensities);
+    }
+};
+
 struct alt_radar_field
 {
     vec2f target_dim;
@@ -244,6 +263,8 @@ struct alt_radar_field
     float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet);
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
+
+    alt_radar_sample sample_for(vec2f pos, uint32_t uid);
 };
 
 inline

@@ -32,6 +32,8 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++17" />
 			<Add option="-fexceptions" />
+			<Add option="-Wno-narrowing" />
+			<Add option="-Werror=return-type" />
 			<Add option="-DSFML_STATIC" />
 			<Add directory="deps" />
 			<Add directory="deps/imgui" />

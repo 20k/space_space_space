@@ -179,7 +179,7 @@ void server_thread()
         float fangle = ffrac * 2 * M_PI;
 
         asteroid* a = entities.make_new<asteroid>();
-        a->r.position = (vec2f){200, 0}.rot(fangle) + (vec2f){400, 400};
+        a->r.position = (vec2f){300, 0}.rot(fangle) + (vec2f){400, 400};
     }
 
 
@@ -290,6 +290,7 @@ void server_thread()
 
         std::vector<ship*> ships;
         std::vector<client_renderable> renderables;
+        std::map<uint32_t, ship*> network_ships;
 
         for(entity* e : entities.entities)
         {
@@ -298,6 +299,7 @@ void server_thread()
             if(s)
             {
                 ships.push_back(s);
+                network_ships[s->network_owner] = s;
             }
 
             renderables.push_back(e->r);
@@ -310,6 +312,17 @@ void server_thread()
 
         for(auto& i : clients)
         {
+            //model.sample = radar.sample()
+
+            if(network_ships[i] != nullptr)
+            {
+                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id);
+            }
+            else
+            {
+                model.sample = decltype(model.sample)();
+            }
+
             conn.writes_to(model, i);
         }
 
@@ -613,6 +626,8 @@ int main()
 
             s.advanced_ship_display();
         }
+
+        render_radar_data(model.sample);
 
         ImGui::SFML::Render(window);
         window.display();

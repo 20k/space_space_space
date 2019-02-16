@@ -833,3 +833,39 @@ void asteroid::tick(double dt_s)
 
     radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
 }
+
+void render_radar_data(const alt_radar_sample& sample)
+{
+    ImGui::Begin("Radar Data");
+
+    assert(sample.frequencies.size() == sample.intensities.size());
+
+    int frequency_bands = 100;
+
+    std::vector<float> frequencies;
+    frequencies.resize(frequency_bands);
+
+    double min_freq = MIN_FREQ;
+    double max_freq = MAX_FREQ;
+
+    for(int i=0; i < frequency_bands - 1; i++)
+    {
+        double lower_band = ((double)i / frequency_bands) * (max_freq - min_freq) + min_freq;
+        double upper_band = ((double)(i + 1) / frequency_bands) * (max_freq - min_freq) + min_freq;
+
+        for(int kk=0; kk < sample.frequencies.size(); kk++)
+        {
+            float freq = sample.frequencies[kk];
+            float intensity = sample.intensities[kk];
+
+            if(freq >= lower_band && freq < upper_band)
+            {
+                frequencies[i] += intensity;
+            }
+        }
+    }
+
+    ImGui::PlotHistogram("RADAR DATA", &frequencies[0], frequencies.size(), 0, nullptr, 0, 100);
+
+    ImGui::End();
+}

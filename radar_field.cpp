@@ -934,6 +934,7 @@ void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f locat
 void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, uint32_t uid)
 {
     freq.id = alt_frequency_packet::gid++;
+    freq.emitted_by = uid;
 
     ignore_map[freq.id][uid].restart();
 
@@ -1119,7 +1120,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     {
         float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / packet.packet_wavefront_width;
 
-        float err = 0.01;
+        //float err = 0.01;
+
+        float err = 1;
 
         if(my_distance_to_packet > err)
             return ivdistance * packet.intensity / (my_distance_to_packet * my_distance_to_packet);
@@ -1241,4 +1244,41 @@ void alt_radar_field::render(sf::RenderWindow& win)
             win.draw(shape);
         }
     }
+}
+
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
+{
+    alt_radar_sample s;
+    s.location = pos;
+
+    for(alt_frequency_packet& packet : packets)
+    {
+        if(packet.emitted_by == uid)
+            continue;
+
+        float intensity = get_intensity_at_of(pos, packet);
+        float frequency = packet.frequency;
+
+        //std::cout << "intens " << intensity << " freq " << frequency << std::endl;
+
+        bool found = false;
+
+        for(int i=0; i < (int)s.frequencies.size(); i++)
+        {
+            if(s.frequencies[i] == frequency)
+            {
+                s.intensities[i] += intensity;
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            s.frequencies.push_back(frequency);
+            s.intensities.push_back(intensity);
+        }
+    }
+
+    return s;
 }

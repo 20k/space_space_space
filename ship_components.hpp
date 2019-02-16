@@ -9,6 +9,7 @@
 #include "entity.hpp"
 #include "networking/networking.hpp"
 #include <memory>
+#include "radar_field.hpp"
 
 namespace sf
 {
@@ -256,11 +257,13 @@ struct data_model : serialisable
 {
     std::vector<T> ships;
     std::vector<client_renderable> renderables;
+    alt_radar_sample sample;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(ships);
         DO_SERIALISE(renderables);
+        DO_SERIALISE(sample);
     }
 };
 
@@ -270,5 +273,7 @@ struct asteroid : entity
 
     virtual void tick(double dt_s) override;
 };
+
+void render_radar_data(const alt_radar_sample& sample);
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED
