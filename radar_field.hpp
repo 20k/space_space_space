@@ -219,6 +219,29 @@ struct hacky_clock
     }
 };
 
+template<typename T>
+struct alt_object_property : serialisable
+{
+    uint32_t id = -1;
+    T property = T();
+
+    alt_object_property()
+    {
+
+    }
+
+    alt_object_property(uint32_t _id, T _property) : id(_id), property(_property)
+    {
+
+    }
+
+    virtual void serialise(nlohmann::json& data, bool encode)
+    {
+        DO_SERIALISE(id);
+        DO_SERIALISE(property);
+    }
+};
+
 struct alt_radar_sample : serialisable
 {
     vec2f location;
@@ -226,16 +249,23 @@ struct alt_radar_sample : serialisable
     std::vector<float> frequencies;
     std::vector<float> intensities;
 
-    std::vector<vec2f> echo_position;
-    std::vector<uint32_t> echo_id; ///?
+    /*std::vector<vec2f> echo_position;
+    std::vector<uint32_t> echo_id; ///?*/
+
+    std::vector<alt_object_property<vec2f>> echo_pos;
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
         DO_SERIALISE(location);
         DO_SERIALISE(frequencies);
         DO_SERIALISE(intensities);
-        DO_SERIALISE(echo_position);
-        DO_SERIALISE(echo_id);
+
+        DO_SERIALISE(echo_pos);
+
+        /*DO_SERIALISE(echo_position);
+        DO_SERIALISE(echo_id);*/
+
+
     }
 };
 

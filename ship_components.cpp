@@ -857,9 +857,9 @@ struct transient_entity : entity
 
 void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
 {
-    for(int i=0; i < (int)sample.echo_id.size(); i++)
+    for(int i=0; i < (int)sample.echo_pos.size(); i++)
     {
-        uint32_t fid = sample.echo_id[i];
+        uint32_t fid = sample.echo_pos[i].id;
         bool found = false;
 
         for(entity* e : entities.entities)
@@ -873,7 +873,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
             {
                 found = true;
                 transient->clk.restart();
-                transient->r.position = sample.echo_position[i];
+                transient->r.position = sample.echo_pos[i].property;
             }
         }
 

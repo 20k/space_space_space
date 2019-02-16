@@ -1265,8 +1265,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
         {
-            s.echo_position.push_back(packet.reflected_position);
-            s.echo_id.push_back(packet.reflected_by);
+            /*s.echo_position.push_back(packet.reflected_position);
+            s.echo_id.push_back(packet.reflected_by);*/
+
+            s.echo_pos.push_back({packet.reflected_by, packet.reflected_position});
         }
 
         //std::cout << "intens " << intensity << " freq " << frequency << std::endl;
