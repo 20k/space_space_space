@@ -991,7 +991,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
             float cross_section = collide.get_cross_section(relative_pos.angle());
 
-            if(len < next_radius && len >= current_radius)
+            cross_section = 0;
+
+            if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
             {
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
@@ -1021,6 +1023,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.origin = collide.pos + packet_vector;
                 reflect.start_angle = (collide.pos - reflect.origin).angle();
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
+
+                //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
                 speculative_packets.push_back(reflect);
 
