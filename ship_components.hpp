@@ -264,4 +264,11 @@ struct data_model : serialisable
     }
 };
 
+struct asteroid : entity
+{
+    asteroid();
+
+    virtual void tick(double dt_s) override;
+};
+
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

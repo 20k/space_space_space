@@ -804,3 +804,32 @@ void projectile::on_collide(entity_manager& em, entity& other)
 
     cleanup = true;
 }
+
+asteroid::asteroid()
+{
+    float min_rad = 2;
+    float max_rad = 4;
+
+    int n = 5;
+
+    for(int i=0; i < n; i++)
+    {
+        r.vert_dist.push_back(randf_s(min_rad, max_rad));
+
+        float angle = ((float)i / n) * 2 * M_PI;
+
+        r.vert_angle.push_back(angle);
+
+        r.vert_cols.push_back({1,1,1});
+    }
+
+    r.approx_rad = max_rad;
+    r.approx_dim = {max_rad, max_rad};
+}
+
+void asteroid::tick(double dt_s)
+{
+    alt_radar_field& radar = get_radar_field();
+
+    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
+}

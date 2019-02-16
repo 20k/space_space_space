@@ -170,6 +170,19 @@ void server_thread()
     test_ship2->r.position = {600, 400};
 
 
+    int num_asteroids = 10;
+
+    for(int i=0; i < num_asteroids; i++)
+    {
+        float ffrac = (float)i / num_asteroids;
+
+        float fangle = ffrac * 2 * M_PI;
+
+        asteroid* a = entities.make_new<asteroid>();
+        a->r.position = (vec2f){200, 0}.rot(fangle) + (vec2f){400, 400};
+    }
+
+
     double frametime_dt = 1;
 
     sf::Clock clk;
