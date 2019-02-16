@@ -865,7 +865,7 @@ void render_radar_data(const alt_radar_sample& sample)
         }
     }
 
-    ImGui::PlotHistogram("RADAR DATA", &frequencies[0], frequencies.size(), 0, nullptr, 0, 100);
+    ImGui::PlotHistogram("RADAR DATA", &frequencies[0], frequencies.size(), 0, nullptr, 0, 100, ImVec2(0, 100));
 
     ImGui::End();
 }

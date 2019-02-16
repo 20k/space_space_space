@@ -117,47 +117,49 @@ struct entity_manager : serialisable
 
     void tick(double dt_s)
     {
-        for(entity* e : entities)
+        auto last_entities = entities;
+
+        for(entity* e : last_entities)
         {
             e->tick(dt_s);
         }
 
-        for(entity* e : entities)
+        for(entity* e : last_entities)
         {
             e->tick_pre_phys(dt_s);
         }
 
-        for(entity* e : entities)
+        for(entity* e : last_entities)
         {
             e->tick_phys(dt_s);
         }
 
-        for(int i=0; i < (int)entities.size(); i++)
+        for(int i=0; i < (int)last_entities.size(); i++)
         {
-            if(!entities[i]->collides)
+            if(!last_entities[i]->collides)
                 continue;
 
-            vec2f p1 = entities[i]->r.position;
-            float r1 = entities[i]->r.approx_rad;
+            vec2f p1 = last_entities[i]->r.position;
+            float r1 = last_entities[i]->r.approx_rad;
 
-            for(int j = 0; j < (int)entities.size(); j++)
+            for(int j = 0; j < (int)last_entities.size(); j++)
             {
-                if(entities[j]->collides)
+                if(last_entities[j]->collides)
                 {
                     if(j <= i)
                         continue;
                 }
 
-                vec2f p2 = entities[j]->r.position;
-                float r2 = entities[j]->r.approx_rad;
+                vec2f p2 = last_entities[j]->r.position;
+                float r2 = last_entities[j]->r.approx_rad;
 
                 if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
                     continue;
 
-                if(collides(*entities[i], *entities[j]))
+                if(collides(*last_entities[i], *last_entities[j]))
                 {
-                    entities[i]->on_collide(*this, *entities[j]);
-                    entities[j]->on_collide(*this, *entities[i]);
+                    last_entities[i]->on_collide(*this, *last_entities[j]);
+                    last_entities[j]->on_collide(*this, *last_entities[i]);
                 }
             }
         }

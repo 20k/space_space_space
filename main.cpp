@@ -196,6 +196,8 @@ void server_thread()
 
     alt_radar_field& radar = get_radar_field();
 
+    bool render = true;
+
     while(1)
     {
         entities.tick(frametime_dt);
@@ -236,6 +238,11 @@ void server_thread()
             }
         }
 
+        if(ONCE_MACRO(sf::Keyboard::M))
+        {
+            render = !render;
+        }
+
         for(entity* e : entities.entities)
         {
             ship* s = dynamic_cast<ship*>(e);
@@ -249,6 +256,17 @@ void server_thread()
                 heat.intensity = 500;
 
                 radar.emit(heat, s->r.position, s->id);
+            }
+
+            asteroid* a = dynamic_cast<asteroid*>(e);
+
+            if(a)
+            {
+                alt_frequency_packet heat;
+                heat.frequency = 50;
+                heat.intensity = 1000;
+
+                radar.emit(heat, e->r.position, e->id);
             }
         }
 
@@ -328,9 +346,12 @@ void server_thread()
 
         #ifdef SERVER_VIEW
 
-        entities.render(debug);
+        if(render)
+        {
+            entities.render(debug);
 
-        radar.render(debug);
+            radar.render(debug);
+        }
 
         debug.display();
         debug.clear();

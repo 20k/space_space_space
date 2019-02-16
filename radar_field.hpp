@@ -180,6 +180,7 @@ struct alt_frequency_packet
     static inline uint32_t gid = 0;
 
     uint32_t emitted_by = -1;
+    uint32_t reflected_by = -1;
 };
 
 struct alt_collideable

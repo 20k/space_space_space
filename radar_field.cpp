@@ -1015,6 +1015,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.start_angle = (collide.pos - reflect.origin).angle();
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
                 reflect.emitted_by = -1;
+                reflect.reflected_by = collide.uid;
 
                 //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
