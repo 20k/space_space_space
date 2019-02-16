@@ -836,6 +836,7 @@ void asteroid::tick(double dt_s)
 
 struct transient_entity : entity
 {
+    bool immediate_destroy = false;
     uint32_t server_id = 0;
     sf::Clock clk;
 
@@ -852,6 +853,9 @@ struct transient_entity : entity
         {
             cleanup = true;
         }
+
+        if(immediate_destroy)
+            cleanup = true;
     }
 };
 
@@ -881,6 +885,60 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         {
             transient_entity* next = entities.make_new<transient_entity>();
             next->server_id = fid;
+        }
+    }
+
+    for(int i=0; i < (int)sample.echo_dir.size(); i++)
+    {
+        uint32_t fid = sample.echo_dir[i].id;
+        bool found = false;
+
+        transient_entity* next = nullptr;
+
+        for(entity* e : entities.entities)
+        {
+            transient_entity* transient = dynamic_cast<transient_entity*>(e);
+
+            if(transient == nullptr)
+                continue;
+
+            if(fid == transient->server_id)
+            {
+                next = transient;
+                break;
+            }
+        }
+
+        if(next == nullptr)
+            next = entities.make_new<transient_entity>();
+
+        float intensity = sample.echo_dir[i].property.length();
+
+        intensity = clamp(intensity*10, 1, 50);
+
+        next->r.position = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
+        next->r.init_rectangular({intensity, 1});
+        next->r.rotation = sample.echo_dir[i].property.angle();
+        next->clk.restart();
+        next->server_id = fid;
+    }
+
+    for(int i=0; i < (int)sample.receive_dir.size(); i++)
+    {
+        transient_entity* next = entities.make_new<transient_entity>();
+
+        float intensity = sample.receive_dir[i].property.length();
+
+        intensity = clamp(intensity*10, 1, 50);
+
+        next->r.position = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);
+        next->r.init_rectangular({intensity, 1});
+        next->r.rotation = sample.receive_dir[i].property.angle();
+        next->immediate_destroy = true;
+
+        for(auto& i : next->r.vert_cols)
+        {
+            i = {1, 0, 0};
         }
     }
 }

@@ -520,8 +520,24 @@ int main()
             }
         }
 
-        entities.tick(frametime_dt);
+
+        while(conn.has_read())
+        {
+            //std::cout << conn.read() << std::endl;
+            model = conn.reads_from<data_model<ship>>().data;
+            //renderables = conn.reads_from<client_entities>().data;
+            conn.pop_read();
+
+            //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
+
+            //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
+
+            renderables.entities = model.renderables;
+        }
+
         entities.cleanup();
+        tick_radar_data(entities, model.sample);
+        entities.tick(frametime_dt);
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
@@ -539,20 +555,6 @@ int main()
         std::cout << "\n";*/
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
-
-        while(conn.has_read())
-        {
-            //std::cout << conn.read() << std::endl;
-            model = conn.reads_from<data_model<ship>>().data;
-            //renderables = conn.reads_from<client_entities>().data;
-            conn.pop_read();
-
-            //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
-
-            //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
-
-            renderables.entities = model.renderables;
-        }
 
         renderables.render(window);
 
@@ -653,7 +655,6 @@ int main()
             s.advanced_ship_display();
         }
 
-        tick_radar_data(entities, model.sample);
         render_radar_data(window, model.sample);
 
         entities.render(window);
