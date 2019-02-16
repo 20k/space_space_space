@@ -988,7 +988,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
                 collide_packet.id = alt_frequency_packet::gid++;
-                collide_packet.emitted_by = -1;
+                //collide_packet.emitted_by = -1;
 
                 float circle_circumference = 2 * M_PI * len;
 
@@ -1014,8 +1014,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.origin = collide.pos + packet_vector;
                 reflect.start_angle = (collide.pos - reflect.origin).angle();
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
-                reflect.emitted_by = -1;
+                //reflect.emitted_by = -1;
                 reflect.reflected_by = collide.uid;
+                reflect.reflected_position = collide.pos;
 
                 //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
@@ -1256,11 +1257,17 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
     for(alt_frequency_packet& packet : packets)
     {
-        if(packet.emitted_by == uid)
+        if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
 
         float intensity = get_intensity_at_of(pos, packet);
         float frequency = packet.frequency;
+
+        if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
+        {
+            s.echo_position.push_back(packet.reflected_position);
+            s.echo_id.push_back(packet.reflected_by);
+        }
 
         //std::cout << "intens " << intensity << " freq " << frequency << std::endl;
 

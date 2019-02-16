@@ -181,6 +181,7 @@ struct alt_frequency_packet
 
     uint32_t emitted_by = -1;
     uint32_t reflected_by = -1;
+    vec2f reflected_position = {0,0};
 };
 
 struct alt_collideable
@@ -225,11 +226,16 @@ struct alt_radar_sample : serialisable
     std::vector<float> frequencies;
     std::vector<float> intensities;
 
+    std::vector<vec2f> echo_position;
+    std::vector<uint32_t> echo_id; ///?
+
     virtual void serialise(nlohmann::json& data, bool encode)
     {
         DO_SERIALISE(location);
         DO_SERIALISE(frequencies);
         DO_SERIALISE(intensities);
+        DO_SERIALISE(echo_position);
+        DO_SERIALISE(echo_id);
     }
 };
 

@@ -497,6 +497,8 @@ int main()
 
     std::map<uint64_t, ship> network_ships;
 
+    entity_manager entities;
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -517,6 +519,9 @@ int main()
                 window.create(sf::VideoMode(event.size.width, event.size.height), "hi");
             }
         }
+
+        entities.tick(frametime_dt);
+        entities.cleanup();
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
@@ -648,7 +653,10 @@ int main()
             s.advanced_ship_display();
         }
 
-        render_radar_data(model.sample);
+        tick_radar_data(entities, model.sample);
+        render_radar_data(window, model.sample);
+
+        entities.render(window);
 
         ImGui::SFML::Render(window);
         window.display();

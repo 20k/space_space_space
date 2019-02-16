@@ -834,7 +834,58 @@ void asteroid::tick(double dt_s)
     radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
 }
 
-void render_radar_data(const alt_radar_sample& sample)
+struct transient_entity : entity
+{
+    uint32_t server_id = 0;
+    sf::Clock clk;
+
+    transient_entity()
+    {
+        r.init_rectangular({5, 5});
+    }
+
+    virtual void tick(double dt_s) override
+    {
+        double time_ms = clk.getElapsedTime().asMicroseconds() / 1000.;
+
+        if(time_ms >= 500)
+        {
+            cleanup = true;
+        }
+    }
+};
+
+void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
+{
+    for(int i=0; i < (int)sample.echo_id.size(); i++)
+    {
+        uint32_t fid = sample.echo_id[i];
+        bool found = false;
+
+        for(entity* e : entities.entities)
+        {
+            transient_entity* transient = dynamic_cast<transient_entity*>(e);
+
+            if(transient == nullptr)
+                continue;
+
+            if(fid == transient->server_id)
+            {
+                found = true;
+                transient->clk.restart();
+                transient->r.position = sample.echo_position[i];
+            }
+        }
+
+        if(!found)
+        {
+            transient_entity* next = entities.make_new<transient_entity>();
+            next->server_id = fid;
+        }
+    }
+}
+
+void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample)
 {
     ImGui::Begin("Radar Data");
 
