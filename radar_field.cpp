@@ -969,17 +969,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 continue;
 
             vec2f packet_to_collide = collide.pos - packet.origin;
-
-            /*vec2f packet_vector = (vec2f){current_radius, 0}.rot(packet_to_collide.angle());
-
-            vec2f packet_position = packet_vector + packet.origin;
-            vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
-
-            float distance_to_packet = (pos - packet_position).length();
-
-            float my_distance_to_packet = (pos - packet.origin).length();
-            float my_packet_angle = (pos - packet.origin).angle();*/
-
             vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
             if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
