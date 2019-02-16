@@ -988,6 +988,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
                 collide_packet.id = alt_frequency_packet::gid++;
+                collide_packet.emitted_by = -1;
 
                 float circle_circumference = 2 * M_PI * len;
 
@@ -1013,6 +1014,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.origin = collide.pos + packet_vector;
                 reflect.start_angle = (collide.pos - reflect.origin).angle();
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
+                reflect.emitted_by = -1;
 
                 //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
