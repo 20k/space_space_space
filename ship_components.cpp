@@ -879,7 +879,6 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, e
                 found = true;
                 transient->clk.restart();
                 transient->r.position = sample.echo_pos[i].property;
-                transient->set_parent_entity(ship_proxy, transient->r.position);
             }
         }
 
@@ -890,8 +889,6 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, e
             next->r.position = sample.echo_pos[i].property;
             next->echo_type = 0;
             next->clk.restart();
-
-            next->set_parent_entity(ship_proxy, next->r.position);
         }
     }
 
@@ -916,6 +913,8 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, e
             }
         }
 
+        bool has = next != nullptr;
+
         if(next == nullptr)
             next = entities.make_new<transient_entity>();
 
@@ -923,19 +922,24 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, e
 
         intensity = clamp(intensity*10, 1, 50);
 
-        next->r.position = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
-        next->r.init_rectangular({intensity, 1});
-        next->r.rotation = sample.echo_dir[i].property.angle();
+        if(!has)
+        {
+            next->r.position = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
+            next->r.init_rectangular({intensity, 1});
+            next->r.rotation = sample.echo_dir[i].property.angle();
+        }
+
         next->clk.restart();
         next->server_id = fid;
         next->echo_type = 1;
 
-        next->set_parent_entity(ship_proxy, next->r.position);
+        if(!has)
+            next->set_parent_entity(ship_proxy, next->r.position);
     }
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
     {
-        transient_entity* next = entities.make_new<transient_entity>();
+        /*transient_entity* next = entities.make_new<transient_entity>();
 
         float intensity = sample.receive_dir[i].property.length();
 
@@ -947,6 +951,54 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, e
         next->immediate_destroy = true;
         next->echo_type = 2;
         next->set_parent_entity(ship_proxy, next->r.position);
+
+        for(auto& i : next->r.vert_cols)
+        {
+            i = {1, 0, 0};
+        }*/
+
+
+        uint32_t fid = sample.receive_dir[i].id;
+        bool found = false;
+
+        transient_entity* next = nullptr;
+
+        for(entity* e : entities.entities)
+        {
+            transient_entity* transient = dynamic_cast<transient_entity*>(e);
+
+            if(transient == nullptr)
+                continue;
+
+            if(fid == transient->server_id && transient->echo_type == 2)
+            {
+                next = transient;
+                break;
+            }
+        }
+
+        bool has = next != nullptr;
+
+        if(next == nullptr)
+            next = entities.make_new<transient_entity>();
+
+        float intensity = sample.receive_dir[i].property.length();
+
+        intensity = clamp(intensity*10, 1, 50);
+
+        if(!has)
+        {
+            next->r.position = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);
+            next->r.init_rectangular({intensity, 1});
+            next->r.rotation = sample.receive_dir[i].property.angle();
+        }
+
+        next->clk.restart();
+        next->server_id = fid;
+        next->echo_type = 2;
+
+        if(!has)
+            next->set_parent_entity(ship_proxy, next->r.position);
 
         for(auto& i : next->r.vert_cols)
         {

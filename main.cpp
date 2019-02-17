@@ -542,6 +542,14 @@ int main()
             renderables.entities = model.renderables;
         }
 
+        for(client_renderable& r : model.renderables)
+        {
+            if(r.network_owner == model.client_network_id)
+            {
+                ship_proxy->r.position = r.position;
+            }
+        }
+
         entities.cleanup();
         tick_radar_data(entities, model.sample, ship_proxy);
         entities.tick(frametime_dt);
@@ -650,14 +658,6 @@ int main()
 
         test_ship->advanced_ship_display();
         #endif // 0
-
-        for(client_renderable& r : model.renderables)
-        {
-            if(r.network_owner == model.client_network_id)
-            {
-                ship_proxy->r.position = r.position;
-            }
-        }
 
         for(ship& s : model.ships)
         {

@@ -25,7 +25,7 @@ struct client_renderable : serialisable
 
     vec2f approx_dim = {0,0};
 
-    uint32_t network_owner = 0;
+    uint32_t network_owner = -1;
 
     void serialise(nlohmann::json& data, bool encode)
     {
