@@ -276,7 +276,7 @@ struct asteroid : entity
     virtual void tick(double dt_s) override;
 };
 
-void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, entity* ship_proxy);
+void tick_radar_data(entity_manager& entities, alt_radar_sample& sample, entity* ship_proxy);
 void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample);
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

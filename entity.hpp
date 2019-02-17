@@ -123,6 +123,22 @@ struct entity_manager : serialisable
         return e;
     }
 
+    template<typename T>
+    std::vector<T*> fetch()
+    {
+        std::vector<T*> ret;
+
+        for(auto& i : entities)
+        {
+            if(dynamic_cast<T*>(i))
+            {
+                ret.push_back((T*)i);
+            }
+        }
+
+        return ret;
+    }
+
     void tick(double dt_s)
     {
         for(auto& i : to_spawn)

@@ -850,30 +850,32 @@ struct transient_entity : entity
     {
         double time_ms = clk.getElapsedTime().asMicroseconds() / 1000.;
 
-        /*if(time_ms >= 1000)
+        if(time_ms >= 1000)
         {
             cleanup = true;
-        }*/
+        }
 
         if(immediate_destroy)
             cleanup = true;
     }
 };
 
-void tick_radar_data(entity_manager& transients, const alt_radar_sample& sample, entity* ship_proxy)
+void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entity* ship_proxy)
 {
+    if(!sample.fresh)
+        return;
+
+    sample.fresh = false;
+
     for(int i=0; i < (int)sample.echo_pos.size(); i++)
     {
         uint32_t fid = sample.echo_pos[i].id;
         bool found = false;
 
-        for(entity* e : transients.entities)
+        auto entities = transients.fetch<transient_entity>();
+
+        for(transient_entity* transient : entities)
         {
-            transient_entity* transient = dynamic_cast<transient_entity*>(e);
-
-            if(transient == nullptr)
-                continue;
-
             if(fid == transient->server_id && transient->echo_type == 0)
             {
                 found = true;
@@ -899,13 +901,10 @@ void tick_radar_data(entity_manager& transients, const alt_radar_sample& sample,
 
         transient_entity* next = nullptr;
 
-        for(entity* e : transients.entities)
+        auto entities = transients.fetch<transient_entity>();
+
+        for(transient_entity* transient : entities)
         {
-            transient_entity* transient = dynamic_cast<transient_entity*>(e);
-
-            if(transient == nullptr)
-                continue;
-
             if(fid == transient->server_id && transient->echo_type == 1)
             {
                 next = transient;
@@ -941,36 +940,15 @@ void tick_radar_data(entity_manager& transients, const alt_radar_sample& sample,
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
     {
-        /*transient_entity* next = entities.make_new<transient_entity>();
-
-        float intensity = sample.receive_dir[i].property.length();
-
-        intensity = clamp(intensity*10, 1, 50);
-
-        next->r.position = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);
-        next->r.init_rectangular({intensity, 1});
-        next->r.rotation = sample.receive_dir[i].property.angle();
-        next->immediate_destroy = true;
-        next->echo_type = 2;
-        next->set_parent_entity(ship_proxy, next->r.position);
-
-        for(auto& i : next->r.vert_cols)
-        {
-            i = {1, 0, 0};
-        }*/
-
         uint32_t fid = sample.receive_dir[i].id;
         bool found = false;
 
         transient_entity* next = nullptr;
 
-        for(entity* e : transients.entities)
+        auto entities = transients.fetch<transient_entity>();
+
+        for(transient_entity* transient : entities)
         {
-            transient_entity* transient = dynamic_cast<transient_entity*>(e);
-
-            if(transient == nullptr)
-                continue;
-
             if(fid == transient->server_id && transient->echo_type == 2)
             {
                 next = transient;

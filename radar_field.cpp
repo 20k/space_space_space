@@ -1292,7 +1292,7 @@ random_constants& get_random_constants_for(uint32_t uid)
 
 alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 {
-    if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
+    /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
         alt_radar_sample sam = cached_samples[uid];
         sam.echo_pos.clear();
@@ -1302,7 +1302,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         sam.fresh = false;
 
         return sam;
-    }
+    }*/
 
     sample_time[uid].restart();
 

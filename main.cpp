@@ -541,11 +541,6 @@ int main()
             if(model.sample.fresh)
             {
                 sample = model.sample;
-
-                for(auto& i : transients.entities)
-                {
-                    i->cleanup = true;
-                }
             }
 
             //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
@@ -565,7 +560,7 @@ int main()
 
         entities.cleanup();
         transients.cleanup();
-        tick_radar_data(transients, model.sample, ship_proxy);
+        tick_radar_data(transients, sample, ship_proxy);
         entities.tick(frametime_dt);
         transients.tick(frametime_dt);
 
@@ -685,7 +680,7 @@ int main()
             s.advanced_ship_display();
         }
 
-        render_radar_data(window, model.sample);
+        render_radar_data(window, sample);
 
         entities.render(window);
         transients.render(window);
