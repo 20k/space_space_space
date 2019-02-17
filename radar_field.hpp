@@ -16,6 +16,8 @@
 
 #define MAX_RESOLUTION_INTENSITY 4
 
+#define HEAT_FREQ 50
+
 namespace sf
 {
     struct RenderWindow;
@@ -226,13 +228,14 @@ struct alt_object_property : serialisable
 {
     uint32_t id = -1;
     T property = T();
+    float frequency = 0;
 
     alt_object_property()
     {
 
     }
 
-    alt_object_property(uint32_t _id, T _property) : id(_id), property(_property)
+    alt_object_property(uint32_t _id, T _property, float _frequency) : id(_id), property(_property), frequency(_frequency)
     {
 
     }
@@ -241,6 +244,7 @@ struct alt_object_property : serialisable
     {
         DO_SERIALISE(id);
         DO_SERIALISE(property);
+        DO_SERIALISE(frequency);
     }
 };
 

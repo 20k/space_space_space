@@ -1396,7 +1396,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.reflected_by, packet.reflected_position + rconst.err_1 * uncertainty});
+            s.echo_pos.push_back({packet.reflected_by, packet.reflected_position + rconst.err_1 * uncertainty, packet.frequency});
         }
         #endif // RECT
 
@@ -1407,7 +1407,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.emitted_by, packet.origin + rconst.err_2 * uncertainty});
+            s.echo_pos.push_back({packet.emitted_by, packet.origin + rconst.err_2 * uncertainty, packet.frequency});
         }
         #endif // RECT_RECV
 
@@ -1417,7 +1417,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
             next_dir = next_dir.rot(rconst.err_3 * uncertainty);
 
-            s.echo_dir.push_back({packet.reflected_by, next_dir * intensity});
+            s.echo_dir.push_back({packet.reflected_by, next_dir * intensity, packet.frequency});
         }
 
         if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 0)
@@ -1426,7 +1426,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
             next_dir = next_dir.rot(rconst.err_4 * uncertainty);
 
-            s.receive_dir.push_back({packet.emitted_by, next_dir.norm() * intensity});
+            s.receive_dir.push_back({packet.emitted_by, next_dir.norm() * intensity, packet.frequency});
         }
 
         //std::cout << "intens " << intensity << " freq " << frequency << std::endl;

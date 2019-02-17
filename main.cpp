@@ -257,7 +257,7 @@ void server_thread()
                 radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position, s->id);
 
                 alt_frequency_packet heat;
-                heat.frequency = 50;
+                heat.frequency = HEAT_FREQ;
                 heat.intensity = 500;
 
                 radar.emit(heat, s->r.position, s->id);
@@ -268,7 +268,7 @@ void server_thread()
             if(a)
             {
                 alt_frequency_packet heat;
-                heat.frequency = 50;
+                heat.frequency = HEAT_FREQ;
                 heat.intensity = 1000;
 
                 radar.emit(heat, e->r.position, e->id);
@@ -607,7 +607,7 @@ int main()
         angular_vel += key.isKeyPressed(sf::Keyboard::D);
         angular_vel -= key.isKeyPressed(sf::Keyboard::A);
 
-        cinput.direction = (vec2f){0, forward_vel};
+        cinput.direction = (vec2f){forward_vel, 0};
         cinput.rotation = angular_vel;
 
         if(ONCE_MACRO(sf::Keyboard::Space))

@@ -16,7 +16,7 @@ ship::ship()
     for(auto& i : last_sat_percentage)
         i = 1;
 
-    vec2f dim = {1, 2};
+    vec2f dim = {2, 1};
 
     r.init_rectangular(dim);
 
@@ -27,7 +27,7 @@ ship::ship()
 
     r.scale = 2;
 
-    r.vert_cols[3] = {1, 0.2, 0.2};
+    r.vert_cols[2] = {1, 0.2, 0.2};
 
     drag = true;
 
@@ -366,6 +366,9 @@ void data_tracker::add(double sat, double held)
 struct torpedo : projectile
 {
     sf::Clock clk;
+    sf::Clock inactivity_time;
+
+    float homing_frequency = HEAT_FREQ;
 
     virtual void tick(double dt_s) override
     {
@@ -376,11 +379,54 @@ struct torpedo : projectile
 
         alt_radar_field& radar = get_radar_field();
 
-        alt_frequency_packet em;
-        em.frequency = 1500;
-        em.intensity = 1000;
+        if(inactivity_time.getElapsedTime().asMicroseconds() / 1000 >= 2 * 1000)
+        {
+            phys_ignore.clear();
 
-        radar.emit(em, r.position, id);
+            alt_frequency_packet em;
+            em.frequency = 1500;
+            em.intensity = 1000;
+
+            radar.emit(em, r.position, id);
+
+            alt_radar_sample sam = radar.sample_for(r.position, id);
+
+            vec2f best_dir = {0, 0};
+            float best_intensity = 0;
+
+            for(auto& i : sam.receive_dir)
+            {
+                if(i.frequency != homing_frequency)
+                    continue;
+
+                if(i.property.length() > best_intensity)
+                {
+                    best_dir = i.property;
+                    best_intensity = i.property.length();
+                }
+            }
+
+            if(best_dir.x() == 0 && best_dir.y() == 0)
+                return;
+
+            float max_angle_per_s = M_PI/4;
+
+            vec2f my_dir = velocity;
+            vec2f target_angle = best_dir;
+
+            float requested_angle = signed_angle_between_vectors(my_dir, target_angle);
+
+            if(fabs(requested_angle) > max_angle_per_s)
+            {
+                requested_angle = signum(requested_angle) * max_angle_per_s;
+            }
+
+            float angle_change = requested_angle * dt_s;
+
+            velocity = velocity.rot(angle_change);
+
+            r.rotation = velocity.angle();
+        }
     }
 };
 
@@ -418,7 +464,7 @@ void ship::tick(double dt_s)
                     projectile* l = parent->make_new<torpedo>();
                     l->r.position = r.position;
                     l->r.rotation = r.rotation;
-                    l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
+                    l->velocity = (vec2f){1, 0}.rot(r.rotation) * 20;
                     //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
                     l->phys_ignore.push_back(id);
 
@@ -838,7 +884,7 @@ void ship::ping()
 
 projectile::projectile()
 {
-    r.init_rectangular({0.2, 1});
+    r.init_rectangular({1, 0.2});
 }
 
 void projectile::on_collide(entity_manager& em, entity& other)
