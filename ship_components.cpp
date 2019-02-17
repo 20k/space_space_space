@@ -923,9 +923,11 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         intensity = clamp(intensity*10, 1, 50);
 
+        vec2f next_pos = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
+
         if(!has)
         {
-            next->r.position = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
+            next->r.position = next_pos;
         }
 
         next->r.init_rectangular({intensity, 1});
@@ -934,8 +936,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->server_id = fid;
         next->echo_type = 1;
 
-        if(!has)
-            next->set_parent_entity(ship_proxy, next->r.position);
+        //if(!has)
+            next->set_parent_entity(ship_proxy, next_pos);
     }
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
