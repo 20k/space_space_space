@@ -258,6 +258,8 @@ struct alt_radar_sample : serialisable
     std::vector<alt_object_property<vec2f>> echo_dir;
     std::vector<alt_object_property<vec2f>> receive_dir;
 
+    bool fresh = false;
+
     virtual void serialise(nlohmann::json& data, bool encode)
     {
         DO_SERIALISE(location);
@@ -267,6 +269,8 @@ struct alt_radar_sample : serialisable
         DO_SERIALISE(echo_pos);
         DO_SERIALISE(echo_dir);
         DO_SERIALISE(receive_dir);
+
+        DO_SERIALISE(fresh);
 
         /*DO_SERIALISE(echo_position);
         DO_SERIALISE(echo_id);*/

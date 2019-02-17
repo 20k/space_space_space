@@ -506,6 +506,9 @@ int main()
 
     entity* ship_proxy = entities.make_new<entity>();
 
+    alt_radar_sample sample;
+    entity_manager transients;
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -527,13 +530,23 @@ int main()
             }
         }
 
-
         while(conn.has_read())
         {
+            //model.cleanup();
             //std::cout << conn.read() << std::endl;
             model = conn.reads_from<data_model<ship>>().data;
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
+
+            if(model.sample.fresh)
+            {
+                sample = model.sample;
+
+                for(auto& i : transients.entities)
+                {
+                    i->cleanup = true;
+                }
+            }
 
             //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
 
@@ -551,8 +564,10 @@ int main()
         }
 
         entities.cleanup();
-        tick_radar_data(entities, model.sample, ship_proxy);
+        transients.cleanup();
+        tick_radar_data(transients, model.sample, ship_proxy);
         entities.tick(frametime_dt);
+        transients.tick(frametime_dt);
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
@@ -673,6 +688,7 @@ int main()
         render_radar_data(window, model.sample);
 
         entities.render(window);
+        transients.render(window);
 
         ImGui::SFML::Render(window);
         window.display();

@@ -125,6 +125,13 @@ struct entity_manager : serialisable
 
     void tick(double dt_s)
     {
+        for(auto& i : to_spawn)
+        {
+            entities.push_back(i);
+        }
+
+        to_spawn.clear();
+
         auto last_entities = entities;
 
         for(entity* e : last_entities)
@@ -179,6 +186,13 @@ struct entity_manager : serialisable
                 e->r.position = e->parent_entity->r.position + e->parent_offset;
             }
         }
+
+        for(auto& i : to_spawn)
+        {
+            entities.push_back(i);
+        }
+
+        to_spawn.clear();
     }
 
     void render(sf::RenderWindow& window)
