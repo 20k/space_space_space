@@ -363,6 +363,27 @@ void data_tracker::add(double sat, double held)
     add_to_vector(held, vheld, max_data);
 }
 
+struct torpedo : projectile
+{
+    sf::Clock clk;
+
+    virtual void tick(double dt_s) override
+    {
+        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 20 * 1000)
+        {
+            cleanup = true;
+        }
+
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet em;
+        em.frequency = 1500;
+        em.intensity = 500;
+
+        radar.emit(em, r.position, id);
+    }
+};
+
 void ship::tick(double dt_s)
 {
     std::vector<double> resource_status = sum<double>([](component& c)
@@ -394,7 +415,7 @@ void ship::tick(double dt_s)
 
                 if(c.has(component_info::WEAPONS))
                 {
-                    projectile* l = parent->make_new<projectile>();
+                    projectile* l = parent->make_new<torpedo>();
                     l->r.position = r.position;
                     l->r.rotation = r.rotation;
                     l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
