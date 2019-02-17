@@ -1264,7 +1264,7 @@ struct random_constants
         float max_error = 10;
 
         std::uniform_real_distribution<float> dist_err(-max_error, max_error);
-        std::uniform_real_distribution<float> angle_err(-M_PI/2, M_PI/2);
+        std::uniform_real_distribution<float> angle_err(-M_PI/4, M_PI/4);
 
         err_1 = {dist_err(rng), dist_err(rng)};
         err_2 = {dist_err(rng), dist_err(rng)};
@@ -1296,15 +1296,79 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
     s.location = pos;
 
     ///need to sum packets first, then iterate them
+    ///need to sum packets with the same emitted id and frequency
     random_constants rconst = get_random_constants_for(uid);
 
-    for(alt_frequency_packet& packet : packets)
+    /*std::vector<alt_frequency_packet> merged;
+
+    for(const alt_frequency_packet& packet : packets)
+    {
+        bool found = false;
+
+        for(alt_frequency_packet& other : merged)
+        {
+            if(other.emitted_by == packet.emitted_by && other.reflected_by == packet.reflected_by && other.frequency == packet.frequency && other.origin == packet.origin)
+            {
+                other.intensity += packet.intensity;
+                found = true;
+                break;
+            }
+        }
+
+        if(found)
+            continue;
+
+        merged.push_back(packet);
+    }*/
+
+    ///ok so the problem with merging is that we calculate intensity analytically, which means that issues are caused by naively combining them
+    ///need to combine POST intensity merge
+
+    std::vector<alt_frequency_packet> post_intensity_calculate;
+
+    for(alt_frequency_packet packet : packets)
+    {
+        float intensity = get_intensity_at_of(pos, packet);
+
+        packet.intensity = intensity;
+
+        post_intensity_calculate.push_back(packet);
+    }
+
+    /*std::vector<alt_frequency_packet> merged;
+
+    for(const alt_frequency_packet& packet : post_intensity_calculate)
+    {
+        bool found = false;
+
+        for(alt_frequency_packet& other : merged)
+        {
+            if(other.emitted_by == packet.emitted_by && other.reflected_by == packet.reflected_by && other.frequency == packet.frequency && other.origin == packet.origin)
+            {
+                other.intensity += packet.intensity;
+                found = true;
+                break;
+            }
+        }
+
+        if(found)
+            continue;
+
+        merged.push_back(packet);
+    }*/
+
+    auto merged = post_intensity_calculate;
+
+    for(alt_frequency_packet& packet : merged)
     {
         if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
 
-        float intensity = get_intensity_at_of(pos, packet);
+        float intensity = packet.intensity;
+        //float intensity = get_intensity_at_of(pos, packet);
         float frequency = packet.frequency;
+
+        //std::cout << intensity << std::endl;
 
         #ifdef RECT
         if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
@@ -1318,8 +1382,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         float uncertainty = intensity / 1;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
-
-        //uncertainty = 0;
 
         #define RECT_RECV
         #ifdef RECT_RECV
