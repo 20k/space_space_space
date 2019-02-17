@@ -378,7 +378,7 @@ struct torpedo : projectile
 
         alt_frequency_packet em;
         em.frequency = 1500;
-        em.intensity = 500;
+        em.intensity = 1000;
 
         radar.emit(em, r.position, id);
     }
@@ -965,7 +965,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         float intensity = sample.echo_dir[i].property.length();
 
-        intensity = clamp(intensity*10, 1, 50);
+        intensity = clamp(intensity*10, 1, 20);
 
         vec2f next_pos = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
 
@@ -1010,7 +1010,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         float intensity = sample.receive_dir[i].property.length();
 
-        intensity = clamp(intensity*10, 1, 50);
+        intensity = clamp(intensity*10, 1, 20);
 
         vec2f next_pos = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);
 
