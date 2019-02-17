@@ -61,9 +61,11 @@ struct entity : virtual serialisable
 
     vec2f velocity = {0,0};
     vec2f control_force = {0,0};
+    vec2f force = {0,0};
 
     float angular_velocity = 0;
     float control_angular_force = 0;
+    float angular_force = 0;
 
     bool drag = false;
 

@@ -87,6 +87,12 @@ void entity::apply_inputs(double dt_s, double velocity_mult, double angular_mult
 
 void entity::tick_phys(double dt_s)
 {
+    velocity += force * dt_s;
+    force = {0,0};
+
+    angular_velocity += angular_force * dt_s;
+    angular_force = 0;
+
     ///need to take into account mass
     r.position += velocity * dt_s;
     r.rotation += angular_velocity * dt_s;

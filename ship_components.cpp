@@ -370,6 +370,10 @@ struct torpedo : projectile
 
     float homing_frequency = HEAT_FREQ;
 
+    float point_angle = 0;
+
+    uint32_t fired_by = -1;
+
     virtual void tick(double dt_s) override
     {
         if(clk.getElapsedTime().asMicroseconds() / 1000. >= 20 * 1000)
@@ -379,53 +383,75 @@ struct torpedo : projectile
 
         alt_radar_field& radar = get_radar_field();
 
+        alt_radar_sample sam = radar.sample_for(r.position, id);
+
+        vec2f best_dir = {0, 0};
+        float best_intensity = 0;
+
+        for(auto& i : sam.receive_dir)
+        {
+            if(i.frequency != homing_frequency)
+                continue;
+
+            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+                continue;
+
+            if(i.property.length() > best_intensity)
+            {
+                best_dir = i.property;
+                best_intensity = i.property.length();
+            }
+        }
+
+        if(best_dir.x() == 0 && best_dir.y() == 0)
+            return;
+
+        float max_angle_per_s = dt_s * M_PI;
+
+        vec2f my_dir = (vec2f){1, 0}.rot(point_angle);
+        //vec2f my_dir = velocity;
+        vec2f target_angle = best_dir;
+
+        float requested_angle = signed_angle_between_vectors(my_dir, target_angle);
+
+        if(fabs(requested_angle) > max_angle_per_s)
+        {
+            requested_angle = signum(requested_angle) * max_angle_per_s;
+        }
+
+        float angle_change = requested_angle;
+
+        point_angle += angle_change;
+
+        r.rotation = point_angle;
+
         if(inactivity_time.getElapsedTime().asMicroseconds() / 1000 >= 2 * 1000)
         {
-            phys_ignore.clear();
-
             alt_frequency_packet em;
             em.frequency = 1500;
             em.intensity = 1000;
 
             radar.emit(em, r.position, id);
 
-            alt_radar_sample sam = radar.sample_for(r.position, id);
+            phys_ignore.clear();
 
-            vec2f best_dir = {0, 0};
-            float best_intensity = 0;
 
-            for(auto& i : sam.receive_dir)
+            float max_speed = 100;
+            float max_speed_ps = 30;
+
+            velocity = velocity + (vec2f){max_speed_ps, 0}.rot(point_angle) * dt_s;
+
+            if(velocity.length() < max_speed)
             {
-                if(i.frequency != homing_frequency)
-                    continue;
-
-                if(i.property.length() > best_intensity)
-                {
-                    best_dir = i.property;
-                    best_intensity = i.property.length();
-                }
+                velocity = velocity.norm() * velocity.length() + (vec2f){1, 0}.rot(point_angle) * max_speed_ps * dt_s;
             }
 
-            if(best_dir.x() == 0 && best_dir.y() == 0)
-                return;
-
-            float max_angle_per_s = M_PI/4;
-
-            vec2f my_dir = velocity;
-            vec2f target_angle = best_dir;
-
-            float requested_angle = signed_angle_between_vectors(my_dir, target_angle);
-
-            if(fabs(requested_angle) > max_angle_per_s)
+            if(velocity.length() > max_speed)
             {
-                requested_angle = signum(requested_angle) * max_angle_per_s;
+                velocity = velocity.norm() * max_speed;
             }
 
-            float angle_change = requested_angle * dt_s;
-
-            velocity = velocity.rot(angle_change);
-
-            r.rotation = velocity.angle();
+            //velocity = velocity + (vec2f){10, 0}.rot(angle_change) * dt_s;
         }
     }
 };
@@ -461,12 +487,13 @@ void ship::tick(double dt_s)
 
                 if(c.has(component_info::WEAPONS))
                 {
-                    projectile* l = parent->make_new<torpedo>();
+                    torpedo* l = parent->make_new<torpedo>();
                     l->r.position = r.position;
                     l->r.rotation = r.rotation;
-                    l->velocity = (vec2f){1, 0}.rot(r.rotation) * 20;
+                    l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
                     //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
                     l->phys_ignore.push_back(id);
+                    l->fired_by = id;
 
                     alt_radar_field& radar = get_radar_field();
 
