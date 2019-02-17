@@ -1281,7 +1281,7 @@ random_constants& get_random_constants_for(uint32_t uid)
 
     random_constants& rconst = cst[uid];
 
-    if(rconst.clk.getElapsedTime().asMicroseconds() / 1000. > 1000)
+    if(rconst.clk.getElapsedTime().asMicroseconds() / 1000. > 200)
     {
         rconst.make(mrng);
         rconst.clk.restart();
@@ -1386,18 +1386,19 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         //std::cout << intensity << std::endl;
 
+        float uncertainty = intensity / 1;
+        uncertainty = 1 - clamp(uncertainty, 0, 1);
+
+        #define RECT
         #ifdef RECT
-        if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
+        if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 1)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.reflected_by, packet.reflected_position});
+            s.echo_pos.push_back({packet.reflected_by, packet.reflected_position + rconst.err_1 * uncertainty});
         }
         #endif // RECT
-
-        float uncertainty = intensity / 1;
-        uncertainty = 1 - clamp(uncertainty, 0, 1);
 
         #define RECT_RECV
         #ifdef RECT_RECV

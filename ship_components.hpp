@@ -232,6 +232,7 @@ struct ship : virtual entity, virtual serialisable
     void apply_rotation_force(float force);
 
     void fire();
+    void ping();
     void take_damage(double amount);
 
     double data_track_elapsed_s = 0;

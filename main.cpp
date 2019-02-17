@@ -106,6 +106,8 @@ void server_thread()
     sensor.add(component_info::SENSORS, 1);
     sensor.add(component_info::HP, 0, 1);
 
+    sensor.add_on_use(component_info::POWER, -35);
+
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
     comms.add(component_info::HP, 0, 1);
@@ -302,6 +304,11 @@ void server_thread()
                     if(read.data.fired)
                     {
                         s->fire();
+                    }
+
+                    if(read.data.ping)
+                    {
+                        s->ping();
                     }
                 }
             }
@@ -542,6 +549,11 @@ int main()
             {
                 sample = model.sample;
             }
+            else
+            {
+                sample.intensities = model.sample.intensities;
+                sample.frequencies = model.sample.frequencies;
+            }
 
             //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
 
@@ -601,6 +613,11 @@ int main()
         if(ONCE_MACRO(sf::Keyboard::Space))
         {
             cinput.fired = true;
+        }
+
+        if(ONCE_MACRO(sf::Keyboard::Q))
+        {
+            cinput.ping = true;
         }
 
         //std::cout << cinput.direction << std::endl;

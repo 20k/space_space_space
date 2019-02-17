@@ -392,20 +392,34 @@ void ship::tick(double dt_s)
             {
                 c.use(next_resource_status);
 
-                projectile* l = parent->make_new<projectile>();
-                l->r.position = r.position;
-                l->r.rotation = r.rotation;
-                l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
-                //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
-                l->phys_ignore.push_back(id);
+                if(c.has(component_info::WEAPONS))
+                {
+                    projectile* l = parent->make_new<projectile>();
+                    l->r.position = r.position;
+                    l->r.rotation = r.rotation;
+                    l->velocity = (vec2f){0, 1}.rot(r.rotation) * 100;
+                    //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
+                    l->phys_ignore.push_back(id);
 
-                alt_radar_field& radar = get_radar_field();
+                    alt_radar_field& radar = get_radar_field();
 
-                alt_frequency_packet em;
-                em.frequency = 1000;
-                em.intensity = 50000;
+                    alt_frequency_packet em;
+                    em.frequency = 1000;
+                    em.intensity = 20000;
 
-                radar.emit(em, r.position, id);
+                    radar.emit(em, r.position, id);
+                }
+
+                if(c.has(component_info::SENSORS))
+                {
+                    alt_radar_field& radar = get_radar_field();
+
+                    alt_frequency_packet em;
+                    em.frequency = 2000;
+                    em.intensity = 100000;
+
+                    radar.emit(em, r.position, id);
+                }
             }
 
             c.try_use = false;
@@ -790,6 +804,17 @@ void ship::fire()
     }
 }
 
+void ship::ping()
+{
+    for(component& c : components)
+    {
+        if(c.has(component_info::SENSORS))
+        {
+            c.try_use = true;
+        }
+    }
+}
+
 projectile::projectile()
 {
     r.init_rectangular({0.2, 1});
@@ -915,9 +940,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         bool has = next != nullptr;
 
         if(next == nullptr)
-        {
             next = transients.make_new<transient_entity>();
-        }
 
         float intensity = sample.echo_dir[i].property.length();
 
@@ -936,8 +959,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->server_id = fid;
         next->echo_type = 1;
 
-        //if(!has)
-            next->set_parent_entity(ship_proxy, next_pos);
+        next->set_parent_entity(ship_proxy, next_pos);
     }
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
@@ -983,8 +1005,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->server_id = fid;
         next->echo_type = 2;
 
-        //if(!has)
-            next->set_parent_entity(ship_proxy, next_pos);
+        next->set_parent_entity(ship_proxy, next_pos);
 
         for(auto& i : next->r.vert_cols)
         {
