@@ -1255,6 +1255,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
     alt_radar_sample s;
     s.location = pos;
 
+    ///need to sum packets first, then iterate them
+
     for(alt_frequency_packet& packet : packets)
     {
         if(packet.emitted_by == uid && packet.reflected_by == -1)
@@ -1272,6 +1274,17 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             s.echo_pos.push_back({packet.reflected_by, packet.reflected_position});
         }
         #endif // RECT
+
+        #define RECT_RECV
+        #ifdef RECT_RECV
+        if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 1)
+        {
+            /*s.echo_position.push_back(packet.reflected_position);
+            s.echo_id.push_back(packet.reflected_by);*/
+
+            s.echo_pos.push_back({packet.emitted_by, packet.origin});
+        }
+        #endif // RECT_RECV
 
         if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
         {

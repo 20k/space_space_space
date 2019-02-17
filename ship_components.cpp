@@ -839,6 +839,7 @@ struct transient_entity : entity
     bool immediate_destroy = false;
     uint32_t server_id = 0;
     sf::Clock clk;
+    int echo_type = -1;
 
     transient_entity()
     {
@@ -873,7 +874,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
             if(transient == nullptr)
                 continue;
 
-            if(fid == transient->server_id)
+            if(fid == transient->server_id && transient->echo_type == 0)
             {
                 found = true;
                 transient->clk.restart();
@@ -885,6 +886,9 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         {
             transient_entity* next = entities.make_new<transient_entity>();
             next->server_id = fid;
+            next->r.position = sample.echo_pos[i].property;
+            next->echo_type = 0;
+            next->clk.restart();
         }
     }
 
@@ -902,7 +906,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
             if(transient == nullptr)
                 continue;
 
-            if(fid == transient->server_id)
+            if(fid == transient->server_id && transient->echo_type == 1)
             {
                 next = transient;
                 break;
@@ -921,6 +925,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         next->r.rotation = sample.echo_dir[i].property.angle();
         next->clk.restart();
         next->server_id = fid;
+        next->echo_type = 1;
     }
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
@@ -935,6 +940,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         next->r.init_rectangular({intensity, 1});
         next->r.rotation = sample.receive_dir[i].property.angle();
         next->immediate_destroy = true;
+        next->echo_type = 2;
 
         for(auto& i : next->r.vert_cols)
         {
