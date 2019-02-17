@@ -1250,12 +1250,53 @@ void alt_radar_field::render(sf::RenderWindow& win)
     }
 }
 
+struct random_constants
+{
+    vec2f err_1;
+    vec2f err_2;
+    float err_3 = 0;
+    float err_4 = 0;
+
+    sf::Clock clk;
+
+    void make(std::minstd_rand0& rng)
+    {
+        float max_error = 10;
+
+        std::uniform_real_distribution<float> dist_err(-max_error, max_error);
+        std::uniform_real_distribution<float> angle_err(-M_PI/2, M_PI/2);
+
+        err_1 = {dist_err(rng), dist_err(rng)};
+        err_2 = {dist_err(rng), dist_err(rng)};
+
+        err_3 = angle_err(rng);
+        err_4 = angle_err(rng);
+    }
+};
+
+random_constants& get_random_constants_for(uint32_t uid)
+{
+    static std::map<uint32_t, random_constants> cst;
+    static std::minstd_rand0 mrng;
+
+    random_constants& rconst = cst[uid];
+
+    if(rconst.clk.getElapsedTime().asMicroseconds() / 1000. > 1000)
+    {
+        rconst.make(mrng);
+        rconst.clk.restart();
+    }
+
+    return rconst;
+}
+
 alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 {
     alt_radar_sample s;
     s.location = pos;
 
     ///need to sum packets first, then iterate them
+    random_constants rconst = get_random_constants_for(uid);
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -1275,6 +1316,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         }
         #endif // RECT
 
+        float uncertainty = intensity / 1;
+        uncertainty = 1 - clamp(uncertainty, 0, 1);
+
+        //uncertainty = 0;
+
         #define RECT_RECV
         #ifdef RECT_RECV
         if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 1)
@@ -1282,18 +1328,26 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.emitted_by, packet.origin});
+            s.echo_pos.push_back({packet.emitted_by, packet.origin + rconst.err_2 * uncertainty});
         }
         #endif // RECT_RECV
 
         if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
         {
-            s.echo_dir.push_back({packet.reflected_by, (packet.reflected_position - pos).norm() * intensity});
+            vec2f next_dir = (packet.reflected_position - pos).norm();
+
+            next_dir = next_dir.rot(rconst.err_3 * uncertainty);
+
+            s.echo_dir.push_back({packet.reflected_by, next_dir * intensity});
         }
 
         if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 0)
         {
-            s.receive_dir.push_back({packet.emitted_by, (packet.origin - pos).norm() * intensity});
+            vec2f next_dir = (packet.origin - pos).norm();
+
+            next_dir = next_dir.rot(rconst.err_4 * uncertainty);
+
+            s.receive_dir.push_back({packet.emitted_by, next_dir.norm() * intensity});
         }
 
         //std::cout << "intens " << intensity << " freq " << frequency << std::endl;

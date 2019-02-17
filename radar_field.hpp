@@ -14,6 +14,8 @@
 #define MIN_FREQ 1
 #define MAX_FREQ 10000
 
+#define MAX_RESOLUTION_INTENSITY 4
+
 namespace sf
 {
     struct RenderWindow;
