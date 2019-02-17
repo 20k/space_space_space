@@ -1292,6 +1292,11 @@ random_constants& get_random_constants_for(uint32_t uid)
 
 alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 {
+    if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
+        return cached_samples[uid];
+
+    sample_time[uid].restart();
+
     alt_radar_sample s;
     s.location = pos;
 
@@ -1335,6 +1340,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         post_intensity_calculate.push_back(packet);
     }
 
+    ///could get around the jitter by sending intensity as frequently as we update randomness
+    ///aka move to a frequency sampling basis
     /*std::vector<alt_frequency_packet> merged;
 
     for(const alt_frequency_packet& packet : post_intensity_calculate)
@@ -1432,6 +1439,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             s.intensities.push_back(intensity);
         }
     }
+
+    cached_samples[uid] = s;
 
     return s;
 }

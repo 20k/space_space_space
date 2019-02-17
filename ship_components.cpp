@@ -860,7 +860,7 @@ struct transient_entity : entity
     }
 };
 
-void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
+void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, entity* ship_proxy)
 {
     for(int i=0; i < (int)sample.echo_pos.size(); i++)
     {
@@ -879,6 +879,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
                 found = true;
                 transient->clk.restart();
                 transient->r.position = sample.echo_pos[i].property;
+                transient->set_parent_entity(ship_proxy, transient->r.position);
             }
         }
 
@@ -889,6 +890,8 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
             next->r.position = sample.echo_pos[i].property;
             next->echo_type = 0;
             next->clk.restart();
+
+            next->set_parent_entity(ship_proxy, next->r.position);
         }
     }
 
@@ -926,6 +929,8 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         next->clk.restart();
         next->server_id = fid;
         next->echo_type = 1;
+
+        next->set_parent_entity(ship_proxy, next->r.position);
     }
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
@@ -941,6 +946,7 @@ void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample)
         next->r.rotation = sample.receive_dir[i].property.angle();
         next->immediate_destroy = true;
         next->echo_type = 2;
+        next->set_parent_entity(ship_proxy, next->r.position);
 
         for(auto& i : next->r.vert_cols)
         {

@@ -258,12 +258,14 @@ struct data_model : serialisable
     std::vector<T> ships;
     std::vector<client_renderable> renderables;
     alt_radar_sample sample;
+    uint32_t client_network_id = 0;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(ships);
         DO_SERIALISE(renderables);
         DO_SERIALISE(sample);
+        DO_SERIALISE(client_network_id);
     }
 };
 
@@ -274,7 +276,7 @@ struct asteroid : entity
     virtual void tick(double dt_s) override;
 };
 
-void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample);
+void tick_radar_data(entity_manager& entities, const alt_radar_sample& sample, entity* ship_proxy);
 void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample);
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

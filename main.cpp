@@ -74,6 +74,8 @@ void server_thread()
     entity_manager entities;
 
     ship* test_ship = entities.make_new<ship>();
+    test_ship->network_owner = 0;
+    test_ship->r.network_owner = 0;
 
     component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
 
@@ -166,6 +168,7 @@ void server_thread()
 
     //std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
     test_ship2->network_owner = 1;
+    test_ship2->r.network_owner = 1;
 
     test_ship2->r.position = {600, 400};
 
@@ -331,6 +334,8 @@ void server_thread()
         for(auto& i : clients)
         {
             //model.sample = radar.sample()
+
+            model.client_network_id = i;
 
             if(network_ships[i] != nullptr)
             {
@@ -499,6 +504,8 @@ int main()
 
     entity_manager entities;
 
+    entity* ship_proxy = entities.make_new<entity>();
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -536,7 +543,7 @@ int main()
         }
 
         entities.cleanup();
-        tick_radar_data(entities, model.sample);
+        tick_radar_data(entities, model.sample, ship_proxy);
         entities.tick(frametime_dt);
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
@@ -643,6 +650,14 @@ int main()
 
         test_ship->advanced_ship_display();
         #endif // 0
+
+        for(client_renderable& r : model.renderables)
+        {
+            if(r.network_owner == model.client_network_id)
+            {
+                ship_proxy->r.position = r.position;
+            }
+        }
 
         for(ship& s : model.ships)
         {

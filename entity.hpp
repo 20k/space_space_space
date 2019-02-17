@@ -25,6 +25,8 @@ struct client_renderable : serialisable
 
     vec2f approx_dim = {0,0};
 
+    uint32_t network_owner = 0;
+
     void serialise(nlohmann::json& data, bool encode)
     {
         //if(!encode)
@@ -40,6 +42,7 @@ struct client_renderable : serialisable
 
         DO_SERIALISE(approx_rad);
         DO_SERIALISE(scale);
+        DO_SERIALISE(network_owner);
     }
 
     void init_rectangular(vec2f dim);
@@ -78,6 +81,10 @@ struct entity : virtual serialisable
     entity_manager* get_parent();
     entity_manager* parent = nullptr;
 
+    void set_parent_entity(entity* en, vec2f absolute_position);
+    entity* parent_entity = nullptr;
+    vec2f parent_offset = {0,0};
+
     virtual void on_collide(entity_manager& em, entity& other){}
 
     virtual ~entity(){}
@@ -100,6 +107,7 @@ bool collides(entity& e1, entity& e2);
 struct entity_manager : serialisable
 {
     std::vector<entity*> entities;
+    std::vector<entity*> to_spawn;
 
     static inline size_t gid = 0;
 
@@ -108,7 +116,7 @@ struct entity_manager : serialisable
     {
         T* e = new T(std::forward<U>(u)...);
 
-        entities.push_back(e);
+        to_spawn.push_back(e);
         e->parent = this;
         e->id = gid++;
 
@@ -163,6 +171,14 @@ struct entity_manager : serialisable
                 }
             }
         }
+
+        for(entity* e : last_entities)
+        {
+            if(e->parent_entity)
+            {
+                e->r.position = e->parent_entity->r.position + e->parent_offset;
+            }
+        }
     }
 
     void render(sf::RenderWindow& window)
@@ -175,6 +191,22 @@ struct entity_manager : serialisable
 
     void cleanup()
     {
+        for(auto& i : to_spawn)
+        {
+            entities.push_back(i);
+        }
+
+        to_spawn.clear();
+
+        for(entity* e : entities)
+        {
+            if(e->parent_entity && e->parent_entity->cleanup)
+            {
+                e->cleanup = true;
+                e->parent_entity = nullptr;
+            }
+        }
+
         for(int i=0; i < (int)entities.size(); i++)
         {
             if(entities[i]->cleanup)

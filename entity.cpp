@@ -189,6 +189,9 @@ bool entity::point_within(vec2f point)
     //debug_circle->setPosition(point.x(), point.y());
     //debug_window->draw(*debug_circle);
 
+    if(r.vert_angle.size() == 0 || r.vert_dist.size() == 0)
+        return false;
+
     vec2f last_pos = get_world_pos(0);
 
     for(int i=0; i < (int)r.vert_dist.size(); i++)
@@ -226,6 +229,14 @@ bool entity::point_within(vec2f point)
         return true;
 
     return false;
+}
+
+void entity::set_parent_entity(entity* en, vec2f absolute_position)
+{
+    assert(en);
+
+    parent_entity = en;
+    parent_offset = absolute_position - en->r.position;
 }
 
 void client_entities::render(sf::RenderWindow& win)
