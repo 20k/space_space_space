@@ -1168,6 +1168,20 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     sample.fresh = false;
 
+    for(entity* e : transients.entities)
+    {
+        e->cleanup = true;
+    }
+
+    transients.cleanup();
+
+    /*std::cout << "received " << sample.receive_dir.size() << std::endl;
+
+    for(auto& e : sample.receive_dir)
+    {
+        std::cout << e.property << std::endl;
+    }*/
+
     for(int i=0; i < (int)sample.echo_pos.size(); i++)
     {
         uint32_t id_e = sample.echo_pos[i].id_e;

@@ -187,6 +187,12 @@ struct alt_frequency_packet
     uint32_t emitted_by = -1;
     uint32_t reflected_by = -1;
     vec2f reflected_position = {0,0};
+
+    /*uint32_t prev_reflected_by = -1;
+    vec2f last_reflected_position = {0,0};*/
+
+    ///parent packet
+    std::shared_ptr<alt_frequency_packet> last_packet;
 };
 
 struct alt_collideable
@@ -293,6 +299,9 @@ struct alt_radar_field
     std::vector<alt_frequency_packet> packets;
     //std::vector<alt_frequency_packet> subtractive_packets;
     std::map<uint32_t, std::vector<alt_frequency_packet>> subtractive_packets;
+
+    std::vector<alt_frequency_packet> speculative_packets;
+    std::map<uint32_t, std::vector<alt_frequency_packet>> speculative_subtractive_packets;
 
     std::vector<alt_collideable> collideables;
 

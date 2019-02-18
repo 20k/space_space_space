@@ -955,9 +955,19 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    profile_dumper pdump("newtick");
+    //profile_dumper pdump("newtick");
 
-    std::vector<alt_frequency_packet> speculative_packets;
+    //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
+
+    /*for(auto& i : speculative_subtractive_packets)
+    {
+        subtractive_packets[i.first] = i.second;
+    }
+
+    speculative_packets.clear();
+    speculative_subtractive_packets.clear();*/
+
+
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -988,6 +998,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
                 collide_packet.id = alt_frequency_packet::gid++;
+                collide_packet.iterations++;
                 //collide_packet.emitted_by = -1;
 
                 float circle_circumference = 2 * M_PI * len;
@@ -1016,7 +1027,12 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
                 //reflect.emitted_by = -1;
                 reflect.reflected_by = collide.uid;
+                //reflect.prev_reflected_by = packet.reflected_by;
                 reflect.reflected_position = collide.pos;
+                //reflect.last_reflected_position = packet.last_reflected_position;
+                reflect.iterations++;
+
+                reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
                 //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
@@ -1027,6 +1043,10 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+
+    packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
+
+    speculative_packets.clear();
 
     for(auto it = packets.begin(); it != packets.end();)
     {
@@ -1049,7 +1069,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
+    //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -1065,7 +1085,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    pdump.dump();
+    //pdump.dump();
 
     collideables.clear();
 }
@@ -1380,9 +1400,30 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
 
+        ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
+        ///THIS WILL NOT BE TRUE IF I MAKE IT DECREASE IN INTENSITY AFTER A REFLECTION SO THIS IS KIND OF WEIRD
         float intensity = packet.intensity;
         //float intensity = get_intensity_at_of(pos, packet);
         float frequency = packet.frequency;
+
+        if(intensity == 0)
+            continue;
+
+        /*uint32_t reflected_by = packet.reflected_by;
+        vec2f reflected_position = packet.reflected_position;
+
+        if(reflected_by == uid)
+        {
+            reflected_by = packet.prev_reflected_by;
+            reflected_position = packet.last_reflected_position;
+        }*/
+
+        alt_frequency_packet consider = packet;
+
+        if(consider.reflected_by == uid && consider.emitted_by != uid && consider.last_packet)
+        {
+            consider = *consider.last_packet;
+        }
 
         //std::cout << intensity << std::endl;
 
@@ -1391,45 +1432,50 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         #define RECT
         #ifdef RECT
-        if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 1)
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.emitted_by, packet.reflected_by, packet.reflected_position + rconst.err_1 * uncertainty, packet.frequency});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.reflected_position + rconst.err_1 * uncertainty, consider.frequency});
         }
         #endif // RECT
 
         #define RECT_RECV
         #ifdef RECT_RECV
-        if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 1)
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 1)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({packet.emitted_by, packet.reflected_by, packet.origin + rconst.err_2 * uncertainty, packet.frequency});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.origin + rconst.err_2 * uncertainty, consider.frequency});
         }
         #endif // RECT_RECV
 
-        if(packet.emitted_by == uid && packet.reflected_by != -1 && packet.reflected_by != uid && intensity > 0)
+        ///specifically excludes self because we never need to know where we are
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0)
         {
-            vec2f next_dir = (packet.reflected_position - pos).norm();
+            vec2f next_dir = (consider.reflected_position - pos).norm();
 
             next_dir = next_dir.rot(rconst.err_3 * uncertainty);
 
-            s.echo_dir.push_back({packet.emitted_by, packet.reflected_by, next_dir * intensity, packet.frequency});
+            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency});
         }
 
-        if(packet.emitted_by != uid && packet.reflected_by == -1 && intensity > 0)
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0)
         {
-            vec2f next_dir = (packet.origin - pos).norm();
+            vec2f next_dir = (consider.origin - pos).norm();
 
             next_dir = next_dir.rot(rconst.err_4 * uncertainty);
 
-            s.receive_dir.push_back({packet.emitted_by, packet.reflected_by, next_dir.norm() * intensity, packet.frequency});
+            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency});
+
+            //std::cout << "sent intens " << intensity << std::endl;
         }
 
-        //std::cout << "intens " << intensity << " freq " << frequency << std::endl;
+        std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
+
+        //std::cout << "loop " << intensity << std::endl;
 
         bool found = false;
 
@@ -1448,6 +1494,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             s.frequencies.push_back(frequency);
             s.intensities.push_back(intensity);
         }
+    }
+
+    for(auto& i : s.intensities)
+    {
+        std::cout << "rintens " << i << std::endl;
     }
 
     s.fresh = true;
