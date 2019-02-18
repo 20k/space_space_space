@@ -1141,7 +1141,8 @@ struct transient_entity : entity
     uint32_t id_r = 0;
     sf::Clock clk;
     int echo_type = -1;
-    vec2f last_prop = {0,0};
+
+    std::vector<std::pair<vec2f, sf::Clock>> last_props;
 
     vec2f dir = {0,0};
 
@@ -1161,6 +1162,37 @@ struct transient_entity : entity
 
         if(immediate_destroy)
             cleanup = true;
+    }
+
+    void add_last_prop(vec2f in)
+    {
+        last_props.push_back({in, sf::Clock()});
+    }
+
+    vec2f get_last_prop()
+    {
+        vec2f sum = {0,0};
+
+        float max_intens = 0;
+
+        for(auto it = last_props.begin(); it != last_props.end();)
+        {
+            if(it->second.getElapsedTime().asMicroseconds() / 1000. > 1000)
+            {
+                it = last_props.erase(it);
+            }
+            else
+            {
+                sum += it->first;
+
+                max_intens = std::max(max_intens, it->first.length());
+
+                it++;
+            }
+        }
+
+        return sum.norm() * max_intens;
+
     }
 };
 
@@ -1263,11 +1295,18 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         if(next == nullptr)
             next = transients.make_new<transient_entity>();
 
-        float intensity = e.property.length() + next->last_prop.length();
+        next->add_last_prop(e.property);
+
+        //float intensity = std::max(e.property.length(), next->last_prop.length());
+
+        vec2f next_prop = next->get_last_prop();
+
+        float intensity = next_prop.length();
 
         intensity = clamp(intensity*10, 1, 20);
 
-        vec2f next_pos = sample.location + (e.property + next->last_prop).norm() * (intensity * 2 + 10);
+        vec2f next_pos = sample.location + next_prop.norm() * (intensity * 2 + 10);
+        //vec2f next_pos = sample.location + (e.property + next->last_prop).norm() * (intensity * 2 + 10);
 
         if(!has)
         {
@@ -1275,20 +1314,20 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         }
 
         next->r.init_rectangular({intensity, 1});
-        next->r.rotation = (e.property + next->last_prop).angle();
+        next->r.rotation = (next_prop).angle();
         next->clk.restart();
         next->id_e = id_e;
         next->id_r = id_r;
         next->echo_type = 1;
-        next->last_prop = e.property + next->last_prop;
+        //next->last_prop = e.property + next->last_prop;
 
         next->set_parent_entity(ship_proxy, next_pos);
     }
 
-    for(int i=0; i < (int)sample.receive_dir.size(); i++)
+    for(alt_object_property<vec2f>& e : sample.receive_dir)
     {
-        uint32_t id_e = sample.receive_dir[i].id_e;
-        uint32_t id_r = sample.receive_dir[i].id_r;
+        uint32_t id_e = e.id_e;
+        uint32_t id_r = e.id_r;
         bool found = false;
 
         transient_entity* next = nullptr;
@@ -1311,11 +1350,17 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             next = transients.make_new<transient_entity>();
         }
 
-        float intensity = sample.receive_dir[i].property.length();
+        /*float intensity = sample.receive_dir[i].property.length();
+        intensity = clamp(intensity*10, 1, 20);
+        vec2f next_pos = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);*/
+
+        next->add_last_prop(e.property);
+        vec2f next_prop = next->get_last_prop();
+        float intensity = next_prop.length();
 
         intensity = clamp(intensity*10, 1, 20);
 
-        vec2f next_pos = sample.location + sample.receive_dir[i].property.norm() * (intensity + 10);
+        vec2f next_pos = sample.location + next_prop.norm() * (intensity * 2 + 10);
 
         if(!has)
         {
@@ -1323,7 +1368,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         }
 
         next->r.init_rectangular({intensity, 1});
-        next->r.rotation = sample.receive_dir[i].property.angle();
+        next->r.rotation = next_prop.angle();
 
         next->clk.restart();
         next->id_e = id_e;
