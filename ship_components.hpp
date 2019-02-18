@@ -75,10 +75,16 @@ struct component : serialisable
 {
     std::vector<does> info;
     std::vector<does> activate_requirements;
+    bool no_drain_on_full_production = false;
 
     std::string long_name;
 
     double last_sat = 1;
+
+    ///how active i need to be
+    ///only applies to no_drain_on_full_production
+    ///has a minimum value to prevent accidental feedback loops
+    double last_production_frac = 1;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
@@ -86,6 +92,8 @@ struct component : serialisable
         DO_SERIALISE(activate_requirements);
         DO_SERIALISE(long_name);
         DO_SERIALISE(last_sat);
+        DO_SERIALISE(no_drain_on_full_production);
+        DO_SERIALISE(last_production_frac);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -95,6 +103,8 @@ struct component : serialisable
     void add(component_info::does_type, double amount, double cap);
 
     void add_on_use(component_info::does_type, double amount);
+
+    void set_no_drain_on_full_production();
 
     bool has(component_info::does_type type)
     {

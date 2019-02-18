@@ -64,7 +64,12 @@ void component::add_on_use(component_info::does_type type, double amount)
     activate_requirements.push_back(d);
 }
 
-double component::satisfied_percentage(double dt_s, const std::vector<double>& res)
+void component::set_no_drain_on_full_production()
+{
+    no_drain_on_full_production = true;
+}
+
+/*double component::satisfied_percentage(double dt_s, const std::vector<double>& res)
 {
     assert(res.size() == component_info::COUNT);
 
@@ -103,7 +108,7 @@ double component::satisfied_percentage(double dt_s, const std::vector<double>& r
     }
 
     return satisfied;
-}
+}*/
 
 #if 0
 void component::apply(const std::vector<double>& all_sat, double dt_s, std::vector<double>& res)
@@ -155,7 +160,7 @@ std::vector<double> component::get_needed()
             mod = last_sat;
         }
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod  * last_production_frac;
     }
 
     return needed;
@@ -248,21 +253,14 @@ std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& a
 
         assert(max_hp > 0);
 
-
-
-        /*if(c.has(component_info::CREW))
-        {
-            printf("Min sat %lf\n", min_sat);
-        }*/
-
         double min_sat = c.get_sat(all_sat);
 
         for(does& d : c.info)
         {
             if(d.recharge > 0)
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s;
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac;
             else
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s;
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac;
         }
 
         c.last_sat = min_sat;
@@ -304,10 +302,10 @@ std::vector<double> ship::get_sat_percentage()
         for(does& d : c.info)
         {
             if(d.recharge < 0)
-                all_needed[d.type] += d.recharge * (hp / max_hp);
+                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac;
 
             if(d.recharge > 0)
-                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage);
+                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac;
         }
     }
 
@@ -549,6 +547,37 @@ void ship::tick(double dt_s)
                                                       {
                                                           return c.get_held();
                                                       });
+
+    std::vector<double> max_resource_status = sum<double>([](component& c)
+    {
+        return c.get_capacity();
+    });
+
+    for(component& c : components)
+    {
+        bool any_under = false;
+
+        for(does& d : c.info)
+        {
+            if(d.recharge <= 0)
+                continue;
+
+            if(resource_status[d.type] < max_resource_status[d.type])
+            {
+                any_under = true;
+                break;
+            }
+        }
+
+        if(!any_under && c.no_drain_on_full_production)
+        {
+            c.last_production_frac = 0.1;
+        }
+        else
+        {
+            c.last_production_frac = 1;
+        }
+    }
 
     std::vector<double> all_sat = get_sat_percentage();
 

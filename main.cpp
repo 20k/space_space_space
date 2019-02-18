@@ -88,15 +88,18 @@ void server_thread()
     warp.add(component_info::WARP, -0.1);
     warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
+    warp.set_no_drain_on_full_production();
 
     shields.add(component_info::SHIELDS, 0.5, 50);
-    shields.add(component_info::POWER, -1);
+    shields.add(component_info::POWER, -3);
     shields.add(component_info::HP, 0, 5);
+    shields.set_no_drain_on_full_production();
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
     laser.add(component_info::CAPACITOR, 1.5, 20);
+    laser.set_no_drain_on_full_production();
 
     laser.add_on_use(component_info::CAPACITOR, -10);
 
@@ -119,10 +122,12 @@ void server_thread()
     armour.add(component_info::ARMOUR, 0.01, 30);
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
+    armour.set_no_drain_on_full_production();
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
     ls.add(component_info::HP, 0.01, 5);
+    //ls.set_no_drain_on_full_production();
 
     coolant.add(component_info::COOLANT, 1, 20);
     coolant.add(component_info::HP, 0, 1);
