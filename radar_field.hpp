@@ -228,6 +228,11 @@ struct hacky_clock
 
         return clk.restart();
     }
+
+    bool should_ignore()
+    {
+        return getElapsedTime().asMicroseconds() / 1000. < 200;
+    }
 };
 
 template<typename T>

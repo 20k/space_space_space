@@ -976,7 +976,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
-            if((ignore_map[packet.id][collide.uid].getElapsedTime().asMicroseconds() / 1000.) < 200)
+            if(ignore_map[packet.id][collide.uid].should_ignore())
                 continue;
 
             vec2f packet_to_collide = collide.pos - packet.origin;
@@ -998,7 +998,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
                 collide_packet.id = alt_frequency_packet::gid++;
-                collide_packet.iterations++;
+                //collide_packet.iterations++;
                 //collide_packet.emitted_by = -1;
 
                 float circle_circumference = 2 * M_PI * len;
@@ -1030,7 +1030,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 //reflect.prev_reflected_by = packet.reflected_by;
                 reflect.reflected_position = collide.pos;
                 //reflect.last_reflected_position = packet.last_reflected_position;
-                reflect.iterations++;
+                //reflect.iterations++;
 
                 reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
@@ -1362,6 +1362,24 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
     for(alt_frequency_packet packet : packets)
     {
+        /*if(ignore_map.find(packet.id) != ignore_map.end())
+        {
+            if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
+            {
+                if(ignore_map[packet.id][uid].should_ignore())
+                {
+                    if(!packet.last_packet)
+                        continue;
+
+                    alt_frequency_packet lpacket = *packet.last_packet;
+                    lpacket.iterations = packet.iterations;
+                    lpacket.id = packet.id;
+
+                    packet = lpacket;
+                }
+            }
+        }*/
+
         float intensity = get_intensity_at_of(pos, packet);
 
         packet.intensity = intensity;
@@ -1420,10 +1438,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         alt_frequency_packet consider = packet;
 
-        if(consider.reflected_by == uid && consider.emitted_by != uid && consider.last_packet)
+        /*if(consider.reflected_by == uid && consider.last_packet)
         {
             consider = *consider.last_packet;
-        }
+        }*/
 
         //std::cout << intensity << std::endl;
 
