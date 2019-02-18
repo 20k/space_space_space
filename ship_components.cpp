@@ -462,7 +462,7 @@ struct torpedo : projectile
 
         accuracy = 1;
 
-        float max_angle_per_s = dt_s * M_PI / 4;
+        float max_angle_per_s = dt_s * M_PI / 8;
 
         vec2f my_dir = (vec2f){1, 0}.rot(r.rotation);
         //vec2f my_dir = velocity;
