@@ -255,19 +255,6 @@ void server_thread()
 
         for(entity* e : entities.entities)
         {
-            ship* s = dynamic_cast<ship*>(e);
-
-            if(s)
-            {
-                radar.add_simple_collideable(s->r.rotation, s->r.approx_dim, s->r.position, s->id);
-
-                alt_frequency_packet heat;
-                heat.frequency = HEAT_FREQ;
-                heat.intensity = 500;
-
-                radar.emit(heat, s->r.position, s->id);
-            }
-
             asteroid* a = dynamic_cast<asteroid*>(e);
 
             if(a)

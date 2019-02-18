@@ -199,6 +199,7 @@ struct ship : virtual entity, virtual serialisable
 
     ship();
 
+    void handle_heat(double dt_s);
     void tick(double dt_s) override;
     void tick_pre_phys(double dt_s) override;
     //void render(sf::RenderWindow& win);

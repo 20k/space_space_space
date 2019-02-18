@@ -458,7 +458,7 @@ struct torpedo : projectile
 
         accuracy = clamp(accuracy, 0, 1);
 
-        accuracy = 1;
+        //accuracy = 1;
 
         float max_angle_per_s = dt_s * M_PI / 8;
 
@@ -636,6 +636,8 @@ void ship::tick(double dt_s)
         }
     }
 
+    handle_heat(dt_s);
+
     std::vector<double> diff;
     diff.resize(component_info::COUNT);
 
@@ -671,6 +673,19 @@ void ship::tick(double dt_s)
 
         data_track_elapsed_s -= time_between_datapoints_s;
     }
+}
+
+void ship::handle_heat(double dt_s)
+{
+    alt_radar_field& radar = get_radar_field();
+
+    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
+
+    alt_frequency_packet heat;
+    heat.frequency = HEAT_FREQ;
+    heat.intensity = 500;
+
+    radar.emit(heat, r.position, id);
 }
 
 void ship::add(const component& c)
