@@ -17,6 +17,7 @@
 #define MAX_RESOLUTION_INTENSITY 4
 
 #define HEAT_FREQ 50
+#define BEST_UNCERTAINTY 1
 
 namespace sf
 {
@@ -298,7 +299,7 @@ struct alt_radar_field
     std::map<uint32_t, sf::Clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
-    float speed_of_light_per_tick = 5.5;
+    float speed_of_light_per_tick = 10.5;
 
     alt_radar_field(vec2f in);
 

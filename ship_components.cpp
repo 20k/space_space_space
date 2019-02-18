@@ -369,14 +369,15 @@ struct torpedo : projectile
     sf::Clock inactivity_time;
 
     float homing_frequency = HEAT_FREQ;
+    bool pinged = false;
 
-    float point_angle = 0;
+    //vec2f last_best_dir = {0,0};
 
     uint32_t fired_by = -1;
 
     virtual void tick(double dt_s) override
     {
-        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 20 * 1000)
+        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 10 * 1000)
         {
             cleanup = true;
         }
@@ -403,12 +404,67 @@ struct torpedo : projectile
             }
         }
 
+        for(auto& i : sam.echo_dir)
+        {
+            if(i.frequency != homing_frequency)
+                continue;
+
+            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+                continue;
+
+            if(i.property.length() > best_intensity)
+            {
+                best_dir = i.property;
+                best_intensity = i.property.length();
+            }
+        }
+
+        for(auto& i : sam.echo_pos)
+        {
+            if(i.frequency != homing_frequency)
+                continue;
+
+            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+                continue;
+
+            best_dir = i.property - r.position;
+            best_intensity = BEST_UNCERTAINTY;
+        }
+
+        /*if((inactivity_time.getElapsedTime().asMicroseconds() / 1000.) >= 1 * 1000 && !pinged)
+        {
+            alt_frequency_packet em;
+            em.frequency = HEAT_FREQ;
+            em.intensity = 100000;
+
+            radar.emit(em, r.position, id);
+
+            pinged = true;
+
+            printf("ping\n");
+        }
+
         if(best_dir.x() == 0 && best_dir.y() == 0)
+        {
+            best_dir = last_best_dir;
+        }
+
+        last_best_dir = best_dir;*/
+
+        if(best_dir.x() == 0 && best_dir.y() == 0)
+        {
             return;
+        }
 
-        float max_angle_per_s = dt_s * M_PI;
+        float accuracy = best_intensity / BEST_UNCERTAINTY;
 
-        vec2f my_dir = (vec2f){1, 0}.rot(point_angle);
+        accuracy = clamp(accuracy, 0, 1);
+
+        accuracy = 1;
+
+        float max_angle_per_s = dt_s * M_PI / 4;
+
+        vec2f my_dir = (vec2f){1, 0}.rot(r.rotation);
         //vec2f my_dir = velocity;
         vec2f target_angle = best_dir;
 
@@ -421,12 +477,44 @@ struct torpedo : projectile
 
         float angle_change = requested_angle;
 
-        point_angle += angle_change;
+        r.rotation += angle_change * accuracy;
 
-        r.rotation = point_angle;
+        //r.rotation = point_angle;
 
-        if(inactivity_time.getElapsedTime().asMicroseconds() / 1000 >= 2 * 1000)
+        if((inactivity_time.getElapsedTime().asMicroseconds() / 1000.) >= 2 * 1000)
         {
+            vec2f desired_velocity = best_dir.norm() * 100;
+
+            vec2f real_velocity = velocity;
+
+            double max_speed_ps = 30;
+
+
+            vec2f project = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation));
+
+            if(angle_between_vectors(project, (vec2f){1, 0}.rot(r.rotation)) > M_PI/2)
+            {
+                max_speed_ps = 10;
+            }
+
+            if(project.length() > max_speed_ps)
+            {
+                project = project.norm() * max_speed_ps;
+            }
+
+            float horizontal_speed_ps = 20;
+
+            vec2f reject = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation + M_PI/2));
+
+            if(reject.length() > horizontal_speed_ps)
+            {
+                reject = reject.norm() * horizontal_speed_ps;
+            }
+
+            velocity += project * dt_s;
+            velocity += reject * dt_s * accuracy;
+
+
             alt_frequency_packet em;
             em.frequency = 1500;
             em.intensity = 1000;
@@ -435,11 +523,10 @@ struct torpedo : projectile
 
             phys_ignore.clear();
 
-
             float max_speed = 100;
-            float max_speed_ps = 30;
+            //float max_speed_ps = 30;
 
-            velocity = velocity + (vec2f){max_speed_ps, 0}.rot(point_angle) * dt_s;
+            /*velocity = velocity + (vec2f){max_speed_ps, 0}.rot(point_angle) * dt_s;
 
             if(velocity.length() < max_speed)
             {
@@ -449,7 +536,7 @@ struct torpedo : projectile
             if(velocity.length() > max_speed)
             {
                 velocity = velocity.norm() * max_speed;
-            }
+            }*/
 
             //velocity = velocity + (vec2f){10, 0}.rot(angle_change) * dt_s;
         }

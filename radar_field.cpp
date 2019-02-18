@@ -1386,7 +1386,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
         //std::cout << intensity << std::endl;
 
-        float uncertainty = intensity / 1;
+        float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
 
         #define RECT
