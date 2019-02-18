@@ -131,6 +131,9 @@ struct component : serialisable
         throw std::runtime_error("rg2");
     }
 
+    ///ignores anything < 0
+    std::vector<double> get_produced();
+    ///both > 0 && < 0
     std::vector<double> get_needed();
     std::vector<double> get_capacity();
     std::vector<double> get_held();
@@ -207,7 +210,7 @@ struct ship : virtual entity, virtual serialisable
     void add(const component& c);
 
     std::vector<double> get_sat_percentage();
-    std::vector<double> get_produced(double dt_s, const std::vector<double>& sat_in);
+    std::vector<double> get_net_resources(double dt_s, const std::vector<double>& sat_in);
 
     std::vector<double> get_capacity();
 

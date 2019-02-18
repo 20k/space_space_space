@@ -141,6 +141,29 @@ void component::apply(const std::vector<double>& all_sat, double dt_s, std::vect
 }
 #endif // 0
 
+std::vector<double> component::get_produced()
+{
+    std::vector<double> needed;
+    needed.resize(component_info::COUNT);
+
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
+
+    for(does& d : info)
+    {
+        double mod = last_sat;
+
+        if(d.recharge < 0)
+            continue;
+
+        needed[d.type] += d.recharge * (hp / max_hp) * mod * last_production_frac;
+    }
+
+    return needed;
+}
+
 std::vector<double> component::get_needed()
 {
     std::vector<double> needed;
@@ -241,7 +264,7 @@ void component::use(std::vector<double>& res)
     try_use = false;
 }
 
-std::vector<double> ship::get_produced(double dt_s, const std::vector<double>& all_sat)
+std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
 {
     std::vector<double> produced_resources;
     produced_resources.resize(component_info::COUNT);
@@ -375,10 +398,13 @@ struct torpedo : projectile
 
     virtual void tick(double dt_s) override
     {
-        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 10 * 1000)
+        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 20 * 1000)
         {
             cleanup = true;
         }
+
+        double activate_time = 3 * 1000;
+        bool activated = (inactivity_time.getElapsedTime().asMicroseconds() / 1000.0) >= activate_time;
 
         alt_radar_field& radar = get_radar_field();
 
@@ -392,7 +418,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+            if((i.id == id || i.id == fired_by) && !activated)
                 continue;
 
             if(i.property.length() > best_intensity)
@@ -407,7 +433,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+            if((i.id == id || i.id == fired_by) && !activated)
                 continue;
 
             if(i.property.length() > best_intensity)
@@ -422,7 +448,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && inactivity_time.getElapsedTime().asMicroseconds() / 1000 < 2 * 1000)
+            if((i.id == id || i.id == fired_by) && !activated)
                 continue;
 
             best_dir = i.property - r.position;
@@ -479,7 +505,7 @@ struct torpedo : projectile
 
         //r.rotation = point_angle;
 
-        if((inactivity_time.getElapsedTime().asMicroseconds() / 1000.) >= 2 * 1000)
+        if(activated)
         {
             vec2f desired_velocity = best_dir.norm() * 100;
 
@@ -583,7 +609,7 @@ void ship::tick(double dt_s)
 
     //std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
 
-    std::vector<double> produced_resources = get_produced(dt_s, all_sat);
+    std::vector<double> produced_resources = get_net_resources(dt_s, all_sat);
 
     std::vector<double> next_resource_status;
     next_resource_status.resize(component_info::COUNT);
@@ -681,9 +707,33 @@ void ship::handle_heat(double dt_s)
 
     radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
 
+    double min_heat = 150;
+    //double max_heat = 1000;
+
+    std::vector<double> all_produced = sum<double>([](auto c)
+                                                   {
+                                                       return c.get_produced();
+                                                   });
+
+    std::vector<double> all_needed = sum<double>([](auto c)
+                                                   {
+                                                       return c.get_needed();
+                                                   });
+
+    double excess_power = all_needed[component_info::POWER];
+
+    if(excess_power < 0)
+        excess_power = 0;
+
+    double power = all_produced[component_info::POWER] - excess_power;
+
+    double power_to_heat = 200;
+
+    double heat_intensity = min_heat + power_to_heat * power;
+
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
-    heat.intensity = 500;
+    heat.intensity = heat_intensity;
 
     radar.emit(heat, r.position, id);
 }
@@ -913,7 +963,7 @@ void ship::apply_rotation_force(float force)
 
 void ship::tick_pre_phys(double dt_s)
 {
-    double thrust = get_produced(1, last_sat_percentage)[component_info::THRUST] * 2;
+    double thrust = get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2;
 
     //std::cout << "thrust " << thrust << std::endl;
 
