@@ -612,6 +612,11 @@ int main()
             cinput.ping = true;
         }
 
+        if(ONCE_MACRO(sf::Keyboard::E))
+        {
+            cinput.laser_fired = true;
+        }
+
         //std::cout << cinput.direction << std::endl;
 
         conn.writes_to(cinput, -1);

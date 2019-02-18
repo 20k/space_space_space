@@ -418,7 +418,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && !activated)
+            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
                 continue;
 
             if(i.property.length() > best_intensity)
@@ -433,7 +433,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && !activated)
+            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
                 continue;
 
             if(i.property.length() > best_intensity)
@@ -448,7 +448,7 @@ struct torpedo : projectile
             if(i.frequency != homing_frequency)
                 continue;
 
-            if((i.id == id || i.id == fired_by) && !activated)
+            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
                 continue;
 
             best_dir = i.property - r.position;
@@ -1137,7 +1137,8 @@ void asteroid::tick(double dt_s)
 struct transient_entity : entity
 {
     bool immediate_destroy = false;
-    uint32_t server_id = 0;
+    uint32_t id_e = 0;
+    uint32_t id_r = 0;
     sf::Clock clk;
     int echo_type = -1;
 
@@ -1169,14 +1170,15 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     for(int i=0; i < (int)sample.echo_pos.size(); i++)
     {
-        uint32_t fid = sample.echo_pos[i].id;
+        uint32_t id_e = sample.echo_pos[i].id_e;
+        uint32_t id_r = sample.echo_pos[i].id_r;
         bool found = false;
 
         auto entities = transients.fetch<transient_entity>();
 
         for(transient_entity* transient : entities)
         {
-            if(fid == transient->server_id && transient->echo_type == 0)
+            if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 0)
             {
                 found = true;
                 transient->clk.restart();
@@ -1187,7 +1189,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         if(!found)
         {
             transient_entity* next = transients.make_new<transient_entity>();
-            next->server_id = fid;
+            next->id_e = id_e;
+            next->id_r = id_r;
             next->r.position = sample.echo_pos[i].property;
             next->echo_type = 0;
             next->clk.restart();
@@ -1196,7 +1199,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     for(int i=0; i < (int)sample.echo_dir.size(); i++)
     {
-        uint32_t fid = sample.echo_dir[i].id;
+        uint32_t id_e = sample.echo_dir[i].id_e;
+        uint32_t id_r = sample.echo_dir[i].id_r;
         bool found = false;
 
         transient_entity* next = nullptr;
@@ -1205,7 +1209,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         for(transient_entity* transient : entities)
         {
-            if(fid == transient->server_id && transient->echo_type == 1)
+            if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 1)
             {
                 next = transient;
                 break;
@@ -1231,7 +1235,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->r.init_rectangular({intensity, 1});
         next->r.rotation = sample.echo_dir[i].property.angle();
         next->clk.restart();
-        next->server_id = fid;
+        next->id_e = id_e;
+        next->id_r = id_r;
         next->echo_type = 1;
 
         next->set_parent_entity(ship_proxy, next_pos);
@@ -1239,7 +1244,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     for(int i=0; i < (int)sample.receive_dir.size(); i++)
     {
-        uint32_t fid = sample.receive_dir[i].id;
+        uint32_t id_e = sample.receive_dir[i].id_e;
+        uint32_t id_r = sample.receive_dir[i].id_r;
         bool found = false;
 
         transient_entity* next = nullptr;
@@ -1248,7 +1254,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         for(transient_entity* transient : entities)
         {
-            if(fid == transient->server_id && transient->echo_type == 2)
+            if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 2)
             {
                 next = transient;
                 break;
@@ -1277,7 +1283,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->r.rotation = sample.receive_dir[i].property.angle();
 
         next->clk.restart();
-        next->server_id = fid;
+        next->id_e = id_e;
+        next->id_r = id_r;
         next->echo_type = 2;
 
         next->set_parent_entity(ship_proxy, next_pos);

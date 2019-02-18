@@ -277,6 +277,7 @@ struct client_input : serialisable
     vec2f direction = {0,0};
     float rotation = 0;
     bool fired = false;
+    bool laser_fired = false;
     bool ping = false;
 
     virtual void serialise(nlohmann::json& data, bool encode) override

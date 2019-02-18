@@ -227,7 +227,8 @@ struct hacky_clock
 template<typename T>
 struct alt_object_property : serialisable
 {
-    uint32_t id = -1;
+    uint32_t id_e = -1;
+    uint32_t id_r = -1;
     T property = T();
     float frequency = 0;
 
@@ -236,14 +237,15 @@ struct alt_object_property : serialisable
 
     }
 
-    alt_object_property(uint32_t _id, T _property, float _frequency) : id(_id), property(_property), frequency(_frequency)
+    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, float _frequency) : id_e(_id_e), id_r(_id_r), property(_property), frequency(_frequency)
     {
 
     }
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
-        DO_SERIALISE(id);
+        DO_SERIALISE(id_e);
+        DO_SERIALISE(id_r);
         DO_SERIALISE(property);
         DO_SERIALISE(frequency);
     }
