@@ -1362,7 +1362,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
     for(alt_frequency_packet packet : packets)
     {
-        /*if(ignore_map.find(packet.id) != ignore_map.end())
+        if(ignore_map.find(packet.id) != ignore_map.end())
         {
             if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
             {
@@ -1378,7 +1378,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
                     packet = lpacket;
                 }
             }
-        }*/
+        }
 
         float intensity = get_intensity_at_of(pos, packet);
 
@@ -1491,7 +1491,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             //std::cout << "sent intens " << intensity << std::endl;
         }
 
-        std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
+        //std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
 
         //std::cout << "loop " << intensity << std::endl;
 
@@ -1514,10 +1514,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         }
     }
 
-    for(auto& i : s.intensities)
+    /*for(auto& i : s.intensities)
     {
         std::cout << "rintens " << i << std::endl;
-    }
+    }*/
 
     s.fresh = true;
     cached_samples[uid] = s;

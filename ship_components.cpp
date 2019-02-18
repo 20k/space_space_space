@@ -1141,6 +1141,9 @@ struct transient_entity : entity
     uint32_t id_r = 0;
     sf::Clock clk;
     int echo_type = -1;
+    vec2f last_prop = {0,0};
+
+    vec2f dir = {0,0};
 
     transient_entity()
     {
@@ -1168,12 +1171,12 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     sample.fresh = false;
 
-    for(entity* e : transients.entities)
+    /*for(entity* e : transients.entities)
     {
         e->cleanup = true;
     }
 
-    transients.cleanup();
+    transients.cleanup();*/
 
     /*std::cout << "received " << sample.receive_dir.size() << std::endl;
 
@@ -1211,10 +1214,35 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         }
     }
 
-    for(int i=0; i < (int)sample.echo_dir.size(); i++)
+    std::vector<alt_object_property<vec2f>> processed_echo_dir;
+
+    for(auto& e : sample.echo_dir)
     {
-        uint32_t id_e = sample.echo_dir[i].id_e;
-        uint32_t id_r = sample.echo_dir[i].id_r;
+        bool found = false;
+
+        for(auto& o : processed_echo_dir)
+        {
+            if(e.id_e == o.id_e && e.id_r == o.id_r && e.frequency == o.frequency)
+            {
+                found = true;
+                ///this is a curious property of the fact that they're unnormalised vectors
+                e.property += o.property;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            processed_echo_dir.push_back(e);
+        }
+    }
+
+    //for(int i=0; i < (int)sample.echo_dir.size(); i++)
+
+    for(alt_object_property<vec2f>& e : processed_echo_dir)
+    {
+        uint32_t id_e = e.id_e;
+        uint32_t id_r = e.id_r;
         bool found = false;
 
         transient_entity* next = nullptr;
@@ -1235,11 +1263,11 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         if(next == nullptr)
             next = transients.make_new<transient_entity>();
 
-        float intensity = sample.echo_dir[i].property.length();
+        float intensity = e.property.length() + next->last_prop.length();
 
         intensity = clamp(intensity*10, 1, 20);
 
-        vec2f next_pos = sample.location + sample.echo_dir[i].property.norm() * (intensity + 10);
+        vec2f next_pos = sample.location + (e.property + next->last_prop).norm() * (intensity * 2 + 10);
 
         if(!has)
         {
@@ -1247,11 +1275,12 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         }
 
         next->r.init_rectangular({intensity, 1});
-        next->r.rotation = sample.echo_dir[i].property.angle();
+        next->r.rotation = (e.property + next->last_prop).angle();
         next->clk.restart();
         next->id_e = id_e;
         next->id_r = id_r;
         next->echo_type = 1;
+        next->last_prop = e.property + next->last_prop;
 
         next->set_parent_entity(ship_proxy, next_pos);
     }
