@@ -1265,6 +1265,10 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             next->echo_type = 0;
             next->clk.restart();
 
+            ///so the reason why e.cross_section can be 1 is because we don't know the real size unless we are reflecting off it
+            ///ie if we receive a signal we only know the position
+            //std::cout << "cross " << e.cross_section << " " << id_e << " " << id_r << std::endl;
+
             next->r.init_rectangular({e.cross_section, 1});
             next->r.rotation = (next->r.position - ship_proxy->r.position).angle() + M_PI/2;
         }

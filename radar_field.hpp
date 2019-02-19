@@ -179,6 +179,10 @@ struct alt_frequency_packet
     float start_angle = 0;
 
     float packet_wavefront_width = 20;
+    //float cross_section = 1;
+    bool has_cs = false;
+    vec2f cross_dim = {0,0};
+    float cross_angle = 0;
 
     uint32_t id = 0;
     uint32_t id_block = 0;
@@ -187,7 +191,6 @@ struct alt_frequency_packet
     uint32_t emitted_by = -1;
     uint32_t reflected_by = -1;
     vec2f reflected_position = {0,0};
-    float reflected_cross_section = 1;
 
     /*uint32_t prev_reflected_by = -1;
     vec2f last_reflected_position = {0,0};*/
@@ -195,6 +198,8 @@ struct alt_frequency_packet
     ///parent packet
     std::shared_ptr<alt_frequency_packet> last_packet;
 };
+
+float get_physical_cross_section(vec2f dim, float initial_angle, float observe_angle);
 
 struct alt_collideable
 {

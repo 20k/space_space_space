@@ -900,6 +900,11 @@ float alt_collideable::get_cross_section(float angle)
     return dim.max_elem() * 5;
 }
 
+float get_physical_cross_section(vec2f dim, float initial_angle, float observe_angle)
+{
+    return dim.max_elem();
+}
+
 float alt_collideable::get_physical_cross_section(float angle)
 {
     return dim.max_elem();
@@ -972,8 +977,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     speculative_packets.clear();
     speculative_subtractive_packets.clear();*/
 
-
-
     for(alt_frequency_packet& packet : packets)
     {
         float current_radius = packet.iterations * speed_of_light_per_tick;
@@ -981,6 +984,13 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(alt_collideable& collide : collideables)
         {
+            if(!packet.has_cs && packet.emitted_by == collide.uid)
+            {
+                packet.cross_dim = collide.dim;
+                packet.cross_angle = collide.angle;
+                packet.has_cs = true;
+            }
+
             if(ignore_map[packet.id][collide.uid].should_ignore())
                 continue;
 
@@ -1036,7 +1046,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.reflected_position = collide.pos;
                 //reflect.last_reflected_position = packet.last_reflected_position;
                 //reflect.iterations++;
-                reflect.reflected_cross_section = collide.get_physical_cross_section(relative_pos.angle());
+                reflect.cross_dim = collide.dim;
+                reflect.cross_angle = collide.angle;
+                reflect.has_cs = true;
 
                 reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
@@ -1461,7 +1473,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.reflected_position + rconst.err_1 * uncertainty, consider.frequency, consider.reflected_cross_section});
+            vec2f next_pos = consider.reflected_position + rconst.err_1 * uncertainty;
+
+            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
+
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
         }
         #endif // RECT
 
@@ -1472,7 +1488,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.origin + rconst.err_2 * uncertainty, consider.frequency, consider.reflected_cross_section});
+            vec2f next_pos = consider.origin + rconst.err_2 * uncertainty;
+
+            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
+
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
         }
         #endif // RECT_RECV
 
