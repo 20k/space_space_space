@@ -187,6 +187,7 @@ struct alt_frequency_packet
     uint32_t emitted_by = -1;
     uint32_t reflected_by = -1;
     vec2f reflected_position = {0,0};
+    float reflected_cross_section = 1;
 
     /*uint32_t prev_reflected_by = -1;
     vec2f last_reflected_position = {0,0};*/
@@ -203,6 +204,7 @@ struct alt_collideable
     vec2f pos = {0,0};
 
     float get_cross_section(float angle);
+    float get_physical_cross_section(float angle);
 };
 
 struct hacky_clock
@@ -242,13 +244,15 @@ struct alt_object_property : serialisable
     uint32_t id_r = -1;
     T property = T();
     float frequency = 0;
+    float cross_section = 1;
 
     alt_object_property()
     {
 
     }
 
-    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, float _frequency) : id_e(_id_e), id_r(_id_r), property(_property), frequency(_frequency)
+    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, float _frequency, float _cross_section) :
+        id_e(_id_e), id_r(_id_r), property(_property), frequency(_frequency), cross_section(_cross_section)
     {
 
     }
@@ -259,6 +263,7 @@ struct alt_object_property : serialisable
         DO_SERIALISE(id_r);
         DO_SERIALISE(property);
         DO_SERIALISE(frequency);
+        DO_SERIALISE(cross_section);
     }
 };
 

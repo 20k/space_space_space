@@ -900,6 +900,11 @@ float alt_collideable::get_cross_section(float angle)
     return dim.max_elem() * 5;
 }
 
+float alt_collideable::get_physical_cross_section(float angle)
+{
+    return dim.max_elem();
+}
+
 alt_radar_field::alt_radar_field(vec2f in)
 {
     target_dim = in;
@@ -1031,6 +1036,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.reflected_position = collide.pos;
                 //reflect.last_reflected_position = packet.last_reflected_position;
                 //reflect.iterations++;
+                reflect.reflected_cross_section = collide.get_physical_cross_section(relative_pos.angle());
 
                 reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
@@ -1455,7 +1461,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.reflected_position + rconst.err_1 * uncertainty, consider.frequency});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.reflected_position + rconst.err_1 * uncertainty, consider.frequency, consider.reflected_cross_section});
         }
         #endif // RECT
 
@@ -1466,7 +1472,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.origin + rconst.err_2 * uncertainty, consider.frequency});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, consider.origin + rconst.err_2 * uncertainty, consider.frequency, consider.reflected_cross_section});
         }
         #endif // RECT_RECV
 
@@ -1477,7 +1483,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
             next_dir = next_dir.rot(rconst.err_3 * uncertainty);
 
-            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency});
+            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
         }
 
         if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0)
@@ -1486,7 +1492,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
             next_dir = next_dir.rot(rconst.err_4 * uncertainty);
 
-            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency});
+            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency, 0});
 
             //std::cout << "sent intens " << intensity << std::endl;
         }

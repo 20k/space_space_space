@@ -23,6 +23,7 @@ struct client_renderable : serialisable
     float approx_rad = 0;
     float scale = 2;
 
+    ///turns out this is half dim
     vec2f approx_dim = {0,0};
 
     uint32_t network_owner = -1;

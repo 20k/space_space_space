@@ -1124,7 +1124,7 @@ asteroid::asteroid()
     }
 
     r.approx_rad = max_rad;
-    r.approx_dim = {max_rad*2, max_rad*2};
+    r.approx_dim = {max_rad, max_rad};
 }
 
 void asteroid::tick(double dt_s)
@@ -1146,6 +1146,10 @@ struct transient_entity : entity
 
     vec2f dir = {0,0};
 
+    bool fadeout = false;
+    double fadeout_after_s = 0.2;
+    double fadeout_time_s = 0.3;
+
     transient_entity()
     {
         r.init_rectangular({5, 5});
@@ -1162,6 +1166,23 @@ struct transient_entity : entity
 
         if(immediate_destroy)
             cleanup = true;
+
+        if(fadeout)
+        {
+            double current_time_s = (clk.getElapsedTime().asMicroseconds() / 1000.) / 1000.;
+
+            if(current_time_s >= fadeout_after_s && current_time_s <= fadeout_after_s + fadeout_time_s)
+            {
+                double frac = (current_time_s - fadeout_after_s) / fadeout_time_s;
+
+                frac = clamp(1 - frac, 0, 1);
+
+                for(auto& i : r.vert_cols)
+                {
+                    i = {frac, frac, frac};
+                }
+            }
+        }
     }
 
     void add_last_prop(vec2f in)
@@ -1217,10 +1238,10 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         std::cout << e.property << std::endl;
     }*/
 
-    for(int i=0; i < (int)sample.echo_pos.size(); i++)
+    for(alt_object_property<vec2f>& e : sample.echo_pos)
     {
-        uint32_t id_e = sample.echo_pos[i].id_e;
-        uint32_t id_r = sample.echo_pos[i].id_r;
+        uint32_t id_e = e.id_e;
+        uint32_t id_r = e.id_r;
         bool found = false;
 
         auto entities = transients.fetch<transient_entity>();
@@ -1231,7 +1252,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             {
                 found = true;
                 transient->clk.restart();
-                transient->r.position = sample.echo_pos[i].property;
+                transient->r.position = e.property;
             }
         }
 
@@ -1240,9 +1261,12 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             transient_entity* next = transients.make_new<transient_entity>();
             next->id_e = id_e;
             next->id_r = id_r;
-            next->r.position = sample.echo_pos[i].property;
+            next->r.position = e.property;
             next->echo_type = 0;
             next->clk.restart();
+
+            next->r.init_rectangular({e.cross_section, 1});
+            next->r.rotation = (next->r.position - ship_proxy->r.position).angle() + M_PI/2;
         }
     }
 
@@ -1268,8 +1292,6 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             processed_echo_dir.push_back(e);
         }
     }
-
-    //for(int i=0; i < (int)sample.echo_dir.size(); i++)
 
     for(alt_object_property<vec2f>& e : processed_echo_dir)
     {
