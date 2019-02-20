@@ -209,6 +209,8 @@ struct ship : virtual entity, virtual serialisable
 
     void add(const component& c);
 
+    void set_thrusters_active(double frac);
+
     std::vector<double> get_sat_percentage();
     std::vector<double> get_net_resources(double dt_s, const std::vector<double>& sat_in);
 
@@ -260,7 +262,7 @@ struct ship : virtual entity, virtual serialisable
     }
 
 private:
-    double added_heat = 0;
+    double thrusters_active = 0;
 };
 
 struct projectile : entity

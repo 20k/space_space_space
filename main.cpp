@@ -296,6 +296,12 @@ void server_thread()
                     s->apply_force(read.data.direction * time);
                     s->apply_rotation_force(read.data.rotation * time);
 
+                    double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
+
+                    thruster_active_percent = clamp(thruster_active_percent, 0, 1);
+
+                    s->set_thrusters_active(thruster_active_percent);
+
                     if(read.data.fired)
                     {
                         s->fire();

@@ -605,6 +605,14 @@ void ship::tick(double dt_s)
         }
     }
 
+    for(component& c : components)
+    {
+        if(c.has(component_info::THRUST))
+        {
+            c.last_production_frac = thrusters_active;
+        }
+    }
+
     std::vector<double> all_sat = get_sat_percentage();
 
     //std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
@@ -731,20 +739,29 @@ void ship::handle_heat(double dt_s)
 
     double heat_intensity = min_heat + power_to_heat * power;
 
+    double thrust_to_heat = 500;
+
+    double thrust_produced = all_produced[component_info::THRUST];
+
+    heat_intensity += thrust_to_heat * thrust_produced;
+
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
-    heat.intensity = heat_intensity + added_heat;
+    heat.intensity = heat_intensity;
 
     //std::cout << "ENGINE HEAT  " << added_heat << std::endl;
 
     radar.emit(heat, r.position, id);
-
-    added_heat = 0;
 }
 
 void ship::add(const component& c)
 {
     components.push_back(c);
+}
+
+void ship::set_thrusters_active(double active)
+{
+    thrusters_active = active;
 }
 
 /*std::string ship::show_components()
@@ -973,11 +990,6 @@ void ship::tick_pre_phys(double dt_s)
 
     ///so to convert from angular to velocity multiply by this
     double velocity_thrust_ratio = 20;
-
-
-    double angular_force_to_heat = 20;
-    added_heat += control_force.length() * velocity_thrust_ratio * angular_force_to_heat / dt_s;
-    added_heat += fabs(control_angular_force) * angular_force_to_heat / dt_s;
 
     apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
     //e.tick_phys(dt_s);
