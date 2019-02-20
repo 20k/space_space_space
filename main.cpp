@@ -192,6 +192,8 @@ void server_thread()
 
     test_ship2->r.position = {600, 400};
 
+    std::minstd_rand rng;
+    rng.seed(1);
 
     int num_asteroids = 10;
 
@@ -201,8 +203,12 @@ void server_thread()
 
         float fangle = ffrac * 2 * M_PI;
 
+        vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){600, 600});
+
         asteroid* a = entities.make_new<asteroid>();
-        a->r.position = (vec2f){300, 0}.rot(fangle) + (vec2f){400, 400};
+        //a->r.position = (vec2f){300, 0}.rot(fangle) + rpos;
+
+        a->r.position = rpos;
     }
 
 
