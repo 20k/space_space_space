@@ -1246,32 +1246,30 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         auto entities = transients.fetch<transient_entity>();
 
+        transient_entity* next = nullptr;
+
         for(transient_entity* transient : entities)
         {
             if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 0)
             {
-                found = true;
-                transient->clk.restart();
-                transient->r.position = e.property;
+                next = transient;
+                break;
             }
         }
 
-        if(!found)
-        {
-            transient_entity* next = transients.make_new<transient_entity>();
-            next->id_e = id_e;
-            next->id_r = id_r;
-            next->r.position = e.property;
-            next->echo_type = 0;
-            next->clk.restart();
+        //if(!found)
 
-            ///so the reason why e.cross_section can be 1 is because we don't know the real size unless we are reflecting off it
-            ///ie if we receive a signal we only know the position
-            //std::cout << "cross " << e.cross_section << " " << id_e << " " << id_r << std::endl;
+        if(next == nullptr)
+            next = transients.make_new<transient_entity>();
 
-            next->r.init_rectangular({e.cross_section, 1});
-            next->r.rotation = (next->r.position - ship_proxy->r.position).angle() + M_PI/2;
-        }
+        next->id_e = id_e;
+        next->id_r = id_r;
+        next->r.position = e.property;
+        next->echo_type = 0;
+        next->clk.restart();
+
+        next->r.init_rectangular({e.cross_section, 1});
+        next->r.rotation = (next->r.position - ship_proxy->r.position).angle() + M_PI/2;
     }
 
     std::vector<alt_object_property<vec2f>> processed_echo_dir;
