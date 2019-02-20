@@ -1106,6 +1106,21 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     //pdump.dump();
 
     collideables.clear();
+
+
+    std::cout << packets.size() << std::endl;
+
+    int num_subtract = 0;
+
+    for(auto& i : packets)
+    {
+        if(subtractive_packets.find(i.id) == subtractive_packets.end())
+            continue;
+
+        num_subtract += subtractive_packets[i.id].size();
+    }
+
+    std::cout << "sub " << num_subtract << std::endl;
 }
 
 float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
@@ -1126,31 +1141,34 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
         return 0;
 
-    for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
+    if(subtractive_packets.find(packet.id) != subtractive_packets.end())
     {
-        float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
-        float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
-
-        float shadow_my_angle = (pos - shadow.origin).angle();
-
-        vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
-        vec2f shadow_position = shadow_vector + shadow.origin;
-        vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
-
-        float distance_to_shadow = (pos - shadow_position).length();
-
-        if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
-            continue;
-
-        /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
+        for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
         {
-            shadowed = true;
-            continue;
-        }*/
+            float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
+            float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
 
-        if(distance_to_shadow <= shadow.packet_wavefront_width)
-        {
-            return 0;
+            float shadow_my_angle = (pos - shadow.origin).angle();
+
+            vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
+            vec2f shadow_position = shadow_vector + shadow.origin;
+            vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
+
+            float distance_to_shadow = (pos - shadow_position).length();
+
+            if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
+                continue;
+
+            /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
+            {
+                shadowed = true;
+                continue;
+            }*/
+
+            if(distance_to_shadow <= shadow.packet_wavefront_width)
+            {
+                return 0;
+            }
         }
     }
 
@@ -1252,7 +1270,19 @@ void alt_radar_field::render(sf::RenderWindow& win)
         win.draw(shape);
     }*/
 
-    std::cout << packets.size() << std::endl;
+    /*std::cout << packets.size() << std::endl;
+
+    int num_subtract = 0;
+
+    for(auto& i : packets)
+    {
+        if(subtractive_packets.find(i.id) == subtractive_packets.end())
+            continue;
+
+        num_subtract += subtractive_packets[i.id].size();
+    }
+
+    std::cout << "sub " << num_subtract << std::endl;*/
 
     sf::CircleShape shape;
 
