@@ -513,7 +513,6 @@ struct torpedo : projectile
 
             double max_speed_ps = 30;
 
-
             vec2f project = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation));
 
             if(angle_between_vectors(project, (vec2f){1, 0}.rot(r.rotation)) > M_PI/2)
@@ -637,11 +636,28 @@ void ship::tick(double dt_s)
 
                 if(c.has(component_info::WEAPONS))
                 {
+                    double eangle = c.use_angle;
+                    double ship_rotation = r.rotation;
+
+                    vec2f evector = (vec2f){1, 0}.rot(eangle);
+                    vec2f ship_vector = (vec2f){1, 0}.rot(ship_rotation);
+
+                    does& wdoes = c.get(component_info::WEAPONS);
+
+                    if(fabs(angle_between_vectors(ship_vector, evector)) > c.max_use_angle)
+                    {
+                        float angle_signed = signed_angle_between_vectors(ship_vector, evector);
+
+                        evector = ship_vector.rot(signum(angle_signed) * c.max_use_angle);
+                    }
+
                     torpedo* l = parent->make_new<torpedo>();
                     l->r.position = r.position;
-                    l->r.rotation = r.rotation;
+                    l->r.rotation = evector.angle();
+                    //l->r.rotation = r.rotation + eangle;
                     //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                    l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation) * 50;
+                    l->velocity = velocity + evector.norm() * 50;
+                    //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
                     l->phys_ignore.push_back(id);
                     l->fired_by = id;
 
@@ -1106,9 +1122,10 @@ void ship::fire(const std::vector<client_fire>& fired)
         {
             if(c.has(component_info::WEAPONS))
             {
-                if(weapon_offset == fire.weapon_offset)
+                if(weapon_offset == (int)fire.weapon_offset)
                 {
                     c.try_use = true;
+                    c.use_angle = fire.fire_angle;
                 }
 
                 weapon_offset++;

@@ -98,7 +98,7 @@ void server_thread()
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
-    missile.add(component_info::CAPACITOR, 1.5, 10);
+    missile.add(component_info::CAPACITOR, 0.75, 10);
     missile.set_no_drain_on_full_production();
 
     missile.add_on_use(component_info::CAPACITOR, -10);
@@ -107,10 +107,12 @@ void server_thread()
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 1.5, 10);
+    laser.add(component_info::CAPACITOR, 0.75, 10);
     laser.set_no_drain_on_full_production();
 
     laser.add_on_use(component_info::CAPACITOR, -10);
+
+    laser.max_use_angle = M_PI/2;
 
     //laser.info[3].held = 0;
 
@@ -660,6 +662,10 @@ int main()
         {
             client_fire fire;
             fire.weapon_offset = 1;
+
+            vec2f relative_pos = mpos - ship_proxy->r.position;
+
+            fire.fire_angle = relative_pos.angle();
 
             cinput.fired.push_back(fire);
         }

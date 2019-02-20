@@ -94,6 +94,7 @@ struct component : serialisable
         DO_SERIALISE(last_sat);
         DO_SERIALISE(no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
+        DO_SERIALISE(max_use_angle);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -146,6 +147,8 @@ struct component : serialisable
     void use(std::vector<double>& res);
 
     bool try_use = false;
+    double use_angle = 0;
+    double max_use_angle = 0;
 };
 
 struct data_tracker : serialisable
@@ -315,10 +318,12 @@ struct client_entities : serialisable
 struct client_fire : serialisable
 {
     uint32_t weapon_offset = 0;
+    float fire_angle = 0;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(weapon_offset);
+        DO_SERIALISE(fire_angle);
     }
 };
 
