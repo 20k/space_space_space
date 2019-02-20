@@ -445,7 +445,10 @@ void server_thread()
 
 int main()
 {
+    //#define WITH_SERVER
+    #ifdef WITH_SERVER
     std::thread(server_thread).detach();
+    #endif // WITH_SERVER
 
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
@@ -565,8 +568,8 @@ int main()
     #endif // 0
 
     connection conn;
-    conn.connect("192.168.0.54", 11000);
-    //conn.connect("77.97.17.179", 11000);
+    //conn.connect("192.168.0.54", 11000);
+    conn.connect("77.97.17.179", 11000);
 
     data_model<ship> model;
     client_entities renderables;
