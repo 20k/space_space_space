@@ -175,6 +175,7 @@ struct data_tracker : serialisable
 };
 
 struct alt_radar_field;
+struct client_fire;
 
 struct ship : virtual entity, virtual serialisable
 {
@@ -247,7 +248,7 @@ struct ship : virtual entity, virtual serialisable
     void apply_force(vec2f dir);
     void apply_rotation_force(float force);
 
-    void fire();
+    void fire(const std::vector<client_fire>& fired);
     void ping();
     void take_damage(double amount);
 
@@ -298,5 +299,43 @@ struct asteroid : entity
 
 void tick_radar_data(entity_manager& entities, alt_radar_sample& sample, entity* ship_proxy);
 void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample);
+
+struct client_entities : serialisable
+{
+    std::vector<client_renderable> entities;
+
+    void render(sf::RenderWindow& win);
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(entities);
+    }
+};
+
+struct client_fire : serialisable
+{
+    uint32_t weapon_offset = 0;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(weapon_offset);
+    }
+};
+
+struct client_input : serialisable
+{
+    vec2f direction = {0,0};
+    float rotation = 0;
+    std::vector<client_fire> fired;
+    bool ping = false;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(direction);
+        DO_SERIALISE(rotation);
+        DO_SERIALISE(fired);
+        DO_SERIALISE(ping);
+    }
+};
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

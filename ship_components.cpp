@@ -1087,13 +1087,32 @@ void ship::render(sf::RenderWindow& window)
 }
 #endif // 0
 
-void ship::fire()
+void ship::fire(const std::vector<client_fire>& fired)
 {
-    for(component& c : components)
+    /*for(component& c : components)
     {
         if(c.has(component_info::WEAPONS))
         {
             c.try_use = true;
+        }
+    }*/
+
+
+    for(const client_fire& fire : fired)
+    {
+        int weapon_offset = 0;
+
+        for(component& c : components)
+        {
+            if(c.has(component_info::WEAPONS))
+            {
+                if(weapon_offset == fire.weapon_offset)
+                {
+                    c.try_use = true;
+                }
+
+                weapon_offset++;
+            }
         }
     }
 }
@@ -1465,4 +1484,12 @@ void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample)
     ImGui::PlotHistogram("RADAR DATA", &frequencies[0], frequencies.size(), 0, nullptr, 0, 100, ImVec2(0, 100));
 
     ImGui::End();
+}
+
+void client_entities::render(sf::RenderWindow& win)
+{
+    for(client_renderable& i : entities)
+    {
+        i.render(win);
+    }
 }

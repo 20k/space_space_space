@@ -302,9 +302,9 @@ void server_thread()
 
                     s->set_thrusters_active(thruster_active_percent);
 
-                    if(read.data.fired)
+                    if(read.data.fired.size() > 0)
                     {
-                        s->fire();
+                        s->fire(read.data.fired);
                     }
 
                     if(read.data.ping)
@@ -633,7 +633,12 @@ int main()
 
         if(ONCE_MACRO(sf::Keyboard::Space))
         {
-            cinput.fired = true;
+            client_fire fire;
+            fire.weapon_offset = 0;
+
+            cinput.fired.push_back(fire);
+
+            //cinput.fired = true;
         }
 
         if(ONCE_MACRO(sf::Keyboard::Q))
@@ -643,7 +648,10 @@ int main()
 
         if(ONCE_MACRO(sf::Keyboard::E))
         {
-            cinput.laser_fired = true;
+            client_fire fire;
+            fire.weapon_offset = 1;
+
+            cinput.fired.push_back(fire);
         }
 
         //std::cout << cinput.direction << std::endl;

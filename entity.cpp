@@ -244,11 +244,3 @@ void entity::set_parent_entity(entity* en, vec2f absolute_position)
     parent_entity = en;
     parent_offset = absolute_position - en->r.position;
 }
-
-void client_entities::render(sf::RenderWindow& win)
-{
-    for(client_renderable& i : entities)
-    {
-        i.render(win);
-    }
-}
