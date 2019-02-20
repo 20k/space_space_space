@@ -193,7 +193,7 @@ void server_thread()
     test_ship2->r.position = {600, 400};
 
     std::minstd_rand rng;
-    rng.seed(1);
+    rng.seed(0);
 
     int num_asteroids = 10;
 
@@ -342,7 +342,7 @@ void server_thread()
             conn.pop_read();
         }
 
-        #define SEE_ONLY_REAL
+        //#define SEE_ONLY_REAL
 
         std::map<uint32_t, ship*> network_ships;
 
@@ -445,7 +445,7 @@ void server_thread()
 
 int main()
 {
-    //#define WITH_SERVER
+    #define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
@@ -608,7 +608,7 @@ int main()
 
             if(event.type == sf::Event::Resized)
             {
-                window.create(sf::VideoMode(event.size.width, event.size.height), "hi");
+                window.create(sf::VideoMode(event.size.width, event.size.height), "hi", sett);
             }
         }
 
