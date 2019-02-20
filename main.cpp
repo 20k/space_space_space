@@ -77,7 +77,7 @@ void server_thread()
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
+    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -95,10 +95,19 @@ void server_thread()
     shields.add(component_info::HP, 0, 5);
     shields.set_no_drain_on_full_production();
 
+    missile.add(component_info::POWER, -1);
+    missile.add(component_info::WEAPONS, 1);
+    missile.add(component_info::HP, 0, 2);
+    missile.add(component_info::CAPACITOR, 1.5, 10);
+    missile.set_no_drain_on_full_production();
+
+    missile.add_on_use(component_info::CAPACITOR, -10);
+
+
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 1.5, 20);
+    laser.add(component_info::CAPACITOR, 1.5, 10);
     laser.set_no_drain_on_full_production();
 
     laser.add_on_use(component_info::CAPACITOR, -10);
@@ -152,6 +161,7 @@ void server_thread()
     test_ship->add(thruster);
     test_ship->add(warp);
     test_ship->add(shields);
+    test_ship->add(missile);
     test_ship->add(laser);
     test_ship->add(sensor);
     test_ship->add(comms);
