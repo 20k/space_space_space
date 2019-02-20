@@ -203,7 +203,7 @@ void server_thread()
 
         float fangle = ffrac * 2 * M_PI;
 
-        vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){600, 600});
+        vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
         asteroid* a = entities.make_new<asteroid>();
         //a->r.position = (vec2f){300, 0}.rot(fangle) + rpos;
