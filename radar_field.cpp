@@ -1013,12 +1013,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 if(get_intensity_at_of(collide.pos, packet) <= 0.001)
                     continue;
 
-                alt_frequency_packet collide_packet = packet;
-                collide_packet.id_block = packet.id;
-                collide_packet.id = alt_frequency_packet::gid++;
-                //collide_packet.iterations++;
-                //collide_packet.emitted_by = -1;
-
                 float circle_circumference = 2 * M_PI * len;
 
                 if(circle_circumference < 0.00001)
@@ -1026,13 +1020,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
                 float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
 
+                vec2f packet_vector = collide.pos - packet.origin;
+
+                alt_frequency_packet collide_packet = packet;
+                collide_packet.id_block = packet.id;
+                collide_packet.id = alt_frequency_packet::gid++;
+                //collide_packet.iterations++;
+                //collide_packet.emitted_by = -1;
+
                 collide_packet.start_angle = relative_pos.angle();
                 collide_packet.restrict_angle = my_fraction * 2 * M_PI;
 
                 subtractive_packets[packet.id].push_back(collide_packet);
-
-
-                vec2f packet_vector = collide.pos - packet.origin;
 
 
                 alt_frequency_packet reflect = packet;
