@@ -697,7 +697,8 @@ void ship::tick(double dt_s)
                         laser* l = parent->make_new<laser>();
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
-                        l->velocity = velocity + evector.norm() * radar.speed_of_light_per_tick / radar.time_between_ticks_s;
+                        ///speed of light is notionally a constant
+                        l->velocity = evector.norm() * radar.speed_of_light_per_tick / radar.time_between_ticks_s;
                         l->phys_ignore.push_back(id);
                     }
 
