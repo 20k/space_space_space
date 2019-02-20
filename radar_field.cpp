@@ -1010,6 +1010,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
             if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
             {
+                if(get_intensity_at_of(collide.pos, packet) <= 0.001)
+                    continue;
+
                 alt_frequency_packet collide_packet = packet;
                 collide_packet.id_block = packet.id;
                 collide_packet.id = alt_frequency_packet::gid++;
