@@ -217,7 +217,7 @@ void server_thread()
     sf::Clock clk;
 
     sf::Clock frame_pacing_clock;
-    double time_between_ticks_ms = 16;
+    double time_between_ticks_ms = 8;
 
     std::map<uint64_t, sf::Clock> control_elapsed;
 
@@ -229,6 +229,8 @@ void server_thread()
     alt_radar_field& radar = get_radar_field();
 
     bool render = true;
+
+    sf::Clock read_clock;
 
     while(1)
     {
@@ -377,6 +379,8 @@ void server_thread()
                 model.sample = decltype(model.sample)();
             }
 
+            //std::cout << "srv write " << read_clock.restart().asMicroseconds() / 1000. << std::endl;
+
             conn.writes_to(model, i);
         }
 
@@ -402,7 +406,7 @@ void server_thread()
 
         for(int i=0; i < round(to_sleep); i++)
         {
-            Sleep(1);
+            sf::sleep(sf::milliseconds(1));
 
             slept++;
 
@@ -540,7 +544,8 @@ int main()
     #endif // 0
 
     connection conn;
-    conn.connect("77.97.17.179", 11000);
+    conn.connect("192.168.0.54", 11000);
+    //conn.connect("77.97.17.179", 11000);
 
     data_model<ship> model;
     client_entities renderables;
@@ -559,6 +564,10 @@ int main()
 
     alt_radar_sample sample;
     entity_manager transients;
+
+    sf::Clock read_clock;
+
+    uint32_t tidx = 0;
 
     while(window.isOpen())
     {
@@ -683,6 +692,8 @@ int main()
 
         //std::cout << cinput.direction << std::endl;
 
+        cinput.idx = tidx++;
+
         conn.writes_to(cinput, -1);
 
         //nlohmann::json testdat = serialise(cinput);
@@ -767,7 +778,7 @@ int main()
         window.display();
         window.clear();
 
-        Sleep(10);
+        sf::sleep(sf::milliseconds(4));
     }
 
     return 0;
