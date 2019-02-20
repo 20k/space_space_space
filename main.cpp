@@ -62,7 +62,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -257,10 +257,12 @@ void server_thread()
 
 
         //if(key.isKeyPressed(sf::Keyboard::K))
+        #ifdef SERVER_VIEW
         if(ONCE_MACRO(sf::Keyboard::K))
         {
             radar.add_packet(alt_pack, {mouse.getPosition(debug).x, mouse.getPosition(debug).y});
         }
+        #endif // SERVER_VIEW
 
         if(ONCE_MACRO(sf::Keyboard::L))
         {
@@ -293,12 +295,14 @@ void server_thread()
 
         iterations++;
 
+        #ifdef SERVER_VIEW
         sf::Event event;
 
         while(debug.pollEvent(event))
         {
 
         }
+        #endif // SERVER_VIEW
 
         while(conn.has_read())
         {
@@ -536,7 +540,7 @@ int main()
     #endif // 0
 
     connection conn;
-    conn.connect("192.168.0.54", 11000);
+    conn.connect("77.97.17.179", 11000);
 
     data_model<ship> model;
     client_entities renderables;
