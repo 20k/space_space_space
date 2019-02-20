@@ -197,6 +197,9 @@ void server_thread()
 
     sf::Clock clk;
 
+    sf::Clock frame_pacing_clock;
+    double time_between_ticks_ms = 16;
+
     std::map<uint64_t, sf::Clock> control_elapsed;
 
     sf::Mouse mouse;
@@ -362,7 +365,27 @@ void server_thread()
 
         #endif // SERVER_VIEW
 
-        Sleep(10);
+        double elapsed_ms = frame_pacing_clock.getElapsedTime().asMicroseconds() / 1000.;
+
+        double to_sleep = clamp(time_between_ticks_ms - elapsed_ms, 0, time_between_ticks_ms);
+
+        int slept = 0;
+
+        for(int i=0; i < round(to_sleep); i++)
+        {
+            Sleep(1);
+
+            slept++;
+
+            if(frame_pacing_clock.getElapsedTime().asMicroseconds() / 1000. >= round(to_sleep))
+                break;
+        }
+
+        frame_pacing_clock.restart();
+
+        //std::cout << frametime_dt << " slept " << to_sleep << " real slept " << slept << std::endl;
+
+        //Sleep(10);
     }
 }
 
