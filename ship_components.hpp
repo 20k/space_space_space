@@ -258,6 +258,9 @@ struct ship : virtual entity, virtual serialisable
         DO_SERIALISE(components);
         DO_SERIALISE(last_sat_percentage);
     }
+
+private:
+    double added_heat = 0;
 };
 
 struct projectile : entity

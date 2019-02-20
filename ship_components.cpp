@@ -733,9 +733,13 @@ void ship::handle_heat(double dt_s)
 
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
-    heat.intensity = heat_intensity;
+    heat.intensity = heat_intensity + added_heat;
+
+    //std::cout << "ENGINE HEAT  " << added_heat << std::endl;
 
     radar.emit(heat, r.position, id);
+
+    added_heat = 0;
 }
 
 void ship::add(const component& c)
@@ -969,6 +973,11 @@ void ship::tick_pre_phys(double dt_s)
 
     ///so to convert from angular to velocity multiply by this
     double velocity_thrust_ratio = 20;
+
+
+    double angular_force_to_heat = 20;
+    added_heat += control_force.length() * velocity_thrust_ratio * angular_force_to_heat / dt_s;
+    added_heat += fabs(control_angular_force) * angular_force_to_heat / dt_s;
 
     apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
     //e.tick_phys(dt_s);
