@@ -311,6 +311,8 @@ struct alt_radar_field
 {
     vec2f target_dim;
 
+    double time_between_ticks_s = 16/1000.;
+
     std::vector<alt_frequency_packet> packets;
     //std::vector<alt_frequency_packet> subtractive_packets;
     std::map<uint32_t, std::vector<alt_frequency_packet>> subtractive_packets;

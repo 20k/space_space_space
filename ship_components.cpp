@@ -670,6 +670,8 @@ void ship::tick(double dt_s)
 
                     does& wdoes = c.get(component_info::WEAPONS);
 
+                    alt_radar_field& radar = get_radar_field();
+
                     if(fabs(angle_between_vectors(ship_vector, evector)) > c.max_use_angle)
                     {
                         float angle_signed = signed_angle_between_vectors(ship_vector, evector);
@@ -695,14 +697,9 @@ void ship::tick(double dt_s)
                         laser* l = parent->make_new<laser>();
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
-                        //l->r.rotation = r.rotation + eangle;
-                        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                        l->velocity = velocity + evector.norm() * 300;
-                        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
+                        l->velocity = velocity + evector.norm() * radar.speed_of_light_per_tick / radar.time_between_ticks_s;
                         l->phys_ignore.push_back(id);
                     }
-
-                    alt_radar_field& radar = get_radar_field();
 
                     alt_frequency_packet em;
                     em.frequency = 1000;
