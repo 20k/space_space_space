@@ -965,7 +965,7 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    //profile_dumper pdump("newtick");
+    profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -1106,11 +1106,11 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    //pdump.dump();
+    pdump.dump();
 
     collideables.clear();
 
-    std::cout << packets.size() << std::endl;
+    /*std::cout << packets.size() << std::endl;
 
     int num_subtract = 0;
 
@@ -1122,7 +1122,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         num_subtract += subtractive_packets[i.id].size();
     }
 
-    std::cout << "sub " << num_subtract << std::endl;
+    std::cout << "sub " << num_subtract << std::endl;*/
 }
 
 float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
