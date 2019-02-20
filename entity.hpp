@@ -88,6 +88,7 @@ struct entity : virtual serialisable
     entity* parent_entity = nullptr;
     vec2f parent_offset = {0,0};
 
+    virtual void pre_collide(entity& other){}
     virtual void on_collide(entity_manager& em, entity& other){}
 
     virtual ~entity(){}
@@ -192,6 +193,9 @@ struct entity_manager : serialisable
 
                 if(collides(*last_entities[i], *last_entities[j]))
                 {
+                    last_entities[i]->pre_collide(*last_entities[j]);
+                    last_entities[j]->pre_collide(*last_entities[i]);
+
                     last_entities[i]->on_collide(*this, *last_entities[j]);
                     last_entities[j]->on_collide(*this, *last_entities[i]);
                 }

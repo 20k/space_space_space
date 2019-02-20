@@ -396,6 +396,17 @@ struct torpedo : projectile
 
     uint32_t fired_by = -1;
 
+    virtual void pre_collide(entity& other) override
+    {
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet em;
+        em.frequency = HEAT_FREQ;
+        em.intensity = 10000;
+
+        radar.emit(em, r.position - velocity.norm() * 5, id);
+    }
+
     virtual void tick(double dt_s) override
     {
         if(clk.getElapsedTime().asMicroseconds() / 1000. >= 50 * 1000)
@@ -668,8 +679,6 @@ void ship::tick(double dt_s)
                     vec2f evector = (vec2f){1, 0}.rot(eangle);
                     vec2f ship_vector = (vec2f){1, 0}.rot(ship_rotation);
 
-                    does& wdoes = c.get(component_info::WEAPONS);
-
                     alt_radar_field& radar = get_radar_field();
 
                     if(fabs(angle_between_vectors(ship_vector, evector)) > c.max_use_angle)
@@ -698,7 +707,7 @@ void ship::tick(double dt_s)
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
-                        l->velocity = evector.norm() * radar.speed_of_light_per_tick / radar.time_between_ticks_s;
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
                         l->phys_ignore.push_back(id);
                     }
 
