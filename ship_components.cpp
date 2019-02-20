@@ -749,8 +749,6 @@ void ship::handle_heat(double dt_s)
     heat.frequency = HEAT_FREQ;
     heat.intensity = heat_intensity;
 
-    //std::cout << "ENGINE HEAT  " << added_heat << std::endl;
-
     radar.emit(heat, r.position, id);
 }
 
