@@ -566,6 +566,32 @@ struct torpedo : projectile
     }
 };
 
+struct laser : projectile
+{
+    sf::Clock clk;
+
+    virtual void tick(double dt_s) override
+    {
+        if(clk.getElapsedTime().asMicroseconds() / 1000. > 200)
+        {
+            phys_ignore.clear();
+        }
+
+        if((clk.getElapsedTime().asMicroseconds() / 1000. / 1000.) > 20)
+        {
+            cleanup = true;
+        }
+
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet em;
+        em.frequency = 3000;
+        em.intensity = 10000;
+
+        radar.emit(em, r.position, id);
+    }
+};
+
 void ship::tick(double dt_s)
 {
     std::vector<double> resource_status = sum<double>([](component& c)
@@ -651,15 +677,30 @@ void ship::tick(double dt_s)
                         evector = ship_vector.rot(signum(angle_signed) * c.max_use_angle);
                     }
 
-                    torpedo* l = parent->make_new<torpedo>();
-                    l->r.position = r.position;
-                    l->r.rotation = evector.angle();
-                    //l->r.rotation = r.rotation + eangle;
-                    //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                    l->velocity = velocity + evector.norm() * 50;
-                    //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
-                    l->phys_ignore.push_back(id);
-                    l->fired_by = id;
+                    if(c.subtype == "missile")
+                    {
+                        torpedo* l = parent->make_new<torpedo>();
+                        l->r.position = r.position;
+                        l->r.rotation = evector.angle();
+                        //l->r.rotation = r.rotation + eangle;
+                        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
+                        l->velocity = velocity + evector.norm() * 50;
+                        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
+                        l->phys_ignore.push_back(id);
+                        l->fired_by = id;
+                    }
+
+                    if(c.subtype == "laser")
+                    {
+                        laser* l = parent->make_new<laser>();
+                        l->r.position = r.position;
+                        l->r.rotation = evector.angle();
+                        //l->r.rotation = r.rotation + eangle;
+                        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
+                        l->velocity = velocity + evector.norm() * 300;
+                        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
+                        l->phys_ignore.push_back(id);
+                    }
 
                     alt_radar_field& radar = get_radar_field();
 

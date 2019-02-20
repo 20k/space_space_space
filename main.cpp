@@ -102,7 +102,7 @@ void server_thread()
     missile.set_no_drain_on_full_production();
 
     missile.add_on_use(component_info::CAPACITOR, -10);
-
+    missile.subtype = "missile";
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
@@ -111,8 +111,9 @@ void server_thread()
     laser.set_no_drain_on_full_production();
 
     laser.add_on_use(component_info::CAPACITOR, -10);
+    laser.subtype = "laser";
 
-    laser.max_use_angle = M_PI/2;
+    laser.max_use_angle = M_PI/8;
 
     //laser.info[3].held = 0;
 

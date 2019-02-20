@@ -79,6 +79,9 @@ struct component : serialisable
 
     std::string long_name;
 
+    ///?????????????????
+    std::string subtype;
+
     double last_sat = 1;
 
     ///how active i need to be
@@ -95,6 +98,7 @@ struct component : serialisable
         DO_SERIALISE(no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
         DO_SERIALISE(max_use_angle);
+        DO_SERIALISE(subtype);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
