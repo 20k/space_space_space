@@ -1039,7 +1039,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 reflect.id = alt_frequency_packet::gid++;
 
                 ///maybe intensity should be distributed here to avoid energy increase
-                reflect.intensity = packet.intensity * 0.95;
+                reflect.intensity = packet.intensity * 0.90;
                 reflect.origin = collide.pos + packet_vector;
                 reflect.start_angle = (collide.pos - reflect.origin).angle();
                 reflect.restrict_angle = my_fraction * 2 * M_PI;
@@ -1109,7 +1109,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     //pdump.dump();
 
     collideables.clear();
-
 
     std::cout << packets.size() << std::endl;
 
