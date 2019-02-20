@@ -337,7 +337,6 @@ struct client_input : serialisable
     float rotation = 0;
     std::vector<client_fire> fired;
     bool ping = false;
-    uint32_t idx = 0;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
@@ -345,7 +344,6 @@ struct client_input : serialisable
         DO_SERIALISE(rotation);
         DO_SERIALISE(fired);
         DO_SERIALISE(ping);
-        DO_SERIALISE(idx);
     }
 };
 

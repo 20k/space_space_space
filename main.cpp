@@ -342,8 +342,8 @@ void server_thread()
             conn.pop_read();
         }
 
-        std::vector<ship*> ships;
-        std::vector<client_renderable> renderables;
+        #define SEE_ONLY_REAL
+
         std::map<uint32_t, ship*> network_ships;
 
         for(entity* e : entities.entities)
@@ -352,15 +352,9 @@ void server_thread()
 
             if(s)
             {
-                ships.push_back(s);
                 network_ships[s->network_owner] = s;
             }
-
-            renderables.push_back(e->r);
         }
-
-        model.ships = ships;
-        model.renderables = renderables;
 
         auto clients = conn.clients();
 
@@ -368,7 +362,34 @@ void server_thread()
         {
             //model.sample = radar.sample()
 
+            std::vector<ship*> ships;
+            std::vector<client_renderable> renderables;
+
+            for(entity* e : entities.entities)
+            {
+                ship* s = dynamic_cast<ship*>(e);
+
+                if(s)
+                {
+                    #ifdef SEE_ONLY_REAL
+                    if(s->network_owner != i)
+                        continue;
+                    #endif // SEE_ONLY_REAL
+
+                    ships.push_back(s);
+                    renderables.push_back(s->r);
+                }
+                else
+                {
+                    #ifndef SEE_ONLY_REAL
+                    renderables.push_back(e->r);
+                    #endif // SEE_ONLY_REAL
+                }
+            }
+
             model.client_network_id = i;
+            model.ships = ships;
+            model.renderables = renderables;
 
             if(network_ships[i] != nullptr)
             {
@@ -567,8 +588,6 @@ int main()
 
     sf::Clock read_clock;
 
-    uint32_t tidx = 0;
-
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -691,8 +710,6 @@ int main()
         }
 
         //std::cout << cinput.direction << std::endl;
-
-        cinput.idx = tidx++;
 
         conn.writes_to(cinput, -1);
 
