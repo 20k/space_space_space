@@ -608,7 +608,7 @@ int main()
 
             if(event.type == sf::Event::Resized)
             {
-                window.create(sf::VideoMode(event.size.width, event.size.height), "hi", sett);
+                window.create(sf::VideoMode(event.size.width, event.size.height), "hi", sf::Style::Default, sett);
             }
         }
 
