@@ -177,6 +177,8 @@ void server_thread()
 
     test_ship->r.position = {400, 400};
 
+    test_ship->r.position = {498.336609, 529.024292};
+
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
     test_ship2->data_track.resize(component_info::COUNT);
@@ -341,6 +343,8 @@ void server_thread()
 
             conn.pop_read();
         }
+
+        //std::cout << "test ship " << test_ship->r.position << std::endl;
 
         //#define SEE_ONLY_REAL
 
