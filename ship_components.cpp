@@ -398,7 +398,7 @@ struct torpedo : projectile
 
     virtual void tick(double dt_s) override
     {
-        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 20 * 1000)
+        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 50 * 1000)
         {
             cleanup = true;
         }
@@ -632,8 +632,8 @@ void ship::tick(double dt_s)
                     torpedo* l = parent->make_new<torpedo>();
                     l->r.position = r.position;
                     l->r.rotation = r.rotation;
-                    l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                    //l->velocity = velocity + (vec2f){0, 1}.rot(rotation) * 100;
+                    //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
+                    l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation) * 50;
                     l->phys_ignore.push_back(id);
                     l->fired_by = id;
 
