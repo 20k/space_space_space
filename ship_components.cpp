@@ -1131,6 +1131,24 @@ void ship::take_damage(double amount)
     }
 }
 
+void ship::on_collide(entity_manager& em, entity& other)
+{
+    if(dynamic_cast<asteroid*>(&other) != nullptr)
+    {
+        vec2f my_velocity = velocity;
+
+        vec2f normal_vector = r.position - other.r.position;
+
+        if(angle_between_vectors(my_velocity, normal_vector) <= M_PI/2)
+            return;
+
+        vec2f reflection_plane = normal_vector;
+        vec2f reflected_velocity = reflect(my_velocity.norm(), reflection_plane.norm()).norm() * my_velocity.length();
+
+        velocity = reflected_velocity * 0.3 + (r.position - other.r.position).norm() * 0.1;
+    }
+}
+
 #if 0
 void ship::render(sf::RenderWindow& window)
 {

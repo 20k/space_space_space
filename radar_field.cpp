@@ -965,7 +965,7 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    profile_dumper pdump("newtick");
+    //profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -1105,7 +1105,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    pdump.dump();
+    //pdump.dump();
 
     collideables.clear();
 

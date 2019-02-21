@@ -269,6 +269,8 @@ struct ship : virtual entity, virtual serialisable
         DO_SERIALISE(last_sat_percentage);
     }
 
+    virtual void on_collide(entity_manager& em, entity& other) override;
+
 private:
     double thrusters_active = 0;
 };
