@@ -25,6 +25,11 @@ vec2f camera::world_to_screen(vec2f in)
     return ((in - position) * zoom).rot(rotation) + screen_size/2.f;
 }
 
+vec2f camera::world_to_screen(vec2f in, float z)
+{
+    return ((in - position) * zoom / z).rot(rotation) + screen_size/2.f;
+}
+
 vec2f camera::screen_to_world(vec2f in)
 {
     return ((in - screen_size/2.f).rot(-rotation) / zoom) + position;

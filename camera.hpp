@@ -13,6 +13,7 @@ struct camera
     camera(vec2f _screen_size);
 
     vec2f world_to_screen(vec2f in);
+    vec2f world_to_screen(vec2f in, float z);
     vec2f screen_to_world(vec2f in);
 
     void add_linear_zoom(float linear);

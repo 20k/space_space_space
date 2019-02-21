@@ -171,10 +171,10 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         vec2f v3 = {l2.x() + ov.x()/2.f, l2.y() + ov.y()/2.f};
         vec2f v4 = {l1.x() + ov.x()/2.f, l1.y() + ov.y()/2.f};
 
-        v1 = cam.world_to_screen(v1);
-        v2 = cam.world_to_screen(v2);
-        v3 = cam.world_to_screen(v3);
-        v4 = cam.world_to_screen(v4);
+        v1 = cam.world_to_screen(v1, z_level);
+        v2 = cam.world_to_screen(v2, z_level);
+        v3 = cam.world_to_screen(v3, z_level);
+        v4 = cam.world_to_screen(v4, z_level);
 
         v[0].position = sf::Vector2f(v1.x(), v1.y());
         v[1].position = sf::Vector2f(v2.x(), v2.y());

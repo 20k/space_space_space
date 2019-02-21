@@ -17,6 +17,8 @@ struct client_renderable : serialisable
     vec2f position = {0,0};
     float rotation = 0;
 
+    float z_level = 1;
+
     std::vector<float> vert_dist;
     std::vector<float> vert_angle;
     std::vector<vec4f> vert_cols;
