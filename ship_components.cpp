@@ -1163,11 +1163,11 @@ void ship::on_collide(entity_manager& em, entity& other)
         velocity = next_velocity;
         other.velocity += their_change;
 
-        take_damage(my_change.length());
+        take_damage(my_change.length()/2);
 
         if(dynamic_cast<ship*>(&other))
         {
-            dynamic_cast<ship*>(&other)->take_damage(their_change.length());
+            dynamic_cast<ship*>(&other)->take_damage(their_change.length()/2);
         }
     }
 }
