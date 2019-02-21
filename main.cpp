@@ -604,6 +604,8 @@ int main()
 
         sf::Event event;
 
+        float mouse_delta = 0;
+
         while(window.pollEvent(event))
         {
             ImGui::SFML::ProcessEvent(event);
@@ -617,7 +619,15 @@ int main()
             {
                 window.create(sf::VideoMode(event.size.width, event.size.height), "hi", sf::Style::Default, sett);
             }
+
+            if(event.type == sf::Event::MouseWheelScrolled)
+            {
+                mouse_delta += event.mouseWheelScroll.delta;
+            }
         }
+
+        cam.screen_size = {window.getSize().x, window.getSize().y};
+        cam.add_linear_zoom(mouse_delta);
 
         while(conn.has_read())
         {
@@ -650,7 +660,7 @@ int main()
             {
                 ship_proxy->r.position = r.position;
 
-                cam.position = r.position - (vec2f){window.getSize().x/2, window.getSize().y/2};
+                cam.position = r.position;
             }
         }
 

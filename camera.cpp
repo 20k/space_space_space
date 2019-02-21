@@ -1,11 +1,39 @@
 #include "camera.hpp"
+#include <math.h>
+
+float proj(float zoom)
+{
+    float val = pow(sqrt(2), zoom);
+
+    return clamp(val, 1/256.f, 256.f);
+}
+
+float unproj(float zoom)
+{
+    return log(zoom) / log(sqrt(2));
+}
+
+camera::camera()
+{
+    zoom = 1;
+    //zoom = proj(1);
+}
 
 vec2f camera::world_to_screen(vec2f in)
 {
-    return ((in - position) * zoom).rot(rotation);
+    return ((in - position) * zoom).rot(rotation) + screen_size/2;
 }
 
 vec2f camera::screen_to_world(vec2f in)
 {
-    return (in.rot(-rotation) / zoom) + position;
+    return ((in - screen_size/2).rot(-rotation) / zoom) + position;
+}
+
+void camera::add_linear_zoom(float linear)
+{
+    float linear_zoom = unproj(zoom);
+
+    linear_zoom += linear;
+
+    zoom = proj(linear_zoom);
 }
