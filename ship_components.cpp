@@ -1396,6 +1396,8 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         std::cout << e.property << std::endl;
     }*/
 
+    float radar_width = 0.5;
+
     for(alt_object_property<vec2f>& e : sample.echo_pos)
     {
         uint32_t id_e = e.id_e;
@@ -1495,7 +1497,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             next->r.position = next_pos;
         }
 
-        next->r.init_rectangular({intensity, 1});
+        next->r.init_rectangular({intensity, radar_width});
         next->r.rotation = (next_prop).angle();
         next->clk.restart();
         next->id_e = id_e;
@@ -1549,7 +1551,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             next->r.position = next_pos;
         }
 
-        next->r.init_rectangular({intensity, 1});
+        next->r.init_rectangular({intensity, radar_width});
         next->r.rotation = next_prop.angle();
 
         next->clk.restart();
