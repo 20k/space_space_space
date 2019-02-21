@@ -1135,17 +1135,20 @@ void ship::on_collide(entity_manager& em, entity& other)
 {
     if(dynamic_cast<asteroid*>(&other) != nullptr)
     {
-        vec2f my_velocity = velocity;
+        const vec2f relative_velocity = velocity - other.velocity;
 
         vec2f normal_vector = r.position - other.r.position;
 
-        if(angle_between_vectors(my_velocity, normal_vector) <= M_PI/2)
+        if(angle_between_vectors(relative_velocity, normal_vector) <= M_PI/2)
             return;
 
-        vec2f reflection_plane = normal_vector;
-        vec2f reflected_velocity = reflect(my_velocity.norm(), reflection_plane.norm()).norm() * my_velocity.length();
+        vec2f to_them = -normal_vector.norm();
 
-        velocity = reflected_velocity * 0.3 + (r.position - other.r.position).norm() * 0.1;
+        vec2f to_them_component = projection(relative_velocity, to_them);
+
+        vec2f next_velocity = (velocity - relative_velocity) + (relative_velocity - 1.3 * to_them_component);
+
+        velocity = next_velocity;
     }
 }
 
