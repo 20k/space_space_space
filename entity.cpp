@@ -166,10 +166,20 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
 
         vec2f ov = perp * scale * thickness;
 
-        v[0].position = sf::Vector2f(l1.x() - ov.x()/2.f, l1.y() - ov.y()/2.f);
-        v[1].position = sf::Vector2f(l2.x() - ov.x()/2.f, l2.y() - ov.y()/2.f);
-        v[2].position = sf::Vector2f(l2.x() + ov.x()/2.f, l2.y() + ov.y()/2.f);
-        v[3].position = sf::Vector2f(l1.x() + ov.x()/2.f, l1.y() + ov.y()/2.f);
+        vec2f v1 = {l1.x() - ov.x()/2.f, l1.y() - ov.y()/2.f};
+        vec2f v2 = {l2.x() - ov.x()/2.f, l2.y() - ov.y()/2.f};
+        vec2f v3 = {l2.x() + ov.x()/2.f, l2.y() + ov.y()/2.f};
+        vec2f v4 = {l1.x() + ov.x()/2.f, l1.y() + ov.y()/2.f};
+
+        v1 = cam.world_to_screen(v1);
+        v2 = cam.world_to_screen(v2);
+        v3 = cam.world_to_screen(v3);
+        v4 = cam.world_to_screen(v4);
+
+        v[0].position = sf::Vector2f(v1.x(), v1.y());
+        v[1].position = sf::Vector2f(v2.x(), v2.y());
+        v[2].position = sf::Vector2f(v3.x(), v3.y());
+        v[3].position = sf::Vector2f(v4.x(), v4.y());
 
         sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z());
 

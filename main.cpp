@@ -649,6 +649,8 @@ int main()
             if(r.network_owner == model.client_network_id)
             {
                 ship_proxy->r.position = r.position;
+
+                cam.position = r.position - (vec2f){window.getSize().x/2, window.getSize().y/2};
             }
         }
 
@@ -712,7 +714,7 @@ int main()
             client_fire fire;
             fire.weapon_offset = 1;
 
-            vec2f relative_pos = mpos - ship_proxy->r.position;
+            vec2f relative_pos = cam.screen_to_world(mpos) - ship_proxy->r.position;
 
             fire.fire_angle = relative_pos.angle();
 
