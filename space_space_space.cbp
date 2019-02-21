@@ -53,6 +53,8 @@
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
+		<Unit filename="camera.cpp" />
+		<Unit filename="camera.hpp" />
 		<Unit filename="deps/imgui-sfml/imgui-SFML.cpp" />
 		<Unit filename="deps/imgui/imgui.cpp" />
 		<Unit filename="deps/imgui/imgui_demo.cpp" />
