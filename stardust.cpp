@@ -22,7 +22,7 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
     }
 
 
-    for(int i=0; i < 1000; i++)
+    for(int i=0; i < 200; i++)
     {
         vec2f min_dist = -(vec2f){100, 100} * 20;
         vec2f max_dist = (vec2f){100, 100} * 20;

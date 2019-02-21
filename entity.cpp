@@ -176,6 +176,9 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         v3 = cam.world_to_screen(v3, z_level);
         v4 = cam.world_to_screen(v4, z_level);
 
+        if(!cam.within_screen(v1) && !cam.within_screen(v2) && !cam.within_screen(v3) && !cam.within_screen(v4))
+            continue;
+
         v[0].position = sf::Vector2f(v1.x(), v1.y());
         v[1].position = sf::Vector2f(v2.x(), v2.y());
         v[2].position = sf::Vector2f(v3.x(), v3.y());

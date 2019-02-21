@@ -43,3 +43,11 @@ void camera::add_linear_zoom(float linear)
 
     zoom = proj(linear_zoom);
 }
+
+bool camera::within_screen(vec2f point)
+{
+    if(point.x() < 0 || point.y() < 0 || point.x() >= screen_size.x() || point.y() >= screen_size.y())
+        return false;
+
+    return true;
+}

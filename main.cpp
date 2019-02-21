@@ -536,6 +536,8 @@ int main()
 
     camera cam({window.getSize().x, window.getSize().y});
 
+    cam.position = {400, 400};
+
     sf::Texture font_atlas;
 
     ImGui::SFML::Init(window, false);

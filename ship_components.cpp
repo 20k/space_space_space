@@ -1396,7 +1396,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         std::cout << e.property << std::endl;
     }*/
 
-    float radar_width = 0.5;
+    float radar_width = 1;
 
     for(alt_object_property<vec2f>& e : sample.echo_pos)
     {
