@@ -409,6 +409,8 @@ struct torpedo : projectile
 
     virtual void tick(double dt_s) override
     {
+        projectile::tick(dt_s);
+
         if(clk.getElapsedTime().asMicroseconds() / 1000. >= 50 * 1000)
         {
             cleanup = true;
@@ -583,6 +585,9 @@ struct laser : projectile
 
     virtual void tick(double dt_s) override
     {
+        ///lasers won't reflect
+        //projectile::tick(dt_s);
+
         if(clk.getElapsedTime().asMicroseconds() / 1000. > 200)
         {
             phys_ignore.clear();
@@ -1247,6 +1252,13 @@ void projectile::on_collide(entity_manager& em, entity& other)
     }
 
     cleanup = true;
+}
+
+void projectile::tick(double dt_s)
+{
+    alt_radar_field& radar = get_radar_field();
+
+    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
 }
 
 asteroid::asteroid()

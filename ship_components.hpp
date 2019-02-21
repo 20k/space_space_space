@@ -280,6 +280,7 @@ struct projectile : entity
     projectile();
 
     void on_collide(entity_manager& em, entity& other) override;
+    void tick(double dt_s) override;
 };
 
 template<typename T>
