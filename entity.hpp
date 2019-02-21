@@ -56,6 +56,8 @@ struct entity : virtual serialisable
     bool cleanup = false;
     bool collides = true;
 
+    float mass = 1;
+
     std::vector<size_t> phys_ignore;
 
     client_renderable r;

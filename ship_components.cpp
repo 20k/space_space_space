@@ -1133,7 +1133,7 @@ void ship::take_damage(double amount)
 
 void ship::on_collide(entity_manager& em, entity& other)
 {
-    if(dynamic_cast<asteroid*>(&other) != nullptr)
+    if(dynamic_cast<asteroid*>(&other) != nullptr || dynamic_cast<ship*>(&other))
     {
         const vec2f relative_velocity = velocity - other.velocity;
 
@@ -1146,13 +1146,29 @@ void ship::on_collide(entity_manager& em, entity& other)
 
         vec2f to_them_component = projection(relative_velocity, to_them);
 
+        float my_mass = mass;
+        float their_mass = other.mass;
+
+        float my_velocity_share = 1 - (my_mass / (my_mass + their_mass));
+        float their_velocity_share = 1 - (their_mass / (my_mass + their_mass));
+
+
         vec2f velocity_change = (relative_velocity - 1.3 * to_them_component);
 
-        vec2f next_velocity = (velocity - relative_velocity) + velocity_change + (r.position - other.r.position).norm() * 0.1;;
+        vec2f my_change = velocity_change * my_velocity_share;
+        vec2f their_change = -velocity_change * their_velocity_share;
+
+        vec2f next_velocity = (velocity - relative_velocity) + my_change + (r.position - other.r.position).norm() * 0.1;;
 
         velocity = next_velocity;
+        other.velocity += their_change;
 
-        take_damage(velocity_change.length());
+        take_damage(my_change.length());
+
+        if(dynamic_cast<ship*>(&other))
+        {
+            dynamic_cast<ship*>(&other)->take_damage(their_change.length());
+        }
     }
 }
 
@@ -1237,6 +1253,8 @@ asteroid::asteroid()
 {
     float min_rad = 2;
     float max_rad = 4;
+
+    mass = 1000;
 
     int n = 5;
 
