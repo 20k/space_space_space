@@ -1,5 +1,6 @@
 #include "entity.hpp"
 #include <SFML/Graphics.hpp>
+#include "camera.hpp"
 
 bool collides(entity& e1, entity& e2)
 {
@@ -131,7 +132,7 @@ void entity::tick_phys(double dt_s)
     }
 }
 
-void client_renderable::render(sf::RenderWindow& window)
+void client_renderable::render(camera& cam, sf::RenderWindow& window)
 {
     float thickness = 0.75f;
 

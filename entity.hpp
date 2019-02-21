@@ -10,6 +10,7 @@ namespace sf
 }
 
 struct entity_manager;
+struct camera;
 
 struct client_renderable : serialisable
 {
@@ -47,7 +48,7 @@ struct client_renderable : serialisable
     }
 
     void init_rectangular(vec2f dim);
-    void render(sf::RenderWindow& window);
+    void render(camera& cam, sf::RenderWindow& window);
 };
 
 struct entity : virtual serialisable
@@ -220,11 +221,11 @@ struct entity_manager : serialisable
         to_spawn.clear();
     }
 
-    void render(sf::RenderWindow& window)
+    void render(camera& cam, sf::RenderWindow& window)
     {
         for(entity* e : entities)
         {
-            e->r.render(window);
+            e->r.render(cam, window);
         }
     }
 

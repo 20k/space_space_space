@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <networking/networking.hpp>
 #include "radar_field.hpp"
+#include "camera.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -454,6 +455,8 @@ int main()
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
 
+    camera cam;
+
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
 
@@ -672,7 +675,7 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
-        renderables.render(window);
+        renderables.render(cam, window);
 
         client_input cinput;
 
@@ -795,8 +798,8 @@ int main()
 
         render_radar_data(window, sample);
 
-        entities.render(window);
-        transients.render(window);
+        entities.render(cam, window);
+        transients.render(cam, window);
 
         ImGui::SFML::Render(window);
         window.display();

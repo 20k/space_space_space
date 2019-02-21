@@ -1606,10 +1606,10 @@ void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample)
     ImGui::End();
 }
 
-void client_entities::render(sf::RenderWindow& win)
+void client_entities::render(camera& cam, sf::RenderWindow& win)
 {
     for(client_renderable& i : entities)
     {
-        i.render(win);
+        i.render(cam, win);
     }
 }

@@ -314,7 +314,7 @@ struct client_entities : serialisable
 {
     std::vector<client_renderable> entities;
 
-    void render(sf::RenderWindow& win);
+    void render(camera& cam, sf::RenderWindow& win);
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
