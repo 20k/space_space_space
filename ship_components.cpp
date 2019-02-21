@@ -22,12 +22,12 @@ ship::ship()
 
     for(auto& i : r.vert_cols)
     {
-        i = {0.5, 1, 0.5};
+        i = {0.5, 1, 0.5, 1};
     }
 
     r.scale = 2;
 
-    r.vert_cols[2] = {1, 0.2, 0.2};
+    r.vert_cols[2] = {1, 0.2, 0.2, 1};
 
     drag = true;
 
@@ -1278,7 +1278,7 @@ asteroid::asteroid()
 
         r.vert_angle.push_back(angle);
 
-        r.vert_cols.push_back({1,1,1});
+        r.vert_cols.push_back({1,1,1,1});
     }
 
     r.approx_rad = max_rad;
@@ -1337,7 +1337,7 @@ struct transient_entity : entity
 
                 for(auto& i : r.vert_cols)
                 {
-                    i = {frac, frac, frac};
+                    i = {frac, frac, frac, 1};
                 }
             }
         }
@@ -1561,7 +1561,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         for(auto& i : next->r.vert_cols)
         {
-            i = {1, 0, 0};
+            i = {1, 0, 0, 1};
         }
     }
 

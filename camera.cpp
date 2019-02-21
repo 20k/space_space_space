@@ -13,20 +13,21 @@ float unproj(float zoom)
     return log(zoom) / log(sqrt(2));
 }
 
-camera::camera()
+camera::camera(vec2f _screen_size)
 {
+    screen_size = _screen_size;
     zoom = 1;
     //zoom = proj(1);
 }
 
 vec2f camera::world_to_screen(vec2f in)
 {
-    return ((in - position) * zoom).rot(rotation) + screen_size/2;
+    return ((in - position) * zoom).rot(rotation) + screen_size/2.f;
 }
 
 vec2f camera::screen_to_world(vec2f in)
 {
-    return ((in - screen_size/2).rot(-rotation) / zoom) + position;
+    return ((in - screen_size/2.f).rot(-rotation) / zoom) + position;
 }
 
 void camera::add_linear_zoom(float linear)

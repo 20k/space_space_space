@@ -9,6 +9,7 @@
 #include <networking/networking.hpp>
 #include "radar_field.hpp"
 #include "camera.hpp"
+#include "stardust.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -223,6 +224,7 @@ void server_thread()
     double time_between_ticks_ms = 8;
 
     std::map<uint64_t, sf::Clock> control_elapsed;
+    std::map<uint64_t, vec2f> last_mouse_pos;
 
     sf::Mouse mouse;
     sf::Keyboard key;
@@ -313,6 +315,8 @@ void server_thread()
         {
             writes_data<client_input> read = conn.reads_from<client_input>();
 
+            last_mouse_pos[read.id] = read.data.mouse_world_pos;
+
             for(entity* e : entities.entities)
             {
                 ship* s = dynamic_cast<ship*>(e);
@@ -347,7 +351,7 @@ void server_thread()
 
         //std::cout << "test ship " << test_ship->r.position << std::endl;
 
-        //#define SEE_ONLY_REAL
+        #define SEE_ONLY_REAL
 
         std::map<uint32_t, ship*> network_ships;
 
@@ -383,6 +387,75 @@ void server_thread()
 
                     ships.push_back(s);
                     renderables.push_back(s->r);
+
+                    if(s->network_owner != i)
+                        continue;
+
+                    vec2f mpos = last_mouse_pos[i];
+
+                    vec2f to_mouse = mpos - s->r.position;
+
+                    vec2f front_dir = (vec2f){1, 0}.rot(s->r.rotation);
+
+                    #ifdef MOUSE_TRACK
+                    for(component& c : s->components)
+                    {
+                        if(c.max_use_angle == 0)
+                            continue;
+
+                        vec2f clamped = clamp_angle(to_mouse, front_dir, c.max_use_angle);
+                        //vec2f clamped = to_mouse;
+
+                        float flen = clamped.length()/4;
+
+                        //flen = clamp(flen, 0, 10);
+
+                        flen = 10;
+
+                        client_renderable init;
+                        init.init_rectangular({flen, 0.0});
+
+                        for(auto& i : init.vert_cols)
+                        {
+                            i.w() = 0.1;
+                        }
+
+                        init.rotation = clamped.angle();
+                        init.position = s->r.position + clamped.norm() * flen * 2;
+
+                        renderables.push_back(init);
+                    }
+                    #endif // MOUSE_TRACK
+
+                    #ifdef FIXED_HORN
+                    float angle_dist = 10;
+
+                    for(component& c : s->components)
+                    {
+                        if(c.max_use_angle == 0)
+                            continue;
+
+                        client_renderable init;
+                        init.init_rectangular({angle_dist, 0.5});
+                        init.rotation = s->r.rotation - c.max_use_angle;
+
+                        for(auto& i : init.vert_cols)
+                        {
+                            i.w() = 0.1;
+                        }
+
+                        vec2f svector = (vec2f){1, 0}.rot(s->r.rotation - c.max_use_angle);
+                        init.position = s->r.position + svector * angle_dist * 2;
+
+                        renderables.push_back(init);
+
+                        init.rotation = s->r.rotation + c.max_use_angle;
+                        svector = (vec2f){1, 0}.rot(s->r.rotation + c.max_use_angle);
+                        init.position = s->r.position + svector * angle_dist * 2;
+
+                        renderables.push_back(init);
+                    }
+                    #endif // FIXED_HORN
                 }
                 else
                 {
@@ -455,12 +528,13 @@ int main()
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
 
-    camera cam;
 
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
 
     sf::RenderWindow window(sf::VideoMode(1200, 800), "hi", sf::Style::Default, sett);
+
+    camera cam({window.getSize().x, window.getSize().y});
 
     sf::Texture font_atlas;
 
@@ -592,6 +666,8 @@ int main()
     entity_manager entities;
 
     entity* ship_proxy = entities.make_new<entity>();
+
+    stardust_manager star_manage(cam, entities);
 
     alt_radar_sample sample;
     entity_manager transients;
@@ -730,6 +806,8 @@ int main()
 
             cinput.fired.push_back(fire);
         }
+
+        cinput.mouse_world_pos = cam.screen_to_world(mpos);
 
         //std::cout << cinput.direction << std::endl;
 

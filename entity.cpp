@@ -67,7 +67,7 @@ void client_renderable::init_rectangular(vec2f dim)
 
     for(auto& i : vert_cols)
     {
-        i = {1,1,1};
+        i = {1,1,1,1};
     }
 
     approx_rad = corner_rads;
@@ -143,7 +143,7 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         int cur = i;
         int next = (i + 1) % vert_dist.size();
 
-        vec3f lcol = vert_cols[cur] * 255;
+        vec4f lcol = vert_cols[cur] * 255;
 
         float d1 = vert_dist[cur];
         float d2 = vert_dist[next];
@@ -181,7 +181,7 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         v[2].position = sf::Vector2f(v3.x(), v3.y());
         v[3].position = sf::Vector2f(v4.x(), v4.y());
 
-        sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z());
+        sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z(), lcol.w());
 
         v[0].color = scol;
         v[1].color = scol;

@@ -19,7 +19,7 @@ struct client_renderable : serialisable
 
     std::vector<float> vert_dist;
     std::vector<float> vert_angle;
-    std::vector<vec3f> vert_cols;
+    std::vector<vec4f> vert_cols;
 
     float approx_rad = 0;
     float scale = 2;

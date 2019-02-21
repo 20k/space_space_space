@@ -340,6 +340,7 @@ struct client_input : serialisable
     float rotation = 0;
     std::vector<client_fire> fired;
     bool ping = false;
+    vec2f mouse_world_pos = {0,0};
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
@@ -347,6 +348,7 @@ struct client_input : serialisable
         DO_SERIALISE(rotation);
         DO_SERIALISE(fired);
         DO_SERIALISE(ping);
+        DO_SERIALISE(mouse_world_pos);
     }
 };
 

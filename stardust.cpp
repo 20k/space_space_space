@@ -1,0 +1,21 @@
+#include "stardust.hpp"
+#include "camera.hpp"
+
+stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
+{
+    std::minstd_rand rng;
+    rng.seed(0);
+
+    for(int i=0; i < 1000; i++)
+    {
+        vec2f min_dist = -(vec2f){100, 100} * 20;
+        vec2f max_dist = (vec2f){100, 100} * 20;
+
+        vec2f rpos = rand_det(rng, min_dist, max_dist);
+
+        entity* em = manage.make_new<stardust>();
+
+        em->r.position = rpos;
+        em->r.init_rectangular({0.1, 0.1});
+    }
+}

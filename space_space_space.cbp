@@ -73,6 +73,8 @@
 		<Unit filename="radar_field.hpp" />
 		<Unit filename="ship_components.cpp" />
 		<Unit filename="ship_components.hpp" />
+		<Unit filename="stardust.cpp" />
+		<Unit filename="stardust.hpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

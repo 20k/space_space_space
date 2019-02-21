@@ -10,7 +10,7 @@ struct camera
     float zoom = 1;
     float rotation = 0;
 
-    camera();
+    camera(vec2f _screen_size);
 
     vec2f world_to_screen(vec2f in);
     vec2f screen_to_world(vec2f in);
