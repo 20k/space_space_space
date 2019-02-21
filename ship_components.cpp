@@ -1146,9 +1146,13 @@ void ship::on_collide(entity_manager& em, entity& other)
 
         vec2f to_them_component = projection(relative_velocity, to_them);
 
-        vec2f next_velocity = (velocity - relative_velocity) + (relative_velocity - 1.3 * to_them_component) + (r.position - other.r.position).norm() * 0.1;;
+        vec2f velocity_change = (relative_velocity - 1.3 * to_them_component);
+
+        vec2f next_velocity = (velocity - relative_velocity) + velocity_change + (r.position - other.r.position).norm() * 0.1;;
 
         velocity = next_velocity;
+
+        take_damage(velocity_change.length());
     }
 }
 
