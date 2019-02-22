@@ -1512,7 +1512,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
             if(rs.vert_dist.size() >= 3)
             {
-                client_renderable split = rs.split((pos - rs.position).angle() + M_PI/2);
+                client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
 
                 s.raw_renderables.push_back({consider.emitted_by, consider.reflected_by, split, consider.frequency, 0});
             }

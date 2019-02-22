@@ -306,7 +306,7 @@ client_renderable client_renderable::split(float world_angle)
 
             ret_dist.push_back(intersection.length());
             ret_angle.push_back(intersection.angle());
-            ret_cols.push_back({1,1,1,1});
+            ret_cols.push_back(vert_cols[i]);
 
             continue;
         }
@@ -319,7 +319,7 @@ client_renderable client_renderable::split(float world_angle)
 
             ret_dist.push_back(intersection.length());
             ret_angle.push_back(intersection.angle());
-            ret_cols.push_back({1,1,1,1});
+            ret_cols.push_back(vert_cols[next]);
 
             ret_dist.push_back(vert_dist[next]);
             ret_angle.push_back(vert_angle[next]);
