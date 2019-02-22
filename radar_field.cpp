@@ -1359,7 +1359,7 @@ random_constants& get_random_constants_for(uint32_t uid)
     return rconst;
 }
 
-alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities)
 {
     /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
@@ -1476,6 +1476,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         if(intensity == 0)
             continue;
 
+
         /*uint32_t reflected_by = packet.reflected_by;
         vec2f reflected_position = packet.reflected_position;
 
@@ -1497,6 +1498,27 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
 
+        if(consider.emitted_by != uid && intensity > 0.01)
+        {
+            client_renderable rs;
+
+            for(entity* e : entities.entities)
+            {
+                if(e->id == consider.emitted_by)
+                {
+                    rs = e->r;
+                }
+            }
+
+            if(rs.vert_dist.size() >= 3)
+            {
+                client_renderable split = rs.split((pos - rs.position).angle() + M_PI/2);
+
+                s.raw_renderables.push_back({consider.emitted_by, consider.reflected_by, split, consider.frequency, 0});
+            }
+        }
+
+        #if 0
         #define RECT
         #ifdef RECT
         if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
@@ -1547,6 +1569,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
 
             //std::cout << "sent intens " << intensity << std::endl;
         }
+        #endif // 0
 
         //std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
 
@@ -1570,6 +1593,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid)
             s.intensities.push_back(intensity);
         }
     }
+
+    std::cout << "rbals " << s.raw_renderables.size() << std::endl;
 
     /*for(auto& i : s.intensities)
     {

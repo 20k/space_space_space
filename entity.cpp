@@ -323,6 +323,10 @@ client_renderable client_renderable::split(float world_angle)
     ret.vert_dist = ret_dist;
     ret.vert_cols = ret_cols;
 
+    ret.vert_angle.push_back(0);
+    ret.vert_dist.push_back(0);
+    ret.vert_cols.push_back({1,1,1,1});
+
     return ret;
 }
 

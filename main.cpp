@@ -471,7 +471,7 @@ void server_thread()
 
             if(network_ships[i] != nullptr)
             {
-                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id);
+                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities);
             }
             else
             {

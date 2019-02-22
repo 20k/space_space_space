@@ -421,7 +421,7 @@ struct torpedo : projectile
 
         alt_radar_field& radar = get_radar_field();
 
-        alt_radar_sample sam = radar.sample_for(r.position, id);
+        alt_radar_sample sam = radar.sample_for(r.position, id, *parent);
 
         vec2f best_dir = {0, 0};
         float best_intensity = 0;
@@ -1395,6 +1395,34 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
     {
         std::cout << e.property << std::endl;
     }*/
+
+    for(alt_object_property<client_renderable>& e : sample.raw_renderables)
+    {
+        uint32_t id_e = e.id_e;
+        uint32_t id_r = e.id_r;
+
+        auto entities = transients.fetch<transient_entity>();
+
+        transient_entity* next = nullptr;
+
+        for(transient_entity* transient : entities)
+        {
+            if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 3)
+            {
+                next = transient;
+                break;
+            }
+        }
+
+        if(next == nullptr)
+            next = transients.make_new<transient_entity>();
+
+        next->id_e = id_e;
+        next->id_r = id_r;
+        next->echo_type = 3;
+        next->clk.restart();
+        next->r = e.property;
+    }
 
     float radar_width = 1;
 
