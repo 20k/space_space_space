@@ -143,7 +143,8 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         int cur = i;
         int next = (i + 1) % vert_dist.size();
 
-        vec4f lcol = vert_cols[cur] * 255;
+        vec4f lcol1 = vert_cols[cur] * 255;
+        vec4f lcol2 = vert_cols[next] * 255;
 
         float d1 = vert_dist[cur];
         float d2 = vert_dist[next];
@@ -184,12 +185,20 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         v[2].position = sf::Vector2f(v3.x(), v3.y());
         v[3].position = sf::Vector2f(v4.x(), v4.y());
 
-        sf::Color scol = sf::Color(lcol.x(), lcol.y(), lcol.z(), lcol.w());
+        sf::Color scol1 = sf::Color(lcol1.x(), lcol1.y(), lcol1.z(), lcol1.w());
+        sf::Color scol2 = sf::Color(lcol2.x(), lcol2.y(), lcol2.z(), lcol2.w());
 
-        v[0].color = scol;
-        v[1].color = scol;
-        v[2].color = scol;
-        v[3].color = scol;
+        #ifdef PROGRESSIVE
+        v[0].color = scol1;
+        v[1].color = scol2;
+        v[2].color = scol2;
+        v[3].color = scol1;
+        #else
+        v[0].color = scol1;
+        v[1].color = scol1;
+        v[2].color = scol1;
+        v[3].color = scol1;
+        #endif
 
         window.draw(v, 4, sf::Quads);
     }
@@ -250,9 +259,12 @@ client_renderable client_renderable::split(float world_angle)
 {
     client_renderable ret = *this;
 
-    vec2f world_dir = (vec2f){1, 0}.rot(world_angle);
-
+    //vec2f world_dir = (vec2f){1, 0}.rot(world_angle);
     vec2f local_dir = (vec2f){1, 0}.rot(world_angle - rotation);
+
+    /*static sf::Clock clk;
+    float fangle = clk.getElapsedTime().asMicroseconds() / 1000. / 1000.;
+    local_dir = (vec2f){1, 0}.rot(fangle);*/
 
     std::vector<float> ret_dist;
     std::vector<float> ret_angle;
@@ -266,8 +278,8 @@ client_renderable client_renderable::split(float world_angle)
         float cangle = vert_angle[cur];
         float nangle = vert_angle[next];
 
-        vec2f cdir = (vec2f){1, 0}.rot(cangle);
-        vec2f ndir = (vec2f){1, 0}.rot(nangle);
+        vec2f cdir = (vec2f){1, 0}.rot(cangle) * vert_dist[cur];
+        vec2f ndir = (vec2f){1, 0}.rot(nangle) * vert_dist[next];
 
         if(!is_left_side(-local_dir, local_dir, cdir) && !is_left_side(-local_dir, local_dir, ndir))
             continue;
@@ -288,6 +300,10 @@ client_renderable client_renderable::split(float world_angle)
 
             vec2f intersection = point2line_intersection({0, 0}, local_dir, cdir, ndir);
 
+            ret_dist.push_back(vert_dist[i]);
+            ret_angle.push_back(vert_angle[i]);
+            ret_cols.push_back(vert_cols[i]);
+
             ret_dist.push_back(intersection.length());
             ret_angle.push_back(intersection.angle());
             ret_cols.push_back({1,1,1,1});
@@ -304,6 +320,10 @@ client_renderable client_renderable::split(float world_angle)
             ret_dist.push_back(intersection.length());
             ret_angle.push_back(intersection.angle());
             ret_cols.push_back({1,1,1,1});
+
+            ret_dist.push_back(vert_dist[next]);
+            ret_angle.push_back(vert_angle[next]);
+            ret_cols.push_back(vert_cols[next]);
 
             continue;
         }
@@ -323,9 +343,11 @@ client_renderable client_renderable::split(float world_angle)
     ret.vert_dist = ret_dist;
     ret.vert_cols = ret_cols;
 
-    ret.vert_angle.push_back(0);
+    /*ret.vert_angle.push_back(0);
     ret.vert_dist.push_back(0);
-    ret.vert_cols.push_back({1,1,1,1});
+    ret.vert_cols.push_back({1,1,1,1});*/
+
+    //return *this;
 
     return ret;
 }
