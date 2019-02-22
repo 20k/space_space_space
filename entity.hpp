@@ -51,6 +51,10 @@ struct client_renderable : serialisable
 
     void init_rectangular(vec2f dim);
     void render(camera& cam, sf::RenderWindow& window);
+
+    //client_renderable carve(float start_angle, float half_angle);
+
+    client_renderable split(float world_angle);
 };
 
 struct entity : virtual serialisable

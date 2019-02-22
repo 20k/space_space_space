@@ -195,6 +195,136 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
     }
 }
 
+/*client_renderable client_renderable::carve(float start_angle, float half_angle)
+{
+    std::vector<float> rotated_angles = vert_angle;
+
+    for(auto& i : rotated_angles)
+    {
+        i += rotation;
+    }
+
+    std::vector<float> ret_angles;
+    std::vector<float> ret_dist;
+    std::vector<vec4f> ret_cols;
+
+    vec2f start_dir = (vec2f){1, 0}.rot(start_angle);
+
+    int first = -1;
+    int last = -1;
+
+    for(int i=0; i < (int)vert_angle.size(); i++)
+    {
+        vec2f cdir = (vec2f){1, 0}.rot(rotated_angles[i]);
+
+        if(angle_between_vectors(start_dir, cdir) >= half_angle)
+        {
+            if(first == -1)
+            {
+                first = i;
+            }
+
+            last = i;
+            continue;
+        }
+
+        ret_angles.push_back(vert_dist[i]);
+        ret_dist.push_back(vert_angle[i]);
+        ret_cols.push_back(vert_cols[i]);
+    }
+
+    client_renderable ret = *this;
+
+    ret.vert_dist = ret_dist;
+    ret.vert_angle = ret_angles;
+    ret.vert_cols = ret_cols;
+
+    if(first == -1 && last == -1)
+        return ret;
+
+    int first_prev = (first - 1 + (int)vert_angle.size()) % (int)vert_angle.size():
+    int last_next = (last + 1) % vert_angle.size();
+}*/
+
+client_renderable client_renderable::split(float world_angle)
+{
+    client_renderable ret = *this;
+
+    vec2f world_dir = (vec2f){1, 0}.rot(world_angle);
+
+    vec2f local_dir = (vec2f){1, 0}.rot(world_angle - rotation);
+
+    std::vector<float> ret_dist;
+    std::vector<float> ret_angle;
+    std::vector<vec4f> ret_cols;
+
+    for(int i=0; i < (int)vert_angle.size(); i++)
+    {
+        int cur = i;
+        int next = (i + 1) % (int)vert_angle.size();
+
+        float cangle = vert_angle[cur];
+        float nangle = vert_angle[next];
+
+        vec2f cdir = (vec2f){1, 0}.rot(cangle);
+        vec2f ndir = (vec2f){1, 0}.rot(nangle);
+
+        if(!is_left_side(-local_dir, local_dir, cdir) && !is_left_side(-local_dir, local_dir, ndir))
+            continue;
+
+        ///left side me and next
+        if(is_left_side(-local_dir, local_dir, cdir) && is_left_side(-local_dir, local_dir, ndir))
+        {
+            ret_dist.push_back(vert_dist[i]);
+            ret_angle.push_back(vert_angle[i]);
+            ret_cols.push_back(vert_cols[i]);
+
+            continue;
+        }
+
+        if(is_left_side(-local_dir, local_dir, cdir) && !is_left_side(-local_dir, local_dir, ndir))
+        {
+            ///left side me, right side next
+
+            vec2f intersection = point2line_intersection({0, 0}, local_dir, cdir, ndir);
+
+            ret_dist.push_back(intersection.length());
+            ret_angle.push_back(intersection.angle());
+            ret_cols.push_back({1,1,1,1});
+
+            continue;
+        }
+
+        if(!is_left_side(-local_dir, local_dir, cdir) && is_left_side(-local_dir, local_dir, ndir))
+        {
+            ///left side me, right side next
+
+            vec2f intersection = point2line_intersection({0, 0}, -local_dir, cdir, ndir);
+
+            ret_dist.push_back(intersection.length());
+            ret_angle.push_back(intersection.angle());
+            ret_cols.push_back({1,1,1,1});
+
+            continue;
+        }
+
+        assert(false);
+
+        /*float signum_1 = signum(signed_angle_between_vectors(cdir, local_dir));
+        float signum_2 = signum(signed_angle_between_vectors(ndir, local_dir));
+
+        if(signum_1 != signum_2)
+        {
+
+        }*/
+    }
+
+    ret.vert_angle = ret_angle;
+    ret.vert_dist = ret_dist;
+    ret.vert_cols = ret_cols;
+
+    return ret;
+}
 
 vec2f entity::get_world_pos(int id)
 {
