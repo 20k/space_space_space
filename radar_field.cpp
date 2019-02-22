@@ -1,6 +1,7 @@
 #include "radar_field.hpp"
 #include <SFML/Graphics.hpp>
 #include <set>
+#include "player.hpp"
 
 radar_field::radar_field(vec2f target)
 {
@@ -1360,7 +1361,7 @@ random_constants& get_random_constants_for(uint32_t uid)
     return rconst;
 }
 
-alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities)
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player)
 {
     /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
@@ -1463,49 +1464,57 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
     auto merged = post_intensity_calculate;
 
-    std::set<uint32_t> high_detail_entities;
-
-    for(alt_frequency_packet& packet : merged)
+    if(player)
     {
-        if(packet.emitted_by == uid && packet.reflected_by == -1)
-            continue;
+        std::set<uint32_t> high_detail_entities;
 
-        float intensity = packet.intensity;
-
-        if(intensity == 0)
-            continue;
-
-        uint64_t search_entity = packet.emitted_by;
-
-        if(packet.reflected_by != -1)
-            search_entity = packet.reflected_by;
-
-        if(intensity >= 0.01)
-            high_detail_entities.insert(search_entity);
-    }
-
-    for(uint32_t id : high_detail_entities)
-    {
-        if(id != uid)
+        for(alt_frequency_packet& packet : merged)
         {
-            client_renderable rs;
+            if(packet.emitted_by == uid && packet.reflected_by == -1)
+                continue;
 
-            for(entity* e : entities.entities)
+            float intensity = packet.intensity;
+
+            if(intensity == 0)
+                continue;
+
+            uint64_t search_entity = packet.emitted_by;
+
+            if(packet.reflected_by != -1)
+                search_entity = packet.reflected_by;
+
+            if(intensity >= 0.01)
+                high_detail_entities.insert(search_entity);
+        }
+
+        for(uint32_t id : high_detail_entities)
+        {
+            if(id != uid)
             {
-                if(e->id == id)
+                client_renderable rs;
+
+                for(entity* e : entities.entities)
                 {
-                    rs = e->r;
-                    break;
+                    if(e->id == id)
+                    {
+                        rs = e->r;
+                        break;
+                    }
+                }
+
+                if(rs.vert_dist.size() >= 3)
+                {
+                    client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+
+                    player.value()->accumulated_renderables[id] = split;
                 }
             }
+        }
 
-            if(rs.vert_dist.size() >= 3)
-            {
-                client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
 
-                s.raw_renderables.push_back({id, split});
-                //s.raw_renderables.push_back({consider.emitted_by, consider.reflected_by, split, consider.frequency, 0});
-            }
+        for(auto& i : player.value()->accumulated_renderables)
+        {
+            s.raw_renderables.push_back({i.first, i.second});
         }
     }
 
@@ -1544,11 +1553,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
-
-        uint64_t search_entity = consider.emitted_by;
-
-        if(consider.reflected_by != -1)
-            search_entity = consider.reflected_by;
 
         #if 0
         #define RECT

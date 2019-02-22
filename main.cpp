@@ -10,6 +10,7 @@
 #include "radar_field.hpp"
 #include "camera.hpp"
 #include "stardust.hpp"
+#include "player.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -199,6 +200,8 @@ void server_thread()
     std::minstd_rand rng;
     rng.seed(0);
 
+    player_model_manager player_manage;
+
     int num_asteroids = 10;
 
     for(int i=0; i < num_asteroids; i++)
@@ -310,6 +313,13 @@ void server_thread()
 
         }
         #endif // SERVER_VIEW
+
+        while(conn.has_new_client())
+        {
+            player_manage.make_new(conn.has_new_client().value());
+
+            conn.pop_new_client();
+        }
 
         while(conn.has_read())
         {
@@ -471,7 +481,7 @@ void server_thread()
 
             if(network_ships[i] != nullptr)
             {
-                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities);
+                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_manage.fetch_by_network_id(i));
             }
             else
             {

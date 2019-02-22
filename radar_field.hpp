@@ -312,10 +312,10 @@ struct alt_radar_sample : serialisable
 
         /*DO_SERIALISE(echo_position);
         DO_SERIALISE(echo_id);*/
-
-
     }
 };
+
+struct player_model;
 
 struct alt_radar_field
 {
@@ -357,7 +357,7 @@ struct alt_radar_field
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
-    alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities);
+    alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player = std::nullopt);
 };
 
 inline
