@@ -252,6 +252,8 @@ struct alt_object_property : serialisable
     float frequency = 0;
     float cross_section = 1;
 
+    uint32_t uid = -1;
+
     alt_object_property()
     {
 
@@ -263,6 +265,11 @@ struct alt_object_property : serialisable
 
     }
 
+    alt_object_property(uint32_t _uid, T _property) : uid(_uid), property(_property)
+    {
+
+    }
+
     virtual void serialise(nlohmann::json& data, bool encode)
     {
         DO_SERIALISE(id_e);
@@ -270,6 +277,7 @@ struct alt_object_property : serialisable
         DO_SERIALISE(property);
         DO_SERIALISE(frequency);
         DO_SERIALISE(cross_section);
+        DO_SERIALISE(uid);
     }
 };
 

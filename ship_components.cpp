@@ -1300,6 +1300,8 @@ struct transient_entity : entity
     sf::Clock clk;
     int echo_type = -1;
 
+    uint32_t uid = -1;
+
     std::vector<std::pair<vec2f, sf::Clock>> last_props;
 
     vec2f dir = {0,0};
@@ -1398,8 +1400,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
     for(alt_object_property<client_renderable>& e : sample.raw_renderables)
     {
-        uint32_t id_e = e.id_e;
-        uint32_t id_r = e.id_r;
+        uint32_t uid = e.uid;
 
         auto entities = transients.fetch<transient_entity>();
 
@@ -1407,7 +1408,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         for(transient_entity* transient : entities)
         {
-            if(id_e == transient->id_e && id_r == transient->id_r && transient->echo_type == 3)
+            if(uid == transient->uid && transient->echo_type == 3)
             {
                 next = transient;
                 break;
@@ -1417,8 +1418,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         if(next == nullptr)
             next = transients.make_new<transient_entity>();
 
-        next->id_e = id_e;
-        next->id_r = id_r;
+        next->uid = uid;
         next->echo_type = 3;
         next->clk.restart();
         next->r = e.property;

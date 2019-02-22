@@ -1,5 +1,6 @@
 #include "radar_field.hpp"
 #include <SFML/Graphics.hpp>
+#include <set>
 
 radar_field::radar_field(vec2f target)
 {
@@ -1462,6 +1463,52 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
     auto merged = post_intensity_calculate;
 
+    std::set<uint32_t> high_detail_entities;
+
+    for(alt_frequency_packet& packet : merged)
+    {
+        if(packet.emitted_by == uid && packet.reflected_by == -1)
+            continue;
+
+        float intensity = packet.intensity;
+
+        if(intensity == 0)
+            continue;
+
+        uint64_t search_entity = packet.emitted_by;
+
+        if(packet.reflected_by != -1)
+            search_entity = packet.reflected_by;
+
+        if(intensity >= 0.01)
+            high_detail_entities.insert(search_entity);
+    }
+
+    for(uint32_t id : high_detail_entities)
+    {
+        if(id != uid)
+        {
+            client_renderable rs;
+
+            for(entity* e : entities.entities)
+            {
+                if(e->id == id)
+                {
+                    rs = e->r;
+                    break;
+                }
+            }
+
+            if(rs.vert_dist.size() >= 3)
+            {
+                client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+
+                s.raw_renderables.push_back({id, split});
+                //s.raw_renderables.push_back({consider.emitted_by, consider.reflected_by, split, consider.frequency, 0});
+            }
+        }
+    }
+
     for(alt_frequency_packet& packet : merged)
     {
         if(packet.emitted_by == uid && packet.reflected_by == -1)
@@ -1502,26 +1549,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         if(consider.reflected_by != -1)
             search_entity = consider.reflected_by;
-
-        if((search_entity != uid) && intensity > 0.01)
-        {
-            client_renderable rs;
-
-            for(entity* e : entities.entities)
-            {
-                if(e->id == search_entity)
-                {
-                    rs = e->r;
-                }
-            }
-
-            if(rs.vert_dist.size() >= 3)
-            {
-                client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
-
-                s.raw_renderables.push_back({consider.emitted_by, consider.reflected_by, split, consider.frequency, 0});
-            }
-        }
 
         #if 0
         #define RECT
