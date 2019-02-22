@@ -248,11 +248,10 @@ struct alt_object_property : serialisable
 {
     uint32_t id_e = -1;
     uint32_t id_r = -1;
+    uint32_t uid = -1;
     T property = T();
     float frequency = 0;
     float cross_section = 1;
-
-    uint32_t uid = -1;
 
     alt_object_property()
     {
@@ -274,10 +273,10 @@ struct alt_object_property : serialisable
     {
         DO_SERIALISE(id_e);
         DO_SERIALISE(id_r);
+        DO_SERIALISE(uid);
         DO_SERIALISE(property);
         DO_SERIALISE(frequency);
         DO_SERIALISE(cross_section);
-        DO_SERIALISE(uid);
     }
 };
 
