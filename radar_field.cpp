@@ -1467,6 +1467,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     if(player)
     {
         std::set<uint32_t> high_detail_entities;
+        std::set<uint32_t> low_detail_entities;
 
         for(alt_frequency_packet& packet : merged)
         {
@@ -1483,8 +1484,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(packet.reflected_by != -1)
                 search_entity = packet.reflected_by;
 
-            if(intensity >= 0.01)
+            if(intensity >= 1)
                 high_detail_entities.insert(search_entity);
+            else if(intensity >= 0.01)
+                low_detail_entities.insert(search_entity);
         }
 
         for(uint32_t id : high_detail_entities)
@@ -1511,10 +1514,42 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             }
         }
 
+        for(uint32_t id : low_detail_entities)
+        {
+            if(id != uid)
+            {
+                client_renderable rs;
+
+                for(entity* e : entities.entities)
+                {
+                    if(e->id == id)
+                    {
+                        rs = e->r;
+                        break;
+                    }
+                }
+
+                if(rs.vert_dist.size() >= 3)
+                {
+                    client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+
+                    uncertain_renderable ren;
+                    ren.position = rs.position;
+                    ren.radius = 5;
+
+                    player.value()->uncertain_renderables[id] = ren;
+                }
+            }
+        }
 
         for(auto& i : player.value()->accumulated_renderables)
         {
             s.raw_renderables.push_back({i.first, i.second});
+        }
+
+        for(auto& i : player.value()->uncertain_renderables)
+        {
+            s.low_detail.push_back({i.first, i.second});
         }
     }
 

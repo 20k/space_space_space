@@ -10,6 +10,7 @@
 #include <SFML/System/Clock.hpp>
 #include <networking/serialisable.hpp>
 #include "entity.hpp"
+#include "player.hpp"
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1
@@ -294,6 +295,7 @@ struct alt_radar_sample : serialisable
     std::vector<alt_object_property<vec2f>> echo_dir;
     std::vector<alt_object_property<vec2f>> receive_dir;
     std::vector<alt_object_property<client_renderable>> raw_renderables;
+    std::vector<alt_object_property<uncertain_renderable>> low_detail;
 
     bool fresh = false;
 
@@ -308,6 +310,7 @@ struct alt_radar_sample : serialisable
         DO_SERIALISE(receive_dir);
 
         DO_SERIALISE(raw_renderables);
+        DO_SERIALISE(low_detail);
         DO_SERIALISE(fresh);
 
         /*DO_SERIALISE(echo_position);

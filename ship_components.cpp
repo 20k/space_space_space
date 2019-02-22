@@ -1424,6 +1424,49 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->r = e.property;
     }
 
+    for(alt_object_property<uncertain_renderable>& e : sample.low_detail)
+    {
+        uint32_t uid = e.uid;
+
+        auto entities = transients.fetch<transient_entity>();
+
+        transient_entity* next = nullptr;
+
+        bool has_high_detail = false;
+
+        for(transient_entity* transient : entities)
+        {
+            if(uid == transient->uid && transient->echo_type == 4)
+            {
+                next = transient;
+            }
+
+            if(uid == transient->uid && transient->echo_type == 3)
+            {
+                has_high_detail = true;
+            }
+        }
+
+        if(!has_high_detail)
+        {
+            if(next == nullptr)
+                next = transients.make_new<transient_entity>();
+
+            next->uid = uid;
+            next->echo_type = 4;
+            next->clk.restart();
+            //next->r = e.property;
+
+            next->r.init_rectangular({e.property.radius, e.property.radius});
+            next->r.position = e.property.position;
+        }
+
+        if(has_high_detail && next)
+        {
+            next->cleanup = true;
+        }
+    }
+
     float radar_width = 1;
 
     for(alt_object_property<vec2f>& e : sample.echo_pos)
