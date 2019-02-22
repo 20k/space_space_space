@@ -1498,13 +1498,18 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
 
-        if(consider.emitted_by != uid && intensity > 0.01)
+        uint64_t search_entity = consider.emitted_by;
+
+        if(consider.reflected_by != -1)
+            search_entity = consider.reflected_by;
+
+        if((search_entity != uid) && intensity > 0.01)
         {
             client_renderable rs;
 
             for(entity* e : entities.entities)
             {
-                if(e->id == consider.emitted_by)
+                if(e->id == search_entity)
                 {
                     rs = e->r;
                 }
@@ -1593,8 +1598,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.intensities.push_back(intensity);
         }
     }
-
-    std::cout << "rbals " << s.raw_renderables.size() << std::endl;
 
     /*for(auto& i : s.intensities)
     {
