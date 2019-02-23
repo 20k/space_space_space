@@ -1406,7 +1406,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         std::cout << e.property << std::endl;
     }*/
 
-    for(alt_object_property<client_renderable>& e : sample.raw_renderables)
+    for(alt_object_property<common_renderable>& e : sample.renderables)
     {
         uint32_t uid = e.uid;
 
@@ -1429,10 +1429,22 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         next->uid = uid;
         next->echo_type = 3;
         next->clk.restart();
-        next->r = e.property;
+        next->r = e.property.r;
+
+        for(auto& i : next->r.vert_cols)
+        {
+            if(e.property.is_unknown && e.property.velocity.length() > 0)
+            {
+                i = {1,0,0,1};
+            }
+            else
+            {
+                i = {1,1,1,1};
+            }
+        }
     }
 
-    for(alt_object_property<uncertain_renderable>& e : sample.low_detail)
+    /*for(alt_object_property<uncertain_renderable>& e : sample.low_detail)
     {
         uint32_t uid = e.uid;
 
@@ -1467,14 +1479,27 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
             next->r.init_rectangular({e.property.radius, e.property.radius});
             next->r.position = e.property.position;
+
+            for(auto& i : next->r.vert_cols)
+            {
+                if(e.property.is_unknown && e.property.velocity.length() > 0)
+                {
+                    i = {1,0,0,1};
+                }
+                else
+                {
+                    i = {1,1,1,1};
+                }
+            }
         }
 
         if(has_high_detail && next)
         {
             next->cleanup = true;
         }
-    }
+    }*/
 
+    #if 0
     float radar_width = 1;
 
     for(alt_object_property<vec2f>& e : sample.echo_pos)
@@ -1645,6 +1670,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             i = {1, 0, 0, 1};
         }
     }
+    #endif // 0
 
     /*client_model.sample.echo_pos.clear();
     client_model.sample.echo_dir.clear();

@@ -255,7 +255,7 @@ void server_thread()
         /*auto clients = conn.clients();
 
         for(auto& i : clients)
-        {
+        {c
             conn.writes_to(entities, i);
         }*/
 

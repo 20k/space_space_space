@@ -309,34 +309,13 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         assert(player != nullptr);
 
         {
-            for(auto& [pid, detailed] : player->accumulated_renderables)
+            for(auto& [pid, detailed] : player->renderables)
             {
                 alt_collideable collide;
-                collide.dim = detailed.approx_dim;
-                collide.angle = detailed.rotation;
+                collide.dim = detailed.r.approx_dim;
+                collide.angle = detailed.r.rotation;
                 collide.uid = pid;
-                collide.pos = detailed.position;
-
-                auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
-
-                if(reflected)
-                {
-                    imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
-                    imaginary_speculative_packets.push_back(reflected.value().first);
-
-                    imaginary_collideable_list[reflected.value().first.id] = player;
-                }
-
-                icollide++;
-            }
-
-            for(auto& [pid, undetailed] : player->uncertain_renderables)
-            {
-                alt_collideable collide;
-                collide.dim = {undetailed.radius, undetailed.radius};
-                collide.angle = 0;
-                collide.uid = pid;
-                collide.pos = undetailed.position;
+                collide.pos = detailed.r.position;
 
                 auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
 
@@ -804,7 +783,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
 
-        if(packet.intensity >= 0.1)
+        if(packet.intensity >= 0.01)
             pseudo_packets.insert(search_entity);
     }
 
@@ -841,7 +820,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         if(packet.reflected_by != -1)
             search_entity = packet.reflected_by;
 
-        considered_packets.insert(search_entity);
+        if(intensity >= 0.01f)
+            considered_packets.insert(search_entity);
 
         /*if(consider.reflected_by == uid && consider.last_packet)
         {
@@ -853,7 +833,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
 
-        #if 0
+        #if 1
         #define RECT
         #ifdef RECT
         if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
@@ -933,6 +913,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     {
         std::set<uint32_t> high_detail_entities;
         std::set<uint32_t> low_detail_entities;
+        std::set<uint32_t> all_entities;
 
         for(alt_frequency_packet& packet : merged)
         {
@@ -950,9 +931,13 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 search_entity = packet.reflected_by;
 
             if(intensity >= 1)
+            {
                 high_detail_entities.insert(search_entity);
+            }
             else if(intensity >= 0.01)
+            {
                 low_detail_entities.insert(search_entity);
+            }
         }
 
         for(uint32_t id : high_detail_entities)
@@ -960,21 +945,30 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(id != uid)
             {
                 client_renderable rs;
+                entity* found = nullptr;
 
                 for(entity* e : entities.entities)
                 {
                     if(e->id == id)
                     {
                         rs = e->r;
+                        found = e;
                         break;
                     }
                 }
 
-                if(rs.vert_dist.size() >= 3)
+                if(found && rs.vert_dist.size() >= 3)
                 {
-                    detailed_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+                    common_renderable split;
+                    client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
-                    player.value()->accumulated_renderables[id] = split;
+                    split.r = r;
+                    split.velocity = found->velocity;
+                    split.type = 1;
+
+                    player.value()->renderables[id] = split;
+
+                    all_entities.insert(id);
                 }
             }
         }
@@ -984,38 +978,57 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(id != uid)
             {
                 client_renderable rs;
+                entity* found = nullptr;
 
                 for(entity* e : entities.entities)
                 {
                     if(e->id == id)
                     {
                         rs = e->r;
+                        found = e;
                         break;
                     }
                 }
 
-                if(rs.vert_dist.size() >= 3)
+                if(found && rs.vert_dist.size() >= 3)
                 {
-                    client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+                    /*client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
 
                     uncertain_renderable ren;
                     ren.position = rs.position;
                     ren.radius = split.approx_dim.max_elem();
+                    ren.velocity = found->velocity;
+
+                    std::cout << "pos " << ren.position << std::endl;
 
                     player.value()->uncertain_renderables[id] = ren;
+
+                    all_entities.insert(id);*/
+
+                    common_renderable split;
+                    client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
+
+                    split.r = r;
+                    split.r.init_rectangular(split.r.approx_dim);
+                    split.velocity = found->velocity;
+                    split.type = 1;
+
+                    player.value()->renderables[id] = split;
+
+                    all_entities.insert(id);
                 }
             }
         }
 
-        for(auto& i : player.value()->accumulated_renderables)
+        for(auto& i : player.value()->renderables)
         {
-            s.raw_renderables.push_back({i.first, i.second});
+            s.renderables.push_back({i.first, i.second});
         }
 
-        for(auto& i : player.value()->uncertain_renderables)
+        /*for(auto& i : player.value()->uncertain_renderables)
         {
             s.low_detail.push_back({i.first, i.second});
-        }
+        }*/
 
         ///ok so
         ///if we have a collide shadow packet but not a real packet
@@ -1028,7 +1041,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         {
             player_model* model = player.value();
 
-            for(auto& i : model->accumulated_renderables)
+            for(auto& i : model->renderables)
             {
                 ///if this is a pseudo packet we've received but not got a considered packet, cleanup
                 if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == considered_packets.end())
@@ -1049,8 +1062,16 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                     //std::cout << "got sig\n";
                 }
+
+                /*if(all_entities.find(i.first) == all_entities.end())
+                {
+                    i.second.unknown();
+                }*/
+
+                i.second.unknown(all_entities.find(i.first) == all_entities.end());
             }
 
+            #if 0
             for(auto& i : model->uncertain_renderables)
             {
                 ///if this is a pseudo packet we've received but not got a considered packet, cleanup
@@ -1063,7 +1084,15 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 {
                     i.second.got_signal();
                 }
+
+                /*if(all_entities.find(i.first) == all_entities.end())
+                {
+                    i.second.unknown();
+                }*/
+
+                i.second.unknown(all_entities.find(i.first) == all_entities.end());
             }
+            #endif // 0
 
             player.value()->cleanup(plr.value()->r.position);
         }
