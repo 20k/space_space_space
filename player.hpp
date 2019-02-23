@@ -21,7 +21,7 @@ struct uncertain
 
     void no_signal()
     {
-        if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 500)
+        if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 1000)
             return;
 
         if(begin_cleanup)
@@ -69,7 +69,8 @@ struct player_model : serialisable
     std::map<uint32_t, uncertain_renderable> uncertain_renderables;
 
     void cleanup(vec2f my_pos);
-    void add_imaginary_collideables();
+
+    void tick(double dt_s);
 };
 
 struct player_model_manager
@@ -95,6 +96,14 @@ struct player_model_manager
         }
 
         return std::nullopt;
+    }
+
+    void tick(double dt_s)
+    {
+        for(auto& i : models)
+        {
+            i->tick(dt_s);
+        }
     }
 };
 

@@ -65,7 +65,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -300,6 +300,7 @@ void server_thread()
         }
 
         radar.tick(frametime_dt, iterations);
+        player_manage.tick(frametime_dt);
 
         iterations++;
 
