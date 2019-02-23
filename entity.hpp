@@ -152,6 +152,17 @@ struct entity_manager : serialisable
         return ret;
     }
 
+    std::optional<entity*> fetch(uint32_t id)
+    {
+        for(entity* e : entities)
+        {
+            if(e->id == id)
+                return e;
+        }
+
+        return std::nullopt;
+    }
+
     void tick(double dt_s)
     {
         for(auto& i : to_spawn)

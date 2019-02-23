@@ -1507,7 +1507,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                 if(rs.vert_dist.size() >= 3)
                 {
-                    client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
+                    detailed_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
 
                     player.value()->accumulated_renderables[id] = split;
                 }
@@ -1550,6 +1550,13 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         for(auto& i : player.value()->uncertain_renderables)
         {
             s.low_detail.push_back({i.first, i.second});
+        }
+
+        std::optional<entity*> plr = entities.fetch(uid);
+
+        if(plr)
+        {
+            player.value()->cleanup(plr.value()->r.position);
         }
     }
 

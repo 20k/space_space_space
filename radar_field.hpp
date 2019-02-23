@@ -340,6 +340,9 @@ struct alt_radar_field
     std::map<uint32_t, sf::Clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
+    std::vector<alt_frequency_packet> shadow_packets;
+    std::map<uint32_t, std::vector<alt_collideable>> shadow_collideables;
+
     float speed_of_light_per_tick = 10.5;
 
     alt_radar_field(vec2f in);
