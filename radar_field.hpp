@@ -205,7 +205,8 @@ struct alt_radar_field
 
     alt_radar_field(vec2f in);
 
-    std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide);
+    std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>>
+    test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
@@ -220,7 +221,7 @@ struct alt_radar_field
     void render(sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);
-    float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet);
+    float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 

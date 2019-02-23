@@ -65,7 +65,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -239,6 +239,8 @@ void server_thread()
     bool render = true;
 
     sf::Clock read_clock;
+
+    camera cam({800, 800});
 
     while(1)
     {
@@ -493,7 +495,7 @@ void server_thread()
 
         if(render)
         {
-            entities.render(debug);
+            entities.render(cam, debug);
 
             radar.render(debug);
         }

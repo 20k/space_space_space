@@ -138,7 +138,8 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
     return real_intensity < 0.1f;
 }
 
-std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide)
+std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>>
+alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
     float current_radius = packet.iterations * speed_of_light_per_tick;
     float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
@@ -169,7 +170,7 @@ std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> alt_radar_f
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
-        if(get_intensity_at_of(collide.pos, packet) <= 0.001)
+        if(get_intensity_at_of(collide.pos, packet, subtractive) <= 0.001)
             return std::nullopt;
 
         float circle_circumference = 2 * M_PI * len;
@@ -266,7 +267,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     {
         for(alt_collideable& collide : collideables)
         {
-            auto reflected = test_reflect_from(packet, collide);
+            auto reflected = test_reflect_from(packet, collide, subtractive_packets);
 
             if(reflected)
             {
@@ -295,7 +296,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 collide.uid = pid;
                 collide.pos = detailed.position;
 
-                auto reflected = test_reflect_from(packet, collide);
+                auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
 
                 if(reflected)
                 {
@@ -362,7 +363,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     std::cout << "sub " << num_subtract << std::endl;*/
 }
 
-float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet)
+float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
 {
     float real_distance = packet.iterations * speed_of_light_per_tick;
     float my_angle = (pos - packet.origin).angle();
@@ -380,9 +381,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
         return 0;
 
-    if(subtractive_packets.find(packet.id) != subtractive_packets.end())
+    if(subtractive.find(packet.id) != subtractive.end())
     {
-        for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
+        for(alt_frequency_packet& shadow : subtractive[packet.id])
         {
             float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
             float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
@@ -438,7 +439,7 @@ float alt_radar_field::get_intensity_at(vec2f pos)
 
     for(alt_frequency_packet& packet : packets)
     {
-        total_intensity += get_intensity_at_of(pos, packet);
+        total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
     }
 
     return total_intensity;
@@ -667,7 +668,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             }
         }
 
-        float intensity = get_intensity_at_of(pos, packet);
+        float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
 
         packet.intensity = intensity;
 
@@ -699,6 +700,156 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     }*/
 
     auto merged = post_intensity_calculate;
+
+    std::set<uint32_t> considered_packets;
+    std::set<uint32_t> pseudo_packets;
+
+    for(alt_frequency_packet packet : imaginary_packets)
+    {
+        if(ignore_map.find(packet.id) != ignore_map.end())
+        {
+            if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
+            {
+                if(ignore_map[packet.id][uid].should_ignore())
+                {
+                    if(!packet.last_packet)
+                        continue;
+
+                    alt_frequency_packet lpacket = *packet.last_packet;
+                    lpacket.iterations = packet.iterations;
+                    lpacket.id = packet.id;
+
+                    packet = lpacket;
+                }
+            }
+        }
+
+        float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
+
+        packet.intensity = intensity;
+
+        if(packet.intensity > 0)
+            pseudo_packets.insert(packet.id);
+    }
+
+    for(alt_frequency_packet& packet : merged)
+    {
+        if(packet.emitted_by == uid && packet.reflected_by == -1)
+            continue;
+
+        ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
+        ///THIS WILL NOT BE TRUE IF I MAKE IT DECREASE IN INTENSITY AFTER A REFLECTION SO THIS IS KIND OF WEIRD
+        float intensity = packet.intensity;
+        //float intensity = get_intensity_at_of(pos, packet);
+        float frequency = packet.frequency;
+
+        if(intensity == 0)
+            continue;
+
+
+        /*uint32_t reflected_by = packet.reflected_by;
+        vec2f reflected_position = packet.reflected_position;
+
+        if(reflected_by == uid)
+        {
+            reflected_by = packet.prev_reflected_by;
+            reflected_position = packet.last_reflected_position;
+        }*/
+
+        alt_frequency_packet consider = packet;
+
+        uint64_t search_entity = packet.emitted_by;
+
+        if(packet.reflected_by != -1)
+            search_entity = packet.reflected_by;
+
+        considered_packets.insert(search_entity);
+
+        /*if(consider.reflected_by == uid && consider.last_packet)
+        {
+            consider = *consider.last_packet;
+        }*/
+
+        //std::cout << intensity << std::endl;
+
+        float uncertainty = intensity / BEST_UNCERTAINTY;
+        uncertainty = 1 - clamp(uncertainty, 0, 1);
+
+        #if 0
+        #define RECT
+        #ifdef RECT
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
+        {
+            /*s.echo_position.push_back(packet.reflected_position);
+            s.echo_id.push_back(packet.reflected_by);*/
+
+            vec2f next_pos = consider.reflected_position + rconst.err_1 * uncertainty;
+
+            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
+
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
+        }
+        #endif // RECT
+
+        #define RECT_RECV
+        #ifdef RECT_RECV
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 1)
+        {
+            /*s.echo_position.push_back(packet.reflected_position);
+            s.echo_id.push_back(packet.reflected_by);*/
+
+            vec2f next_pos = consider.origin + rconst.err_2 * uncertainty;
+
+            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
+
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
+        }
+        #endif // RECT_RECV
+
+        ///specifically excludes self because we never need to know where we are
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0)
+        {
+            vec2f next_dir = (consider.reflected_position - pos).norm();
+
+            next_dir = next_dir.rot(rconst.err_3 * uncertainty);
+
+            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
+        }
+
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0)
+        {
+            vec2f next_dir = (consider.origin - pos).norm();
+
+            next_dir = next_dir.rot(rconst.err_4 * uncertainty);
+
+            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency, 0});
+
+            //std::cout << "sent intens " << intensity << std::endl;
+        }
+        #endif // 0
+
+        //std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
+
+        //std::cout << "loop " << intensity << std::endl;
+
+        bool found = false;
+
+        for(int i=0; i < (int)s.frequencies.size(); i++)
+        {
+            if(s.frequencies[i] == frequency)
+            {
+                s.intensities[i] += intensity;
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            s.frequencies.push_back(frequency);
+            s.intensities.push_back(intensity);
+        }
+    }
 
     if(player)
     {
@@ -788,123 +939,16 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.low_detail.push_back({i.first, i.second});
         }
 
+        ///ok so
+        ///if we have a collide shadow packet but not a real packet
+        ///start a timer to erase it
+        ///cancel the timer if we receive more packets
+
         std::optional<entity*> plr = entities.fetch(uid);
 
         if(plr)
         {
             player.value()->cleanup(plr.value()->r.position);
-        }
-    }
-
-    for(alt_frequency_packet& packet : merged)
-    {
-        if(packet.emitted_by == uid && packet.reflected_by == -1)
-            continue;
-
-        ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
-        ///THIS WILL NOT BE TRUE IF I MAKE IT DECREASE IN INTENSITY AFTER A REFLECTION SO THIS IS KIND OF WEIRD
-        float intensity = packet.intensity;
-        //float intensity = get_intensity_at_of(pos, packet);
-        float frequency = packet.frequency;
-
-        if(intensity == 0)
-            continue;
-
-
-        /*uint32_t reflected_by = packet.reflected_by;
-        vec2f reflected_position = packet.reflected_position;
-
-        if(reflected_by == uid)
-        {
-            reflected_by = packet.prev_reflected_by;
-            reflected_position = packet.last_reflected_position;
-        }*/
-
-        alt_frequency_packet consider = packet;
-
-        /*if(consider.reflected_by == uid && consider.last_packet)
-        {
-            consider = *consider.last_packet;
-        }*/
-
-        //std::cout << intensity << std::endl;
-
-        float uncertainty = intensity / BEST_UNCERTAINTY;
-        uncertainty = 1 - clamp(uncertainty, 0, 1);
-
-        #if 0
-        #define RECT
-        #ifdef RECT
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
-        {
-            /*s.echo_position.push_back(packet.reflected_position);
-            s.echo_id.push_back(packet.reflected_by);*/
-
-            vec2f next_pos = consider.reflected_position + rconst.err_1 * uncertainty;
-
-            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
-
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
-        }
-        #endif // RECT
-
-        #define RECT_RECV
-        #ifdef RECT_RECV
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 1)
-        {
-            /*s.echo_position.push_back(packet.reflected_position);
-            s.echo_id.push_back(packet.reflected_by);*/
-
-            vec2f next_pos = consider.origin + rconst.err_2 * uncertainty;
-
-            float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
-
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
-        }
-        #endif // RECT_RECV
-
-        ///specifically excludes self because we never need to know where we are
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0)
-        {
-            vec2f next_dir = (consider.reflected_position - pos).norm();
-
-            next_dir = next_dir.rot(rconst.err_3 * uncertainty);
-
-            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
-        }
-
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0)
-        {
-            vec2f next_dir = (consider.origin - pos).norm();
-
-            next_dir = next_dir.rot(rconst.err_4 * uncertainty);
-
-            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency, 0});
-
-            //std::cout << "sent intens " << intensity << std::endl;
-        }
-        #endif // 0
-
-        //std::cout << "intens " << intensity << " freq " << frequency << " emmitted " << consider.emitted_by << " ref " << consider.reflected_by << std::endl;
-
-        //std::cout << "loop " << intensity << std::endl;
-
-        bool found = false;
-
-        for(int i=0; i < (int)s.frequencies.size(); i++)
-        {
-            if(s.frequencies[i] == frequency)
-            {
-                s.intensities[i] += intensity;
-                found = true;
-                break;
-            }
-        }
-
-        if(!found)
-        {
-            s.frequencies.push_back(frequency);
-            s.intensities.push_back(intensity);
         }
     }
 
