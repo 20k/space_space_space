@@ -15,7 +15,7 @@ struct uncertain
 
     bool bad(vec2f player_pos, vec2f my_pos)
     {
-        return elapsed.getElapsedTime().asMilliseconds() > 0 && begin_cleanup;
+        return elapsed.getElapsedTime().asMilliseconds() > 500 && begin_cleanup;
 
         //return elapsed.getElapsedTime().asSeconds() > 1 && (player_pos - my_pos).length() < 10;
     }
@@ -23,16 +23,10 @@ struct uncertain
     void unknown(bool state)
     {
         is_unknown = state;
-        //is_unknown = true;
     }
 
     void no_signal()
     {
-        if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 100)
-            return;
-
-        //is_unknown = true;
-
         if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 1000)
             return;
 

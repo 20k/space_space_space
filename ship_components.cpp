@@ -1437,10 +1437,11 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
             {
                 i = {1,0,0,1};
             }
-            else
-            {
-                i = {1,1,1,1};
-            }
+        }
+
+        if(!e.property.is_unknown || e.property.velocity.length() == 0)
+        {
+            next->r.vert_cols = e.property.r.vert_cols;
         }
     }
 

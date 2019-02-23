@@ -933,43 +933,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(intensity >= 1)
             {
                 high_detail_entities.insert(search_entity);
+                all_entities.insert(search_entity);
             }
             else if(intensity >= 0.01)
             {
                 low_detail_entities.insert(search_entity);
-            }
-        }
-
-        for(uint32_t id : high_detail_entities)
-        {
-            if(id != uid)
-            {
-                client_renderable rs;
-                entity* found = nullptr;
-
-                for(entity* e : entities.entities)
-                {
-                    if(e->id == id)
-                    {
-                        rs = e->r;
-                        found = e;
-                        break;
-                    }
-                }
-
-                if(found && rs.vert_dist.size() >= 3)
-                {
-                    common_renderable split;
-                    client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
-
-                    split.r = r;
-                    split.velocity = found->velocity;
-                    split.type = 1;
-
-                    player.value()->renderables[id] = split;
-
-                    all_entities.insert(id);
-                }
+                all_entities.insert(search_entity);
             }
         }
 
@@ -1005,20 +974,66 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                     all_entities.insert(id);*/
 
+                    if(player.value()->renderables.find(id) != player.value()->renderables.end())
+                    {
+                        common_renderable& cr = player.value()->renderables[id];
+
+                        if(cr.type == 1)
+                        {
+                            cr.velocity = found->velocity;
+                            cr.r.position = rs.position;
+                            cr.r.rotation = rs.rotation;
+                            continue;
+                        }
+                    }
+
+                    if(high_detail_entities.find(id) != high_detail_entities.end())
+                        continue;
+
                     common_renderable split;
                     client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
                     split.r = r;
                     split.r.init_rectangular(split.r.approx_dim);
                     split.velocity = found->velocity;
-                    split.type = 1;
+                    split.type = 0;
 
                     player.value()->renderables[id] = split;
-
-                    all_entities.insert(id);
                 }
             }
         }
+
+        for(uint32_t id : high_detail_entities)
+        {
+            if(id != uid)
+            {
+                client_renderable rs;
+                entity* found = nullptr;
+
+                for(entity* e : entities.entities)
+                {
+                    if(e->id == id)
+                    {
+                        rs = e->r;
+                        found = e;
+                        break;
+                    }
+                }
+
+                if(found && rs.vert_dist.size() >= 3)
+                {
+                    common_renderable split;
+                    client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
+
+                    split.r = r;
+                    split.velocity = found->velocity;
+                    split.type = 1;
+
+                    player.value()->renderables[id] = split;
+                }
+            }
+        }
+
 
         for(auto& i : player.value()->renderables)
         {
