@@ -199,6 +199,7 @@ struct alt_radar_field
 
     std::vector<alt_frequency_packet> imaginary_packets;
     std::map<uint32_t, player_model*> imaginary_collideable_list;
+    std::map<uint32_t, std::vector<alt_frequency_packet>> imaginary_subtractive_packets;
 
     float speed_of_light_per_tick = 10.5;
 

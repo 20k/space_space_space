@@ -254,6 +254,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
+    std::vector<alt_frequency_packet> imaginary_speculative_packets;
+
     ///ok so here's where it gets a bit crazy
     ///ships or anything which performs 'realistic' persistent tracking emit 'fake' packets that reflect off the 'fake' objects they have stored
     ///if a ship gets a reflection from this fake packet that does not meet the real expectations, the object does not exist
@@ -265,11 +267,13 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         {
             for(auto& [pid, detailed] : player->accumulated_renderables)
             {
-                vec2f pos = detailed.position;
+                alt_collideable collide;
+                collide.dim = detailed.approx_dim;
+                collide.angle = detailed.rotation;
+                collide.uid = pid;
+                collide.pos = detailed.position;
+
             }
-
-            //vec2f pos = low_renderable->position;
-
         }
     }
 
