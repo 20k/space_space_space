@@ -257,10 +257,6 @@ void server_thread()
             conn.writes_to(entities, i);
         }*/
 
-        frequency_packet pack;
-        pack.intensity = 50000;
-        pack.frequency = 100;
-
         alt_frequency_packet alt_pack;
         alt_pack.intensity = 50000;
         alt_pack.frequency = 1000;
@@ -760,12 +756,6 @@ int main()
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
-
-        frequency_packet test;
-        test.intensity = 1;
-        test.frequency = 10;
-
-        std::array<frequency_packet, 4> res = distribute_packet(mfrac, test);
 
         /*std::cout << "tl " << res[0].intensity << std::endl;
         std::cout << "bl " << res[1].intensity << std::endl;
