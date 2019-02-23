@@ -183,8 +183,9 @@ struct data_tracker : serialisable
 
 struct alt_radar_field;
 struct client_fire;
+struct player_model;
 
-struct ship : virtual entity, virtual serialisable
+struct ship : entity
 {
     size_t network_owner = 0;
 
@@ -205,6 +206,8 @@ struct ship : virtual entity, virtual serialisable
 
     ///so we want a diff wrapper type
     //std::vector<data_tracker> data_track;
+
+    player_model* model = nullptr;
 
     std::vector<persistent<data_tracker>> data_track;
 

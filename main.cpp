@@ -314,7 +314,19 @@ void server_thread()
 
         while(conn.has_new_client())
         {
-            player_manage.make_new(conn.has_new_client().value());
+            uint32_t pid = conn.has_new_client().value();
+
+            player_model* fmodel = player_manage.make_new(pid);
+
+            std::vector<ship*> ships = entities.fetch<ship>();
+
+            for(ship* s : ships)
+            {
+                if(s->network_owner == pid)
+                {
+                    s->model = fmodel;
+                }
+            }
 
             conn.pop_new_client();
         }

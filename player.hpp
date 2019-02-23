@@ -3,14 +3,36 @@
 
 #include "entity.hpp"
 #include <optional>
+#include <SFML/System/Clock.hpp>
 
 struct uncertain
 {
     sf::Clock elapsed;
 
+    bool begin_cleanup = false;
+
     bool bad(vec2f player_pos, vec2f my_pos)
     {
-        return elapsed.getElapsedTime().asSeconds() > 1 && (player_pos - my_pos).length() < 10;
+        return elapsed.getElapsedTime().asMilliseconds() > 500 && begin_cleanup;
+
+        //return elapsed.getElapsedTime().asSeconds() > 1 && (player_pos - my_pos).length() < 10;
+    }
+
+    void no_signal()
+    {
+        if(begin_cleanup)
+            return;
+
+        begin_cleanup = true;
+        elapsed.restart();
+    }
+
+    void got_signal()
+    {
+        if(!begin_cleanup)
+            return;
+
+        begin_cleanup = false;
     }
 };
 
@@ -41,24 +63,8 @@ struct player_model : serialisable
     std::map<uint32_t, detailed_renderable> accumulated_renderables;
     std::map<uint32_t, uncertain_renderable> uncertain_renderables;
 
-    void cleanup(vec2f my_pos)
-    {
-        for(auto it = uncertain_renderables.begin(); it != uncertain_renderables.end();)
-        {
-            if(it->second.bad(my_pos, it->second.position))
-                it = uncertain_renderables.erase(it);
-            else
-                it++;
-        }
-
-        for(auto it = accumulated_renderables.begin(); it != accumulated_renderables.end();)
-        {
-            if(it->second.bad(my_pos, it->second.position))
-                it = accumulated_renderables.erase(it);
-            else
-                it++;
-        }
-    }
+    void cleanup(vec2f my_pos);
+    void add_imaginary_collideables();
 };
 
 struct player_model_manager

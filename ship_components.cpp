@@ -704,6 +704,8 @@ void ship::tick(double dt_s)
                         //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
                         l->phys_ignore.push_back(id);
                         l->fired_by = id;
+
+                        std::cout << "missile id " << l->id << std::endl;
                     }
 
                     if(c.subtype == "laser")
@@ -731,7 +733,10 @@ void ship::tick(double dt_s)
                     em.frequency = 2000;
                     em.intensity = 100000;
 
-                    radar.emit(em, r.position, id);
+                    if(!model)
+                        radar.emit(em, r.position, id);
+                    else
+                        radar.emit_with_imaginary_packet(em, r.position, id, model);
                 }
             }
 

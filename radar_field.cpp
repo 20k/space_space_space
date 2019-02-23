@@ -119,6 +119,8 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
+
+    std::cout << "imaginary\n";
 }
 
 void alt_radar_field::add_player_model(player_model* model)
@@ -251,7 +253,7 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    profile_dumper pdump("newtick");
+    //profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -344,7 +346,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    pdump.dump();
+    //pdump.dump();
 
     collideables.clear();
 
@@ -445,6 +447,18 @@ float alt_radar_field::get_intensity_at(vec2f pos)
     return total_intensity;
 }
 
+float alt_radar_field::get_imaginary_intensity_at(vec2f pos)
+{
+    float total_intensity = 0;
+
+    for(alt_frequency_packet& packet : imaginary_packets)
+    {
+        total_intensity += get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
+    }
+
+    return total_intensity;
+}
+
 void alt_radar_field::render(sf::RenderWindow& win)
 {
     #if 0
@@ -530,7 +544,7 @@ void alt_radar_field::render(sf::RenderWindow& win)
     {
         for(int x=0; x < target_dim.x(); x+=20)
         {
-            float intensity = get_intensity_at({x, y});
+            float intensity = get_imaginary_intensity_at({x, y});
 
             if(intensity == 0)
                 continue;
@@ -728,9 +742,19 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         packet.intensity = intensity;
 
+        uint64_t search_entity = packet.emitted_by;
+
+        if(packet.reflected_by != -1)
+            search_entity = packet.reflected_by;
+
+        if(packet.emitted_by == uid && packet.reflected_by == -1)
+            continue;
+
         if(packet.intensity > 0)
-            pseudo_packets.insert(packet.id);
+            pseudo_packets.insert(search_entity);
     }
+
+    //std::cout << "pseudo size " << pseudo_packets.size() << std::endl;
 
     for(alt_frequency_packet& packet : merged)
     {
@@ -946,8 +970,47 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         std::optional<entity*> plr = entities.fetch(uid);
 
-        if(plr)
+        if(plr && player)
         {
+            player_model* model = player.value();
+
+            for(auto& i : model->accumulated_renderables)
+            {
+                ///if this is a pseudo packet we've received but not got a considered packet, cleanup
+                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == considered_packets.end())
+                {
+                    i.second.no_signal();
+
+                    //std::cout << "nope " << std::endl;
+                }
+
+                /*if(pseudo_packets.find(i.first) != pseudo_packets.end())
+                {
+                    std::cout << "received imaginary " << i.first << std::endl;
+                }*/
+
+                if(considered_packets.find(i.first) != considered_packets.end())
+                {
+                    i.second.got_signal();
+
+                    //std::cout << "got sig\n";
+                }
+            }
+
+            for(auto& i : model->uncertain_renderables)
+            {
+                ///if this is a pseudo packet we've received but not got a considered packet, cleanup
+                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == pseudo_packets.end())
+                {
+                    i.second.no_signal();
+                }
+
+                if(considered_packets.find(i.first) != considered_packets.end())
+                {
+                    i.second.got_signal();
+                }
+            }
+
             player.value()->cleanup(plr.value()->r.position);
         }
     }
