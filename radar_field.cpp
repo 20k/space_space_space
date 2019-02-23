@@ -106,6 +106,8 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, uint32_t uid)
 
 void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model)
 {
+    assert(model != nullptr);
+
     freq.id = alt_frequency_packet::gid++;
     freq.emitted_by = uid;
 
@@ -116,6 +118,8 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
     packets.push_back(freq);
 
     freq.id = alt_frequency_packet::gid++;
+
+    ignore_map[freq.id][uid].restart();
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
@@ -251,7 +255,7 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    //profile_dumper pdump("newtick");
+    profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -284,9 +288,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     ///if a ship gets a reflection from this fake packet that does not meet the real expectations, the object does not exist
     ///will need to update this down the line to have fake collideables themselves emit fake radiation
     ///this can be a simple cut down model - only one reflection
+
+    int icollide = 0;
+
     for(alt_frequency_packet& packet : imaginary_packets)
     {
-        for(auto& [first, player] : imaginary_collideable_list)
+        //for(auto& [first, player] : imaginary_collideable_list)
+
+        player_model* player = imaginary_collideable_list[packet.id];
+
+        if(player == nullptr)
+            continue;
+
         {
             for(auto& [pid, detailed] : player->accumulated_renderables)
             {
@@ -303,6 +316,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                     imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
                 }
+
+                icollide++;
             }
 
             for(auto& [pid, undetailed] : player->uncertain_renderables)
@@ -320,6 +335,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                     imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
                 }
+
+                icollide++;
             }
         }
     }
@@ -332,6 +349,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     clean_old_packets(*this, packets, subtractive_packets);
     clean_old_packets(*this, imaginary_packets, imaginary_subtractive_packets);
+
+    std::cout << "ipackets " << icollide << std::endl;
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -361,7 +380,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    //pdump.dump();
+    pdump.dump();
 
     collideables.clear();
 

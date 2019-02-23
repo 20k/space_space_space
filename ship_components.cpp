@@ -823,7 +823,10 @@ void ship::handle_heat(double dt_s)
     heat.frequency = HEAT_FREQ;
     heat.intensity = heat_intensity;
 
-    radar.emit(heat, r.position, id);
+    if(!model)
+        radar.emit(heat, r.position, id);
+    else
+        radar.emit_with_imaginary_packet(heat, r.position, id, model);
 }
 
 void ship::add(const component& c)
