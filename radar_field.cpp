@@ -226,9 +226,31 @@ std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> alt_radar_f
     return std::nullopt;
 }
 
+void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>& packets, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive_packets)
+{
+    for(auto it = packets.begin(); it != packets.end();)
+    {
+        if(field.packet_expired(*it))
+        {
+            auto f_it = subtractive_packets.find(it->id);
+
+            if(f_it != subtractive_packets.end())
+            {
+                subtractive_packets.erase(f_it);
+            }
+
+            it = packets.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
+}
+
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
-    //profile_dumper pdump("newtick");
+    profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -273,35 +295,25 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 collide.uid = pid;
                 collide.pos = detailed.position;
 
+                auto reflected = test_reflect_from(packet, collide);
+
+                if(reflected)
+                {
+                    imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
+                    imaginary_speculative_packets.push_back(reflected.value().first);
+                }
             }
         }
     }
-
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
+    imaginary_packets.insert(imaginary_packets.end(), imaginary_speculative_packets.begin(), imaginary_speculative_packets.end());
 
     speculative_packets.clear();
+    imaginary_speculative_packets.clear();
 
-    for(auto it = packets.begin(); it != packets.end();)
-    {
-        if(packet_expired(*it))
-        {
-            //std::cout << "erase\n";
-
-            auto f_it = subtractive_packets.find(it->id);
-
-            if(f_it != subtractive_packets.end())
-            {
-                subtractive_packets.erase(f_it);
-            }
-
-            it = packets.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
+    clean_old_packets(*this, packets, subtractive_packets);
+    clean_old_packets(*this, imaginary_packets, imaginary_subtractive_packets);
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -310,7 +322,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         packet.iterations++;
     }
 
-    //for(alt_frequency_packet& packet : subtractive_packets)
     for(auto& i : subtractive_packets)
     {
         for(alt_frequency_packet& packet : i.second)
@@ -319,7 +330,20 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    //pdump.dump();
+    for(alt_frequency_packet& packet : imaginary_packets)
+    {
+        packet.iterations++;
+    }
+
+    for(auto& i : imaginary_subtractive_packets)
+    {
+        for(alt_frequency_packet& packet : i.second)
+        {
+            packet.iterations++;
+        }
+    }
+
+    pdump.dump();
 
     collideables.clear();
 
