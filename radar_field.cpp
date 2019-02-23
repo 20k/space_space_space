@@ -119,8 +119,6 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
-
-    std::cout << "imaginary\n";
 }
 
 void alt_radar_field::add_player_model(player_model* model)
@@ -297,6 +295,23 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 collide.angle = detailed.rotation;
                 collide.uid = pid;
                 collide.pos = detailed.position;
+
+                auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
+
+                if(reflected)
+                {
+                    imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
+                    imaginary_speculative_packets.push_back(reflected.value().first);
+                }
+            }
+
+            for(auto& [pid, undetailed] : player->uncertain_renderables)
+            {
+                alt_collideable collide;
+                collide.dim = {undetailed.radius, undetailed.radius};
+                collide.angle = 0;
+                collide.uid = pid;
+                collide.pos = undetailed.position;
 
                 auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
 
@@ -946,7 +961,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                     uncertain_renderable ren;
                     ren.position = rs.position;
-                    ren.radius = 5;
+                    ren.radius = split.approx_dim.max_elem();
 
                     player.value()->uncertain_renderables[id] = ren;
                 }
@@ -1000,7 +1015,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             for(auto& i : model->uncertain_renderables)
             {
                 ///if this is a pseudo packet we've received but not got a considered packet, cleanup
-                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == pseudo_packets.end())
+                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == considered_packets.end())
                 {
                     i.second.no_signal();
                 }
