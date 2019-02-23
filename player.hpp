@@ -8,6 +8,7 @@
 struct uncertain
 {
     sf::Clock elapsed;
+    sf::Clock received_signal;
 
     bool begin_cleanup = false;
 
@@ -20,6 +21,9 @@ struct uncertain
 
     void no_signal()
     {
+        if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 500)
+            return;
+
         if(begin_cleanup)
             return;
 
@@ -33,6 +37,7 @@ struct uncertain
             return;
 
         begin_cleanup = false;
+        received_signal.restart();
     }
 };
 

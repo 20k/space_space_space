@@ -231,8 +231,10 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
     return std::nullopt;
 }
 
-void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>& packets, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive_packets)
+std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>& packets, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive_packets)
 {
+    std::vector<uint32_t> ret;
+
     for(auto it = packets.begin(); it != packets.end();)
     {
         if(field.packet_expired(*it))
@@ -244,6 +246,8 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
                 subtractive_packets.erase(f_it);
             }
 
+            ret.push_back(it->id);
+
             it = packets.erase(it);
         }
         else
@@ -251,6 +255,8 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
             it++;
         }
     }
+
+    return ret;
 }
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
@@ -297,8 +303,10 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         player_model* player = imaginary_collideable_list[packet.id];
 
-        if(player == nullptr)
-            continue;
+        //if(player == nullptr)
+        //    continue;
+
+        assert(player != nullptr);
 
         {
             for(auto& [pid, detailed] : player->accumulated_renderables)
@@ -315,6 +323,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 {
                     imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
+
+                    imaginary_collideable_list[reflected.value().first.id] = player;
                 }
 
                 icollide++;
@@ -334,6 +344,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 {
                     imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
+
+                    imaginary_collideable_list[reflected.value().first.id] = player;
                 }
 
                 icollide++;
@@ -348,9 +360,17 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     imaginary_speculative_packets.clear();
 
     clean_old_packets(*this, packets, subtractive_packets);
-    clean_old_packets(*this, imaginary_packets, imaginary_subtractive_packets);
+    std::vector<uint32_t> to_imaginary_clean = clean_old_packets(*this, imaginary_packets, imaginary_subtractive_packets);
 
-    std::cout << "ipackets " << icollide << std::endl;
+    for(auto& i : to_imaginary_clean)
+    {
+        if(imaginary_collideable_list.find(i) != imaginary_collideable_list.end())
+        {
+            imaginary_collideable_list.erase(imaginary_collideable_list.find(i));
+        }
+    }
+
+    //std::cout << "ipackets " << icollide << std::endl;
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -784,7 +804,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
 
-        if(packet.intensity > 0)
+        if(packet.intensity >= 0.1)
             pseudo_packets.insert(search_entity);
     }
 
