@@ -197,19 +197,21 @@ struct alt_radar_field
     std::map<uint32_t, sf::Clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
-    std::vector<alt_frequency_packet> shadow_packets;
-    std::map<uint32_t, std::vector<uint32_t>> shadow_collideable_ids;
-    std::vector<alt_collideable> shadow_collideables;
+    std::vector<alt_frequency_packet> imaginary_packets;
+    std::map<uint32_t, player_model*> imaginary_collideable_list;
 
     float speed_of_light_per_tick = 10.5;
 
     alt_radar_field(vec2f in);
+
+    std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
     void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
 
     void emit(alt_frequency_packet freq, vec2f pos, uint32_t uid);
+    void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model);
 
     bool packet_expired(alt_frequency_packet& packet);
 
@@ -222,6 +224,9 @@ struct alt_radar_field
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
     alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player = std::nullopt);
+
+    void add_player_model(player_model*);
+    std::vector<player_model*> models;
 };
 
 inline

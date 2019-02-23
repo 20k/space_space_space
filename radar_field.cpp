@@ -104,6 +104,28 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, uint32_t uid)
     add_packet_raw(freq, pos);
 }
 
+void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model)
+{
+    freq.id = alt_frequency_packet::gid++;
+    freq.emitted_by = uid;
+
+    ignore_map[freq.id][uid].restart();
+
+    freq.origin = pos;
+
+    packets.push_back(freq);
+
+    freq.id = alt_frequency_packet::gid++;
+
+    imaginary_packets.push_back(freq);
+    imaginary_collideable_list[freq.id] = model;
+}
+
+void alt_radar_field::add_player_model(player_model* model)
+{
+    models.push_back(model);
+}
+
 bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 {
     float real_distance = packet.iterations * speed_of_light_per_tick;
@@ -114,6 +136,94 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
     float real_intensity = packet.intensity / (real_distance * real_distance);
 
     return real_intensity < 0.1f;
+}
+
+std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>> alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide)
+{
+    float current_radius = packet.iterations * speed_of_light_per_tick;
+    float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+
+    if(!packet.has_cs && packet.emitted_by == collide.uid)
+    {
+        packet.cross_dim = collide.dim;
+        packet.cross_angle = collide.angle;
+        packet.has_cs = true;
+    }
+
+    if(ignore_map[packet.id][collide.uid].should_ignore())
+        return std::nullopt;
+
+    vec2f packet_to_collide = collide.pos - packet.origin;
+    vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
+
+    if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
+        return std::nullopt;
+
+    vec2f relative_pos = collide.pos - packet.origin;
+
+    float len = relative_pos.length();
+
+    float cross_section = collide.get_cross_section(relative_pos.angle());
+
+    cross_section = 0;
+
+    if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
+    {
+        if(get_intensity_at_of(collide.pos, packet) <= 0.001)
+            return std::nullopt;
+
+        float circle_circumference = 2 * M_PI * len;
+
+        if(circle_circumference < 0.00001)
+            return std::nullopt;
+
+        float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
+
+        vec2f packet_vector = collide.pos - packet.origin;
+
+        alt_frequency_packet collide_packet = packet;
+        collide_packet.id_block = packet.id;
+        collide_packet.id = alt_frequency_packet::gid++;
+        //collide_packet.iterations++;
+        //collide_packet.emitted_by = -1;
+
+        collide_packet.start_angle = relative_pos.angle();
+        collide_packet.restrict_angle = my_fraction * 2 * M_PI;
+
+        //subtractive_packets[packet.id].push_back(collide_packet);
+
+
+        alt_frequency_packet reflect = packet;
+        reflect.id = alt_frequency_packet::gid++;
+
+        ///maybe intensity should be distributed here to avoid energy increase
+        reflect.intensity = packet.intensity * 0.90;
+        reflect.origin = collide.pos + packet_vector;
+        reflect.start_angle = (collide.pos - reflect.origin).angle();
+        reflect.restrict_angle = my_fraction * 2 * M_PI;
+        //reflect.emitted_by = -1;
+        reflect.reflected_by = collide.uid;
+        //reflect.prev_reflected_by = packet.reflected_by;
+        reflect.reflected_position = collide.pos;
+        //reflect.last_reflected_position = packet.last_reflected_position;
+        //reflect.iterations++;
+        reflect.cross_dim = collide.dim;
+        reflect.cross_angle = collide.angle;
+        reflect.has_cs = true;
+
+        reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
+
+        //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
+
+        //speculative_packets.push_back(reflect);
+
+        ignore_map[packet.id][collide.uid].restart();
+        ignore_map[reflect.id][collide.uid].restart();
+
+        return {{reflect, collide_packet}};
+    }
+
+    return std::nullopt;
 }
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
@@ -132,90 +242,37 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     for(alt_frequency_packet& packet : packets)
     {
-        float current_radius = packet.iterations * speed_of_light_per_tick;
-        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
-
         for(alt_collideable& collide : collideables)
         {
-            if(!packet.has_cs && packet.emitted_by == collide.uid)
+            auto reflected = test_reflect_from(packet, collide);
+
+            if(reflected)
             {
-                packet.cross_dim = collide.dim;
-                packet.cross_angle = collide.angle;
-                packet.has_cs = true;
-            }
-
-            if(ignore_map[packet.id][collide.uid].should_ignore())
-                continue;
-
-            vec2f packet_to_collide = collide.pos - packet.origin;
-            vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
-
-            if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
-                continue;
-
-            vec2f relative_pos = collide.pos - packet.origin;
-
-            float len = relative_pos.length();
-
-            float cross_section = collide.get_cross_section(relative_pos.angle());
-
-            cross_section = 0;
-
-            if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
-            {
-                if(get_intensity_at_of(collide.pos, packet) <= 0.001)
-                    continue;
-
-                float circle_circumference = 2 * M_PI * len;
-
-                if(circle_circumference < 0.00001)
-                    continue;
-
-                float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
-
-                vec2f packet_vector = collide.pos - packet.origin;
-
-                alt_frequency_packet collide_packet = packet;
-                collide_packet.id_block = packet.id;
-                collide_packet.id = alt_frequency_packet::gid++;
-                //collide_packet.iterations++;
-                //collide_packet.emitted_by = -1;
-
-                collide_packet.start_angle = relative_pos.angle();
-                collide_packet.restrict_angle = my_fraction * 2 * M_PI;
-
-                subtractive_packets[packet.id].push_back(collide_packet);
-
-
-                alt_frequency_packet reflect = packet;
-                reflect.id = alt_frequency_packet::gid++;
-
-                ///maybe intensity should be distributed here to avoid energy increase
-                reflect.intensity = packet.intensity * 0.90;
-                reflect.origin = collide.pos + packet_vector;
-                reflect.start_angle = (collide.pos - reflect.origin).angle();
-                reflect.restrict_angle = my_fraction * 2 * M_PI;
-                //reflect.emitted_by = -1;
-                reflect.reflected_by = collide.uid;
-                //reflect.prev_reflected_by = packet.reflected_by;
-                reflect.reflected_position = collide.pos;
-                //reflect.last_reflected_position = packet.last_reflected_position;
-                //reflect.iterations++;
-                reflect.cross_dim = collide.dim;
-                reflect.cross_angle = collide.angle;
-                reflect.has_cs = true;
-
-                reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
-
-                //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
-
-                speculative_packets.push_back(reflect);
-
-                ignore_map[packet.id][collide.uid].restart();
-                ignore_map[reflect.id][collide.uid].restart();
+                subtractive_packets[packet.id].push_back(reflected.value().second);
+                speculative_packets.push_back(reflected.value().first);
             }
         }
     }
+
+    ///ok so here's where it gets a bit crazy
+    ///ships or anything which performs 'realistic' persistent tracking emit 'fake' packets that reflect off the 'fake' objects they have stored
+    ///if a ship gets a reflection from this fake packet that does not meet the real expectations, the object does not exist
+    ///will need to update this down the line to have fake collideables themselves emit fake radiation
+    ///this can be a simple cut down model - only one reflection
+    for(alt_frequency_packet& packet : imaginary_packets)
+    {
+        for(auto& [first, player] : imaginary_collideable_list)
+        {
+            for(auto& [pid, detailed] : player->accumulated_renderables)
+            {
+                vec2f pos = detailed.position;
+            }
+
+            //vec2f pos = low_renderable->position;
+
+        }
+    }
+
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
