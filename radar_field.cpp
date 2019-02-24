@@ -273,6 +273,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     speculative_packets.clear();
     speculative_subtractive_packets.clear();*/
 
+    auto next_subtractive = decltype(subtractive_packets)();
+
     for(alt_frequency_packet& packet : packets)
     {
         for(alt_collideable& collide : collideables)
@@ -281,11 +283,20 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
             if(reflected)
             {
-                subtractive_packets[packet.id].push_back(reflected.value().second);
+                ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
+                ///which will affect compat with imaginary shadows
+                next_subtractive[packet.id].push_back(reflected.value().second);
                 speculative_packets.push_back(reflected.value().first);
             }
         }
     }
+
+    for(auto& i : next_subtractive)
+    {
+        subtractive_packets[i.first] = i.second;
+    }
+
+    auto next_imaginary_subtractive = decltype(subtractive_packets)();
 
     std::vector<alt_frequency_packet> imaginary_speculative_packets;
 
@@ -321,7 +332,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
                 if(reflected)
                 {
-                    imaginary_subtractive_packets[packet.id].push_back(reflected.value().second);
+                    next_imaginary_subtractive[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
 
                     imaginary_collideable_list[reflected.value().first.id] = player;
@@ -330,6 +341,11 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 icollide++;
             }
         }
+    }
+
+    for(auto& i : next_imaginary_subtractive)
+    {
+        imaginary_subtractive_packets[i.first] = i.second;
     }
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());

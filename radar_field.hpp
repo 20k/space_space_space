@@ -163,8 +163,8 @@ struct alt_radar_sample : serialisable
         DO_SERIALISE(intensities);
 
         DO_SERIALISE(echo_pos);
-        DO_SERIALISE(echo_dir);
-        DO_SERIALISE(receive_dir);
+        /*DO_SERIALISE(echo_dir);
+        DO_SERIALISE(receive_dir);*/
 
         DO_SERIALISE(renderables);
         //DO_SERIALISE(low_detail);
