@@ -11,6 +11,7 @@
 #include "camera.hpp"
 #include "stardust.hpp"
 #include "player.hpp"
+#include "fixed_clock.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -60,6 +61,8 @@ bool once()
 
 void server_thread()
 {
+    fixed_clock::init = true;
+
     connection conn;
     conn.host("192.168.0.54", 11000);
 
@@ -539,6 +542,8 @@ void server_thread()
         //std::cout << frametime_dt << " slept " << to_sleep << " real slept " << slept << std::endl;
 
         //Sleep(10);
+
+        fixed_clock::increment();
     }
 }
 

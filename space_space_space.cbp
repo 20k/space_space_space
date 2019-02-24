@@ -67,8 +67,11 @@
 		<Unit filename="deps/networking/serialisable.hpp" />
 		<Unit filename="entity.cpp" />
 		<Unit filename="entity.hpp" />
+		<Unit filename="fixed_clock.hpp" />
 		<Unit filename="format.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="player.cpp" />
+		<Unit filename="player.hpp" />
 		<Unit filename="radar_field.cpp" />
 		<Unit filename="radar_field.hpp" />
 		<Unit filename="ship_components.cpp" />
