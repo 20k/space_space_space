@@ -7,7 +7,7 @@
 #include <map>
 #include <unordered_map>
 #include <optional>
-#include <SFML/System/Clock.hpp>
+#include "fixed_clock.hpp"
 #include <networking/serialisable.hpp>
 #include "entity.hpp"
 #include "player.hpp"
@@ -74,7 +74,7 @@ struct alt_collideable
 struct hacky_clock
 {
     bool once = true;
-    sf::Clock clk;
+    fixed_clock clk;
 
     auto getElapsedTime()
     {
@@ -194,7 +194,7 @@ struct alt_radar_field
 
     std::map<uint32_t, std::map<uint32_t, hacky_clock>> ignore_map;
 
-    std::map<uint32_t, sf::Clock> sample_time;
+    std::map<uint32_t, fixed_clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
     std::vector<alt_frequency_packet> imaginary_packets;

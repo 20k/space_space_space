@@ -4,11 +4,12 @@
 #include "entity.hpp"
 #include <optional>
 #include <SFML/System/Clock.hpp>
+#include "fixed_clock.hpp"
 
 struct uncertain
 {
-    sf::Clock elapsed;
-    sf::Clock received_signal;
+    fixed_clock elapsed;
+    fixed_clock received_signal;
 
     bool begin_cleanup = false;
     bool is_unknown = false;
