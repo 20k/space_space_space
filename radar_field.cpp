@@ -308,14 +308,16 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     int icollide = 0;
 
+    #define NO_MULTI_REFLECT_IMAGINARY
+
     for(alt_frequency_packet& packet : imaginary_packets)
     {
-        //for(auto& [first, player] : imaginary_collideable_list)
-
         player_model* player = imaginary_collideable_list[packet.id];
 
-        //if(player == nullptr)
-        //    continue;
+        #ifdef NO_MULTI_REFLECT_IMAGINARY
+        if(player == nullptr)
+            continue;
+        #endif // NO_MULTI_REFLECT_IMAGINARY
 
         assert(player != nullptr);
 
@@ -335,7 +337,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                     next_imaginary_subtractive[packet.id].push_back(reflected.value().second);
                     imaginary_speculative_packets.push_back(reflected.value().first);
 
+                    #ifndef NO_MULTI_REFLECT_IMAGINARY
                     imaginary_collideable_list[reflected.value().first.id] = player;
+                    #endif // NO_MULTI_REFLECT_IMAGINARY
                 }
 
                 icollide++;
