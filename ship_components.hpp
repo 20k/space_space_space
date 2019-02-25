@@ -33,6 +33,7 @@ namespace component_info
         CREW,
         POWER,
         CAPACITOR, ///weapons
+        MISSILE_STORE,
         COUNT
     };
 
@@ -51,6 +52,7 @@ namespace component_info
         "Crew",
         "Power",
         "Capacitor",
+        "Missiles",
     };
 }
 
@@ -60,6 +62,9 @@ struct does : serialisable
     double held = 0;
     double recharge = 0;
 
+    double time_between_use_s = 0;
+    double last_use_s = 0;
+
     component_info::does_type type = component_info::COUNT;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
@@ -67,6 +72,8 @@ struct does : serialisable
         DO_SERIALISE(capacity);
         DO_SERIALISE(held);
         DO_SERIALISE(recharge);
+        DO_SERIALISE(time_between_use_s);
+        DO_SERIALISE(last_use_s);
         DO_SERIALISE(type);
     }
 };
@@ -107,7 +114,7 @@ struct component : serialisable
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
 
-    void add_on_use(component_info::does_type, double amount);
+    void add_on_use(component_info::does_type, double amount, double time_between_use_s);
 
     void set_no_drain_on_full_production();
 

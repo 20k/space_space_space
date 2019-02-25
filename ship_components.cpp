@@ -54,12 +54,13 @@ void component::add(component_info::does_type type, double amount, double capaci
     info.push_back(d);
 }
 
-void component::add_on_use(component_info::does_type type, double amount)
+void component::add_on_use(component_info::does_type type, double amount, double time_between_use_s)
 {
     does d;
     d.type = type;
     d.capacity = amount;
     d.held = 0;
+    d.time_between_use_s = time_between_use_s;
 
     activate_requirements.push_back(d);
 }
@@ -249,6 +250,9 @@ bool component::can_use(const std::vector<double>& res)
 
         if(fabs(d.capacity) > res[d.type])
             return false;
+
+        if(d.last_use_s < d.time_between_use_s)
+            return false;
     }
 
     return true;
@@ -259,6 +263,8 @@ void component::use(std::vector<double>& res)
     for(does& d : activate_requirements)
     {
         res[d.type] += d.capacity;
+
+        d.last_use_s = 0;
     }
 
     try_use = false;
@@ -704,8 +710,6 @@ void ship::tick(double dt_s)
                         //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
                         l->phys_ignore.push_back(id);
                         l->fired_by = id;
-
-                        std::cout << "missile id " << l->id << std::endl;
                     }
 
                     if(c.subtype == "laser")
@@ -741,6 +745,11 @@ void ship::tick(double dt_s)
             }
 
             c.try_use = false;
+        }
+
+        for(does& d : c.activate_requirements)
+        {
+            d.last_use_s += dt_s;
         }
     }
 

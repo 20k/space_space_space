@@ -104,19 +104,19 @@ void server_thread()
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
-    missile.add(component_info::CAPACITOR, 0.75, 10);
+    missile.add(component_info::MISSILE_STORE, 0.01, 10);
     missile.set_no_drain_on_full_production();
 
-    missile.add_on_use(component_info::CAPACITOR, -10);
+    missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
     laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 0.75, 10);
+    laser.add(component_info::CAPACITOR, 1.5, 20);
     laser.set_no_drain_on_full_production();
 
-    laser.add_on_use(component_info::CAPACITOR, -10);
+    laser.add_on_use(component_info::CAPACITOR, -10, 1);
     laser.subtype = "laser";
 
     laser.max_use_angle = M_PI/8;
@@ -127,7 +127,7 @@ void server_thread()
     sensor.add(component_info::SENSORS, 1);
     sensor.add(component_info::HP, 0, 1);
 
-    sensor.add_on_use(component_info::POWER, -35);
+    sensor.add_on_use(component_info::POWER, -35, 5);
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
