@@ -68,7 +68,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -184,6 +184,8 @@ void server_thread()
     test_ship->r.position = {400, 400};
 
     test_ship->r.position = {498.336609, 529.024292};
+
+    test_ship->r.position = {323.986694, 242.469727};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
@@ -373,7 +375,8 @@ void server_thread()
             conn.pop_read();
         }
 
-        //std::cout << "test ship " << test_ship->r.position << std::endl;
+        if(key.isKeyPressed(sf::Keyboard::P))
+            std::cout << "test ship " << test_ship->r.position << std::endl;
 
         #define SEE_ONLY_REAL
 

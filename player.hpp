@@ -58,14 +58,11 @@ struct common_renderable : serialisable, uncertain
     client_renderable r;
     vec2f velocity = {0,0};
 
-    float approx_radius = 0;
-
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(type);
         DO_SERIALISE(r);
         DO_SERIALISE(velocity);
-        DO_SERIALISE(approx_radius);
         DO_SERIALISE(is_unknown);
     }
 };

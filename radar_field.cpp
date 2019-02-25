@@ -308,7 +308,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     int icollide = 0;
 
-    #define NO_MULTI_REFLECT_IMAGINARY
+    //#define NO_MULTI_REFLECT_IMAGINARY
 
     for(alt_frequency_packet& packet : imaginary_packets)
     {
@@ -960,6 +960,21 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             }
         }
 
+        ///initialise player collide
+        {
+            std::optional<entity*> e = entities.fetch(uid);
+
+            if(e)
+            {
+                common_renderable play;
+                play.type = 1;
+                play.r = e.value()->r;
+                play.velocity = e.value()->velocity;
+
+                player.value()->renderables[uid] = play;
+            }
+        }
+
         for(uint32_t id : low_detail_entities)
         {
             if(id != uid)
@@ -1008,6 +1023,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                     //split.r = r;
                     split.r = split.r.merge_into_me(r);
                     split.r.init_rectangular(split.r.approx_dim);
+                    split.r.approx_dim = rs.approx_dim;
+                    split.r.approx_rad = rs.approx_rad;
                     split.velocity = found->velocity;
                     split.type = 0;
 
@@ -1045,8 +1062,9 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                         split.r.vert_cols.clear();
                     }
 
-                    //split.r = r;
                     split.r = split.r.merge_into_me(r);
+                    split.r.approx_dim = rs.approx_dim;
+                    split.r.approx_rad = rs.approx_rad;
                     split.velocity = found->velocity;
                     split.type = 1;
 
