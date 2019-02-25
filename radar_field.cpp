@@ -321,29 +321,27 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         assert(player != nullptr);
 
+        for(auto& [pid, detailed] : player->renderables)
         {
-            for(auto& [pid, detailed] : player->renderables)
+            alt_collideable collide;
+            collide.dim = detailed.r.approx_dim;
+            collide.angle = detailed.r.rotation;
+            collide.uid = pid;
+            collide.pos = detailed.r.position;
+
+            auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
+
+            if(reflected)
             {
-                alt_collideable collide;
-                collide.dim = detailed.r.approx_dim;
-                collide.angle = detailed.r.rotation;
-                collide.uid = pid;
-                collide.pos = detailed.r.position;
+                next_imaginary_subtractive[packet.id].push_back(reflected.value().second);
+                imaginary_speculative_packets.push_back(reflected.value().first);
 
-                auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
-
-                if(reflected)
-                {
-                    next_imaginary_subtractive[packet.id].push_back(reflected.value().second);
-                    imaginary_speculative_packets.push_back(reflected.value().first);
-
-                    #ifndef NO_MULTI_REFLECT_IMAGINARY
-                    imaginary_collideable_list[reflected.value().first.id] = player;
-                    #endif // NO_MULTI_REFLECT_IMAGINARY
-                }
-
-                icollide++;
+                #ifndef NO_MULTI_REFLECT_IMAGINARY
+                imaginary_collideable_list[reflected.value().first.id] = player;
+                #endif // NO_MULTI_REFLECT_IMAGINARY
             }
+
+            icollide++;
         }
     }
 
