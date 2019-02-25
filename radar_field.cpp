@@ -977,19 +977,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                 if(found && rs.vert_dist.size() >= 3)
                 {
-                    /*client_renderable split = rs.split((pos - rs.position).angle() - M_PI/2);
-
-                    uncertain_renderable ren;
-                    ren.position = rs.position;
-                    ren.radius = split.approx_dim.max_elem();
-                    ren.velocity = found->velocity;
-
-                    std::cout << "pos " << ren.position << std::endl;
-
-                    player.value()->uncertain_renderables[id] = ren;
-
-                    all_entities.insert(id);*/
-
                     if(player.value()->renderables.find(id) != player.value()->renderables.end())
                     {
                         common_renderable& cr = player.value()->renderables[id];
@@ -1056,11 +1043,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.renderables.push_back({i.first, i.second});
         }
 
-        /*for(auto& i : player.value()->uncertain_renderables)
-        {
-            s.low_detail.push_back({i.first, i.second});
-        }*/
-
         ///ok so
         ///if we have a collide shadow packet but not a real packet
         ///start a timer to erase it
@@ -1101,29 +1083,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                 i.second.unknown(all_entities.find(i.first) == all_entities.end());
             }
-
-            #if 0
-            for(auto& i : model->uncertain_renderables)
-            {
-                ///if this is a pseudo packet we've received but not got a considered packet, cleanup
-                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == considered_packets.end())
-                {
-                    i.second.no_signal();
-                }
-
-                if(considered_packets.find(i.first) != considered_packets.end())
-                {
-                    i.second.got_signal();
-                }
-
-                /*if(all_entities.find(i.first) == all_entities.end())
-                {
-                    i.second.unknown();
-                }*/
-
-                i.second.unknown(all_entities.find(i.first) == all_entities.end());
-            }
-            #endif // 0
 
             player.value()->cleanup(plr.value()->r.position);
         }

@@ -50,37 +50,6 @@ struct uncertain
     }
 };
 
-/*struct uncertain_renderable : serialisable, uncertain
-{
-    vec2f position = {0,0};
-    float radius = 0;
-    vec2f velocity = {0,0};
-
-    virtual void serialise(nlohmann::json& data, bool encode) override
-    {
-        DO_SERIALISE(position);
-        DO_SERIALISE(radius);
-        DO_SERIALISE(velocity);
-        DO_SERIALISE(is_unknown);
-    }
-};
-
-struct detailed_renderable : client_renderable, uncertain
-{
-    vec2f velocity = {0,0};
-
-    detailed_renderable(){}
-    detailed_renderable(const client_renderable& in) : client_renderable(in){}
-
-    virtual void serialise(nlohmann::json& data, bool encode) override
-    {
-        client_renderable::serialise(data, encode);
-
-        DO_SERIALISE(velocity);
-        DO_SERIALISE(is_unknown);
-    }
-};*/
-
 struct common_renderable : serialisable, uncertain
 {
     ///0 = low detail, 1 = high
@@ -106,9 +75,6 @@ struct player_model : serialisable
     ///oh goodie raw pointers
     //entity* en = nullptr;
     uint32_t network_id = -1;
-
-    /*std::map<uint32_t, detailed_renderable> accumulated_renderables;
-    std::map<uint32_t, uncertain_renderable> uncertain_renderables;*/
 
     std::map<uint32_t, common_renderable> renderables;
 
