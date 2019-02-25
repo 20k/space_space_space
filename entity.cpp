@@ -122,7 +122,7 @@ void entity::tick_phys(double dt_s)
             }
         }*/
 
-        velocity = velocity - fsign * velocity_drag * dt_s;
+        velocity = velocity - velocity.norm() * velocity_drag * dt_s;
 
         if(signum(velocity).x() != fsign.x())
             velocity.x() = 0;
