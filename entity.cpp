@@ -352,6 +352,115 @@ client_renderable client_renderable::split(float world_angle)
     return ret;
 }
 
+bool same_vertex(float dist1, float angle1, float dist2, float angle2)
+{
+    vec2f dir_1 = (vec2f){1, 0}.rot(angle1);
+    vec2f dir_2 = (vec2f){1, 0}.rot(angle2);
+
+    return angle_between_vectors(dir_1, dir_2) < 0.001 && approx_equal(dist1, dist2);
+}
+
+bool any_vertex_same(float dist1, float angle1, std::vector<float>& distances, std::vector<float>& angles)
+{
+    for(int i=0; i < (int)distances.size(); i++)
+    {
+        if(same_vertex(dist1, angle1, distances[i], angles[i]))
+            return true;
+    }
+
+    return false;
+}
+
+client_renderable client_renderable::merge_into_me(client_renderable& r1, client_renderable& r2)
+{
+    client_renderable ret = r1;
+
+    /*for(int i=0; i < (int)r2.vert_dist.size(); i++)
+    {
+        ret.vert_dist.push_back(r2.vert_dist[i]);
+        ret.vert_angle.push_back(r2.vert_angle[i]);
+        ret.vert_cols.push_back(r2.vert_cols[i]);
+    }*/
+
+    ///so
+    ///assume both have the same winding order
+    ///they either have 1+ vertices shared, or 0
+    ///if shared, all vertices after the first common vertex will be the same right
+    ///and then just append the vertices next to the list
+    ///the other, more rebust version might to be to deduplicate all vertices first, and maintain one which contains
+    ///both r1, and the common vertices (aka r1), find the divergence point, then splice r2 into the divergence point
+    ///might be a bit easier to implement
+
+    /*std::vector<float> unshared_dist;
+    std::vector<float> unshared_angle;
+    std::vector<vec4f> unshared_cols;
+
+    for(int i=0; i < (int)ret.vert_dist.size(); i++)
+    {
+        if(any_vertex_same(r2.vert_dist[i], r2.vert_angle[i], ret.vert_dist, ret.vert_angle))
+            continue;
+
+        unshared_dist.push_back(r2.vert_dist[i]);
+        unshared_angle.push_back(r2.vert_angle[i]);
+        unshared_cols.push_back(r2.vert_cols[i]);
+    }*/
+
+    for(int i=0; i < (int)ret.vert_dist.size(); i++)
+    {
+        ret.insert(ret.vert_dist[i], ret.vert_angle[i], ret.vert_cols[i]);
+    }
+
+    return ret;
+}
+
+struct svertex
+{
+    float dist = 0;
+    float angle = 0;
+    vec4f col = {1,1,1,1};
+};
+
+void client_renderable::insert(float dist, float angle, vec4f col)
+{
+    if(any_vertex_same(dist, angle, vert_dist, vert_angle))
+        return;
+
+    std::vector<svertex> vert;
+    vert.reserve(vert_dist.size() + 1);
+
+    for(int i=0; i < (int)vert_dist.size(); i++)
+    {
+        vert.push_back({vert_dist[i], vert_angle[i], vert_cols[i]});
+    }
+
+    vert.push_back({dist, angle, col});
+
+    std::sort(vert.begin(), vert.end(), [](auto& i1, auto& i2)
+    {
+        return i1.angle < i2.angle;
+    });
+
+    vert_dist.clear();
+    vert_angle.clear();
+    vert_cols.clear();
+
+    for(svertex& v : vert)
+    {
+        vert_dist.push_back(v.dist);
+        vert_angle.push_back(v.angle);
+        vert_cols.push_back(v.col);
+    }
+
+    /*for(int i=0; i < (int)vert_dist.size(); i++)
+    {
+        int next = (i + 1) % (int)vert_dist.size();
+
+        vec2f fdir = (vec2f){1, 0}.rot(vert_angle[i]);
+        vec2f ndir = (vec2f){1, 0}.rot(vert_angle[next]);
+        vec2f cdir = (vec2f){1, 0}.rot(angle);
+    }*/
+}
+
 vec2f entity::get_world_pos(int id)
 {
     return (vec2f){cosf(r.vert_angle[id] + r.rotation), sinf(r.vert_angle[id] + r.rotation)} * r.vert_dist[id] * r.scale + r.position;
