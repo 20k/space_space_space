@@ -1166,7 +1166,7 @@ void ship::on_collide(entity_manager& em, entity& other)
         float their_velocity_share = 1 - (their_mass / (my_mass + their_mass));
 
 
-        vec2f velocity_change = (relative_velocity - 1.3 * to_them_component);
+        vec2f velocity_change = (relative_velocity - 1.5 * to_them_component);
 
         vec2f my_change = velocity_change * my_velocity_share;
         vec2f their_change = -velocity_change * their_velocity_share;
