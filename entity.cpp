@@ -102,25 +102,12 @@ void entity::tick_phys(double dt_s)
     {
         float sign = signum(angular_velocity);
 
-        /*if(fabs(angular_velocity) < fabs(sign))
-        {
-            sign = angular_velocity;
-        }*/
-
         angular_velocity -= sign * angular_drag * dt_s;
 
         if(signum(angular_velocity) != sign)
             angular_velocity = 0;
 
         vec2f fsign = signum(velocity);
-
-        /*for(int i=0; i < 2; i++)
-        {
-            if(fabs(velocity.v[i]) < fabs(fsign.v[i]))
-            {
-                fsign.v[i] = velocity.v[i];
-            }
-        }*/
 
         velocity = velocity - velocity.norm() * velocity_drag * dt_s;
 
@@ -329,25 +316,11 @@ client_renderable client_renderable::split(float world_angle)
         }
 
         assert(false);
-
-        /*float signum_1 = signum(signed_angle_between_vectors(cdir, local_dir));
-        float signum_2 = signum(signed_angle_between_vectors(ndir, local_dir));
-
-        if(signum_1 != signum_2)
-        {
-
-        }*/
     }
 
     ret.vert_angle = ret_angle;
     ret.vert_dist = ret_dist;
     ret.vert_cols = ret_cols;
-
-    /*ret.vert_angle.push_back(0);
-    ret.vert_dist.push_back(0);
-    ret.vert_cols.push_back({1,1,1,1});*/
-
-    //return *this;
 
     return ret;
 }
@@ -374,36 +347,6 @@ bool any_vertex_same(float dist1, float angle1, std::vector<float>& distances, s
 client_renderable client_renderable::merge_into_me(client_renderable& r1)
 {
     client_renderable ret = r1;
-
-    /*for(int i=0; i < (int)r2.vert_dist.size(); i++)
-    {
-        ret.vert_dist.push_back(r2.vert_dist[i]);
-        ret.vert_angle.push_back(r2.vert_angle[i]);
-        ret.vert_cols.push_back(r2.vert_cols[i]);
-    }*/
-
-    ///so
-    ///assume both have the same winding order
-    ///they either have 1+ vertices shared, or 0
-    ///if shared, all vertices after the first common vertex will be the same right
-    ///and then just append the vertices next to the list
-    ///the other, more rebust version might to be to deduplicate all vertices first, and maintain one which contains
-    ///both r1, and the common vertices (aka r1), find the divergence point, then splice r2 into the divergence point
-    ///might be a bit easier to implement
-
-    /*std::vector<float> unshared_dist;
-    std::vector<float> unshared_angle;
-    std::vector<vec4f> unshared_cols;
-
-    for(int i=0; i < (int)ret.vert_dist.size(); i++)
-    {
-        if(any_vertex_same(r2.vert_dist[i], r2.vert_angle[i], ret.vert_dist, ret.vert_angle))
-            continue;
-
-        unshared_dist.push_back(r2.vert_dist[i]);
-        unshared_angle.push_back(r2.vert_angle[i]);
-        unshared_cols.push_back(r2.vert_cols[i]);
-    }*/
 
     for(int i=0; i < (int)vert_dist.size(); i++)
     {
@@ -480,15 +423,6 @@ void client_renderable::insert(float dist, float angle, vec4f col)
         i--;
         continue;
     }
-
-    /*for(int i=0; i < (int)vert_dist.size(); i++)
-    {
-        int next = (i + 1) % (int)vert_dist.size();
-
-        vec2f fdir = (vec2f){1, 0}.rot(vert_angle[i]);
-        vec2f ndir = (vec2f){1, 0}.rot(vert_angle[next]);
-        vec2f cdir = (vec2f){1, 0}.rot(angle);
-    }*/
 }
 
 vec2f entity::get_world_pos(int id)
