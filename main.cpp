@@ -586,96 +586,6 @@ int main()
 
     assert(font != nullptr);
 
-    #if 0
-    entity_manager entities;
-
-    ship* test_ship = entities.make_new<ship>();
-
-    component thruster, warp, shields, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
-
-    thruster.add(component_info::POWER, -1);
-    thruster.add(component_info::THRUST, 1);
-    thruster.add(component_info::HP, 0, 1);
-
-    warp.add(component_info::POWER, -1);
-    warp.add(component_info::WARP, 0.5, 10);
-    warp.add(component_info::WARP, -0.1);
-    warp.add(component_info::WARP, 0.1);
-    warp.add(component_info::HP, 0, 5);
-
-    shields.add(component_info::SHIELDS, 0.5, 10);
-    shields.add(component_info::POWER, -1);
-    shields.add(component_info::HP, 0, 5);
-
-    laser.add(component_info::POWER, -1);
-    laser.add(component_info::WEAPONS, 1);
-    laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 1, 20);
-
-    laser.add_on_use(component_info::CAPACITOR, -10);
-
-    //laser.info[3].held = 0;
-
-    sensor.add(component_info::POWER, -1);
-    sensor.add(component_info::SENSORS, 1);
-    sensor.add(component_info::HP, 0, 1);
-
-    comms.add(component_info::POWER, -0.5);
-    comms.add(component_info::COMMS, 1);
-    comms.add(component_info::HP, 0, 1);
-
-    /*sysrepair.add(component_info::POWER, -1);
-    sysrepair.add(component_info::SYSTEM, 1);
-    sysrepair.add(component_info::HP, 0.1, 1);*/
-
-    armour.add(component_info::ARMOUR, 0.1, 10);
-    armour.add(component_info::POWER, -0.5);
-    armour.add(component_info::HP, 0, 10);
-
-    ls.add(component_info::POWER, -1);
-    ls.add(component_info::LIFE_SUPPORT, 1, 5);
-    ls.add(component_info::HP, 0.01, 5);
-
-    coolant.add(component_info::COOLANT, 1, 20);
-    coolant.add(component_info::HP, 0, 1);
-
-    power_generator.add(component_info::POWER, 10, 50);
-    power_generator.add(component_info::HP, 0, 10);
-
-    //power_generator.info[1].held = 0;
-    //power_generator.info[0].held = 0;
-
-    ///need to add the ability for systems to start depleting if they have insufficient
-    ///consumption
-    ///or... maybe we just cheat and add a crew death component that's offset by crew replenishment?
-    //crew.add(component_info::POWER, 1, 5);
-    crew.add(component_info::HP, 0.1, 10);
-    crew.add(component_info::LIFE_SUPPORT, -0.5, 1);
-    crew.add(component_info::COMMS, 0.1);
-    crew.add(component_info::CREW, 0.01, 100);
-    crew.add(component_info::CREW, -0.01); ///passive death on no o2
-
-
-    test_ship->add(thruster);
-    test_ship->add(warp);
-    test_ship->add(shields);
-    test_ship->add(laser);
-    test_ship->add(sensor);
-    test_ship->add(comms);
-    //test_ship.add(sysrepair);
-    test_ship->add(armour);
-    test_ship->add(ls);
-    test_ship->add(coolant);
-    test_ship->add(power_generator);
-    test_ship->add(crew);
-
-    test_ship->position = {400, 400};
-
-    ship* test_ship2 = entities.make_new<ship>(*test_ship);
-
-    test_ship2->position = {600, 400};
-    #endif // 0
-
     connection conn;
     conn.connect("192.168.0.54", 11000);
     //conn.connect("77.97.17.179", 11000);
@@ -777,12 +687,6 @@ int main()
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
 
-        /*std::cout << "tl " << res[0].intensity << std::endl;
-        std::cout << "bl " << res[1].intensity << std::endl;
-        std::cout << "tr " << res[2].intensity << std::endl;
-        std::cout << "br " << res[3].intensity << std::endl;
-        std::cout << "\n";*/
-
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
         renderables.render(cam, window);
@@ -831,71 +735,7 @@ int main()
 
         cinput.mouse_world_pos = cam.screen_to_world(mpos);
 
-        //std::cout << cinput.direction << std::endl;
-
         conn.writes_to(cinput, -1);
-
-        //nlohmann::json testdat = serialise(cinput);
-
-        //std::cout << "writing " << testdat.dump() << std::endl;
-
-        //conn.write_to({(uint64_t)-1, testdat.dump()});
-
-        #if 0
-        float forward_vel = 0;
-
-        forward_vel += key.isKeyPressed(sf::Keyboard::W);
-        forward_vel -= key.isKeyPressed(sf::Keyboard::S);
-
-        float angular_vel = 0;
-
-        angular_vel += key.isKeyPressed(sf::Keyboard::D);
-        angular_vel -= key.isKeyPressed(sf::Keyboard::A);
-
-        test_ship->apply_force({0, forward_vel});
-        test_ship->apply_rotation_force(angular_vel);
-
-        //test_ship.tick(frametime_dt);
-        //test_ship.tick_move(frametime_dt);
-        //test_ship.render(window);
-
-        entities.tick(frametime_dt);
-        entities.render(window);
-        entities.cleanup();
-
-        ImGui::Begin("Hi");
-
-        ImGui::Text("Test");
-
-        ImGui::End();
-
-        ImGui::Begin("Test Ship");
-
-        //std::string str = test_ship.show_components();
-
-        //ImGui::Text(str.c_str());
-
-        ImGui::Text(test_ship->show_resources().c_str());
-
-        ImGui::End();
-
-        ImGui::Begin("Test Ship2");
-
-        //std::string str = test_ship.show_components();
-
-        //ImGui::Text(str.c_str());
-
-        ImGui::Text(test_ship2->show_resources().c_str());
-
-        ImGui::End();
-
-        if(ONCE_MACRO(sf::Keyboard::Space))
-        {
-            test_ship->fire();
-        }
-
-        test_ship->advanced_ship_display();
-        #endif // 0
 
         for(ship& s : model.ships)
         {
