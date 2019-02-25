@@ -127,7 +127,7 @@ void server_thread()
     sensor.add(component_info::SENSORS, 1);
     sensor.add(component_info::HP, 0, 1);
 
-    sensor.add_on_use(component_info::POWER, -35, 5);
+    sensor.add_on_use(component_info::POWER, -35, 1);
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);

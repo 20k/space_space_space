@@ -55,7 +55,7 @@ struct client_renderable : serialisable
     //client_renderable carve(float start_angle, float half_angle);
 
     client_renderable split(float world_angle);
-    static client_renderable merge_into_me(client_renderable& r1, client_renderable& r2);
+    client_renderable merge_into_me(client_renderable& r1);
 
     void insert(float dist, float angle, vec4f col);
 };

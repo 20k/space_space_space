@@ -354,10 +354,10 @@ client_renderable client_renderable::split(float world_angle)
 
 bool same_vertex(float dist1, float angle1, float dist2, float angle2)
 {
-    vec2f dir_1 = (vec2f){1, 0}.rot(angle1);
-    vec2f dir_2 = (vec2f){1, 0}.rot(angle2);
+    vec2f dir_1 = (vec2f){1, 0}.rot(angle1) * dist1;
+    vec2f dir_2 = (vec2f){1, 0}.rot(angle2) * dist2;
 
-    return angle_between_vectors(dir_1, dir_2) < 0.001 && approx_equal(dist1, dist2);
+    return (dir_1 - dir_2).length() < 0.00001;
 }
 
 bool any_vertex_same(float dist1, float angle1, std::vector<float>& distances, std::vector<float>& angles)
@@ -371,7 +371,7 @@ bool any_vertex_same(float dist1, float angle1, std::vector<float>& distances, s
     return false;
 }
 
-client_renderable client_renderable::merge_into_me(client_renderable& r1, client_renderable& r2)
+client_renderable client_renderable::merge_into_me(client_renderable& r1)
 {
     client_renderable ret = r1;
 
@@ -405,9 +405,9 @@ client_renderable client_renderable::merge_into_me(client_renderable& r1, client
         unshared_cols.push_back(r2.vert_cols[i]);
     }*/
 
-    for(int i=0; i < (int)ret.vert_dist.size(); i++)
+    for(int i=0; i < (int)vert_dist.size(); i++)
     {
-        ret.insert(ret.vert_dist[i], ret.vert_angle[i], ret.vert_cols[i]);
+        ret.insert(vert_dist[i], vert_angle[i], vert_cols[i]);
     }
 
     return ret;
@@ -437,7 +437,10 @@ void client_renderable::insert(float dist, float angle, vec4f col)
 
     std::sort(vert.begin(), vert.end(), [](auto& i1, auto& i2)
     {
-        return i1.angle < i2.angle;
+        vec2f n1 = (vec2f){1, 0}.rot(i1.angle);
+        vec2f n2 = (vec2f){1, 0}.rot(i2.angle);
+
+        return n1.angle() < n2.angle();
     });
 
     vert_dist.clear();
@@ -449,6 +452,33 @@ void client_renderable::insert(float dist, float angle, vec4f col)
         vert_dist.push_back(v.dist);
         vert_angle.push_back(v.angle);
         vert_cols.push_back(v.col);
+    }
+
+    /*if(vert_dist.size() <= 20)
+        return;*/
+
+    for(int i=0; i < (int)vert_dist.size() + 2; i++)
+    {
+        int cur = i % (int)vert_dist.size();
+        int next = (i + 1) % (int)vert_dist.size();
+        int nnext = (i + 2) % (int)vert_dist.size();
+
+        vec2f vec_1 = (vec2f){1, 0}.rot(vert_angle[cur]) * vert_dist[cur];
+        vec2f vec_2 = (vec2f){1, 0}.rot(vert_angle[next]) * vert_dist[next];
+        vec2f vec_3 = (vec2f){1, 0}.rot(vert_angle[nnext]) * vert_dist[nnext];
+
+        //if(fabs(angle_between_vectors(vec_2 - vec_1, vec_3 - vec_1)) >= 0.01)
+        //    continue;
+
+        if(point2line_shortest(vec_1, vec_3 - vec_1, vec_2).length() > 0.00001)
+            continue;
+
+        vert_dist.erase(vert_dist.begin() + next);
+        vert_angle.erase(vert_angle.begin() + next);
+        vert_cols.erase(vert_cols.begin() + next);
+
+        i--;
+        continue;
     }
 
     /*for(int i=0; i < (int)vert_dist.size(); i++)

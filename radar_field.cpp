@@ -995,10 +995,18 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                     if(high_detail_entities.find(id) != high_detail_entities.end())
                         continue;
 
-                    common_renderable split;
+                    common_renderable split = player.value()->renderables[id];
                     client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
-                    split.r = r;
+                    if(split.type == 1)
+                    {
+                        split.r.vert_dist.clear();
+                        split.r.vert_angle.clear();
+                        split.r.vert_cols.clear();
+                    }
+
+                    //split.r = r;
+                    split.r = split.r.merge_into_me(r);
                     split.r.init_rectangular(split.r.approx_dim);
                     split.velocity = found->velocity;
                     split.type = 0;
@@ -1027,10 +1035,18 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
                 if(found && rs.vert_dist.size() >= 3)
                 {
-                    common_renderable split;
+                    common_renderable split = player.value()->renderables[id];
                     client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
-                    split.r = r;
+                    if(split.type == 0)
+                    {
+                        split.r.vert_dist.clear();
+                        split.r.vert_angle.clear();
+                        split.r.vert_cols.clear();
+                    }
+
+                    //split.r = r;
+                    split.r = split.r.merge_into_me(r);
                     split.velocity = found->velocity;
                     split.type = 1;
 
