@@ -158,19 +158,24 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         packet.has_cs = true;
     }
 
+    vec2f relative_pos = collide.pos - packet.origin;
+
+    float len_sq = relative_pos.squared_length();
+
+    if(len_sq >= next_radius*next_radius || len_sq < current_radius*current_radius)
+        return std::nullopt;
+
     vec2f packet_to_collide = collide.pos - packet.origin;
     vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
     if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
         return std::nullopt;
 
-    vec2f relative_pos = collide.pos - packet.origin;
-
-    float len = relative_pos.lengthf();
-
     float cross_section = collide.get_cross_section(relative_pos.angle());
 
     cross_section = 0;
+
+    float len = sqrtf(len_sq);
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
@@ -285,7 +290,7 @@ vec2f alt_aggregate_collideables::calc_half_dim()
         fmax = max(fmax, i.pos);
     }
 
-    return ((fmax - fmin) / 1.f);
+    return ((fmax - fmin) / 2.f);
 }
 
 all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_collideable>& collideables, int num_groups)
@@ -396,18 +401,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
 
     std::vector<alt_collideable> coll_out;
 
     for(alt_frequency_packet& packet : packets)
     {
-        aggregates.get_collideables(*this, packet, coll_out);
+        //aggregates.get_collideables(*this, packet, coll_out);
 
         //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
 
-        //for(alt_collideable& collide : collideables)
-        for(alt_collideable& collide : coll_out)
+        for(alt_collideable& collide : collideables)
+        //for(alt_collideable& collide : coll_out)
         {
             auto reflected = test_reflect_from(packet, collide, subtractive_packets);
 
