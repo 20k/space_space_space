@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 1000;
+        int num_asteroids = 100;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -80,7 +80,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 300, 6000);
+            float rdist = rand_det_s(rng, 300, 600);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
@@ -88,7 +88,7 @@ struct solar_system
 
             for(entity* e : entities.entities)
             {
-                if((e->r.position - found_pos).length() < 100)
+                if((e->r.position - found_pos).length() < 10)
                 {
                     cont = true;
                     break;
@@ -120,7 +120,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -299,6 +299,7 @@ void server_thread()
     sf::Clock read_clock;
 
     camera cam({800, 800});
+    cam.position = {400, 400};
 
     while(1)
     {
@@ -357,7 +358,7 @@ void server_thread()
             }
         }
 
-        radar.tick(frametime_dt, iterations);
+        radar.tick(debug, frametime_dt, iterations);
         player_manage.tick(frametime_dt);
 
         iterations++;

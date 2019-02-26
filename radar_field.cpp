@@ -266,7 +266,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 
 vec2f alt_aggregate_collideables::calc_avg()
 {
-    vec2f avg = {0,0};
+    /*vec2f avg = {0,0};
 
     if(collide.size() == 0)
         return avg;
@@ -276,7 +276,21 @@ vec2f alt_aggregate_collideables::calc_avg()
         avg += i.pos;
     }
 
-    return avg / (float)collide.size();
+    return avg / (float)collide.size();*/
+
+    vec2f fmin = {FLT_MAX, FLT_MAX};
+    vec2f fmax = {-FLT_MAX, -FLT_MAX};
+
+    if(collide.size() == 0)
+        return {0,0};
+
+    for(auto& i : collide)
+    {
+        fmin = min(fmin, i.pos);
+        fmax = max(fmax, i.pos);
+    }
+
+    return ((fmax + fmin) / 2.f);
 }
 
 vec2f alt_aggregate_collideables::calc_half_dim()
@@ -366,6 +380,11 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
         next = alt_aggregate_collideables();
     }
 
+    for(auto& i : used)
+    {
+        assert(i);
+    }
+
     return ret;
 }
 
@@ -388,7 +407,7 @@ void all_alt_aggregate_collideables::get_collideables(alt_radar_field& field, al
     }
 }
 
-void alt_radar_field::tick(double dt_s, uint32_t iterations)
+void alt_radar_field::tick(sf::RenderWindow& debug, double dt_s, uint32_t iterations)
 {
     profile_dumper pdump("newtick");
 
@@ -404,18 +423,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    //all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
 
     std::vector<alt_collideable> coll_out;
 
     for(alt_frequency_packet& packet : packets)
     {
-        //aggregates.get_collideables(*this, packet, coll_out);
+        aggregates.get_collideables(*this, packet, coll_out);
 
         //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
 
-        for(alt_collideable& collide : collideables)
-        //for(alt_collideable& collide : coll_out)
+        //for(alt_collideable& collide : collideables)
+        for(alt_collideable& collide : coll_out)
         {
             std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
 
@@ -434,6 +453,22 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+
+    #define DEBUG_AGGREGATE
+    #ifdef DEBUG_AGGREGATE
+    for(alt_aggregate_collideables& agg : aggregates.aggregate)
+    {
+        sf::RectangleShape shape;
+        shape.setSize({agg.half_dim.x()*2, agg.half_dim.y()*2});
+        shape.setPosition(agg.pos.x(), agg.pos.y());
+        shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+        shape.setFillColor(sf::Color::Transparent);
+        shape.setOutlineThickness(2);
+        shape.setOutlineColor(sf::Color::White);
+
+        debug.draw(shape);
+    }
+    #endif // DEBUG_AGGREGATE
 
     for(auto& i : next_subtractive)
     {
@@ -749,6 +784,8 @@ void alt_radar_field::render(sf::RenderWindow& win)
         for(int x=0; x < target_dim.x(); x+=20)
         {
             float intensity = get_imaginary_intensity_at({x, y});
+
+            //float intensity = get_intensity_at({x, y});
 
             if(intensity == 0)
                 continue;
