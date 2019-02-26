@@ -243,7 +243,7 @@ struct alt_radar_field
     void emit(alt_frequency_packet freq, vec2f pos, uint32_t uid);
     void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model);
 
-    bool packet_expired(alt_frequency_packet& packet);
+    bool packet_expired(const alt_frequency_packet& packet);
 
     void tick(double dt_s, uint32_t iterations);
     void render(sf::RenderWindow& win);

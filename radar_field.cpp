@@ -130,7 +130,7 @@ void alt_radar_field::add_player_model(player_model* model)
     models.push_back(model);
 }
 
-bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
+bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 {
     if(packet.force_cleanup)
         return true;
@@ -240,7 +240,15 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 {
     std::vector<uint32_t> ret;
 
-    for(auto it = packets.begin(); it != packets.end();)
+    ///right of course, remove_if leaves the elements in unspecified state
+    ///its faster to iterate this twice and use erase remove than iterate once with stable partition
+
+    auto packet_expired = [&](const alt_frequency_packet& in)
+                           {
+                                return field.packet_expired(in);
+                           };
+
+    for(auto it = packets.begin(); it != packets.end(); it++)
     {
         if(field.packet_expired(*it))
         {
@@ -252,14 +260,10 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
             }
 
             ret.push_back(it->id);
-
-            it = packets.erase(it);
-        }
-        else
-        {
-            it++;
         }
     }
+
+    packets.erase(std::remove_if(packets.begin(), packets.end(), packet_expired), packets.end());
 
     return ret;
 }
@@ -540,12 +544,10 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
+    #if 1
     all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
 
     std::vector<alt_collideable> coll_out;
-
-    int calculated = 0;
-    int saved = 0;
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -602,6 +604,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+    #endif // 0
+
+    //all_alt_aggregate_packets agg_packets = aggregate_packets(packets, 100, *this);
 
     ///ok alternate optimisation design
     ///say we divide up the map into physx squares (modulo the position the position to find the bucket)
@@ -721,6 +726,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
+
     for(alt_frequency_packet& packet : packets)
     {
         packet.iterations++;
@@ -733,6 +739,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             packet.iterations++;
         }
     }
+
 
     for(alt_frequency_packet& packet : imaginary_packets)
     {
