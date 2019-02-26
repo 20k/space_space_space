@@ -407,7 +407,7 @@ void all_alt_aggregate_collideables::get_collideables(alt_radar_field& field, al
     }
 }
 
-void alt_radar_field::tick(sf::RenderWindow& debug, double dt_s, uint32_t iterations)
+void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
     profile_dumper pdump("newtick");
 
@@ -423,7 +423,7 @@ void alt_radar_field::tick(sf::RenderWindow& debug, double dt_s, uint32_t iterat
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 20);
 
     std::vector<alt_collideable> coll_out;
 
@@ -454,7 +454,7 @@ void alt_radar_field::tick(sf::RenderWindow& debug, double dt_s, uint32_t iterat
         }
     }
 
-    #define DEBUG_AGGREGATE
+    //#define DEBUG_AGGREGATE
     #ifdef DEBUG_AGGREGATE
     for(alt_aggregate_collideables& agg : aggregates.aggregate)
     {
