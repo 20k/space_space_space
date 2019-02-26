@@ -59,6 +59,39 @@ bool once()
 
 #define ONCE_MACRO(x) once<x, __LINE__, __COUNTER__>()
 
+struct solar_system
+{
+    entity* sun = nullptr;
+
+    std::vector<entity*> asteroids;
+
+    solar_system(entity_manager& entities)
+    {
+        std::minstd_rand rng;
+        rng.seed(0);
+
+        int num_asteroids = 100;
+
+        for(int i=0; i < num_asteroids; i++)
+        {
+            float ffrac = (float)i / num_asteroids;
+
+            float fangle = ffrac * 2 * M_PI;
+
+            //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
+
+            float rdist = rand_det_s(rng, 300, 600);
+
+            asteroid* a = entities.make_new<asteroid>();
+            //a->r.position = (vec2f){300, 0}.rot(fangle) + rpos;
+
+            a->r.position = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
+
+            asteroids.push_back(a);
+        }
+    }
+};
+
 void server_thread()
 {
     fixed_clock::init = true;
@@ -207,7 +240,7 @@ void server_thread()
 
     player_model_manager player_manage;
 
-    int num_asteroids = 10;
+    /*int num_asteroids = 10;
 
     for(int i=0; i < num_asteroids; i++)
     {
@@ -221,8 +254,9 @@ void server_thread()
         //a->r.position = (vec2f){300, 0}.rot(fangle) + rpos;
 
         a->r.position = rpos;
-    }
+    }*/
 
+    solar_system sys(entities);
 
     double frametime_dt = 1;
 
