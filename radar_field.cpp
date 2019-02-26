@@ -285,7 +285,7 @@ vec2f alt_aggregate_collideables::calc_half_dim()
         fmax = max(fmax, i.pos);
     }
 
-    return (fmax - fmin) / 2.f;
+    return ((fmax - fmin) / 1.f);
 }
 
 all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_collideable>& collideables, int num_groups)
@@ -370,7 +370,7 @@ void all_alt_aggregate_collideables::get_collideables(alt_radar_field& field, al
 
     for(alt_aggregate_collideables& agg : aggregate)
     {
-        if(rect_lies_inside_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
+        if(rect_intersects_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
         {
             for(alt_collideable& coll : agg.collide)
             {
