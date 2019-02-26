@@ -71,6 +71,14 @@ struct alt_collideable
     float get_physical_cross_section(float angle);
 };
 
+struct alt_aggregate_collideables
+{
+    vec2f pos = {0,0};
+    vec2f dim = {0,0};
+
+    std::vector<alt_collideable> collide;
+};
+
 struct hacky_clock
 {
     bool once = true;

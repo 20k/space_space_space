@@ -155,9 +155,6 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         packet.has_cs = true;
     }
 
-    if(ignore_map[packet.id][collide.uid].should_ignore())
-        return std::nullopt;
-
     vec2f packet_to_collide = collide.pos - packet.origin;
     vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
@@ -166,7 +163,7 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
     vec2f relative_pos = collide.pos - packet.origin;
 
-    float len = relative_pos.length();
+    float len = relative_pos.lengthf();
 
     float cross_section = collide.get_cross_section(relative_pos.angle());
 
@@ -174,6 +171,9 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
+        if(ignore_map[packet.id][collide.uid].should_ignore())
+            return std::nullopt;
+
         if(get_intensity_at_of(collide.pos, packet, subtractive) <= 0.001)
             return std::nullopt;
 
@@ -401,9 +401,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     collideables.clear();
 
-    /*std::cout << packets.size() << std::endl;
+    std::cout << packets.size() << std::endl;
 
-    int num_subtract = 0;
+    /*int num_subtract = 0;
 
     for(auto& i : packets)
     {
