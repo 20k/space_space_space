@@ -266,18 +266,6 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 
 vec2f alt_aggregate_collideables::calc_avg()
 {
-    /*vec2f avg = {0,0};
-
-    if(collide.size() == 0)
-        return avg;
-
-    for(auto& i : collide)
-    {
-        avg += i.pos;
-    }
-
-    return avg / (float)collide.size();*/
-
     vec2f fmin = {FLT_MAX, FLT_MAX};
     vec2f fmax = {-FLT_MAX, -FLT_MAX};
 
@@ -407,6 +395,135 @@ void all_alt_aggregate_collideables::get_collideables(alt_radar_field& field, al
     }
 }
 
+struct alt_aggregate_packet
+{
+    vec2f pos = {0,0};
+    vec2f half_dim;
+
+    std::vector<alt_frequency_packet> packets;
+
+    vec2f calc_avg(alt_radar_field& field)
+    {
+        vec2f fmin = {FLT_MAX, FLT_MAX};
+        vec2f fmax = {-FLT_MAX, -FLT_MAX};
+
+        if(packets.size() == 0)
+            return {0,0};
+
+        for(auto& i : packets)
+        {
+            float next_rad = (i.iterations + 1) * field.speed_of_light_per_tick;
+
+            fmin = min(fmin, i.origin - (vec2f){next_rad, next_rad});
+            fmax = max(fmax, i.origin + (vec2f){next_rad, next_rad});
+        }
+
+        return ((fmax + fmin) / 2.f);
+    }
+
+    vec2f calc_half_dim(alt_radar_field& field)
+    {
+        vec2f fmin = {FLT_MAX, FLT_MAX};
+        vec2f fmax = {-FLT_MAX, -FLT_MAX};
+
+        if(packets.size() == 0)
+            return {0,0};
+
+        for(auto& i : packets)
+        {
+            float next_rad = (i.iterations + 1) * field.speed_of_light_per_tick;
+
+            fmin = min(fmin, i.origin - (vec2f){next_rad, next_rad});
+            fmax = max(fmax, i.origin + (vec2f){next_rad, next_rad});
+        }
+
+        return ((fmax - fmin) / 2.f);
+    }
+};
+
+struct all_alt_aggregate_packets
+{
+    std::vector<alt_aggregate_packet> packets;
+};
+
+all_alt_aggregate_packets aggregate_packets(const std::vector<alt_frequency_packet>& packets, int num_groups, alt_radar_field& field)
+{
+    all_alt_aggregate_packets ret;
+
+    if(packets.size() == 0)
+        return ret;
+
+    std::vector<int> used;
+    used.resize(packets.size());
+
+    /*used[0] = 1;
+
+    alt_aggregate_collideables next;
+    next.collide.push_back(collideables[0]);*/
+
+    alt_aggregate_packet next;
+
+    int num_per_group = ceilf((float)packets.size() / num_groups);
+
+    for(int ng=0; ng < num_groups; ng++)
+    {
+        for(int ielem = 0; ielem < (int)packets.size(); ielem++)
+        {
+            if(used[ielem])
+                continue;
+
+            used[ielem] = 1;
+
+            next.packets.push_back(packets[ielem]);
+            break;
+        }
+
+        for(int kk=0; kk < num_per_group; kk++)
+        {
+            float nearest_dist = FLT_MAX;
+            int nearest_elem = -1;
+
+            for(int ielem = 0; ielem < (int)packets.size(); ielem++)
+            {
+                if(used[ielem])
+                    continue;
+
+                ///MANHATTEN DISTANCE
+                float next_man = (packets[ielem].origin - next.calc_avg(field)).sum_absolute() + (packets[ielem].iterations + 1) * field.speed_of_light_per_tick;
+
+                if(next_man < nearest_dist)
+                {
+                    nearest_dist = next_man;
+                    nearest_elem = ielem;
+                }
+            }
+
+            if(nearest_elem != -1)
+            {
+                next.packets.push_back(packets[nearest_elem]);
+                used[nearest_elem] = 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        next.pos = next.calc_avg(field);
+        next.half_dim = next.calc_half_dim(field);
+
+        ret.packets.push_back(next);
+        next = alt_aggregate_packet();
+    }
+
+    for(auto& i : used)
+    {
+        assert(i);
+    }
+
+    return ret;
+}
+
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
 {
     profile_dumper pdump("newtick");
@@ -426,6 +543,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
 
     std::vector<alt_collideable> coll_out;
+
+    int calculated = 0;
+    int saved = 0;
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -482,6 +602,19 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+
+    ///ok alternate optimisation design
+    ///say we divide up the map into physx squares (modulo the position the position to find the bucket)
+    ///then for each square we find the maximum packet radius and store it there
+
+    ///won't work
+    ///ok maybe do the same chunking system, take the 10 nearest packets, find the bounding box, and then go backwards and check
+    ///collideables against the bounding boxes
+    ///generally there's a lot more packets than collideables so should provide a substantial perf increase
+    ///other than the has_cs thing which might be able to die, there's no need to touch a packet other than incrementing tick (which could be done away with)
+    ///that turns it to: one pass over packets, collideables * log(n) packets
+    ///this is much better than log(n) collideables * packets
+
 
     //#define DEBUG_AGGREGATE
     #ifdef DEBUG_AGGREGATE
