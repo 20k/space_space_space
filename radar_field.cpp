@@ -271,7 +271,7 @@ vec2f alt_aggregate_collideables::calc_avg()
     return avg / (float)collide.size();
 }
 
-vec2f alt_aggregate_collideables::calc_dim()
+vec2f alt_aggregate_collideables::calc_half_dim()
 {
     vec2f fmin = {FLT_MAX, FLT_MAX};
     vec2f fmax = {-FLT_MAX, -FLT_MAX};
@@ -345,10 +345,14 @@ std::vector<alt_aggregate_collideables> aggregate_collideables(const std::vector
                 next.collide.push_back(collideables[nearest_elem]);
                 used[nearest_elem] = 1;
             }
+            else
+            {
+                break;
+            }
         }
 
         next.pos = next.calc_avg();
-        next.dim = next.calc_dim();
+        next.half_dim = next.calc_half_dim();
 
         ret.push_back(next);
         next = alt_aggregate_collideables();
@@ -372,6 +376,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     speculative_subtractive_packets.clear();*/
 
     auto next_subtractive = decltype(subtractive_packets)();
+
+    std::vector<alt_aggregate_collideables> aggregates = aggregate_collideables(collideables, 10);
 
     for(alt_frequency_packet& packet : packets)
     {

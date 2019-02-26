@@ -76,12 +76,12 @@ struct alt_collideable
 struct alt_aggregate_collideables
 {
     vec2f pos = {0,0};
-    vec2f dim = {0,0};
+    vec2f half_dim = {0,0};
 
     std::vector<alt_collideable> collide;
 
     vec2f calc_avg();
-    vec2f calc_dim();
+    vec2f calc_half_dim();
 };
 
 struct hacky_clock
