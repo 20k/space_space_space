@@ -423,13 +423,13 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 20);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
 
     std::vector<alt_collideable> coll_out;
 
     for(alt_frequency_packet& packet : packets)
     {
-        aggregates.get_collideables(*this, packet, coll_out);
+        /*aggregates.get_collideables(*this, packet, coll_out);
 
         //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
 
@@ -450,6 +450,35 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
                 if(inf.reflect)
                     speculative_packets.push_back(inf.reflect.value());
+            }
+        }*/
+
+
+        float current_radius = packet.iterations * speed_of_light_per_tick;
+        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+
+        for(alt_aggregate_collideables& agg : aggregates.aggregate)
+        {
+            if(rect_intersects_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
+            {
+                for(alt_collideable& collide : agg.collide)
+                {
+                    std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
+
+                    if(reflected)
+                    {
+                        reflect_info inf = reflected.value();
+
+                        ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
+                        ///which will affect compat with imaginary shadows
+
+                        if(inf.collide)
+                            next_subtractive[packet.id].push_back(inf.collide.value());
+
+                        if(inf.reflect)
+                            speculative_packets.push_back(inf.reflect.value());
+                    }
+                }
             }
         }
     }
