@@ -199,6 +199,12 @@ struct alt_radar_sample : serialisable
 
 struct player_model;
 
+struct reflect_info
+{
+    std::optional<alt_frequency_packet> reflect;
+    std::optional<alt_frequency_packet> collide;
+};
+
 struct alt_radar_field
 {
     vec2f target_dim;
@@ -227,7 +233,7 @@ struct alt_radar_field
 
     alt_radar_field(vec2f in);
 
-    std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>>
+    std::optional<reflect_info>
     test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);

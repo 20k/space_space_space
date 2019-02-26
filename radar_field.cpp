@@ -145,7 +145,7 @@ bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
     return real_intensity < 0.1f;
 }
 
-std::optional<std::pair<alt_frequency_packet, alt_frequency_packet>>
+std::optional<reflect_info>
 alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
     float current_radius = packet.iterations * speed_of_light_per_tick;
@@ -201,6 +201,9 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
         collide_packet.start_angle = relative_pos.angle();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
+
+        //if(packet.reflected_by != -1)
+        //    return {{std::nullopt, collide_packet}};
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
@@ -401,7 +404,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
+    //all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
 
     std::vector<alt_collideable> coll_out;
 
@@ -414,14 +417,20 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         for(alt_collideable& collide : collideables)
         //for(alt_collideable& collide : coll_out)
         {
-            auto reflected = test_reflect_from(packet, collide, subtractive_packets);
+            std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
 
             if(reflected)
             {
+                reflect_info inf = reflected.value();
+
                 ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
                 ///which will affect compat with imaginary shadows
-                next_subtractive[packet.id].push_back(reflected.value().second);
-                speculative_packets.push_back(reflected.value().first);
+
+                if(inf.collide)
+                    next_subtractive[packet.id].push_back(inf.collide.value());
+
+                if(inf.reflect)
+                    speculative_packets.push_back(inf.reflect.value());
             }
         }
     }
@@ -468,11 +477,20 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
             if(reflected)
             {
-                next_imaginary_subtractive[packet.id].push_back(reflected.value().second);
-                imaginary_speculative_packets.push_back(reflected.value().first);
+                reflect_info inf = reflected.value();
+
+                ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
+                ///which will affect compat with imaginary shadows
+
+                if(inf.collide)
+                    next_imaginary_subtractive[packet.id].push_back(inf.collide.value());
+
+                if(inf.reflect)
+                    imaginary_speculative_packets.push_back(inf.reflect.value());
 
                 #ifndef NO_MULTI_REFLECT_IMAGINARY
-                imaginary_collideable_list[reflected.value().first.id] = player;
+                if(inf.reflect)
+                    imaginary_collideable_list[inf.reflect.value().id] = player;
                 #endif // NO_MULTI_REFLECT_IMAGINARY
             }
 
