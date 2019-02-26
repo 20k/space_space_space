@@ -288,9 +288,9 @@ vec2f alt_aggregate_collideables::calc_half_dim()
     return (fmax - fmin) / 2.f;
 }
 
-std::vector<alt_aggregate_collideables> aggregate_collideables(const std::vector<alt_collideable>& collideables, int num_groups)
+all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_collideable>& collideables, int num_groups)
 {
-    std::vector<alt_aggregate_collideables> ret;
+    all_alt_aggregate_collideables ret;
 
     if(collideables.size() == 0)
         return ret;
@@ -354,11 +354,30 @@ std::vector<alt_aggregate_collideables> aggregate_collideables(const std::vector
         next.pos = next.calc_avg();
         next.half_dim = next.calc_half_dim();
 
-        ret.push_back(next);
+        ret.aggregate.push_back(next);
         next = alt_aggregate_collideables();
     }
 
     return ret;
+}
+
+void all_alt_aggregate_collideables::get_collideables(alt_radar_field& field, alt_frequency_packet& packet, std::vector<alt_collideable>& out)
+{
+    out.clear();
+
+    float current_radius = packet.iterations * field.speed_of_light_per_tick;
+    float next_radius = (packet.iterations + 1) * field.speed_of_light_per_tick;
+
+    for(alt_aggregate_collideables& agg : aggregate)
+    {
+        if(rect_lies_inside_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
+        {
+            for(alt_collideable& coll : agg.collide)
+            {
+                out.push_back(coll);
+            }
+        }
+    }
 }
 
 void alt_radar_field::tick(double dt_s, uint32_t iterations)
@@ -377,11 +396,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     auto next_subtractive = decltype(subtractive_packets)();
 
-    std::vector<alt_aggregate_collideables> aggregates = aggregate_collideables(collideables, 10);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
+
+    std::vector<alt_collideable> coll_out;
 
     for(alt_frequency_packet& packet : packets)
     {
-        for(alt_collideable& collide : collideables)
+        aggregates.get_collideables(*this, packet, coll_out);
+
+        //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
+
+        //for(alt_collideable& collide : collideables)
+        for(alt_collideable& collide : coll_out)
         {
             auto reflected = test_reflect_from(packet, collide, subtractive_packets);
 
@@ -505,7 +531,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     collideables.clear();
 
-    std::cout << packets.size() << std::endl;
+    std::cout << "mpackets " << packets.size() << std::endl;
 
     /*int num_subtract = 0;
 
