@@ -24,6 +24,7 @@ struct profile_dumper
 {
     sf::Clock clk;
     std::string name;
+    bool stopped = false;
 
     static void dump()
     {
@@ -42,9 +43,22 @@ struct profile_dumper
 
     ~profile_dumper()
     {
+        if(stopped)
+            return;
+
         info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
 
         //std::cout << name << " " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+    }
+
+    void stop()
+    {
+        if(stopped)
+            return;
+
+        stopped = true;
+
+        info_dump[name] += clk.getElapsedTime().asMicroseconds() / 1000.;
     }
 };
 
@@ -545,7 +559,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     auto next_subtractive = decltype(subtractive_packets)();
 
     #if 1
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 100);
+    profile_dumper build_time("btime");
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
+    build_time.stop();
 
     std::vector<alt_collideable> coll_out;
 
@@ -754,7 +770,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         }
     }
 
-    pdump.dump();
+    //pdump.dump();
+    pdump.stop();
+    profile_dumper::dump();
 
     collideables.clear();
 
