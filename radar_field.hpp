@@ -51,6 +51,8 @@ struct alt_frequency_packet
     uint32_t reflected_by = -1;
     vec2f reflected_position = {0,0};
 
+    bool force_cleanup = false;
+
     /*uint32_t prev_reflected_by = -1;
     vec2f last_reflected_position = {0,0};*/
 
@@ -77,6 +79,9 @@ struct alt_aggregate_collideables
     vec2f dim = {0,0};
 
     std::vector<alt_collideable> collide;
+
+    vec2f calc_avg();
+    vec2f calc_dim();
 };
 
 struct hacky_clock

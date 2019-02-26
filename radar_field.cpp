@@ -132,6 +132,9 @@ void alt_radar_field::add_player_model(player_model* model)
 
 bool alt_radar_field::packet_expired(alt_frequency_packet& packet)
 {
+    if(packet.force_cleanup)
+        return true;
+
     float real_distance = packet.iterations * speed_of_light_per_tick;
 
     if(packet.iterations == 0)
@@ -189,14 +192,10 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         alt_frequency_packet collide_packet = packet;
         collide_packet.id_block = packet.id;
         collide_packet.id = alt_frequency_packet::gid++;
-        //collide_packet.iterations++;
         //collide_packet.emitted_by = -1;
 
         collide_packet.start_angle = relative_pos.angle();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
-
-        //subtractive_packets[packet.id].push_back(collide_packet);
-
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
@@ -219,8 +218,6 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
-
-        //speculative_packets.push_back(reflect);
 
         ignore_map[packet.id][collide.uid].restart();
         ignore_map[reflect.id][collide.uid].restart();
@@ -254,6 +251,107 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
         {
             it++;
         }
+    }
+
+    return ret;
+}
+
+vec2f alt_aggregate_collideables::calc_avg()
+{
+    vec2f avg = {0,0};
+
+    if(collide.size() == 0)
+        return avg;
+
+    for(auto& i : collide)
+    {
+        avg += i.pos;
+    }
+
+    return avg / (float)collide.size();
+}
+
+vec2f alt_aggregate_collideables::calc_dim()
+{
+    vec2f fmin = {FLT_MAX, FLT_MAX};
+    vec2f fmax = {-FLT_MAX, -FLT_MAX};
+
+    if(collide.size() == 0)
+        return {0,0};
+
+    for(auto& i : collide)
+    {
+        fmin = min(fmin, i.pos);
+        fmax = max(fmax, i.pos);
+    }
+
+    return (fmax - fmin) / 2.f;
+}
+
+std::vector<alt_aggregate_collideables> aggregate_collideables(const std::vector<alt_collideable>& collideables, int num_groups)
+{
+    std::vector<alt_aggregate_collideables> ret;
+
+    if(collideables.size() == 0)
+        return ret;
+
+    std::vector<int> used;
+    used.resize(collideables.size());
+
+    /*used[0] = 1;
+
+    alt_aggregate_collideables next;
+    next.collide.push_back(collideables[0]);*/
+
+    alt_aggregate_collideables next;
+
+    int num_per_group = ceilf((float)collideables.size() / num_groups);
+
+    for(int ng=0; ng < num_groups; ng++)
+    {
+        for(int ielem = 0; ielem < (int)collideables.size(); ielem++)
+        {
+            if(used[ielem])
+                continue;
+
+            used[ielem] = 1;
+
+            next.collide.push_back(collideables[ielem]);
+            break;
+        }
+
+        for(int kk=0; kk < num_per_group; kk++)
+        {
+            float nearest_dist = FLT_MAX;
+            int nearest_elem = -1;
+
+            for(int ielem = 0; ielem < (int)collideables.size(); ielem++)
+            {
+                if(used[ielem])
+                    continue;
+
+                ///MANHATTEN DISTANCE
+                float next_man = (collideables[ielem].pos - next.calc_avg()).sum_absolute();
+
+                if(next_man < nearest_dist)
+                {
+                    nearest_dist = next_man;
+                    nearest_elem = ielem;
+                }
+            }
+
+            if(nearest_elem != -1)
+            {
+                next.collide.push_back(collideables[nearest_elem]);
+                used[nearest_elem] = 1;
+            }
+        }
+
+        next.pos = next.calc_avg();
+        next.dim = next.calc_dim();
+
+        ret.push_back(next);
+        next = alt_aggregate_collideables();
     }
 
     return ret;
