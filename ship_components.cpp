@@ -1141,6 +1141,7 @@ void ship::take_damage(double amount)
 
     std::minstd_rand0 rng;
     rng.seed(get_random_value());
+
     std::uniform_int_distribution<int> dist(0, (int)components.size() - 1);
 
     int max_vals = 100;
