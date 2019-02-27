@@ -248,17 +248,19 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
             return {{std::nullopt, collide_packet}};
         #endif // NO_DOUBLE_REFLECT
 
+        float reflect_percentage = 0.1;
+
         if(collide.en && packet.frequency == HEAT_FREQ)
         {
             ///only absorb 10% of heat? we only reflect 90%
-            collide.en->latent_heat += local_intensity * time_between_ticks_s * 0.1;
+            collide.en->latent_heat += local_intensity * (1 - reflect_percentage);
         }
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
 
         ///maybe intensity should be distributed here to avoid energy increase
-        reflect.intensity = packet.intensity * 0.90;
+        reflect.intensity = packet.intensity * reflect_percentage;
         reflect.origin = collide.pos + packet_vector;
         reflect.start_angle = (collide.pos - reflect.origin).angle();
         reflect.restrict_angle = my_fraction * 2 * M_PI;

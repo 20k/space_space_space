@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 10;
+        int num_asteroids = 1000;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -80,7 +80,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 50, 600);
+            float rdist = rand_det_s(rng, 50, 6000);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
@@ -88,7 +88,7 @@ struct solar_system
 
             for(entity* e : entities.entities)
             {
-                if((e->r.position - found_pos).length() < 10)
+                if((e->r.position - found_pos).length() < 100)
                 {
                     cont = true;
                     break;
@@ -120,7 +120,7 @@ struct solar_system
 
         sun = entities.make_new<asteroid>();
         sun->r.position = {400, 400};
-        //sun->permanent_heat = intensity;
+        sun->permanent_heat = intensity;
     }
 };
 
@@ -335,6 +335,23 @@ void server_thread()
         alt_pack.intensity = 50000;
         alt_pack.frequency = 1000;
 
+
+        #ifdef SERVER_VIEW
+        /*vec2f mpos = {mouse.getPosition(debug).x, mouse.getPosition(debug).y};
+
+        for(entity* e : entities.entities)
+        {
+            heatable_entity* heat = dynamic_cast<heatable_entity*>(e);
+
+            if(!heat)
+                continue;
+
+            if(heat->point_within(mpos))
+            {
+                printf("heat %f\n", heat->latent_heat);
+            }
+        }*/
+        #endif // SERVER_VIEW
 
         //if(key.isKeyPressed(sf::Keyboard::K))
         #ifdef SERVER_VIEW
