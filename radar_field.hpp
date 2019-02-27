@@ -218,7 +218,7 @@ struct heatable
 
 struct heatable_entity : entity, heatable
 {
-
+    void dissipate();
 };
 
 struct alt_radar_field

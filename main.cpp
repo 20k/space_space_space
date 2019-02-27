@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 1000;
+        int num_asteroids = 10;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -80,7 +80,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 300, 6000);
+            float rdist = rand_det_s(rng, 50, 600);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
@@ -103,6 +103,7 @@ struct solar_system
 
             asteroid* a = entities.make_new<asteroid>();
             a->r.position = found_pos;
+            a->permanent_heat = 100;
 
             asteroids.push_back(a);
 
@@ -119,7 +120,7 @@ struct solar_system
 
         sun = entities.make_new<asteroid>();
         sun->r.position = {400, 400};
-        sun->permanent_heat = intensity;
+        //sun->permanent_heat = intensity;
     }
 };
 
@@ -132,7 +133,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
@@ -356,7 +357,7 @@ void server_thread()
             render = !render;
         }
 
-        for(entity* e : entities.entities)
+        /*for(entity* e : entities.entities)
         {
             asteroid* a = dynamic_cast<asteroid*>(e);
 
@@ -368,7 +369,7 @@ void server_thread()
 
                 radar.emit(heat, e->r.position, e->id);
             }
-        }
+        }*/
 
         radar.tick(frametime_dt, iterations);
         player_manage.tick(frametime_dt);

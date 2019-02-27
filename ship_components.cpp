@@ -847,6 +847,10 @@ void ship::handle_heat(double dt_s)
         radar.emit(heat, r.position, id);
     else
         radar.emit_with_imaginary_packet(heat, r.position, id, model);
+
+    //std::cout << "lheat " << latent_heat << std::endl;
+
+    dissipate();
 }
 
 void ship::add(const component& c)
@@ -1319,6 +1323,8 @@ void asteroid::tick(double dt_s)
     alt_radar_field& radar = get_radar_field();
 
     radar.add_simple_collideable(this);
+
+    dissipate();
 }
 
 struct transient_entity : entity

@@ -77,6 +77,24 @@ float alt_collideable::get_physical_cross_section(float angle)
     return dim.max_elem();
 }
 
+void heatable_entity::dissipate()
+{
+    alt_radar_field& radar = get_radar_field();
+
+    float emitted = latent_heat * 0.1;
+
+    alt_frequency_packet heat;
+    heat.frequency = HEAT_FREQ;
+    heat.intensity = permanent_heat + emitted;
+
+    if(heat.intensity >= RADAR_CUTOFF)
+        radar.emit(heat, r.position, id);
+    else
+        return;
+
+    latent_heat -= emitted;
+}
+
 alt_radar_field::alt_radar_field(vec2f in)
 {
     target_dim = in;
@@ -682,7 +700,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     for(auto& i : next_subtractive)
     {
-        subtractive_packets[i.first] = i.second;
+        subtractive_packets[i.first].insert(subtractive_packets[i.first].end(), i.second.begin(), i.second.end());
     }
 
     auto next_imaginary_subtractive = decltype(subtractive_packets)();
@@ -746,7 +764,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     for(auto& i : next_imaginary_subtractive)
     {
-        imaginary_subtractive_packets[i.first] = i.second;
+        imaginary_subtractive_packets[i.first].insert(imaginary_subtractive_packets[i.first].end(), i.second.begin(), i.second.end());
     }
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
