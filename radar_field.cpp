@@ -376,12 +376,14 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
 
     for(int ng=0; ng < num_groups; ng++)
     {
+        int start_elem = 0;
         for(int ielem = 0; ielem < (int)collideables.size(); ielem++)
         {
             if(used[ielem])
                 continue;
 
             used[ielem] = 1;
+            start_elem = ielem;
 
             next.collide.push_back(collideables[ielem]);
             break;
@@ -394,7 +396,7 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
             float nearest_dist = FLT_MAX;
             int nearest_elem = -1;
 
-            for(int ielem = 0; ielem < (int)collideables.size(); ielem++)
+            for(int ielem = start_elem; ielem < (int)collideables.size(); ielem++)
             {
                 if(used[ielem])
                     continue;
