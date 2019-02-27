@@ -348,6 +348,8 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
             break;
         }
 
+        vec2f tavg = next.calc_avg();
+
         for(int kk=0; kk < num_per_group; kk++)
         {
             float nearest_dist = FLT_MAX;
@@ -359,7 +361,7 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
                     continue;
 
                 ///MANHATTEN DISTANCE
-                float next_man = (collideables[ielem].pos - next.calc_avg()).sum_absolute();
+                float next_man = (collideables[ielem].pos - tavg).sum_absolute();
 
                 if(next_man < nearest_dist)
                 {
@@ -496,6 +498,8 @@ all_alt_aggregate_packets aggregate_packets(const std::vector<alt_frequency_pack
             break;
         }
 
+        vec2f tavg = next.calc_avg(field);
+
         for(int kk=0; kk < num_per_group; kk++)
         {
             float nearest_dist = FLT_MAX;
@@ -507,7 +511,7 @@ all_alt_aggregate_packets aggregate_packets(const std::vector<alt_frequency_pack
                     continue;
 
                 ///MANHATTEN DISTANCE
-                float next_man = (packets[ielem].origin - next.calc_avg(field)).sum_absolute() + (packets[ielem].iterations + 1) * field.speed_of_light_per_tick;
+                float next_man = (packets[ielem].origin - tavg).sum_absolute() + (packets[ielem].iterations + 1) * field.speed_of_light_per_tick;
 
                 if(next_man < nearest_dist)
                 {
@@ -560,7 +564,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     #if 1
     profile_dumper build_time("btime");
-    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 50);
+    all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 30);
     build_time.stop();
 
     std::vector<alt_collideable> coll_out;
