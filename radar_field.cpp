@@ -248,7 +248,7 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
             return {{std::nullopt, collide_packet}};
         #endif // NO_DOUBLE_REFLECT
 
-        float reflect_percentage = 0.1;
+        float reflect_percentage = 0.5;
 
         if(collide.en && packet.frequency == HEAT_FREQ)
         {
