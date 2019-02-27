@@ -21,6 +21,8 @@
 #define HEAT_FREQ 50
 #define BEST_UNCERTAINTY 1
 
+#define RADAR_CUTOFF 0.1
+
 namespace sf
 {
     struct RenderWindow;
@@ -267,5 +269,16 @@ alt_radar_field& get_radar_field()
 
     return radar;
 }
+
+struct heatable
+{
+    float latent_heat = 0;
+    float permanent_heat = 0;
+};
+
+struct heatable_entity : entity, heatable
+{
+
+};
 
 #endif // RADAR_FIELD_HPP_INCLUDED

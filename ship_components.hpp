@@ -11,6 +11,8 @@
 #include <memory>
 #include "radar_field.hpp"
 
+struct heatable;
+
 namespace sf
 {
     struct RenderWindow;
@@ -192,7 +194,7 @@ struct alt_radar_field;
 struct client_fire;
 struct player_model;
 
-struct ship : entity
+struct ship : heatable_entity
 {
     size_t network_owner = 0;
 
@@ -285,7 +287,7 @@ private:
     double thrusters_active = 0;
 };
 
-struct projectile : entity
+struct projectile : heatable_entity
 {
     projectile();
 
@@ -310,7 +312,7 @@ struct data_model : serialisable
     }
 };
 
-struct asteroid : entity
+struct asteroid : heatable_entity
 {
     asteroid();
 

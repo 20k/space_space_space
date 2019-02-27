@@ -61,11 +61,11 @@ bool once()
 
 struct solar_system
 {
-    entity* sun = nullptr;
+    asteroid* sun = nullptr;
 
     std::vector<entity*> asteroids;
 
-    solar_system(entity_manager& entities)
+    solar_system(entity_manager& entities, alt_radar_field& field)
     {
         std::minstd_rand rng;
         rng.seed(0);
@@ -108,6 +108,18 @@ struct solar_system
 
             entities.cleanup();
         }
+
+        float solar_size = 1000;
+
+        ///intensity / ((it * sol) * (it * sol)) = 0.1
+
+        ///intensity / (dist * dist) = 0.1
+
+        float intensity = RADAR_CUTOFF * (solar_size * solar_size);
+
+        sun = entities.make_new<asteroid>();
+        sun->r.position = {400, 400};
+        sun->permanent_heat = intensity;
     }
 };
 
@@ -275,7 +287,9 @@ void server_thread()
         a->r.position = rpos;
     }*/
 
-    solar_system sys(entities);
+    alt_radar_field& radar = get_radar_field();
+
+    solar_system sys(entities, radar);
 
     double frametime_dt = 1;
 
@@ -291,8 +305,6 @@ void server_thread()
     sf::Keyboard key;
 
     uint32_t iterations = 0;
-
-    alt_radar_field& radar = get_radar_field();
 
     bool render = true;
 
@@ -352,7 +364,7 @@ void server_thread()
             {
                 alt_frequency_packet heat;
                 heat.frequency = HEAT_FREQ;
-                heat.intensity = 1000;
+                heat.intensity = a->permanent_heat;
 
                 radar.emit(heat, e->r.position, e->id);
             }

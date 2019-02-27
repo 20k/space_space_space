@@ -156,7 +156,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
     float real_intensity = packet.intensity / (real_distance * real_distance);
 
-    return real_intensity < 0.1f;
+    return real_intensity < RADAR_CUTOFF;
 }
 
 std::optional<reflect_info>
@@ -199,6 +199,7 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         if(get_intensity_at_of(collide.pos, packet, subtractive) <= 0.001)
             return std::nullopt;
 
+
         float circle_circumference = 2 * M_PI * len;
 
         if(circle_circumference < 0.00001)
@@ -216,8 +217,11 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         collide_packet.start_angle = relative_pos.angle();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
 
-        //if(packet.reflected_by != -1)
-        //    return {{std::nullopt, collide_packet}};
+        //#define NO_DOUBLE_REFLECT
+        #ifdef NO_DOUBLE_REFLECT
+        if(packet.reflected_by != -1)
+            return {{std::nullopt, collide_packet}};
+        #endif // NO_DOUBLE_REFLECT
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
@@ -243,6 +247,8 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
         ignore_map[packet.id][collide.uid].restart();
         ignore_map[reflect.id][collide.uid].restart();
+
+        //return {{std::nullopt, collide_packet}};
 
         return {{reflect, collide_packet}};
     }
@@ -569,6 +575,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     std::vector<alt_collideable> coll_out;
 
+    //profile_dumper exec_time("etime");
+
     for(alt_frequency_packet& packet : packets)
     {
         /*aggregates.get_collideables(*this, packet, coll_out);
@@ -624,6 +632,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+
+    //exec_time.stop();
     #endif // 0
 
     //all_alt_aggregate_packets agg_packets = aggregate_packets(packets, 100, *this);
@@ -974,9 +984,9 @@ void alt_radar_field::render(sf::RenderWindow& win)
     {
         for(int x=0; x < target_dim.x(); x+=20)
         {
-            float intensity = get_imaginary_intensity_at({x, y});
+            //float intensity = get_imaginary_intensity_at({x, y});
 
-            //float intensity = get_intensity_at({x, y});
+            float intensity = get_intensity_at({x, y});
 
             if(intensity == 0)
                 continue;
