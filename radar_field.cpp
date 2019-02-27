@@ -391,10 +391,12 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
 
         vec2f tavg = next.calc_avg();
 
-        for(int kk=0; kk < num_per_group; kk++)
+        //for(int kk=0; kk < num_per_group; kk++)
         {
-            float nearest_dist = FLT_MAX;
-            int nearest_elem = -1;
+            /*float nearest_dist = FLT_MAX;
+            int nearest_elem = -1;*/
+
+            std::vector<std::pair<float, int>> nearest_elems;
 
             for(int ielem = start_elem; ielem < (int)collideables.size(); ielem++)
             {
@@ -404,14 +406,27 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
                 ///MANHATTEN DISTANCE
                 float next_man = (collideables[ielem].pos - tavg).sum_absolute();
 
-                if(next_man < nearest_dist)
+                /*if(next_man < nearest_dist)
                 {
                     nearest_dist = next_man;
                     nearest_elem = ielem;
-                }
+                }*/
+
+                nearest_elems.push_back({next_man, ielem});
             }
 
-            if(nearest_elem != -1)
+            std::sort(nearest_elems.begin(), nearest_elems.end(), [](const auto& i1, const auto& i2)
+                      {
+                          return i1.first < i2.first;
+                      });
+
+            for(int i=0; i < (int)nearest_elems.size() && i < num_per_group; i++)
+            {
+                next.collide.push_back(collideables[nearest_elems[i].second]);
+                used[nearest_elems[i].second] = 1;
+            }
+
+            /*if(nearest_elem != -1)
             {
                 next.collide.push_back(collideables[nearest_elem]);
                 used[nearest_elem] = 1;
@@ -419,7 +434,7 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
             else
             {
                 break;
-            }
+            }*/
         }
 
         next.pos = next.calc_avg();
