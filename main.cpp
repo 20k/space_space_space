@@ -70,17 +70,19 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 1000;
+        int num_asteroids = 500;
 
         for(int i=0; i < num_asteroids; i++)
         {
-            float ffrac = (float)i / num_asteroids;
+            //float ffrac = (float)i / num_asteroids;
+
+            float ffrac = rand_det_s(rng, 0, 1);
 
             float fangle = ffrac * 2 * M_PI;
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 50, 6000);
+            float rdist = rand_det_s(rng, 300, 2000);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
