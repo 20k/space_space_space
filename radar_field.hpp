@@ -64,12 +64,15 @@ struct alt_frequency_packet
 
 float get_physical_cross_section(vec2f dim, float initial_angle, float observe_angle);
 
+struct heatable_entity;
+
 struct alt_collideable
 {
     vec2f dim = {0,0};
     float angle = 0;
     uint32_t uid = 0;
     vec2f pos = {0,0};
+    heatable_entity* en = nullptr; ///uuh
 
     float get_cross_section(float angle);
     float get_physical_cross_section(float angle);

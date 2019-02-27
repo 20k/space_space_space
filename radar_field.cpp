@@ -101,11 +101,15 @@ void alt_radar_field::add_simple_collideable(heatable_entity* en)
 {
     assert(en);
 
+    if(en->cleanup)
+        return;
+
     alt_collideable rc;
     rc.angle = en->r.rotation;
     rc.dim = en->r.approx_dim;
     rc.uid = en->id;
     rc.pos = en->r.position;
+    rc.en = en;
 
     collideables.push_back(rc);
 }
@@ -198,9 +202,10 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         if(ignore_map[packet.id][collide.uid].should_ignore())
             return std::nullopt;
 
-        if(get_intensity_at_of(collide.pos, packet, subtractive) <= 0.001)
-            return std::nullopt;
+        float local_intensity = get_intensity_at_of(collide.pos, packet, subtractive);
 
+        if(local_intensity <= 0.001)
+            return std::nullopt;
 
         float circle_circumference = 2 * M_PI * len;
 
@@ -224,6 +229,12 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         if(packet.reflected_by != -1)
             return {{std::nullopt, collide_packet}};
         #endif // NO_DOUBLE_REFLECT
+
+        if(collide.en && packet.frequency == HEAT_FREQ)
+        {
+            ///only absorb 10% of heat? we only reflect 90%
+            collide.en->latent_heat += local_intensity * time_between_ticks_s * 0.1;
+        }
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
@@ -706,6 +717,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             collide.angle = detailed.r.rotation;
             collide.uid = pid;
             collide.pos = detailed.r.position;
+            collide.en = nullptr; ///nope! this is imaginary thanks
 
             auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
 
