@@ -365,14 +365,10 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
     std::vector<int> used;
     used.resize(collideables.size());
 
-    /*used[0] = 1;
-
-    alt_aggregate_collideables next;
-    next.collide.push_back(collideables[0]);*/
-
-    alt_aggregate_collideables next;
-
     int num_per_group = ceilf((float)collideables.size() / num_groups);
+
+    alt_aggregate_collideables next;
+    next.collide.reserve(num_per_group+1);
 
     for(int ng=0; ng < num_groups; ng++)
     {
@@ -391,57 +387,48 @@ all_alt_aggregate_collideables aggregate_collideables(const std::vector<alt_coll
 
         vec2f tavg = next.calc_avg();
 
-        //for(int kk=0; kk < num_per_group; kk++)
+        std::vector<std::pair<float, int>> nearest_elems;
+        nearest_elems.reserve(collideables.size());
+
+        for(int ielem = start_elem; ielem < (int)collideables.size(); ielem++)
         {
-            /*float nearest_dist = FLT_MAX;
-            int nearest_elem = -1;*/
+            if(used[ielem])
+                continue;
 
-            std::vector<std::pair<float, int>> nearest_elems;
+            ///MANHATTEN DISTANCE
+            float next_man = (collideables[ielem].pos - tavg).sum_absolute();
 
-            for(int ielem = start_elem; ielem < (int)collideables.size(); ielem++)
-            {
-                if(used[ielem])
-                    continue;
-
-                ///MANHATTEN DISTANCE
-                float next_man = (collideables[ielem].pos - tavg).sum_absolute();
-
-                /*if(next_man < nearest_dist)
-                {
-                    nearest_dist = next_man;
-                    nearest_elem = ielem;
-                }*/
-
-                nearest_elems.push_back({next_man, ielem});
-            }
-
-            std::sort(nearest_elems.begin(), nearest_elems.end(), [](const auto& i1, const auto& i2)
-                      {
-                          return i1.first < i2.first;
-                      });
-
-            for(int i=0; i < (int)nearest_elems.size() && i < num_per_group; i++)
-            {
-                next.collide.push_back(collideables[nearest_elems[i].second]);
-                used[nearest_elems[i].second] = 1;
-            }
-
-            /*if(nearest_elem != -1)
-            {
-                next.collide.push_back(collideables[nearest_elem]);
-                used[nearest_elem] = 1;
-            }
-            else
-            {
-                break;
-            }*/
+            nearest_elems.push_back({next_man, ielem});
         }
+
+        auto it = nearest_elems.begin();
+
+        for(int max_count = 0; it != nearest_elems.end() && max_count < num_per_group; it++, max_count++)
+        {
+
+        }
+
+        std::nth_element(nearest_elems.begin(), it, nearest_elems.end(),
+          [](const auto& i1, const auto& i2)
+          {
+              return i1.first < i2.first;
+          });
+
+        for(int i=0; i < (int)nearest_elems.size() && i < num_per_group; i++)
+        {
+            next.collide.push_back(collideables[nearest_elems[i].second]);
+            used[nearest_elems[i].second] = 1;
+        }
+
+        if(nearest_elems.size() == 0)
+            break;
 
         next.pos = next.calc_avg();
         next.half_dim = next.calc_half_dim();
 
         ret.aggregate.push_back(next);
         next = alt_aggregate_collideables();
+        next.collide.reserve(num_per_group+1);
     }
 
     for(auto& i : used)
