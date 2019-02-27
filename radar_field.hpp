@@ -207,6 +207,17 @@ struct reflect_info
     std::optional<alt_frequency_packet> collide;
 };
 
+struct heatable
+{
+    float latent_heat = 0;
+    float permanent_heat = 0;
+};
+
+struct heatable_entity : entity, heatable
+{
+
+};
+
 struct alt_radar_field
 {
     vec2f target_dim;
@@ -240,7 +251,7 @@ struct alt_radar_field
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
-    void add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid);
+    void add_simple_collideable(heatable_entity* en);
 
     void emit(alt_frequency_packet freq, vec2f pos, uint32_t uid);
     void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model);
@@ -269,16 +280,5 @@ alt_radar_field& get_radar_field()
 
     return radar;
 }
-
-struct heatable
-{
-    float latent_heat = 0;
-    float permanent_heat = 0;
-};
-
-struct heatable_entity : entity, heatable
-{
-
-};
 
 #endif // RADAR_FIELD_HPP_INCLUDED

@@ -807,7 +807,7 @@ void ship::handle_heat(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
+    radar.add_simple_collideable(this);
 
     double min_heat = 150;
     //double max_heat = 1000;
@@ -1287,7 +1287,7 @@ void projectile::tick(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
+    radar.add_simple_collideable(this);
 }
 
 asteroid::asteroid()
@@ -1318,7 +1318,7 @@ void asteroid::tick(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(r.rotation, r.approx_dim, r.position, id);
+    radar.add_simple_collideable(this);
 }
 
 struct transient_entity : entity

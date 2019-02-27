@@ -64,6 +64,7 @@ struct entity : virtual serialisable
 {
     size_t id = 0;
     bool cleanup = false;
+    int cleanup_rounds = 0;
     bool collides = true;
 
     float mass = 1;
@@ -168,12 +169,7 @@ struct entity_manager : serialisable
 
     void tick(double dt_s)
     {
-        for(auto& i : to_spawn)
-        {
-            entities.push_back(i);
-        }
-
-        to_spawn.clear();
+        force_spawn();
 
         auto last_entities = entities;
 
@@ -233,12 +229,7 @@ struct entity_manager : serialisable
             }
         }
 
-        for(auto& i : to_spawn)
-        {
-            entities.push_back(i);
-        }
-
-        to_spawn.clear();
+        force_spawn();
     }
 
     void render(camera& cam, sf::RenderWindow& window)
@@ -249,7 +240,7 @@ struct entity_manager : serialisable
         }
     }
 
-    void cleanup()
+    void force_spawn()
     {
         for(auto& i : to_spawn)
         {
@@ -257,6 +248,11 @@ struct entity_manager : serialisable
         }
 
         to_spawn.clear();
+    }
+
+    void cleanup()
+    {
+        force_spawn();
 
         for(entity* e : entities)
         {
@@ -270,6 +266,14 @@ struct entity_manager : serialisable
         for(int i=0; i < (int)entities.size(); i++)
         {
             if(entities[i]->cleanup)
+            {
+                entities[i]->cleanup_rounds++;
+            }
+        }
+
+        for(int i=0; i < (int)entities.size(); i++)
+        {
+            if(entities[i]->cleanup && entities[i]->cleanup_rounds == 2)
             {
                 entity* ptr = entities[i];
 

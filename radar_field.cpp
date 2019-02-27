@@ -97,13 +97,15 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
     packets.push_back(freq);
 }
 
-void alt_radar_field::add_simple_collideable(float angle, vec2f dim, vec2f location, uint32_t uid)
+void alt_radar_field::add_simple_collideable(heatable_entity* en)
 {
+    assert(en);
+
     alt_collideable rc;
-    rc.angle = angle;
-    rc.dim = dim;
-    rc.uid = uid;
-    rc.pos = location;
+    rc.angle = en->r.rotation;
+    rc.dim = en->r.approx_dim;
+    rc.uid = en->id;
+    rc.pos = en->r.position;
 
     collideables.push_back(rc);
 }
