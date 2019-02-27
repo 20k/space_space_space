@@ -824,11 +824,11 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     //pdump.dump();
     pdump.stop();
-    //profile_dumper::dump();
+    profile_dumper::dump();
 
     collideables.clear();
 
-    //std::cout << "mpackets " << packets.size() << std::endl;
+    std::cout << "mpackets " << packets.size() << std::endl;
 
     /*int num_subtract = 0;
 
