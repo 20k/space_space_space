@@ -256,6 +256,16 @@ bool component::can_use(const std::vector<double>& res)
             return false;
     }
 
+    if(has(component_info::HP))
+    {
+        does& d = get(component_info::HP);
+
+        assert(d.capacity > 0);
+
+        if((d.held / d.capacity) < 0.2)
+            return false;
+    }
+
     return true;
 }
 
