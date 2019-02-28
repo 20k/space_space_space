@@ -614,6 +614,14 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     //profile_dumper exec_time("etime");
 
+    int num_hit = 0;
+    std::set<int> hitp;
+    int num_hit_rects = 0;
+
+    ///so
+    ///6000 packets
+    ///only 200 ever hit anything
+
     for(alt_frequency_packet& packet : packets)
     {
         /*aggregates.get_collideables(*this, packet, coll_out);
@@ -648,12 +656,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         {
             if(rect_intersects_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
             {
+                //num_hit_rects++;
+
                 for(alt_collideable& collide : agg.collide)
                 {
                     std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
 
                     if(reflected)
                     {
+                        //num_hit++;
+
+                        //hitp.insert(packet.id);
+
                         reflect_info inf = reflected.value();
 
                         ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
@@ -669,6 +683,10 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }
     }
+
+    /*std::cout << "hit " << num_hit << std::endl;
+    std::cout << "hitp " << hitp.size() << std::endl;
+    std::cout << "num_hit_rects " << num_hit_rects << " max " << packets.size() * aggregates.aggregate.size() << std::endl;*/
 
     //exec_time.stop();
     #endif // 0
