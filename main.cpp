@@ -299,7 +299,7 @@ void server_thread()
     sf::Clock clk;
 
     sf::Clock frame_pacing_clock;
-    double time_between_ticks_ms = 8;
+    double time_between_ticks_ms = 16;
 
     std::map<uint64_t, sf::Clock> control_elapsed;
     std::map<uint64_t, vec2f> last_mouse_pos;
@@ -614,6 +614,8 @@ void server_thread()
 
         double to_sleep = clamp(time_between_ticks_ms - elapsed_ms, 0, time_between_ticks_ms);
 
+        sf::Clock sleep_clock;
+
         int slept = 0;
 
         for(int i=0; i < round(to_sleep); i++)
@@ -622,13 +624,13 @@ void server_thread()
 
             slept++;
 
-            if(frame_pacing_clock.getElapsedTime().asMicroseconds() / 1000. >= round(to_sleep))
+            if(sleep_clock.getElapsedTime().asMicroseconds() / 1000. >= round(to_sleep))
                 break;
         }
 
         frame_pacing_clock.restart();
 
-        //std::cout << frametime_dt << " slept " << to_sleep << " real slept " << slept << std::endl;
+        //std::cout << frametime_dt * 1000 << " slept " << to_sleep << " real slept " << slept << std::endl;
 
         //Sleep(10);
 
