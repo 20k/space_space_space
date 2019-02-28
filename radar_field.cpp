@@ -610,7 +610,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     all_alt_aggregate_collideables aggregates = aggregate_collideables(collideables, 30);
     build_time.stop();
 
-    std::vector<alt_collideable> coll_out;
+    //std::vector<alt_collideable> coll_out;
 
     //profile_dumper exec_time("etime");
 
