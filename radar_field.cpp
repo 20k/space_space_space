@@ -340,9 +340,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     #if 1
     profile_dumper build_time("btime");
-    all_aggregate<alt_collideable> aggregates = collect_aggregates(collideables, 30);
+    all_aggregate<alt_collideable> aggregates = collect_aggregates(collideables, 100);
 
-    all_aggregate<aggregate<alt_collideable>> second_level = collect_aggregates(aggregates.data, 10);
+    all_aggregate<aggregate<alt_collideable>> second_level = collect_aggregates(aggregates.data, 30);
 
     build_time.stop();
 
@@ -388,7 +388,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         float current_radius = packet.iterations * speed_of_light_per_tick;
         float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
 
-        for(aggregate<alt_collideable>& agg : aggregates.data)
+        /*for(aggregate<alt_collideable>& agg : aggregates.data)
         {
             if(agg.intersects(packet.origin, current_radius, next_radius))
             {
@@ -414,6 +414,41 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
                         if(inf.reflect)
                             speculative_packets.push_back(inf.reflect.value());
+                    }
+                }
+            }
+        }*/
+
+        for(auto& coarse : second_level.data)
+        {
+            if(coarse.intersects(packet.origin, current_radius, next_radius))
+            {
+                for(auto& fine : coarse.data)
+                {
+                    if(fine.intersects(packet.origin, current_radius, next_radius))
+                    {
+                        for(alt_collideable& collide : fine.data)
+                        {
+                            std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
+
+                            if(reflected)
+                            {
+                                //num_hit++;
+
+                                //hitp.insert(packet.id);
+
+                                reflect_info inf = reflected.value();
+
+                                ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
+                                ///which will affect compat with imaginary shadows
+
+                                if(inf.collide)
+                                    next_subtractive[packet.id].push_back(inf.collide.value());
+
+                                if(inf.reflect)
+                                    speculative_packets.push_back(inf.reflect.value());
+                            }
+                        }
                     }
                 }
             }
