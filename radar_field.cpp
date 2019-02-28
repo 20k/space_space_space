@@ -251,6 +251,11 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
         float reflect_percentage = 0.5;
 
+        if(collide.en)
+        {
+            reflect_percentage = collide.en->reflectivity;
+        }
+
         if(collide.en && packet.frequency == HEAT_FREQ)
         {
             ///only absorb 10% of heat? we only reflect 90%
@@ -283,6 +288,11 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         ignore_map[reflect.id][collide.uid].restart();
 
         //return {{std::nullopt, collide_packet}};
+
+        if(reflect_percentage == 0 || reflect.intensity < RADAR_CUTOFF)
+        {
+            return {{std::nullopt, collide_packet}};
+        }
 
         return {{reflect, collide_packet}};
     }

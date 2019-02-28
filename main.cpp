@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 1000;
+        int num_asteroids = 300;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -123,6 +123,7 @@ struct solar_system
         sun = entities.make_new<asteroid>();
         sun->r.position = {400, 400};
         sun->permanent_heat = intensity;
+        sun->reflectivity = 0;
     }
 };
 
@@ -318,7 +319,9 @@ void server_thread()
 
     while(1)
     {
+        sf::Clock tickclock;
         entities.tick(frametime_dt);
+        std::cout << "tclock " << tickclock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
         entities.cleanup();
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;

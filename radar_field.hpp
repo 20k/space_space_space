@@ -204,6 +204,7 @@ struct heatable
 {
     float latent_heat = 0;
     float permanent_heat = 0;
+    float reflectivity = 0.5;
 };
 
 struct heatable_entity : entity, heatable
