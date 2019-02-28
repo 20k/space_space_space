@@ -69,6 +69,7 @@
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
+		<Unit filename="aggregates.hpp" />
 		<Unit filename="camera.cpp" />
 		<Unit filename="camera.hpp" />
 		<Unit filename="deps/imgui-sfml/imgui-SFML.cpp" />

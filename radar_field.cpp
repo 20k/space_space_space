@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <set>
 #include "player.hpp"
+#include "aggregates.hpp"
 
 std::map<std::string, double> info_dump;
 
