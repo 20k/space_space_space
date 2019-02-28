@@ -112,7 +112,7 @@ struct solar_system
             entities.cleanup();
         }
 
-        float solar_size = 1000;
+        float solar_size = 2000;
 
         ///intensity / ((it * sol) * (it * sol)) = 0.1
 

@@ -855,7 +855,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
 
     float distance_to_packet = (pos - packet_position).length();
 
-    float my_distance_to_packet = (pos - packet.origin).length();
+    if(distance_to_packet > packet.packet_wavefront_width)
+        return 0;
+
     float my_packet_angle = (pos - packet.origin).angle();
 
     if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
@@ -894,25 +896,20 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
         }
     }
 
-    if(distance_to_packet > packet.packet_wavefront_width)
-    {
-        return 0;
-    }
+    float my_distance_to_packet_sq = (pos - packet.origin).squared_length();
+
+    float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / packet.packet_wavefront_width;
+
+    //float err = 0.01;
+
+    float err = 1;
+
+    if(my_distance_to_packet_sq > err*err)
+        return ivdistance * packet.intensity / my_distance_to_packet_sq;
     else
-    {
-        float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / packet.packet_wavefront_width;
+        return ivdistance * packet.intensity / (err * err);
 
-        //float err = 0.01;
-
-        float err = 1;
-
-        if(my_distance_to_packet > err)
-            return ivdistance * packet.intensity / (my_distance_to_packet * my_distance_to_packet);
-        else
-            return ivdistance * packet.intensity / (err * err);
-    }
-
-    return 0;
+    assert(false);
 }
 
 float alt_radar_field::get_intensity_at(vec2f pos)
