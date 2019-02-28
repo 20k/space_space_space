@@ -78,26 +78,6 @@ struct alt_collideable
     float get_physical_cross_section(float angle);
 };
 
-struct alt_aggregate_collideables
-{
-    vec2f pos = {0,0};
-    vec2f half_dim = {0,0};
-
-    std::vector<alt_collideable> collide;
-
-    vec2f calc_avg();
-    vec2f calc_half_dim();
-};
-
-struct alt_radar_field;
-
-struct all_alt_aggregate_collideables
-{
-    std::vector<alt_aggregate_collideables> aggregate;
-
-    void get_collideables(alt_radar_field& field, alt_frequency_packet& p, std::vector<alt_collideable>& out);
-};
-
 struct hacky_clock
 {
     bool once = true;
