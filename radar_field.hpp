@@ -76,6 +76,16 @@ struct alt_collideable
 
     float get_cross_section(float angle);
     float get_physical_cross_section(float angle);
+
+    vec2f get_pos() const
+    {
+        return pos;
+    }
+
+    vec2f get_dim() const
+    {
+        return dim;
+    }
 };
 
 struct hacky_clock

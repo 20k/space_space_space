@@ -341,6 +341,9 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     #if 1
     profile_dumper build_time("btime");
     all_aggregate<alt_collideable> aggregates = collect_aggregates(collideables, 30);
+
+    all_aggregate<aggregate<alt_collideable>> second_level = collect_aggregates(aggregates.data, 10);
+
     build_time.stop();
 
     //std::vector<alt_collideable> coll_out;
@@ -387,7 +390,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(aggregate<alt_collideable>& agg : aggregates.data)
         {
-            if(rect_intersects_doughnut(agg.pos, agg.half_dim, packet.origin, current_radius, next_radius))
+            if(agg.intersects(packet.origin, current_radius, next_radius))
             {
                 //num_hit_rects++;
 

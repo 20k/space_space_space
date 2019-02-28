@@ -12,6 +12,16 @@ struct aggregate
     //vec2f dim;
     vec2f half_dim;
 
+    vec2f get_pos() const
+    {
+        return pos;
+    }
+
+    vec2f get_dim() const
+    {
+        return half_dim * 2;
+    }
+
     vec2f calc_avg()
     {
         vec2f fmin = {FLT_MAX, FLT_MAX};
@@ -22,8 +32,8 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, i.pos - i.dim);
-            fmax = max(fmax, i.pos + i.dim);
+            fmin = min(fmin, i.get_pos() - i.get_dim());
+            fmax = max(fmax, i.get_pos() + i.get_dim());
         }
 
         return ((fmax + fmin) / 2.f);
@@ -39,11 +49,16 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, i.pos - i.dim);
-            fmax = max(fmax, i.pos + i.dim);
+            fmin = min(fmin, i.get_pos() - i.get_dim());
+            fmax = max(fmax, i.get_pos() + i.get_dim());
         }
 
         return ((fmax - fmin) / 2.f);
+    }
+
+    bool intersects(vec2f in_pos, float current_radius, float next_radius)
+    {
+        return rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
     }
 };
 
@@ -95,7 +110,7 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
                 continue;
 
             ///MANHATTEN DISTANCE
-            float next_man = (in[ielem].pos - tavg).sum_absolute();
+            float next_man = (in[ielem].get_pos() - tavg).sum_absolute();
 
             nearest_elems.push_back({next_man, ielem});
         }
