@@ -394,12 +394,12 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     for(alt_frequency_packet& packet : packets)
     {
-        /*aggregates.get_collideables(*this, packet, coll_out);
+        /*//aggregates.get_collideables(*this, packet, coll_out);
 
         //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
 
-        //for(alt_collideable& collide : collideables)
-        for(alt_collideable& collide : coll_out)
+        for(alt_collideable& collide : collideables)
+        //for(alt_collideable& collide : coll_out)
         {
             std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
 
@@ -417,7 +417,6 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                     speculative_packets.push_back(inf.reflect.value());
             }
         }*/
-
 
         float current_radius = packet.iterations * speed_of_light_per_tick;
         float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;

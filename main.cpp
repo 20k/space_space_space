@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 300;
+        int num_asteroids = 1000;
 
         for(int i=0; i < num_asteroids; i++)
         {
