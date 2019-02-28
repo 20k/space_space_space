@@ -9,7 +9,8 @@ struct aggregate
 {
     std::vector<T> data;
     vec2f pos;
-    vec2f dim;
+    //vec2f dim;
+    vec2f half_dim;
 
     vec2f calc_avg()
     {
@@ -65,8 +66,8 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 
     int num_per_group = ceilf((float)in.size() / num_groups);
 
-    alt_aggregate_collideables next;
-    next.collide.reserve(num_per_group+1);
+    aggregate<T> next;
+    next.data.reserve(num_per_group+1);
 
     for(int ng=0; ng < num_groups; ng++)
     {
@@ -79,7 +80,7 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
             used[ielem] = 1;
             start_elem = ielem;
 
-            next.collide.push_back(in[ielem]);
+            next.data.push_back(in[ielem]);
             break;
         }
 
@@ -114,7 +115,7 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 
         for(int i=0; i < (int)nearest_elems.size() && i < num_per_group; i++)
         {
-            next.collide.push_back(in[nearest_elems[i].second]);
+            next.data.push_back(in[nearest_elems[i].second]);
             used[nearest_elems[i].second] = 1;
         }
 
@@ -124,9 +125,9 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
         next.pos = next.calc_avg();
         next.half_dim = next.calc_half_dim();
 
-        ret.aggregate.push_back(next);
-        next = alt_aggregate_collideables();
-        next.collide.reserve(num_per_group+1);
+        ret.data.push_back(next);
+        next = decltype(next)();
+        next.data.reserve(num_per_group+1);
     }
 
     for(auto& i : used)
