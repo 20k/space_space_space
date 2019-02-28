@@ -861,9 +861,11 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
         return 0;
 
-    if(subtractive.find(packet.id) != subtractive.end())
+    auto f_it = subtractive.find(packet.id);
+
+    if(f_it != subtractive.end())
     {
-        for(alt_frequency_packet& shadow : subtractive[packet.id])
+        for(alt_frequency_packet& shadow : f_it->second)
         {
             float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
             float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
