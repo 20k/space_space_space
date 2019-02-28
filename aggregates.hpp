@@ -63,15 +63,12 @@ struct aggregate
 };
 
 template<typename T>
-struct all_aggregate
-{
-    std::vector<aggregate<T>> data;
-};
+using all_aggregates = aggregate<aggregate<T>>;
 
 template<typename T>
-all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
+all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 {
-    all_aggregate<T> ret;
+    aggregate<aggregate<T>> ret;
 
     if(in.size() == 0)
         return ret;
@@ -149,6 +146,9 @@ all_aggregate<T> collect_aggregates(const std::vector<T>& in, int num_groups)
     {
         assert(i);
     }
+
+    ret.half_dim = ret.calc_half_dim();
+    ret.pos = ret.calc_avg();
 
     return ret;
 }

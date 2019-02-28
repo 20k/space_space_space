@@ -339,12 +339,36 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     auto next_subtractive = decltype(subtractive_packets)();
 
     #if 1
-    profile_dumper build_time("btime");
+    /*profile_dumper build_time("btime");
     all_aggregate<alt_collideable> aggregates = collect_aggregates(collideables, 100);
+    build_time.stop();*/
 
-    all_aggregate<aggregate<alt_collideable>> second_level = collect_aggregates(aggregates.data, 30);
 
-    build_time.stop();
+    //profile_dumper build_time("btime");
+    //profile_dumper b2time("b2");
+    all_aggregates<alt_collideable> nsecond = collect_aggregates(collideables, 20);
+    //b2time.stop();
+
+    all_aggregates<aggregate<alt_collideable>> second_level;
+    nsecond.data.reserve(nsecond.data.size());
+
+    aggregate<alt_collideable> aggregates;
+
+    for(aggregate<alt_collideable>& to_process : nsecond.data)
+    {
+        all_aggregates<alt_collideable> subaggr = collect_aggregates(to_process.data, 10);
+
+        second_level.data.push_back(subaggr);
+    }
+
+    //build_time.stop();
+
+    /*profile_dumper build_time("btime");
+
+    aggregate<aggregate<alt_collideable>> aggregates = collect_aggregates(collideables, 100);
+    aggregate<aggregate<aggregate<alt_collideable>>> second_level = collect_aggregates(aggregates.data, 30);
+
+    build_time.stop();*/
 
     //std::vector<alt_collideable> coll_out;
 
