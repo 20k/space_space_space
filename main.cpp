@@ -146,6 +146,8 @@ void server_thread()
     //alt_radar_field radar({800, 800});
 
     entity_manager entities;
+    alt_radar_field& radar = get_radar_field();
+    radar.em = &entities;
 
     ship* test_ship = entities.make_new<ship>();
     test_ship->network_owner = 0;
@@ -290,8 +292,6 @@ void server_thread()
 
         a->r.position = rpos;
     }*/
-
-    alt_radar_field& radar = get_radar_field();
 
     solar_system sys(entities, radar);
 

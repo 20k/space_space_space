@@ -109,6 +109,8 @@ struct entity : virtual serialisable
     virtual void pre_collide(entity& other){}
     virtual void on_collide(entity_manager& em, entity& other){}
 
+    float get_cross_section(float angle);
+
     virtual ~entity(){}
 
     void serialise(nlohmann::json& data, bool encode) override

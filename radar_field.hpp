@@ -66,7 +66,7 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
 
 struct heatable_entity;
 
-struct alt_collideable
+/*struct alt_collideable
 {
     vec2f dim = {0,0};
     float angle = 0;
@@ -86,7 +86,7 @@ struct alt_collideable
     {
         return dim;
     }
-};
+};*/
 
 struct hacky_clock
 {
@@ -216,6 +216,9 @@ struct alt_radar_field
 {
     vec2f target_dim;
 
+    ///this is a really bad idea but ergh
+    entity_manager* em = nullptr;
+
     double time_between_ticks_s = 16/1000.;
 
     std::vector<alt_frequency_packet> packets;
@@ -225,7 +228,7 @@ struct alt_radar_field
     std::vector<alt_frequency_packet> speculative_packets;
     std::map<uint32_t, std::vector<alt_frequency_packet>> speculative_subtractive_packets;
 
-    std::vector<alt_collideable> collideables;
+    //std::vector<alt_collideable> collideables;
 
     std::map<uint32_t, std::map<uint32_t, hacky_clock>> ignore_map;
 
@@ -241,14 +244,14 @@ struct alt_radar_field
     alt_radar_field(vec2f in);
 
     std::optional<reflect_info>
-    test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
+    test_reflect_from(alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
-    void add_simple_collideable(heatable_entity* en);
+    //void add_simple_collideable(heatable_entity* en);
 
-    void emit(alt_frequency_packet freq, vec2f pos, uint32_t uid);
-    void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model);
+    void emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en);
+    void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model);
 
     bool packet_expired(const alt_frequency_packet& packet);
 
@@ -270,7 +273,7 @@ struct alt_radar_field
 inline
 alt_radar_field& get_radar_field()
 {
-    static alt_radar_field radar({800, 800});
+    static thread_local alt_radar_field radar({800, 800});
 
     return radar;
 }

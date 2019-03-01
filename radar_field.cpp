@@ -63,7 +63,7 @@ struct profile_dumper
     }
 };
 
-float alt_collideable::get_cross_section(float angle)
+/*float alt_collideable::get_cross_section(float angle)
 {
     return dim.max_elem() * 5;
 }
@@ -76,7 +76,7 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
 float alt_collideable::get_physical_cross_section(float angle)
 {
     return dim.max_elem();
-}
+}*/
 
 void heatable_entity::dissipate()
 {
@@ -89,7 +89,7 @@ void heatable_entity::dissipate()
     heat.intensity = permanent_heat + emitted;
 
     if(heat.intensity >= RADAR_CUTOFF)
-        radar.emit(heat, r.position, id);
+        radar.emit(heat, r.position, *this);
     else
         return;
 
@@ -116,7 +116,7 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
     packets.push_back(freq);
 }
 
-void alt_radar_field::add_simple_collideable(heatable_entity* en)
+/*void alt_radar_field::add_simple_collideable(heatable_entity* en)
 {
     assert(en);
 
@@ -131,26 +131,26 @@ void alt_radar_field::add_simple_collideable(heatable_entity* en)
     rc.en = en;
 
     collideables.push_back(rc);
-}
+}*/
 
-void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, uint32_t uid)
+void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en)
 {
     freq.id = alt_frequency_packet::gid++;
-    freq.emitted_by = uid;
+    freq.emitted_by = en.id;
 
-    ignore_map[freq.id][uid].restart();
+    ignore_map[freq.id][en.id].restart();
 
     add_packet_raw(freq, pos);
 }
 
-void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, uint32_t uid, player_model* model)
+void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model)
 {
     assert(model != nullptr);
 
     freq.id = alt_frequency_packet::gid++;
-    freq.emitted_by = uid;
+    freq.emitted_by = en.id;
 
-    ignore_map[freq.id][uid].restart();
+    ignore_map[freq.id][en.id].restart();
 
     freq.origin = pos;
 
@@ -158,7 +158,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     freq.id = alt_frequency_packet::gid++;
 
-    ignore_map[freq.id][uid].restart();
+    ignore_map[freq.id][en.id].restart();
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
@@ -185,32 +185,32 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 }
 
 std::optional<reflect_info>
-alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
+alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
     float current_radius = packet.iterations * speed_of_light_per_tick;
     float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
 
-    if(!packet.has_cs && packet.emitted_by == collide.uid)
+    if(!packet.has_cs && packet.emitted_by == collide.id)
     {
-        packet.cross_dim = collide.dim;
-        packet.cross_angle = collide.angle;
+        packet.cross_dim = collide.r.approx_dim;
+        packet.cross_angle = collide.r.rotation;
         packet.has_cs = true;
     }
 
-    vec2f relative_pos = collide.pos - packet.origin;
+    vec2f relative_pos = collide.r.position - packet.origin;
 
     float len_sq = relative_pos.squared_length();
 
     if(len_sq >= next_radius*next_radius || len_sq < current_radius*current_radius)
         return std::nullopt;
 
-    vec2f packet_to_collide = collide.pos - packet.origin;
+    vec2f packet_to_collide = collide.r.position - packet.origin;
     vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
     if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
         return std::nullopt;
 
-    float cross_section = collide.get_cross_section(relative_pos.angle());
+    float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
 
     cross_section = 0;
 
@@ -218,10 +218,10 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
-        if(ignore_map[packet.id][collide.uid].should_ignore())
+        if(ignore_map[packet.id][collide.id].should_ignore())
             return std::nullopt;
 
-        float local_intensity = get_intensity_at_of(collide.pos, packet, subtractive);
+        float local_intensity = get_intensity_at_of(collide.r.position, packet, subtractive);
 
         if(local_intensity <= 0.001)
             return std::nullopt;
@@ -231,9 +231,10 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
         if(circle_circumference < 0.00001)
             return std::nullopt;
 
-        float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
+        ///non physical cross section
+        float my_fraction = (collide.get_cross_section(relative_pos.angle()) * 5) / circle_circumference;
 
-        vec2f packet_vector = collide.pos - packet.origin;
+        vec2f packet_vector = collide.r.position - packet.origin;
 
         alt_frequency_packet collide_packet = packet;
         collide_packet.id_block = packet.id;
@@ -251,15 +252,17 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
         float reflect_percentage = 0.5;
 
-        if(collide.en)
+        /*if(collide.en)
         {
             reflect_percentage = collide.en->reflectivity;
-        }
+        }*/
 
-        if(collide.en && packet.frequency == HEAT_FREQ)
+        reflect_percentage = collide.reflectivity;
+
+        if(packet.frequency == HEAT_FREQ)
         {
             ///only absorb 10% of heat? we only reflect 90%
-            collide.en->latent_heat += local_intensity * (1 - reflect_percentage);
+            collide.latent_heat += local_intensity * (1 - reflect_percentage);
         }
 
         alt_frequency_packet reflect = packet;
@@ -267,25 +270,25 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, alt_collideable
 
         ///maybe intensity should be distributed here to avoid energy increase
         reflect.intensity = packet.intensity * reflect_percentage;
-        reflect.origin = collide.pos + packet_vector;
-        reflect.start_angle = (collide.pos - reflect.origin).angle();
+        reflect.origin = collide.r.position + packet_vector;
+        reflect.start_angle = (collide.r.position - reflect.origin).angle();
         reflect.restrict_angle = my_fraction * 2 * M_PI;
         //reflect.emitted_by = -1;
-        reflect.reflected_by = collide.uid;
+        reflect.reflected_by = collide.id;
         //reflect.prev_reflected_by = packet.reflected_by;
-        reflect.reflected_position = collide.pos;
+        reflect.reflected_position = collide.r.position;
         //reflect.last_reflected_position = packet.last_reflected_position;
         //reflect.iterations++;
-        reflect.cross_dim = collide.dim;
-        reflect.cross_angle = collide.angle;
+        reflect.cross_dim = collide.r.approx_dim;
+        reflect.cross_angle = collide.r.rotation;
         reflect.has_cs = true;
 
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
-        ignore_map[packet.id][collide.uid].restart();
-        ignore_map[reflect.id][collide.uid].restart();
+        ignore_map[packet.id][collide.id].restart();
+        ignore_map[reflect.id][collide.id].restart();
 
         //return {{std::nullopt, collide_packet}};
 
@@ -357,7 +360,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     //profile_dumper build_time("btime");
     //profile_dumper b2time("b2");
-    all_aggregates<alt_collideable> nsecond = collect_aggregates(collideables, 20);
+    /*all_aggregates<alt_collideable> nsecond = collect_aggregates(collideables, 20);
     //b2time.stop();
 
     all_aggregates<aggregate<alt_collideable>> second_level;
@@ -370,7 +373,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         all_aggregates<alt_collideable> subaggr = collect_aggregates(to_process.data, 10);
 
         second_level.data.push_back(subaggr);
-    }
+    }*/
 
     //build_time.stop();
 
@@ -453,7 +456,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }*/
 
-        for(auto& coarse : second_level.data)
+        for(auto& coarse : em->collision.data)
         {
             if(coarse.intersects(packet.origin, current_radius, next_radius))
             {
@@ -461,9 +464,12 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                 {
                     if(fine.intersects(packet.origin, current_radius, next_radius))
                     {
-                        for(alt_collideable& collide : fine.data)
+                        for(entity* collide : fine.data)
                         {
-                            std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
+                            if(dynamic_cast<heatable_entity*>(collide) == nullptr)
+                                continue;
+
+                            std::optional<reflect_info> reflected = test_reflect_from(packet, *static_cast<heatable_entity*>(collide), subtractive_packets);
 
                             if(reflected)
                             {
@@ -559,14 +565,18 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(auto& [pid, detailed] : player->renderables)
         {
-            alt_collideable collide;
+            /*alt_collideable collide;
             collide.dim = detailed.r.approx_dim;
             collide.angle = detailed.r.rotation;
             collide.uid = pid;
             collide.pos = detailed.r.position;
-            collide.en = nullptr; ///nope! this is imaginary thanks
+            collide.en = nullptr; ///nope! this is imaginary thanks*/
 
-            auto reflected = test_reflect_from(packet, collide, imaginary_subtractive_packets);
+            heatable_entity hacky_en;
+            hacky_en.r = detailed.r;
+            hacky_en.id = pid;
+
+            auto reflected = test_reflect_from(packet, hacky_en, imaginary_subtractive_packets);
 
             if(reflected)
             {
@@ -649,7 +659,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     pdump.stop();
     profile_dumper::dump();
 
-    collideables.clear();
+    //collideables.clear();
 
     std::cout << "mpackets " << packets.size() << std::endl;
 
@@ -912,6 +922,11 @@ random_constants& get_random_constants_for(uint32_t uid)
     }
 
     return rconst;
+}
+
+float get_physical_cross_section(vec2f dim, float initial_angle, float observe_angle)
+{
+    return dim.max_elem();
 }
 
 alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player)

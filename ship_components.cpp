@@ -421,7 +421,7 @@ struct torpedo : projectile
         em.frequency = HEAT_FREQ;
         em.intensity = 10000;
 
-        radar.emit(em, r.position - velocity.norm() * 5, id);
+        radar.emit(em, r.position - velocity.norm() * 5, *this);
     }
 
     virtual void tick(double dt_s) override
@@ -572,7 +572,7 @@ struct torpedo : projectile
             em.frequency = 1500;
             em.intensity = 1000;
 
-            radar.emit(em, r.position, id);
+            radar.emit(em, r.position, *this);
 
             phys_ignore.clear();
 
@@ -621,7 +621,7 @@ struct laser : projectile
         em.frequency = 3000;
         em.intensity = 10000;
 
-        radar.emit(em, r.position, id);
+        radar.emit(em, r.position, *this);
     }
 };
 
@@ -737,7 +737,7 @@ void ship::tick(double dt_s)
                     em.frequency = 1000;
                     em.intensity = 20000;
 
-                    radar.emit(em, r.position, id);
+                    radar.emit(em, r.position, *this);
                 }
 
                 if(c.has(component_info::SENSORS))
@@ -749,9 +749,9 @@ void ship::tick(double dt_s)
                     em.intensity = 100000;
 
                     if(!model)
-                        radar.emit(em, r.position, id);
+                        radar.emit(em, r.position, *this);
                     else
-                        radar.emit_with_imaginary_packet(em, r.position, id, model);
+                        radar.emit_with_imaginary_packet(em, r.position, *this, model);
                 }
             }
 
@@ -807,7 +807,7 @@ void ship::handle_heat(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(this);
+    //radar.add_simple_collideable(this);
 
     double min_heat = 150;
     //double max_heat = 1000;
@@ -844,9 +844,9 @@ void ship::handle_heat(double dt_s)
     heat.intensity = heat_intensity;
 
     if(!model)
-        radar.emit(heat, r.position, id);
+        radar.emit(heat, r.position, *this);
     else
-        radar.emit_with_imaginary_packet(heat, r.position, id, model);
+        radar.emit_with_imaginary_packet(heat, r.position, *this, model);
 
     //std::cout << "lheat " << latent_heat << std::endl;
 
@@ -1292,7 +1292,7 @@ void projectile::tick(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(this);
+    //radar.add_simple_collideable(this);
 }
 
 asteroid::asteroid()
@@ -1323,7 +1323,7 @@ void asteroid::tick(double dt_s)
 {
     alt_radar_field& radar = get_radar_field();
 
-    radar.add_simple_collideable(this);
+    //radar.add_simple_collideable(this);
 
     dissipate();
 }
