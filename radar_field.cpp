@@ -466,7 +466,10 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
                     {
                         for(entity* collide : fine.data)
                         {
-                            if(dynamic_cast<heatable_entity*>(collide) == nullptr)
+                            //if(dynamic_cast<heatable_entity*>(collide) == nullptr)
+                            //    continue;
+
+                            if(!collide->is_heat)
                                 continue;
 
                             std::optional<reflect_info> reflected = test_reflect_from(packet, *static_cast<heatable_entity*>(collide), subtractive_packets);

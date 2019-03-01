@@ -209,6 +209,11 @@ struct heatable
 
 struct heatable_entity : entity, heatable
 {
+    heatable_entity()
+    {
+        is_heat = true;
+    }
+
     void dissipate();
 };
 

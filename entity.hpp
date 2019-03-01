@@ -84,6 +84,9 @@ struct entity : virtual serialisable
 
     bool drag = false;
 
+    ///this is a performance compromise
+    bool is_heat = false;
+
     virtual void tick(double dt_s) {};
     void tick_phys(double dt_s);
     virtual void tick_pre_phys(double dt_s){}
