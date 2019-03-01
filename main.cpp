@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 100;
+        int num_asteroids = 500;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -82,7 +82,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 30, 600);
+            float rdist = rand_det_s(rng, 300, 6000);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
@@ -90,7 +90,7 @@ struct solar_system
 
             for(entity* e : entities.entities)
             {
-                if((e->r.position - found_pos).length() < 10)
+                if((e->r.position - found_pos).length() < 100)
                 {
                     cont = true;
                     break;
@@ -699,6 +699,7 @@ int main()
     std::map<uint64_t, ship> network_ships;
 
     entity_manager entities;
+    entities.use_aggregates = false;
 
     entity* ship_proxy = entities.make_new<entity>();
 
@@ -706,6 +707,7 @@ int main()
 
     alt_radar_sample sample;
     entity_manager transients;
+    transients.use_aggregates = false;
 
     sf::Clock read_clock;
 

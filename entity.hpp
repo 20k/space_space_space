@@ -140,6 +140,8 @@ struct entity_manager : serialisable
 
     static inline size_t gid = 0;
 
+    bool use_aggregates = true;
+
     all_aggregates<aggregate<entity*>> collision;
 
     template<typename T, typename... U>
@@ -202,99 +204,110 @@ struct entity_manager : serialisable
             e->tick_phys(dt_s);
         }
 
-        handle_aggregates();
-
-        /*for(int i=0; i < (int)last_entities.size(); i++)
+        if(use_aggregates)
         {
-            if(!last_entities[i]->collides)
-                continue;
+            handle_aggregates();
 
-            vec2f p1 = last_entities[i]->r.position;
-            float r1 = last_entities[i]->r.approx_rad;
+            int num_fine_intersections = 0;
 
-            for(int j = 0; j < (int)last_entities.size(); j++)
+            for(int c_1=0; c_1 < (int)collision.data.size(); c_1++)
             {
-                if(last_entities[j]->collides)
+                for(int c_2=c_1; c_2 < (int)collision.data.size(); c_2++)
                 {
-                    if(j <= i)
+                    auto& coarse_1 = collision.data[c_1];
+                    auto& coarse_2 = collision.data[c_2];
+
+                    if(c_1 != c_2 && !coarse_1.intersects(coarse_2))
                         continue;
-                }
-                else
-                {
-                    continue;
-                }
 
-                vec2f p2 = last_entities[j]->r.position;
-                float r2 = last_entities[j]->r.approx_rad;
-
-                if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
-                    continue;
-
-                if(collides(*last_entities[i], *last_entities[j]))
-                {
-                    last_entities[i]->pre_collide(*last_entities[j]);
-                    last_entities[j]->pre_collide(*last_entities[i]);
-
-                    last_entities[i]->on_collide(*this, *last_entities[j]);
-                    last_entities[j]->on_collide(*this, *last_entities[i]);
-                }
-            }
-        }*/
-
-        for(int c_1=0; c_1 < (int)collision.data.size(); c_1++)
-        {
-            for(int c_2=c_1; c_2 < (int)collision.data.size(); c_2++)
-            {
-                auto& coarse_1 = collision.data[c_1];
-                auto& coarse_2 = collision.data[c_2];
-
-                if(c_1 != c_2 && !coarse_1.intersects(coarse_2))
-                    continue;
-
-                for(int f_1 = 0; f_1 < (int)coarse_1.data.size(); f_1++)
-                {
-                    int f_2_start = c_1 == c_2 ? f_1 : 0;
-
-                    for(int f_2 = f_2_start; f_2 < (int)coarse_2.data.size(); f_2++)
+                    for(int f_1 = 0; f_1 < (int)coarse_1.data.size(); f_1++)
                     {
-                        auto& fine_1 = coarse_1.data[f_1];
-                        auto& fine_2 = coarse_2.data[f_2];
+                        int f_2_start = c_1 == c_2 ? f_1 : 0;
 
-                        if(f_1 != f_2 && !fine_1.intersects(fine_2))
-                            continue;
-
-                        for(int i_1 = 0; i_1 < (int)fine_1.data.size(); i_1++)
+                        for(int f_2 = f_2_start; f_2 < (int)coarse_2.data.size(); f_2++)
                         {
-                            ///no self intersect
-                            int i_2_start = f_1 == f_2 ? i_1+1 : 0;
+                            auto& fine_1 = coarse_1.data[f_1];
+                            auto& fine_2 = coarse_2.data[f_2];
 
-                            for(int i_2 = i_2_start; i_2 < (int)fine_2.data.size(); i_2++)
+                            if(f_1 != f_2 && !fine_1.intersects(fine_2))
+                                continue;
+
+                            num_fine_intersections++;
+
+                            for(int i_1 = 0; i_1 < (int)fine_1.data.size(); i_1++)
                             {
-                                entity* e1 = fine_1.data[i_1];
-                                entity* e2 = fine_2.data[i_2];
+                                ///no self intersect
+                                int i_2_start = f_1 == f_2 ? i_1+1 : 0;
 
-                                if(!e1->collides || !e2->collides)
-                                    continue;
-
-                                vec2f p1 = e1->r.position;
-                                float r1 = e1->r.approx_rad;
-
-                                vec2f p2 = e2->r.position;
-                                float r2 = e2->r.approx_rad;
-
-                                if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
-                                    continue;
-
-                                if(collides(*e1, *e2))
+                                for(int i_2 = i_2_start; i_2 < (int)fine_2.data.size(); i_2++)
                                 {
-                                    e1->pre_collide(*e2);
-                                    e2->pre_collide(*e1);
+                                    entity* e1 = fine_1.data[i_1];
+                                    entity* e2 = fine_2.data[i_2];
 
-                                    e1->on_collide(*this, *e2);
-                                    e2->on_collide(*this, *e1);
+                                    if(!e1->collides || !e2->collides)
+                                        continue;
+
+                                    vec2f p1 = e1->r.position;
+                                    float r1 = e1->r.approx_rad;
+
+                                    vec2f p2 = e2->r.position;
+                                    float r2 = e2->r.approx_rad;
+
+                                    if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
+                                        continue;
+
+                                    if(collides(*e1, *e2))
+                                    {
+                                        e1->pre_collide(*e2);
+                                        e2->pre_collide(*e1);
+
+                                        e1->on_collide(*this, *e2);
+                                        e2->on_collide(*this, *e1);
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            //printf("fine %i\n", num_fine_intersections);
+        }
+        else
+        {
+            for(int i=0; i < (int)last_entities.size(); i++)
+            {
+                if(!last_entities[i]->collides)
+                    continue;
+
+                vec2f p1 = last_entities[i]->r.position;
+                float r1 = last_entities[i]->r.approx_rad;
+
+                for(int j = 0; j < (int)last_entities.size(); j++)
+                {
+                    if(last_entities[j]->collides)
+                    {
+                        if(j <= i)
+                            continue;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    vec2f p2 = last_entities[j]->r.position;
+                    float r2 = last_entities[j]->r.approx_rad;
+
+                    if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
+                        continue;
+
+                    if(collides(*last_entities[i], *last_entities[j]))
+                    {
+                        last_entities[i]->pre_collide(*last_entities[j]);
+                        last_entities[j]->pre_collide(*last_entities[i]);
+
+                        last_entities[i]->on_collide(*this, *last_entities[j]);
+                        last_entities[j]->on_collide(*this, *last_entities[i]);
                     }
                 }
             }

@@ -19,6 +19,7 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
         em->r.position = rpos;
         em->r.init_rectangular({0.1, 0.1});
         em->r.z_level = z_level;
+        em->collides = false;
     }
 
 
@@ -34,5 +35,6 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
 
         em->r.position = rpos;
         em->r.init_rectangular({0.1, 0.1});
+        em->collides = false;
     }
 }
