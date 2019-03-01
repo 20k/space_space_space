@@ -57,8 +57,8 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, tget_pos(i) - tget_dim(i));
-            fmax = max(fmax, tget_pos(i) + tget_dim(i));
+            fmin = min(fmin, tget_pos(i) - tget_dim(i)/2.f);
+            fmax = max(fmax, tget_pos(i) + tget_dim(i)/2.f);
         }
 
         return ((fmax + fmin) / 2.f);
@@ -74,8 +74,8 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, tget_pos(i) - tget_dim(i));
-            fmax = max(fmax, tget_pos(i) + tget_dim(i));
+            fmin = min(fmin, tget_pos(i) - tget_dim(i)/2.f);
+            fmax = max(fmax, tget_pos(i) + tget_dim(i)/2.f);
         }
 
         return ((fmax - fmin) / 2.f);
