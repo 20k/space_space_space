@@ -102,10 +102,62 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
     if(in.size() == 0)
         return ret;
 
-    std::vector<int> used;
-    used.resize(in.size());
+    if(num_groups <= 0)
+        num_groups = 1;
 
     int num_per_group = ceilf((float)in.size() / num_groups);
+
+    #if 1
+    int idx = 0;
+
+    for(; idx < (int)in.size() && idx < num_groups; idx++)
+    {
+        ret.data.emplace_back();
+    }
+
+    for(int i=0; i < idx; i++)
+    {
+        ret.data[i].data.reserve(num_per_group);
+        ret.data[i].data.push_back(in[i]);
+    }
+
+    int real_groups = idx;
+
+    if(real_groups == 0)
+        return ret;
+
+    for(; idx < (int)in.size(); idx++)
+    {
+        vec2f my_pos = tget_pos(in[idx]);
+
+        float min_dist = 9999;
+        int nearest_group = -1;
+
+        for(int ng=0; ng < num_groups; ng++)
+        {
+            vec2f their_start = tget_pos(ret.data[ng].data[0]);
+
+            float man_dist = (my_pos - their_start).sum_absolute();
+
+            if(man_dist < min_dist)
+            {
+                min_dist = man_dist;
+                nearest_group = ng;
+            }
+        }
+
+        ret.data[nearest_group].data.push_back(in[idx]);
+    }
+
+    for(auto& i : ret.data)
+    {
+        i.pos = i.calc_avg();
+        i.half_dim = i.calc_half_dim();
+    }
+
+    #else
+    std::vector<int> used;
+    used.resize(in.size());
 
     aggregate<T> next;
     next.data.reserve(num_per_group+1);
@@ -175,6 +227,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
     {
         assert(i);
     }
+    #endif // 0
 
     ret.half_dim = ret.calc_half_dim();
     ret.pos = ret.calc_avg();
