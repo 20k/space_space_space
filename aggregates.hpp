@@ -3,6 +3,7 @@
 
 #include <vec/vec.hpp>
 #include <vector>
+//#include <SFML/System/Clock.hpp>
 
 template<typename T>
 vec2f tget_pos(T& in)
@@ -97,6 +98,8 @@ using all_aggregates = aggregate<aggregate<T>>;
 template<typename T>
 all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 {
+    //sf::Clock agg_1;
+
     aggregate<aggregate<T>> ret;
 
     if(in.size() == 0)
@@ -135,6 +138,9 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 
         for(int ng=0; ng < num_groups; ng++)
         {
+            //if(ret.data[ng].data.size() >= num_per_group)
+            //    continue;
+
             vec2f their_start = tget_pos(ret.data[ng].data[0]);
 
             float man_dist = (my_pos - their_start).sum_absolute();
@@ -231,6 +237,10 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 
     ret.half_dim = ret.calc_half_dim();
     ret.pos = ret.calc_avg();
+
+    //double tim = agg_1.getElapsedTime().asMicroseconds() / 1000.;
+
+    //std::cout << "agg_1 " << tim << std::endl;
 
     return ret;
 }

@@ -323,7 +323,10 @@ void server_thread()
     {
         sf::Clock tickclock;
         entities.tick(frametime_dt);
-        std::cout << "tclock " << tickclock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+
+        double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
+        std::cout << "tclock " << tclock_time << std::endl;
+
         entities.cleanup();
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;

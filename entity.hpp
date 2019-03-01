@@ -346,19 +346,15 @@ struct entity_manager : serialisable
     {
         all_aggregates<entity*> nsecond = collect_aggregates(entities, 20);
 
-        all_aggregates<aggregate<entity*>> second_level;
-        nsecond.data.reserve(nsecond.data.size());
+        collision.data.clear();
+        collision.data.reserve(nsecond.data.size());
 
         aggregate<entity*> aggregates;
 
         for(aggregate<entity*>& to_process : nsecond.data)
         {
-            all_aggregates<entity*> subaggr = collect_aggregates(to_process.data, 10);
-
-            second_level.data.push_back(subaggr);
+            collision.data.push_back(collect_aggregates(to_process.data, 10));
         }
-
-        collision = second_level;
     }
 
     void debug_aggregates(camera& cam, sf::RenderWindow& window)
