@@ -160,7 +160,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
             used[nearest_elems[i].second] = 1;
         }
 
-        if(nearest_elems.size() == 0)
+        if(next.data.size() == 0)
             break;
 
         next.pos = next.calc_avg();
