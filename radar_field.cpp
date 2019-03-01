@@ -465,7 +465,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             {
                 for(auto& fine : coarse.data)
                 {
-                    if(fine.intersects(packet.origin, current_radius, next_radius))
+                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius))
                     {
                         for(entity* collide : fine.data)
                         {
