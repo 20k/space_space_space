@@ -130,7 +130,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
     {
         vec2f my_pos = tget_pos(in[idx]);
 
-        float min_dist = 9999;
+        float min_dist = FLT_MAX;
         int nearest_group = -1;
 
         for(int ng=0; ng < num_groups; ng++)
