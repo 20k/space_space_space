@@ -362,7 +362,7 @@ struct entity_manager : serialisable
             shape.setOutlineThickness(2);
             shape.setOutlineColor(sf::Color::White);
 
-            //window.draw(shape);
+            window.draw(shape);
 
             for(aggregate<entity*>& subagg : agg.data)
             {

@@ -207,8 +207,11 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
     vec2f packet_to_collide = collide.r.position - packet.origin;
     vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
-    if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
-        return std::nullopt;
+    //if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
+    //    return std::nullopt;
+
+    if(!angle_lies_between_vectors_cos(packet_to_collide, packet_angle, cos(packet.restrict_angle)))
+       return std::nullopt;
 
     float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
 

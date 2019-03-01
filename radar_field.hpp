@@ -36,7 +36,7 @@ struct alt_frequency_packet
     vec2f origin = {0,0};
 
     int iterations = 0;
-    float restrict_angle = 2 * M_PI;
+    float restrict_angle = M_PI;
     float start_angle = 0;
 
     float packet_wavefront_width = 20;
