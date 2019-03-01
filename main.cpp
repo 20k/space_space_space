@@ -70,7 +70,7 @@ struct solar_system
         std::minstd_rand rng;
         rng.seed(0);
 
-        int num_asteroids = 1000;
+        int num_asteroids = 100;
 
         for(int i=0; i < num_asteroids; i++)
         {
@@ -82,7 +82,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 30, 6000);
+            float rdist = rand_det_s(rng, 30, 600);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
@@ -90,7 +90,7 @@ struct solar_system
 
             for(entity* e : entities.entities)
             {
-                if((e->r.position - found_pos).length() < 100)
+                if((e->r.position - found_pos).length() < 10)
                 {
                     cont = true;
                     break;
@@ -136,10 +136,10 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
-    sf::RenderWindow debug(sf::VideoMode(800, 800), "debug");
+    sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
 
     #endif // SERVER_VIEW
 
@@ -314,8 +314,10 @@ void server_thread()
 
     sf::Clock read_clock;
 
-    camera cam({800, 800});
+    #ifdef SERVER_VIEW
+    camera cam({debug.getSize().x, debug.getSize().y});
     cam.position = {400, 400};
+    #endif // SERVER_VIEW
 
     while(1)
     {
@@ -604,6 +606,7 @@ void server_thread()
         if(render)
         {
             entities.render(cam, debug);
+            entities.debug_aggregates(debug);
 
             radar.render(debug);
         }

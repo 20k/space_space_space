@@ -4,6 +4,7 @@
 #include <vec/vec.hpp>
 #include <networking/serialisable.hpp>
 #include "aggregates.hpp"
+#include <SFML/Graphics.hpp>
 
 namespace sf
 {
@@ -344,6 +345,35 @@ struct entity_manager : serialisable
         }
 
         collision = second_level;
+    }
+
+    void debug_aggregates(sf::RenderWindow& window)
+    {
+        for(aggregate<aggregate<entity*>>& agg : collision.data)
+        {
+            sf::RectangleShape shape;
+            shape.setSize({agg.half_dim.x()*2, agg.half_dim.y()*2});
+            shape.setPosition(agg.pos.x(), agg.pos.y());
+            shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+            shape.setFillColor(sf::Color::Transparent);
+            shape.setOutlineThickness(2);
+            shape.setOutlineColor(sf::Color::White);
+
+            window.draw(shape);
+
+            for(aggregate<entity*>& subagg : agg.data)
+            {
+                sf::RectangleShape shape;
+                shape.setSize({subagg.half_dim.x()*2, subagg.half_dim.y()*2});
+                shape.setPosition(subagg.pos.x(), subagg.pos.y());
+                shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+                shape.setFillColor(sf::Color::Transparent);
+                shape.setOutlineThickness(2);
+                shape.setOutlineColor(sf::Color::White);
+
+                window.draw(shape);
+            }
+        }
     }
 
     void cleanup()

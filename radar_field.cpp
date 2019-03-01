@@ -398,14 +398,17 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
     for(alt_frequency_packet& packet : packets)
     {
-        /*//aggregates.get_collideables(*this, packet, coll_out);
+        //aggregates.get_collideables(*this, packet, coll_out);
 
         //std::cout << "colls " << coll_out.size() << " real " << collideables.size() << std::endl;
 
-        for(alt_collideable& collide : collideables)
+        /*for(entity* collide : em->entities)
         //for(alt_collideable& collide : coll_out)
         {
-            std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
+            if(!collide->is_heat)
+                continue;
+
+            std::optional<reflect_info> reflected = test_reflect_from(packet, *(heatable_entity*)collide, subtractive_packets);
 
             if(reflected)
             {
