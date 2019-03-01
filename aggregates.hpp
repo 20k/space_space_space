@@ -84,6 +84,11 @@ struct aggregate
     {
         return rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
     }
+
+    bool intersects(const aggregate<T>& agg)
+    {
+        return rect_intersect(pos - half_dim, pos + half_dim, agg.pos - agg.half_dim, agg.pos + agg.half_dim);
+    }
 };
 
 template<typename T>
