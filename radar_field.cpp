@@ -205,12 +205,12 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
         return std::nullopt;
 
     vec2f packet_to_collide = collide.r.position - packet.origin;
-    vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
+    vec2f packet_angle = packet.precalculated_start_angle;
 
     //if(angle_between_vectors(packet_to_collide, packet_angle) > packet.restrict_angle)
     //    return std::nullopt;
 
-    if(!angle_lies_between_vectors_cos(packet_to_collide, packet_angle, cos(packet.restrict_angle)))
+    if(!angle_lies_between_vectors_cos(packet_to_collide.norm(), packet_angle, packet.cos_restrict_angle))
        return std::nullopt;
 
     float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
@@ -245,7 +245,9 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
         //collide_packet.emitted_by = -1;
 
         collide_packet.start_angle = relative_pos.angle();
+        collide_packet.precalculated_start_angle = relative_pos.norm();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
+        collide_packet.cos_restrict_angle = cos(collide_packet.restrict_angle);
 
         //#define NO_DOUBLE_REFLECT
         #ifdef NO_DOUBLE_REFLECT
@@ -275,6 +277,7 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
         reflect.intensity = packet.intensity * reflect_percentage;
         reflect.origin = collide.r.position + packet_vector;
         reflect.start_angle = (collide.r.position - reflect.origin).angle();
+        reflect.precalculated_start_angle = (collide.r.position - reflect.origin).norm();
         reflect.restrict_angle = my_fraction * 2 * M_PI;
         //reflect.emitted_by = -1;
         reflect.reflected_by = collide.id;
@@ -285,6 +288,7 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
         reflect.cross_dim = collide.r.approx_dim;
         reflect.cross_angle = collide.r.rotation;
         reflect.has_cs = true;
+        reflect.cos_restrict_angle = cos(collide_packet.restrict_angle);
 
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
