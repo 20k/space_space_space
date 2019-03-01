@@ -261,7 +261,7 @@ struct alt_radar_field
     bool packet_expired(const alt_frequency_packet& packet);
 
     void tick(double dt_s, uint32_t iterations);
-    void render(sf::RenderWindow& win);
+    void render(camera& cam, sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);
     float get_imaginary_intensity_at(vec2f pos);

@@ -775,7 +775,7 @@ float alt_radar_field::get_imaginary_intensity_at(vec2f pos)
     return total_intensity;
 }
 
-void alt_radar_field::render(sf::RenderWindow& win)
+void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 {
     #if 0
     for(alt_frequency_packet& packet : packets)
@@ -880,8 +880,10 @@ void alt_radar_field::render(sf::RenderWindow& win)
 
             float fcol = 255 * ffrac;
 
+            vec2f world = cam.world_to_screen({x, y}, 1);
+
             shape.setRadius(intensity);
-            shape.setPosition(x, y);
+            shape.setPosition(world.x(), world.y());
             shape.setFillColor(sf::Color(fcol, fcol, fcol, fcol));
             shape.setOrigin(shape.getRadius(), shape.getRadius());
 
