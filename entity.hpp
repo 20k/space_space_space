@@ -5,6 +5,7 @@
 #include <networking/serialisable.hpp>
 #include "aggregates.hpp"
 #include <SFML/Graphics.hpp>
+#include "camera.hpp"
 
 namespace sf
 {
@@ -347,29 +348,33 @@ struct entity_manager : serialisable
         collision = second_level;
     }
 
-    void debug_aggregates(sf::RenderWindow& window)
+    void debug_aggregates(camera& cam, sf::RenderWindow& window)
     {
         for(aggregate<aggregate<entity*>>& agg : collision.data)
         {
+            vec2f rpos = cam.world_to_screen(agg.pos, 1);
+
             sf::RectangleShape shape;
             shape.setSize({agg.half_dim.x()*2, agg.half_dim.y()*2});
-            shape.setPosition(agg.pos.x(), agg.pos.y());
+            shape.setPosition(rpos.x(), rpos.y());
             shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
             shape.setFillColor(sf::Color::Transparent);
             shape.setOutlineThickness(2);
             shape.setOutlineColor(sf::Color::White);
 
-            window.draw(shape);
+            //window.draw(shape);
 
             for(aggregate<entity*>& subagg : agg.data)
             {
+                vec2f rpos = cam.world_to_screen(subagg.pos, 1);
+
                 sf::RectangleShape shape;
                 shape.setSize({subagg.half_dim.x()*2, subagg.half_dim.y()*2});
-                shape.setPosition(subagg.pos.x(), subagg.pos.y());
+                shape.setPosition(rpos.x(), rpos.y());
                 shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
                 shape.setFillColor(sf::Color::Transparent);
                 shape.setOutlineThickness(2);
-                shape.setOutlineColor(sf::Color::White);
+                shape.setOutlineColor(sf::Color::Red);
 
                 window.draw(shape);
             }

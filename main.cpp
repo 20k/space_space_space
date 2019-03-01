@@ -606,7 +606,7 @@ void server_thread()
         if(render)
         {
             entities.render(cam, debug);
-            entities.debug_aggregates(debug);
+            entities.debug_aggregates(cam, debug);
 
             radar.render(debug);
         }
