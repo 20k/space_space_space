@@ -5,6 +5,30 @@
 #include <vector>
 
 template<typename T>
+vec2f tget_pos(T& in)
+{
+    return in.get_pos();
+}
+
+template<typename T>
+vec2f tget_dim(T& in)
+{
+    return in.get_dim();
+}
+
+template<typename T>
+vec2f tget_pos(T* in)
+{
+    return in->get_pos();
+}
+
+template<typename T>
+vec2f tget_dim(T* in)
+{
+    return in->get_dim();
+}
+
+template<typename T>
 struct aggregate
 {
     std::vector<T> data;
@@ -32,8 +56,8 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, i.get_pos() - i.get_dim());
-            fmax = max(fmax, i.get_pos() + i.get_dim());
+            fmin = min(fmin, tget_pos(i) - tget_dim(i));
+            fmax = max(fmax, tget_pos(i) + tget_dim(i));
         }
 
         return ((fmax + fmin) / 2.f);
@@ -49,8 +73,8 @@ struct aggregate
 
         for(auto& i : data)
         {
-            fmin = min(fmin, i.get_pos() - i.get_dim());
-            fmax = max(fmax, i.get_pos() + i.get_dim());
+            fmin = min(fmin, tget_pos(i) - tget_dim(i));
+            fmax = max(fmax, tget_pos(i) + tget_dim(i));
         }
 
         return ((fmax - fmin) / 2.f);
@@ -107,7 +131,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
                 continue;
 
             ///MANHATTEN DISTANCE
-            float next_man = (in[ielem].get_pos() - tavg).sum_absolute();
+            float next_man = (tget_pos(in[ielem]) - tavg).sum_absolute();
 
             nearest_elems.push_back({next_man, ielem});
         }

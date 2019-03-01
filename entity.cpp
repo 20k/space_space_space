@@ -487,3 +487,13 @@ void entity::set_parent_entity(entity* en, vec2f absolute_position)
     parent_entity = en;
     parent_offset = absolute_position - en->r.position;
 }
+
+vec2f entity::get_pos()
+{
+    return r.position;
+}
+
+vec2f entity::get_dim()
+{
+    return r.approx_dim;
+}
