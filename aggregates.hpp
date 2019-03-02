@@ -37,6 +37,8 @@ struct aggregate
     //vec2f dim;
     vec2f half_dim;
 
+    vec2f tl, tr, bl, br;
+
     vec2f get_pos() const
     {
         return pos;
@@ -85,6 +87,11 @@ struct aggregate
     {
         pos = calc_avg();
         half_dim = calc_half_dim();
+
+        tl = pos - half_dim;
+        tr = pos + (vec2f){half_dim.x(), -half_dim.y()};
+        bl = pos + (vec2f){-half_dim.x(), half_dim.y()};
+        br = pos + half_dim;
     }
 
     bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle)
@@ -95,11 +102,6 @@ struct aggregate
 
         if(hit_doughnut)
         {
-            vec2f tl = pos - half_dim;
-            vec2f tr = pos + (vec2f){half_dim.x(), -half_dim.y()};
-            vec2f bl = pos + (vec2f){-half_dim.x(), half_dim.y()};
-            vec2f br = pos + half_dim;
-
             vec2f rtl = tl - in_pos;
             vec2f rtr = tr - in_pos;
             vec2f rbl = bl - in_pos;
