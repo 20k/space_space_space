@@ -148,6 +148,9 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity
     freq.id = alt_frequency_packet::gid++;
     freq.emitted_by = en.id;
 
+    freq.cross_dim = en.r.approx_dim;
+    freq.cross_angle = en.r.rotation;
+
     ignore_map[freq.id][en.id].restart();
 
     add_packet_raw(freq, pos);
@@ -159,6 +162,8 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     freq.id = alt_frequency_packet::gid++;
     freq.emitted_by = en.id;
+    freq.cross_dim = en.r.approx_dim;
+    freq.cross_angle = en.r.rotation;
 
     ignore_map[freq.id][en.id].restart();
 
@@ -199,13 +204,6 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
 {
     float current_radius = packet.iterations * speed_of_light_per_tick;
     float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
-
-    if(!packet.has_cs && packet.emitted_by == collide.id)
-    {
-        packet.cross_dim = collide.r.approx_dim;
-        packet.cross_angle = collide.r.rotation;
-        packet.has_cs = true;
-    }
 
     vec2f relative_pos = collide.r.position - packet.origin;
 
@@ -296,7 +294,6 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
         //reflect.iterations++;
         reflect.cross_dim = collide.r.approx_dim;
         reflect.cross_angle = collide.r.rotation;
-        reflect.has_cs = true;
         reflect.cos_restrict_angle = cos(collide_packet.restrict_angle);
 
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
@@ -441,8 +438,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }*/
 
-        float current_radius = packet.iterations * speed_of_light_per_tick;
-        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+        float current_radius = packet.iterations * speed_of_light_per_tick - packet.packet_wavefront_width/2;
+        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick + packet.packet_wavefront_width/2;
 
         /*for(aggregate<alt_collideable>& agg : aggregates.data)
         {
