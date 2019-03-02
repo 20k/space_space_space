@@ -495,7 +495,7 @@ vec2f entity::get_pos()
 
 vec2f entity::get_dim()
 {
-    return r.approx_dim;
+    return r.approx_dim*2*r.scale;
 }
 
 float entity::get_cross_section(float angle)
