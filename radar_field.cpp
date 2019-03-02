@@ -255,6 +255,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         collide_packet.precalculated_start_angle = relative_pos.norm();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
         collide_packet.cos_restrict_angle = cos(collide_packet.restrict_angle);
+        collide_packet.cos_half_restrict_angle = cos(collide_packet.restrict_angle/2);
 
         //#define NO_DOUBLE_REFLECT
         #ifdef NO_DOUBLE_REFLECT
@@ -293,6 +294,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.cross_dim = collide.r.approx_dim;
         reflect.cross_angle = collide.r.rotation;
         reflect.cos_restrict_angle = cos(collide_packet.restrict_angle);
+        reflect.cos_half_restrict_angle = cos(reflect.restrict_angle/2);
 
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
 
@@ -472,11 +474,11 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
         for(auto& coarse : em->collision.data)
         {
-            if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_restrict_angle, packet.restrict_angle))
+            if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_half_restrict_angle, packet.restrict_angle))
             {
                 for(auto& fine : coarse.data)
                 {
-                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_restrict_angle, packet.restrict_angle))
+                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_half_restrict_angle, packet.restrict_angle))
                     {
                         for(entity* collide : fine.data)
                         {
