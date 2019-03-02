@@ -96,64 +96,33 @@ struct aggregate
 
     bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle)
     {
-        bool hit_doughnut = rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
-
         ///so, if we hit the doughnut AND we fully lie within the unoccluded zone, hit
 
-        if(hit_doughnut)
-        {
-            vec2f rtl = tl - in_pos;
-            vec2f rtr = tr - in_pos;
-            vec2f rbl = bl - in_pos;
-            vec2f rbr = br - in_pos;
+        ///see rect_intersects_doughnut
+        vec2f rtl = tl - in_pos;
+        vec2f rtr = tr - in_pos;
+        vec2f rbl = bl - in_pos;
+        vec2f rbr = br - in_pos;
 
-            /*bool lies_within = angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_half_restrict_angle) &&
-                               angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_half_restrict_angle) &&
-                               angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_half_restrict_angle) &&
-                               angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_half_restrict_angle);*/
+        float rad_sq = current_radius * current_radius;
 
-            return !angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_half_restrict_angle) ||
-                    !angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_half_restrict_angle) ||
-                    !angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_half_restrict_angle) ||
-                    !angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_half_restrict_angle);
+        if(rtl.squared_length() < rad_sq &&
+           rtr.squared_length() < rad_sq &&
+           rbl.squared_length() < rad_sq &&
+           rbr.squared_length() < rad_sq)
+            return false;
 
-            /*vec2f v1 = start_dir.rot(-restrict_angle);
-            vec2f v2 = start_dir.rot(restrict_angle);
+        vec2f clpos = clamp(in_pos, tl, br);
+        vec2f dist = in_pos - clpos;
 
-            float c_1 = dot(rtl.norm(), {1, 0});
-            float c_2 = dot(rtr.norm(), {1, 0});
-            float c_3 = dot(rbl.norm(), {1, 0});
-            float c_4 = dot(rbr.norm(), {1, 0});
+        if(dist.squared_length() >= next_radius * next_radius)
+            return false;
 
-            bool lies_within = angle_lies_between_vectors_cos(v1, v2, c_1) &&
-                                      angle_lies_between_vectors_cos(v1, v2, c_2) &&
-                                      angle_lies_between_vectors_cos(v1, v2, c_3) &&
-                                      angle_lies_between_vectors_cos(v1, v2, c_4);*/
-
-
-            /*float nc_1 = dot(rtl.norm(), start_dir);
-            float nc_2 = dot(rtr.norm(), start_dir);
-            float nc_3 = dot(rbl.norm(), start_dir);
-            float nc_4 = dot(rbr.norm(), start_dir);
-
-            bool lies_within = nc_1 >= cos_restrict_angle &&
-                               nc_2 >= cos_restrict_angle &&
-                               nc_3 >= cos_restrict_angle &&
-                               nc_4 >= cos_restrict_angle;*/
-
-            /*bool lies_within = angle_between_vectors(rtl, start_dir) < restrict_angle/2 &&
-                                angle_between_vectors(rtr, start_dir) < restrict_angle/2 &&
-                                angle_between_vectors(rbl, start_dir) < restrict_angle/2 &&
-                                angle_between_vectors(rbr, start_dir) < restrict_angle/2;
-
-            //assert(lies_within == assume_lies_within);
-
-            return !lies_within;*/
-
-            //return !lies_within;
-        }
-
-        return hit_doughnut;
+        ///check if we lie in the occluded zone
+        return !angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_half_restrict_angle) ||
+                !angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_half_restrict_angle) ||
+                !angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_half_restrict_angle) ||
+                !angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_half_restrict_angle);
     }
 
     bool intersects(const aggregate<T>& agg)
