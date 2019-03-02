@@ -87,7 +87,7 @@ struct aggregate
         half_dim = calc_half_dim();
     }
 
-    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_start_angle)
+    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_start_angle, float restrict_angle)
     {
         bool hit_doughnut = rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
 
@@ -105,10 +105,23 @@ struct aggregate
             vec2f rbl = bl - in_pos;
             vec2f rbr = br - in_pos;
 
-            bool lies_within = angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_start_angle) &&
+            /*bool lies_within = angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_start_angle) &&
                                angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_start_angle) &&
                                angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_start_angle) &&
-                               angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_start_angle);
+                               angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_start_angle);*/
+
+            vec2f v1 = start_dir.rot(-restrict_angle);
+            vec2f v2 = start_dir.rot(restrict_angle);
+
+            float c_1 = dot(rtl.norm(), {1, 0});
+            float c_2 = dot(rtr.norm(), {1, 0});
+            float c_3 = dot(rbl.norm(), {1, 0});
+            float c_4 = dot(rbr.norm(), {1, 0});
+
+            bool lies_within = angle_lies_between_vectors_cos(v1, v2, c_1) &&
+                               angle_lies_between_vectors_cos(v1, v2, c_2) &&
+                               angle_lies_between_vectors_cos(v1, v2, c_3) &&
+                               angle_lies_between_vectors_cos(v1, v2, c_4);
 
             return lies_within;
         }
