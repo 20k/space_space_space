@@ -696,7 +696,6 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
     vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
 
     vec2f packet_position = packet_vector + packet.origin;
-    vec2f packet_angle = (vec2f){1, 0}.rot(packet.start_angle);
 
     float distance_to_packet = (pos - packet_position).length();
 
@@ -705,7 +704,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
 
     float my_packet_angle = (pos - packet.origin).angle();
 
-    if(angle_between_vectors(packet_vector, packet_angle) > packet.restrict_angle)
+    if(!angle_lies_between_vectors_cos(packet_vector.norm(), packet.precalculated_start_angle, packet.cos_restrict_angle))
         return 0;
 
     auto f_it = subtractive.find(packet.id);
@@ -721,11 +720,10 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
 
             vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
             vec2f shadow_position = shadow_vector + shadow.origin;
-            vec2f shadow_angle = (vec2f){1, 0}.rot(shadow.start_angle);
 
             float distance_to_shadow = (pos - shadow_position).length();
 
-            if(angle_between_vectors(shadow_vector, shadow_angle) > shadow.restrict_angle)
+            if(!angle_lies_between_vectors_cos(shadow_vector.norm(), shadow.precalculated_start_angle, shadow.cos_restrict_angle))
                 continue;
 
             /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
