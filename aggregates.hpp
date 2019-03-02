@@ -136,7 +136,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
         float min_dist = FLT_MAX;
         int nearest_group = -1;
 
-        for(int ng=0; ng < num_groups; ng++)
+        for(int ng=0; ng < real_groups; ng++)
         {
             //if(ret.data[ng].data.size() >= num_per_group)
             //    continue;

@@ -237,7 +237,7 @@ struct entity_manager : serialisable
                             for(int i_1 = 0; i_1 < (int)fine_1.data.size(); i_1++)
                             {
                                 ///no self intersect
-                                int i_2_start = f_1 == f_2 ? i_1+1 : 0;
+                                int i_2_start = (c_1 == c_2 && f_1 == f_2) ? i_1+1 : 0;
 
                                 for(int i_2 = i_2_start; i_2 < (int)fine_2.data.size(); i_2++)
                                 {
@@ -348,8 +348,6 @@ struct entity_manager : serialisable
 
         collision.data.clear();
         collision.data.reserve(nsecond.data.size());
-
-        aggregate<entity*> aggregates;
 
         for(aggregate<entity*>& to_process : nsecond.data)
         {
