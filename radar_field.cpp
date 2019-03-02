@@ -212,9 +212,9 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
     if(!angle_lies_between_vectors_cos(relative_pos.norm(), packet_angle, packet.cos_restrict_angle))
        return std::nullopt;
 
-    float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
+    //float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
 
-    cross_section = 0;
+    float cross_section = 0;
 
     float len = sqrtf(len_sq);
 
