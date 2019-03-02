@@ -78,8 +78,17 @@ float alt_collideable::get_physical_cross_section(float angle)
     return dim.max_elem();
 }*/
 
-void heatable_entity::dissipate()
+void heatable_entity::dissipate(int ticks_between_emissions)
 {
+    if(ticks_between_emissions < 1)
+        ticks_between_emissions = 1;
+
+    if(ticks_between_emissions != 1)
+    {
+        if((parent->iteration % ticks_between_emissions) != (id % ticks_between_emissions))
+            return;
+    }
+
     alt_radar_field& radar = get_radar_field();
 
     float emitted = latent_heat * 0.1;
@@ -87,6 +96,7 @@ void heatable_entity::dissipate()
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
     heat.intensity = permanent_heat + emitted;
+    heat.packet_wavefront_width *= ticks_between_emissions;
 
     if(heat.intensity >= RADAR_CUTOFF)
         radar.emit(heat, r.position, *this);

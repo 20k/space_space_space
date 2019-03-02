@@ -216,7 +216,7 @@ struct heatable_entity : entity, heatable
         is_heat = true;
     }
 
-    void dissipate();
+    void dissipate(int ticks_between_emissions = 1);
 };
 
 struct alt_radar_field

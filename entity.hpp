@@ -139,6 +139,7 @@ struct entity_manager : serialisable
     std::vector<entity*> to_spawn;
 
     static inline size_t gid = 0;
+    uint32_t iteration = 0;
 
     bool use_aggregates = true;
 
@@ -322,6 +323,8 @@ struct entity_manager : serialisable
         }
 
         force_spawn();
+
+        iteration++;
     }
 
     void render(camera& cam, sf::RenderWindow& window)
