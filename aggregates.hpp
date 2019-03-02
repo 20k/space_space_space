@@ -96,6 +96,8 @@ struct aggregate
 
     bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle)
     {
+        //return true;
+
         ///so, if we hit the doughnut AND we fully lie within the unoccluded zone, hit
 
         ///see rect_intersects_doughnut
@@ -118,11 +120,49 @@ struct aggregate
         if(dist.squared_length() >= next_radius * next_radius)
             return false;
 
+        //std::cout << "cres " << cos(restrict_angle) << std::endl;
+
+        //std::cout << "dt " << dot(rtl.norm(), start_dir) << std::endl;
+
+        /*std::cout << "in? " << angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos(restrict_angle)) << " " <<
+                               angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos(restrict_angle)) << " " <<
+                               angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos(restrict_angle)) << " " <<
+                               angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos(restrict_angle)) << "\n";*/
+
+        //return true;
+
+        /*bool all_in = angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos(restrict_angle)) &&
+                      angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos(restrict_angle)) &&
+                      angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos(restrict_angle)) &&
+                      angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos(restrict_angle));*/
+
+        ///oh ok, so the problem with this is that it might overlap
+        /*bool all_out = angle_between_vectors(rtl.norm(), start_dir) > restrict_angle &&
+                        angle_between_vectors(rtr.norm(), start_dir) > restrict_angle &&
+                        angle_between_vectors(rbl.norm(), start_dir) > restrict_angle &&
+                        angle_between_vectors(rbr.norm(), start_dir) > restrict_angle;
+
         ///check if we lie in the occluded zone
-        return !angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_half_restrict_angle) ||
-                !angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_half_restrict_angle) ||
-                !angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_half_restrict_angle) ||
-                !angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_half_restrict_angle);
+        return !all_out;*/
+
+        vec2f vright = start_dir.rot(restrict_angle);
+        vec2f vleft = start_dir.rot(-restrict_angle);
+
+        if(is_left_side((vec2f){0,0}, vleft, rtl) &&
+           is_left_side((vec2f){0,0}, vleft, rtr) &&
+           is_left_side((vec2f){0,0}, vleft, rbl) &&
+           is_left_side((vec2f){0,0}, vleft, rbr)
+           )
+            return false;
+
+        if(!is_left_side((vec2f){0,0}, vright, rtl) &&
+           !is_left_side((vec2f){0,0}, vright, rtr) &&
+           !is_left_side((vec2f){0,0}, vright, rbl) &&
+           !is_left_side((vec2f){0,0}, vright, rbr)
+           )
+            return false;
+
+        return true;
     }
 
     bool intersects(const aggregate<T>& agg)

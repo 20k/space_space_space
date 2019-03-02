@@ -40,7 +40,7 @@ struct alt_frequency_packet
     float cos_restrict_angle = -1; ///cos M_PI
     float cos_half_restrict_angle = cos(M_PI/2);
     float start_angle = 0;
-    vec2f precalculated_start_angle = (vec2f){1, 0}.rot(start_angle);
+    vec2f precalculated_start_angle = {1, 0};
 
     float packet_wavefront_width = 20;
     //float cross_section = 1;
@@ -267,6 +267,7 @@ struct alt_radar_field
 
     float get_intensity_at(vec2f pos);
     float get_imaginary_intensity_at(vec2f pos);
+    float get_refl_intensity_at(vec2f pos);
     float get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
 
     bool angle_valid(alt_frequency_packet& packet, float angle);

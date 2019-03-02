@@ -438,8 +438,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }*/
 
-        float current_radius = packet.iterations * speed_of_light_per_tick - packet.packet_wavefront_width/2;
-        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick + packet.packet_wavefront_width/2;
+        float current_radius = packet.iterations * speed_of_light_per_tick;
+        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
 
         /*for(aggregate<alt_collideable>& agg : aggregates.data)
         {
@@ -783,6 +783,21 @@ float alt_radar_field::get_imaginary_intensity_at(vec2f pos)
     return total_intensity;
 }
 
+float alt_radar_field::get_refl_intensity_at(vec2f pos)
+{
+    float total_intensity = 0;
+
+    for(alt_frequency_packet& packet : packets)
+    {
+        if(packet.reflected_by == -1)
+            continue;
+
+        total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
+    }
+
+    return total_intensity;
+}
+
 void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 {
     #if 0
@@ -870,7 +885,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         {
             //float intensity = get_imaginary_intensity_at({x, y});
 
-            float intensity = get_intensity_at({x, y});
+            float intensity = get_refl_intensity_at({x, y});
 
             if(intensity == 0)
                 continue;
