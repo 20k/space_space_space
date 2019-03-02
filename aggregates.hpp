@@ -81,9 +81,39 @@ struct aggregate
         return ((fmax - fmin) / 2.f);
     }
 
-    bool intersects(vec2f in_pos, float current_radius, float next_radius)
+    void complete()
     {
-        return rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
+        pos = calc_avg();
+        half_dim = calc_half_dim();
+    }
+
+    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_start_angle)
+    {
+        bool hit_doughnut = rect_intersects_doughnut(pos, half_dim, in_pos, current_radius, next_radius);
+
+        ///so, if we hit the doughnut AND we fully lie within the unoccluded zone, hit
+
+        if(hit_doughnut)
+        {
+            vec2f tl = pos - half_dim;
+            vec2f tr = pos + (vec2f){half_dim.x(), -half_dim.y()};
+            vec2f bl = pos + (vec2f){-half_dim.x(), half_dim.y()};
+            vec2f br = pos + half_dim;
+
+            vec2f rtl = tl - in_pos;
+            vec2f rtr = tr - in_pos;
+            vec2f rbl = bl - in_pos;
+            vec2f rbr = br - in_pos;
+
+            bool lies_within = angle_lies_between_vectors_cos(rtl.norm(), start_dir, cos_start_angle) &&
+                               angle_lies_between_vectors_cos(rtr.norm(), start_dir, cos_start_angle) &&
+                               angle_lies_between_vectors_cos(rbl.norm(), start_dir, cos_start_angle) &&
+                               angle_lies_between_vectors_cos(rbr.norm(), start_dir, cos_start_angle);
+
+            return lies_within;
+        }
+
+        return hit_doughnut;
     }
 
     bool intersects(const aggregate<T>& agg)
@@ -157,8 +187,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
 
     for(auto& i : ret.data)
     {
-        i.pos = i.calc_avg();
-        i.half_dim = i.calc_half_dim();
+        i.complete();
     }
 
     #else
@@ -235,8 +264,7 @@ all_aggregates<T> collect_aggregates(const std::vector<T>& in, int num_groups)
     }
     #endif // 0
 
-    ret.half_dim = ret.calc_half_dim();
-    ret.pos = ret.calc_avg();
+    ret.complete();
 
     //double tim = agg_1.getElapsedTime().asMicroseconds() / 1000.;
 
