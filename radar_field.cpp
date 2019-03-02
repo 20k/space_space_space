@@ -200,7 +200,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 }
 
 std::optional<reflect_info>
-alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
+alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
     float current_radius = packet.iterations * speed_of_light_per_tick;
     float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
@@ -262,14 +262,12 @@ alt_radar_field::test_reflect_from(alt_frequency_packet& packet, heatable_entity
             return {{std::nullopt, collide_packet}};
         #endif // NO_DOUBLE_REFLECT
 
-        float reflect_percentage = 0.5;
-
         /*if(collide.en)
         {
             reflect_percentage = collide.en->reflectivity;
         }*/
 
-        reflect_percentage = collide.reflectivity;
+        float reflect_percentage = collide.reflectivity;
 
         if(packet.frequency == HEAT_FREQ)
         {
@@ -695,7 +693,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     std::cout << "sub " << num_subtract << std::endl;*/
 }
 
-float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
+float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
 {
     float real_distance = packet.iterations * speed_of_light_per_tick;
 

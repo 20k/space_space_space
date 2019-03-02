@@ -250,7 +250,7 @@ struct alt_radar_field
     alt_radar_field(vec2f in);
 
     std::optional<reflect_info>
-    test_reflect_from(alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
+    test_reflect_from(const alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
 
     void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
@@ -266,7 +266,7 @@ struct alt_radar_field
 
     float get_intensity_at(vec2f pos);
     float get_imaginary_intensity_at(vec2f pos);
-    float get_intensity_at_of(vec2f pos, alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
+    float get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
