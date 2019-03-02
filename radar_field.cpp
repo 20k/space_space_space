@@ -691,9 +691,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
 {
     float real_distance = packet.iterations * speed_of_light_per_tick;
-    float my_angle = (pos - packet.origin).angle();
 
-    vec2f packet_vector = (vec2f){real_distance, 0}.rot(my_angle);
+    vec2f packet_vector = (pos - packet.origin).norm() * real_distance;
 
     vec2f packet_position = packet_vector + packet.origin;
 
@@ -716,9 +715,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, alt_frequency_packet& pack
             float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
             float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
 
-            float shadow_my_angle = (pos - shadow.origin).angle();
-
-            vec2f shadow_vector = (vec2f){shadow_real_distance, 0}.rot(shadow_my_angle);
+            vec2f shadow_vector = (pos - shadow.origin).norm() * shadow_real_distance;
             vec2f shadow_position = shadow_vector + shadow.origin;
 
             float distance_to_shadow = (pos - shadow_position).length();
