@@ -172,7 +172,7 @@ struct aggregate
 
     bool intersects(const aggregate<T>& agg)
     {
-        return rect_intersect(pos - half_dim, pos + half_dim, agg.pos - agg.half_dim, agg.pos + agg.half_dim);
+        return rect_intersect(tl, br, agg.tl, agg.br);
     }
 };
 
