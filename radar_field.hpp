@@ -35,7 +35,7 @@ struct alt_frequency_packet
     float intensity = 0;
     vec2f origin = {0,0};
 
-    int iterations = 0;
+    uint32_t start_iteration = 0;
     float restrict_angle = M_PI;
     float cos_restrict_angle = -1; ///cos M_PI
     float cos_half_restrict_angle = cos(M_PI/2);
@@ -214,6 +214,9 @@ struct heatable
 
 struct heatable_entity : entity, heatable
 {
+    ///aka the sun, used for optimising
+    bool hot_stationary = false;
+
     heatable_entity()
     {
         is_heat = true;
@@ -224,6 +227,8 @@ struct heatable_entity : entity, heatable
 
 struct alt_radar_field
 {
+    uint32_t iteration_count = 0;
+
     vec2f target_dim;
 
     ///this is a really bad idea but ergh
@@ -265,7 +270,7 @@ struct alt_radar_field
 
     bool packet_expired(const alt_frequency_packet& packet);
 
-    void tick(double dt_s, uint32_t iterations);
+    void tick(double dt_s);
     void render(camera& cam, sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);

@@ -398,7 +398,7 @@ void server_thread()
             }
         }*/
 
-        radar.tick(frametime_dt, iterations);
+        radar.tick(frametime_dt);
         player_manage.tick(frametime_dt);
 
         iterations++;

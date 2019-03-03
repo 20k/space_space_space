@@ -115,6 +115,7 @@ void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
     freq.id = alt_frequency_packet::gid++;
+    freq.start_iteration = iteration_count;
 
     packets.push_back(freq);
 }
@@ -122,6 +123,7 @@ void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
 void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
+    freq.start_iteration = iteration_count;
 
     packets.push_back(freq);
 }
@@ -164,6 +166,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
     freq.emitted_by = en.id;
     freq.cross_dim = en.r.approx_dim;
     freq.cross_angle = en.r.rotation;
+    freq.start_iteration = iteration_count;
 
     ignore_map[freq.id][en.id].restart();
 
@@ -189,9 +192,9 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     if(packet.force_cleanup)
         return true;
 
-    float real_distance = packet.iterations * speed_of_light_per_tick;
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
 
-    if(packet.iterations == 0)
+    if(packet.start_iteration == iteration_count)
         return false;
 
     float real_intensity = packet.intensity / (real_distance * real_distance);
@@ -202,8 +205,8 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 std::optional<reflect_info>
 alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
-    float current_radius = packet.iterations * speed_of_light_per_tick;
-    float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+    float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+    float next_radius = current_radius + speed_of_light_per_tick;
 
     vec2f relative_pos = collide.r.position - packet.origin;
 
@@ -355,7 +358,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
     return ret;
 }
 
-void alt_radar_field::tick(double dt_s, uint32_t iterations)
+void alt_radar_field::tick(double dt_s)
 {
     profile_dumper pdump("newtick");
 
@@ -445,8 +448,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
             }
         }*/
 
-        float current_radius = packet.iterations * speed_of_light_per_tick;
-        float next_radius = (packet.iterations + 1) * speed_of_light_per_tick;
+        float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+        float next_radius = current_radius + speed_of_light_per_tick;
 
         /*for(aggregate<alt_collideable>& agg : aggregates.data)
         {
@@ -654,7 +657,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
 
-    for(alt_frequency_packet& packet : packets)
+    /*for(alt_frequency_packet& packet : packets)
     {
         packet.iterations++;
     }
@@ -679,7 +682,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
         {
             packet.iterations++;
         }
-    }
+    }*/
 
     //pdump.dump();
     pdump.stop();
@@ -688,6 +691,8 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
     //collideables.clear();
 
     std::cout << "mpackets " << packets.size() << std::endl;
+
+    iteration_count++;
 
     /*int num_subtract = 0;
 
@@ -704,7 +709,7 @@ void alt_radar_field::tick(double dt_s, uint32_t iterations)
 
 float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
 {
-    float real_distance = packet.iterations * speed_of_light_per_tick;
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
 
     vec2f packet_vector = (pos - packet.origin).norm() * real_distance;
 
@@ -726,8 +731,8 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     {
         for(alt_frequency_packet& shadow : f_it->second)
         {
-            float shadow_real_distance = shadow.iterations * speed_of_light_per_tick;
-            float shadow_next_real_distance = (shadow.iterations + 1) * speed_of_light_per_tick;
+            float shadow_real_distance = (iteration_count - shadow.start_iteration) * speed_of_light_per_tick;
+            float shadow_next_real_distance = shadow_real_distance * speed_of_light_per_tick;
 
             vec2f shadow_vector = (pos - shadow.origin).norm() * shadow_real_distance;
             vec2f shadow_position = shadow_vector + shadow.origin;
@@ -1030,7 +1035,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                         continue;
 
                     alt_frequency_packet lpacket = *packet.last_packet;
-                    lpacket.iterations = packet.iterations;
+                    lpacket.start_iteration = packet.start_iteration;
                     lpacket.id = packet.id;
 
                     packet = lpacket;
@@ -1086,7 +1091,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                         continue;
 
                     alt_frequency_packet lpacket = *packet.last_packet;
-                    lpacket.iterations = packet.iterations;
+                    lpacket.start_iteration = packet.start_iteration;
                     lpacket.id = packet.id;
 
                     packet = lpacket;
