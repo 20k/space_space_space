@@ -645,7 +645,7 @@ void server_thread()
 
         fixed_clock::increment();
 
-        Sleep(100);
+        //Sleep(100);
     }
 }
 

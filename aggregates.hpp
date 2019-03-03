@@ -94,7 +94,7 @@ struct aggregate
         br = pos + half_dim;
     }
 
-    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle)
+    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle, vec2f left_restrict, vec2f right_restrict)
     {
         //return true;
 
@@ -119,6 +119,11 @@ struct aggregate
 
         if(dist.squared_length() >= next_radius * next_radius)
             return false;
+
+        if(restrict_angle >= M_PI/4)
+            return true;
+
+        //printf("restrict %f\n", restrict_angle);
 
         //std::cout << "cres " << cos(restrict_angle) << std::endl;
 
@@ -145,21 +150,21 @@ struct aggregate
         ///check if we lie in the occluded zone
         return !all_out;*/
 
-        vec2f vright = start_dir.rot(restrict_angle);
-        vec2f vleft = start_dir.rot(-restrict_angle);
+        //return true;
 
-        if(is_left_side((vec2f){0,0}, vleft, rtl) &&
-           is_left_side((vec2f){0,0}, vleft, rtr) &&
-           is_left_side((vec2f){0,0}, vleft, rbl) &&
-           is_left_side((vec2f){0,0}, vleft, rbr)
-           )
+        vec2f vright = right_restrict;
+        vec2f vleft = left_restrict;
+
+        if(!is_left_side((vec2f){0,0}, vleft, rtl) &&
+           !is_left_side((vec2f){0,0}, vleft, rtr) &&
+           !is_left_side((vec2f){0,0}, vleft, rbl) &&
+           !is_left_side((vec2f){0,0}, vleft, rbr))
             return false;
 
-        if(!is_left_side((vec2f){0,0}, vright, rtl) &&
-           !is_left_side((vec2f){0,0}, vright, rtr) &&
-           !is_left_side((vec2f){0,0}, vright, rbl) &&
-           !is_left_side((vec2f){0,0}, vright, rbr)
-           )
+        if(is_left_side((vec2f){0,0}, vright, rtl) &&
+           is_left_side((vec2f){0,0}, vright, rtr) &&
+           is_left_side((vec2f){0,0}, vright, rbl) &&
+           is_left_side((vec2f){0,0}, vright, rbr))
             return false;
 
         return true;
