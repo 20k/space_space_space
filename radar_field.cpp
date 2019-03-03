@@ -1025,11 +1025,15 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
     for(alt_frequency_packet packet : packets)
     {
-        if(ignore_map.find(packet.id) != ignore_map.end())
+        auto it_packet = ignore_map.find(packet.id);
+
+        if(it_packet != ignore_map.end())
         {
-            if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
+            auto it_collide = it_packet->second.find(uid);
+
+            if(it_collide != it_packet->second.end())
             {
-                if(ignore_map[packet.id][uid].should_ignore())
+                if(it_collide->second.should_ignore())
                 {
                     if(!packet.last_packet)
                         continue;
