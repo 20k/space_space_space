@@ -1074,50 +1074,51 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         merged.push_back(packet);
     }*/
 
-    auto merged = post_intensity_calculate;
-
     std::set<uint32_t> considered_packets;
     std::set<uint32_t> pseudo_packets;
 
-    for(alt_frequency_packet packet : imaginary_packets)
+    if(player)
     {
-        if(ignore_map.find(packet.id) != ignore_map.end())
+        for(alt_frequency_packet packet : imaginary_packets)
         {
-            if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
+            if(ignore_map.find(packet.id) != ignore_map.end())
             {
-                if(ignore_map[packet.id][uid].should_ignore())
+                if(ignore_map[packet.id].find(uid) != ignore_map[packet.id].end())
                 {
-                    if(!packet.last_packet)
-                        continue;
+                    if(ignore_map[packet.id][uid].should_ignore())
+                    {
+                        if(!packet.last_packet)
+                            continue;
 
-                    alt_frequency_packet lpacket = *packet.last_packet;
-                    lpacket.start_iteration = packet.start_iteration;
-                    lpacket.id = packet.id;
+                        alt_frequency_packet lpacket = *packet.last_packet;
+                        lpacket.start_iteration = packet.start_iteration;
+                        lpacket.id = packet.id;
 
-                    packet = lpacket;
+                        packet = lpacket;
+                    }
                 }
             }
+
+            float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
+
+            packet.intensity = intensity;
+
+            uint64_t search_entity = packet.emitted_by;
+
+            if(packet.reflected_by != -1)
+                search_entity = packet.reflected_by;
+
+            if(packet.emitted_by == uid && packet.reflected_by == -1)
+                continue;
+
+            if(packet.intensity >= 0.01)
+                pseudo_packets.insert(search_entity);
         }
-
-        float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
-
-        packet.intensity = intensity;
-
-        uint64_t search_entity = packet.emitted_by;
-
-        if(packet.reflected_by != -1)
-            search_entity = packet.reflected_by;
-
-        if(packet.emitted_by == uid && packet.reflected_by == -1)
-            continue;
-
-        if(packet.intensity >= 0.01)
-            pseudo_packets.insert(search_entity);
     }
 
     //std::cout << "pseudo size " << pseudo_packets.size() << std::endl;
 
-    for(alt_frequency_packet& packet : merged)
+    for(alt_frequency_packet& packet : post_intensity_calculate)
     {
         if(packet.emitted_by == uid && packet.reflected_by == -1)
             continue;
@@ -1243,7 +1244,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         std::set<uint32_t> low_detail_entities;
         std::set<uint32_t> all_entities;
 
-        for(alt_frequency_packet& packet : merged)
+        for(alt_frequency_packet& packet : post_intensity_calculate)
         {
             if(packet.emitted_by == uid && packet.reflected_by == -1)
                 continue;
