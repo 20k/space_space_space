@@ -66,6 +66,17 @@ void component::add_on_use(component_info::does_type type, double amount, double
     activate_requirements.push_back(d);
 }
 
+void component::set_heat(double heat)
+{
+    heat_produced_at_full_usage = heat;
+}
+
+void component::set_heat_scales_by_production(bool status, component_info::does_type primary)
+{
+    production_heat_scales = status;
+    primary_type = primary;
+}
+
 void component::set_no_drain_on_full_production()
 {
     no_drain_on_full_production = true;
@@ -805,13 +816,6 @@ void ship::tick(double dt_s)
 
 void ship::handle_heat(double dt_s)
 {
-    alt_radar_field& radar = get_radar_field();
-
-    //radar.add_simple_collideable(this);
-
-    double min_heat = 150;
-    //double max_heat = 1000;
-
     std::vector<double> all_produced = sum<double>([](auto c)
                                                    {
                                                        return c.get_produced();
@@ -822,6 +826,13 @@ void ship::handle_heat(double dt_s)
                                                        return c.get_needed();
                                                    });
 
+    #if 0
+    //radar.add_simple_collideable(this);
+
+    double min_heat = 150;
+    //double max_heat = 1000;
+
+
     double excess_power = all_needed[component_info::POWER];
 
     if(excess_power < 0)
@@ -829,7 +840,10 @@ void ship::handle_heat(double dt_s)
 
     double power = all_produced[component_info::POWER] - excess_power;
 
+    ///heat at max power instead?
+
     double power_to_heat = 200;
+    double coolant_to_heat_drain = 200;
 
     double heat_intensity = min_heat + power_to_heat * power;
 
@@ -837,15 +851,81 @@ void ship::handle_heat(double dt_s)
 
     double thrust_produced = all_produced[component_info::THRUST];
 
+    double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;
+
     heat_intensity += thrust_to_heat * thrust_produced;
 
-    latent_heat += heat_intensity;
+    latent_heat += heat_intensity - heat_drained;
+
+    if(latent_heat < 0)
+        latent_heat = 0;
 
     float emitted = latent_heat * HEAT_EMISSION_FRAC;
 
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
     heat.intensity = emitted;
+
+    if(!model)
+        radar.emit(heat, r.position, *this);
+    else
+        radar.emit_with_imaginary_packet(heat, r.position, *this, model);
+
+    latent_heat -= emitted;
+    #endif // 0
+
+    double min_heat = 50;
+    double produced_heat = 0;
+
+    for(component& c : components)
+    {
+        double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac);
+
+        if(c.production_heat_scales)
+        {
+            if(c.primary_type == component_info::COUNT)
+                throw std::runtime_error("Bad primary type");
+
+            double produced_comp = all_produced[c.primary_type];
+            double excess_comp = all_needed[c.primary_type];
+
+            if(produced_comp > 0.001)
+            {
+                if(excess_comp < 0)
+                    excess_comp = 0;
+
+                double unused_frac = excess_comp / produced_comp;
+
+                if(unused_frac < 0 || unused_frac > 1)
+                {
+                    printf("errr in unused frac? %lf\n", unused_frac);
+                }
+
+                heat = heat * (1 - unused_frac);
+            }
+        }
+
+        produced_heat += heat;
+    }
+
+    double coolant_to_heat_drain = 200;
+    double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;
+
+    produced_heat -= heat_drained;
+
+    latent_heat += produced_heat;
+
+    if(latent_heat < 0)
+        latent_heat = 0;
+
+    ///radiated heat is fairly minimal
+    float emitted = latent_heat * HEAT_EMISSION_FRAC;
+
+    alt_frequency_packet heat;
+    heat.frequency = HEAT_FREQ;
+    heat.intensity = emitted;
+
+    alt_radar_field& radar = get_radar_field();
 
     if(!model)
         radar.emit(heat, r.position, *this);

@@ -163,6 +163,7 @@ void server_thread()
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
     thruster.add(component_info::HP, 0, 1);
+    thruster.set_heat(100);
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
@@ -170,17 +171,20 @@ void server_thread()
     warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
     warp.set_no_drain_on_full_production();
+    warp.set_heat(1000);
 
     shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -3);
     shields.add(component_info::HP, 0, 5);
     shields.set_no_drain_on_full_production();
+    shields.set_heat(200);
 
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
     missile.add(component_info::MISSILE_STORE, 0.01, 10);
     missile.set_no_drain_on_full_production();
+    missile.set_heat(50);
 
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
@@ -190,6 +194,7 @@ void server_thread()
     laser.add(component_info::HP, 0, 2);
     laser.add(component_info::CAPACITOR, 1.5, 20);
     laser.set_no_drain_on_full_production();
+    laser.set_heat(50);
 
     laser.add_on_use(component_info::CAPACITOR, -10, 1);
     laser.subtype = "laser";
@@ -204,9 +209,12 @@ void server_thread()
 
     sensor.add_on_use(component_info::POWER, -35, 1);
 
+    sensor.set_heat(20);
+
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
     comms.add(component_info::HP, 0, 1);
+    comms.set_heat(10);
 
     /*sysrepair.add(component_info::POWER, -1);
     sysrepair.add(component_info::SYSTEM, 1);
@@ -216,17 +224,23 @@ void server_thread()
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
     armour.set_no_drain_on_full_production();
+    armour.set_heat(50);
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
     ls.add(component_info::HP, 0.01, 5);
     //ls.set_no_drain_on_full_production();
+    ls.set_heat(100);
 
-    coolant.add(component_info::COOLANT, 1, 20);
+    coolant.add(component_info::COOLANT, 4, 200);
     coolant.add(component_info::HP, 0, 1);
+    coolant.add(component_info::POWER, -1);
+    coolant.set_heat(50);
 
-    power_generator.add(component_info::POWER, 10, 50);
+    power_generator.add(component_info::POWER, 6, 50);
     power_generator.add(component_info::HP, 0, 10);
+    power_generator.set_heat(6 * 200);
+    power_generator.set_heat_scales_by_production(true, component_info::POWER);
 
     //power_generator.info[1].held = 0;
     //power_generator.info[0].held = 0;
@@ -240,6 +254,7 @@ void server_thread()
     crew.add(component_info::COMMS, 0.1);
     crew.add(component_info::CREW, 0.01, 100);
     crew.add(component_info::CREW, -0.01); ///passive death on no o2
+    crew.set_heat(5);
 
 
     test_ship->add(thruster);

@@ -98,6 +98,11 @@ struct component : serialisable
     ///has a minimum value to prevent accidental feedback loops
     double last_production_frac = 1;
 
+    ///does heat scale depending on how much of the output is used?
+    ///aka power gen
+    bool production_heat_scales = false;
+    component_info::does_type primary_type = component_info::COUNT;
+
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(info);
@@ -108,6 +113,7 @@ struct component : serialisable
         DO_SERIALISE(last_production_frac);
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(subtype);
+        DO_SERIALISE(production_heat_scales);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -117,6 +123,9 @@ struct component : serialisable
     void add(component_info::does_type, double amount, double cap);
 
     void add_on_use(component_info::does_type, double amount, double time_between_use_s);
+
+    void set_heat(double heat);
+    void set_heat_scales_by_production(bool status, component_info::does_type primary);
 
     void set_no_drain_on_full_production();
 
@@ -162,6 +171,8 @@ struct component : serialisable
     bool try_use = false;
     double use_angle = 0;
     double max_use_angle = 0;
+
+    double heat_produced_at_full_usage = 0;
 };
 
 struct data_tracker : serialisable
