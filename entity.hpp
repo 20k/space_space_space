@@ -143,6 +143,7 @@ struct entity_manager : serialisable
     uint32_t iteration = 0;
 
     bool use_aggregates = true;
+    bool aggregates_dirty = true;
 
     all_aggregates<aggregate<entity*>> collision;
 
@@ -191,16 +192,10 @@ struct entity_manager : serialisable
 
         auto last_entities = entities;
 
-        sf::Clock tclock;
-
         for(entity* e : last_entities)
         {
             e->tick(dt_s);
         }
-
-        double tclk = tclock.getElapsedTime().asMicroseconds() / 1000.;
-
-        std::cout << "tclk " << tclk << std::endl;
 
         for(entity* e : last_entities)
         {
@@ -214,7 +209,17 @@ struct entity_manager : serialisable
 
         if(use_aggregates)
         {
-            handle_aggregates();
+            //sf::Clock aggy;
+
+            if(aggregates_dirty)
+                handle_aggregates();
+            else
+                partial_reaggregate();
+
+            aggregates_dirty = false;
+
+            //double aggy_time = aggy.getElapsedTime().asMicroseconds() / 1000.;
+            //std::cout << "aggyt " << aggy_time << std::endl;
 
             //#define ALL_RECTS
             #ifdef ALL_RECTS
@@ -416,9 +421,15 @@ struct entity_manager : serialisable
             entities.push_back(i);
         }
 
+        aggregates_dirty = aggregates_dirty || (to_spawn.size() > 0);
+
         to_spawn.clear();
     }
 
+    ///ok, need to modify this so we only update collision meshes intermittently
+    ///so: need to pick one coarse, go through it and its subobjects and redistribute between
+    ///other meshes, then recalculate any affected meshes
+    ///only fully reaggregate on a spawn for the moment?
     void handle_aggregates()
     {
         all_aggregates<entity*> nsecond = collect_aggregates(entities, 20);
@@ -429,6 +440,68 @@ struct entity_manager : serialisable
         for(aggregate<entity*>& to_process : nsecond.data)
         {
             collision.data.push_back(collect_aggregates(to_process.data, 10));
+        }
+    }
+
+    void partial_reaggregate()
+    {
+        if(collision.data.size() == 0)
+            return;
+
+        int ccoarse = iteration % collision.data.size();
+
+        auto& to_restrib = collision.data[ccoarse];
+
+        ///for fine in coarse
+        for(auto& trf : to_restrib.data)
+        {
+            ///don't fully deplete
+            if(trf.data.size() == 1)
+                continue;
+
+            ///for entities in fine
+            for(auto entity_it = trf.data.begin(); entity_it != trf.data.end();)
+            {
+                entity* e = *entity_it;
+
+                float min_dist = FLT_MAX;
+                int nearest_fine = -1;
+                int nearest_coarse = -1;
+
+                for(int coarse_id = 0; coarse_id < (int)collision.data.size(); coarse_id++)
+                {
+                    auto& coarse = collision.data[coarse_id];
+
+                    for(int fine_id = 0; fine_id < (int)coarse.data.size(); fine_id++)
+                    {
+                        auto& fine = coarse.data[fine_id];
+
+                        float dist = (e->r.position - fine.get_pos()).length();
+
+                        if(dist < min_dist)
+                        {
+                            min_dist = dist;
+                            nearest_fine = fine_id;
+                            nearest_coarse = coarse_id;
+                        }
+                    }
+                }
+
+                if(nearest_coarse == -1 || nearest_fine == -1)
+                {
+                    entity_it++;
+                    continue;
+                }
+
+                if(&collision.data[nearest_coarse].data[nearest_fine] == &trf)
+                {
+                    entity_it++;
+                    continue;
+                }
+
+                entity_it = trf.data.erase(entity_it);
+                collision.data[nearest_coarse].data[nearest_fine].data.push_back(e);
+            }
         }
     }
 
@@ -493,6 +566,8 @@ struct entity_manager : serialisable
                 entity* ptr = entities[i];
 
                 entities.erase(entities.begin() + i);
+
+                aggregates_dirty = true;
 
                 delete ptr;
                 i--;
