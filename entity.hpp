@@ -503,6 +503,18 @@ struct entity_manager : serialisable
                 collision.data[nearest_coarse].data[nearest_fine].data.push_back(e);
             }
         }
+
+        collision.complete();
+
+        for(auto& coarse : collision.data)
+        {
+            for(auto& fine : coarse.data)
+            {
+                fine.complete();
+            }
+
+            coarse.complete();
+        }
     }
 
     void debug_aggregates(camera& cam, sf::RenderWindow& window)
