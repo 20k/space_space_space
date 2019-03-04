@@ -104,6 +104,7 @@ struct solar_system
             }
 
             asteroid* a = entities.make_new<asteroid>();
+            a->init(2, 4);
             a->r.position = found_pos;
             a->ticks_between_collisions = 2;
             //a->permanent_heat = 100;
@@ -113,15 +114,18 @@ struct solar_system
             entities.cleanup();
         }
 
-        float solar_size = 1000;
+        /*float solar_size = STANDARD_SUN_EMISSIONS_RADIUS;
 
         ///intensity / ((it * sol) * (it * sol)) = 0.1
 
         ///intensity / (dist * dist) = 0.1
 
-        float intensity = RADAR_CUTOFF * (solar_size * solar_size);
+        float intensity = 0.1 * (solar_size * solar_size);*/
+
+        float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
         sun = entities.make_new<asteroid>();
+        sun->init(3, 4);
         sun->r.position = {400, 400};
         sun->permanent_heat = intensity;
         sun->reflectivity = 0;

@@ -988,7 +988,7 @@ std::string ship::show_resources()
         ret += format(strings[i], strings) + ": " + format(status[i], status) + " | " + format(cur[i], cur) + " / " + format(caps[i], caps) + "\n";
     }
 
-    ret += "Heat: " + to_string_with_variable_prec(latent_heat) + "\n";
+    ret += "Heat: " + to_string_with_variable_prec(heat_to_kelvin(latent_heat)) + "\n";
 
     return ret;
 }
@@ -1316,11 +1316,11 @@ void projectile::tick(double dt_s)
 
 asteroid::asteroid()
 {
-    float min_rad = 2;
-    float max_rad = 4;
-
     mass = 1000;
+}
 
+void asteroid::init(float min_rad, float max_rad)
+{
     int n = 5;
 
     for(int i=0; i < n; i++)

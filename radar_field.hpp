@@ -22,7 +22,24 @@
 #define BEST_UNCERTAINTY 1
 
 #define RADAR_CUTOFF 0.1
-#define HEAT_EMISSION_FRAC 0.01
+#define HEAT_EMISSION_FRAC 0.1
+
+///1 heat at this distance
+#define STANDARD_SUN_EMISSIONS_RADIUS 315.
+#define STANDARD_SUN_HEAT_INTENSITY (STANDARD_SUN_EMISSIONS_RADIUS * STANDARD_SUN_EMISSIONS_RADIUS)
+#define REAL_SUN_TEMPERATURE_KELVIN 6000.
+
+inline
+double heat_to_kelvin(double heat)
+{
+    return heat * REAL_SUN_TEMPERATURE_KELVIN / STANDARD_SUN_HEAT_INTENSITY;
+}
+
+inline
+double kelvin_to_heat(double kelvin)
+{
+    return kelvin * STANDARD_SUN_HEAT_INTENSITY / REAL_SUN_TEMPERATURE_KELVIN;
+}
 
 namespace sf
 {

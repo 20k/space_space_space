@@ -316,6 +316,7 @@ struct data_model : serialisable
 struct asteroid : heatable_entity
 {
     asteroid();
+    void init(float min_rad, float max_rad);
 
     virtual void tick(double dt_s) override;
 };
