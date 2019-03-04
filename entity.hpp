@@ -209,6 +209,8 @@ struct entity_manager : serialisable
         {
             handle_aggregates();
 
+            //#define ALL_RECTS
+            #ifdef ALL_RECTS
             int num_fine_intersections = 0;
 
             for(int c_1=0; c_1 < (int)collision.data.size(); c_1++)
@@ -248,6 +250,9 @@ struct entity_manager : serialisable
                                     if(!e1->collides || !e2->collides)
                                         continue;
 
+                                    if(e1 == e2)
+                                        continue;
+
                                     vec2f p1 = e1->r.position;
                                     float r1 = e1->r.approx_rad;
 
@@ -271,6 +276,60 @@ struct entity_manager : serialisable
                     }
                 }
             }
+
+            #endif // ALL_RECTS
+
+            #define HALF_RECTS
+            #ifdef HALF_RECTS
+            for(entity* e1 : entities)
+            {
+                if(!e1->collides)
+                    continue;
+
+                vec2f tl = e1->r.position - e1->r.approx_dim;
+                vec2f br = e1->r.position + e1->r.approx_dim;
+
+                for(auto& coarse : collision.data)
+                {
+                    if(!rect_intersect(coarse.tl, coarse.br, tl, br))
+                        continue;
+
+                    for(auto& fine : coarse.data)
+                    {
+                        if(!rect_intersect(fine.tl, fine.br, tl, br))
+                            continue;
+
+                        for(entity* e2 : fine.data)
+                        {
+                            if(!e2->collides)
+                                continue;
+
+                            if(e1 == e2)
+                                continue;
+
+                            vec2f p1 = e1->r.position;
+                            float r1 = e1->r.approx_rad;
+
+                            vec2f p2 = e2->r.position;
+                            float r2 = e2->r.approx_rad;
+
+                            if((p2 - p1).squared_length() > ((r1 * 1.5f + r2 * 1.5f) * (r1 * 1.5f + r2 * 1.5f)) * 4.f)
+                                continue;
+
+                            if(collides(*e1, *e2))
+                            {
+                                e1->pre_collide(*e2);
+                                e2->pre_collide(*e1);
+
+                                e1->on_collide(*this, *e2);
+                                e2->on_collide(*this, *e1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endif // HALF_RECTS
 
             //printf("fine %i\n", num_fine_intersections);
         }
