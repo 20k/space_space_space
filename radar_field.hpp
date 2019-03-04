@@ -22,6 +22,7 @@
 #define BEST_UNCERTAINTY 1
 
 #define RADAR_CUTOFF 0.1
+#define HEAT_EMISSION_FRAC 0.01
 
 namespace sf
 {

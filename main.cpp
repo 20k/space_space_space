@@ -82,7 +82,7 @@ struct solar_system
 
             //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
 
-            float rdist = rand_det_s(rng, 30, 6000);
+            float rdist = rand_det_s(rng, 300, 6000);
 
             vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 

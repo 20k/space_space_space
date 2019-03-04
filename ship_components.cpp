@@ -839,18 +839,37 @@ void ship::handle_heat(double dt_s)
 
     heat_intensity += thrust_to_heat * thrust_produced;
 
+    latent_heat += heat_intensity;
+
+    float emitted = latent_heat * HEAT_EMISSION_FRAC;
+
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
-    heat.intensity = heat_intensity;
+    heat.intensity = emitted;
 
     if(!model)
         radar.emit(heat, r.position, *this);
     else
         radar.emit_with_imaginary_packet(heat, r.position, *this, model);
 
+    latent_heat -= emitted;
+
     //std::cout << "lheat " << latent_heat << std::endl;
 
-    dissipate();
+    //dissipate();
+
+    /*float emitted = latent_heat * 0.01;
+
+    alt_radar_field& radar = get_radar_field();
+
+    alt_frequency_packet heat;
+    heat.frequency = HEAT_FREQ;
+    heat.intensity = permanent_heat + emitted;
+    heat.packet_wavefront_width *= ticks_between_emissions;
+
+    radar.emit(heat, r.position, *this);
+
+    latent_heat -= emitted;*/
 }
 
 void ship::add(const component& c)
@@ -968,6 +987,8 @@ std::string ship::show_resources()
     {
         ret += format(strings[i], strings) + ": " + format(status[i], status) + " | " + format(cur[i], cur) + " / " + format(caps[i], caps) + "\n";
     }
+
+    ret += "Heat: " + to_string_with_variable_prec(latent_heat) + "\n";
 
     return ret;
 }

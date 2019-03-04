@@ -89,7 +89,7 @@ void heatable_entity::dissipate(int ticks_between_emissions)
             return;
     }
 
-    float emitted = latent_heat * 0.1;
+    float emitted = latent_heat * 0.01;
 
     if(permanent_heat + emitted >= RADAR_CUTOFF)
     {

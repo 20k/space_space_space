@@ -279,6 +279,7 @@ struct ship : heatable_entity
         DO_SERIALISE(network_owner);
         DO_SERIALISE(components);
         DO_SERIALISE(last_sat_percentage);
+        DO_SERIALISE(latent_heat);
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override;
