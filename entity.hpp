@@ -69,6 +69,7 @@ struct entity : virtual serialisable
     bool cleanup = false;
     int cleanup_rounds = 0;
     bool collides = true;
+    int ticks_between_collisions = 1;
 
     float mass = 1;
 
@@ -190,10 +191,16 @@ struct entity_manager : serialisable
 
         auto last_entities = entities;
 
+        sf::Clock tclock;
+
         for(entity* e : last_entities)
         {
             e->tick(dt_s);
         }
+
+        double tclk = tclock.getElapsedTime().asMicroseconds() / 1000.;
+
+        std::cout << "tclk " << tclk << std::endl;
 
         for(entity* e : last_entities)
         {
@@ -286,6 +293,15 @@ struct entity_manager : serialisable
                 if(!e1->collides)
                     continue;
 
+                auto id = e1->id;
+                auto ticks_between_collisions = e1->ticks_between_collisions;
+
+                if(ticks_between_collisions > 1)
+                {
+                    if((iteration % ticks_between_collisions) != (id % ticks_between_collisions))
+                        continue;
+                }
+
                 vec2f tl = e1->r.position - e1->r.approx_dim;
                 vec2f br = e1->r.position + e1->r.approx_dim;
 
@@ -328,7 +344,6 @@ struct entity_manager : serialisable
                     }
                 }
             }
-
             #endif // HALF_RECTS
 
             //printf("fine %i\n", num_fine_intersections);

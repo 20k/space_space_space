@@ -258,7 +258,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         collide_packet.precalculated_start_angle = relative_pos.norm();
         collide_packet.restrict_angle = my_fraction * 2 * M_PI;
         collide_packet.cos_restrict_angle = cos(collide_packet.restrict_angle);
-        collide_packet.cos_half_restrict_angle = cos(collide_packet.restrict_angle/2);
+        //collide_packet.cos_half_restrict_angle = cos(collide_packet.restrict_angle/2);
 
         collide_packet.left_restrict = (vec2f){1, 0}.rot(collide_packet.start_angle - collide_packet.restrict_angle);
         collide_packet.right_restrict = (vec2f){1, 0}.rot(collide_packet.start_angle + collide_packet.restrict_angle);
@@ -300,7 +300,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.cross_dim = collide.r.approx_dim;
         reflect.cross_angle = collide.r.rotation;
         reflect.cos_restrict_angle = cos(collide_packet.restrict_angle);
-        reflect.cos_half_restrict_angle = cos(reflect.restrict_angle/2);
+        //reflect.cos_half_restrict_angle = cos(reflect.restrict_angle/2);
 
         reflect.left_restrict = (vec2f){1, 0}.rot(reflect.start_angle - reflect.restrict_angle);
         reflect.right_restrict = (vec2f){1, 0}.rot(reflect.start_angle + reflect.restrict_angle);
@@ -484,11 +484,11 @@ void alt_radar_field::tick(double dt_s)
 
         for(auto& coarse : em->collision.data)
         {
-            if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_half_restrict_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+            if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
             {
                 for(auto& fine : coarse.data)
                 {
-                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.cos_half_restrict_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                     {
                         for(entity* collide : fine.data)
                         {

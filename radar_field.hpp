@@ -38,12 +38,12 @@ struct alt_frequency_packet
     uint32_t start_iteration = 0;
     float restrict_angle = M_PI;
     float cos_restrict_angle = -1; ///cos M_PI
-    float cos_half_restrict_angle = cos(M_PI/2);
     float start_angle = 0;
     vec2f precalculated_start_angle = {1, 0};
 
-    vec2f left_restrict = (vec2f){1, 0}.rot(-restrict_angle);
-    vec2f right_restrict = (vec2f){1, 0}.rot(restrict_angle);
+    ///irrelevant for restrict angle > pi/2
+    vec2f left_restrict = (vec2f){1, 0};
+    vec2f right_restrict = (vec2f){1, 0};
 
     float packet_wavefront_width = 20;
     //float cross_section = 1;

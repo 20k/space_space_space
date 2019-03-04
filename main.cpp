@@ -105,6 +105,7 @@ struct solar_system
 
             asteroid* a = entities.make_new<asteroid>();
             a->r.position = found_pos;
+            a->ticks_between_collisions = 2;
             //a->permanent_heat = 100;
 
             asteroids.push_back(a);

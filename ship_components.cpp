@@ -1290,9 +1290,7 @@ void projectile::on_collide(entity_manager& em, entity& other)
 
 void projectile::tick(double dt_s)
 {
-    alt_radar_field& radar = get_radar_field();
 
-    //radar.add_simple_collideable(this);
 }
 
 asteroid::asteroid()
@@ -1321,9 +1319,6 @@ asteroid::asteroid()
 
 void asteroid::tick(double dt_s)
 {
-    alt_radar_field& radar = get_radar_field();
-
-    //radar.add_simple_collideable(this);
     dissipate();
 }
 

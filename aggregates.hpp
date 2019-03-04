@@ -94,7 +94,7 @@ struct aggregate
         br = pos + half_dim;
     }
 
-    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float cos_half_restrict_angle, float restrict_angle, vec2f left_restrict, vec2f right_restrict)
+    bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float restrict_angle, vec2f left_restrict, vec2f right_restrict)
     {
         //return true;
 
