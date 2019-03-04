@@ -89,17 +89,19 @@ void heatable_entity::dissipate(int ticks_between_emissions)
             return;
     }
 
-    alt_radar_field& radar = get_radar_field();
-
     float emitted = latent_heat * 0.1;
 
-    alt_frequency_packet heat;
-    heat.frequency = HEAT_FREQ;
-    heat.intensity = permanent_heat + emitted;
-    heat.packet_wavefront_width *= ticks_between_emissions;
+    if(permanent_heat + emitted >= RADAR_CUTOFF)
+    {
+        alt_radar_field& radar = get_radar_field();
 
-    if(heat.intensity >= RADAR_CUTOFF)
+        alt_frequency_packet heat;
+        heat.frequency = HEAT_FREQ;
+        heat.intensity = permanent_heat + emitted;
+        heat.packet_wavefront_width *= ticks_between_emissions;
+
         radar.emit(heat, r.position, *this);
+    }
     else
         return;
 
