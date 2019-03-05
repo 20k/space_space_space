@@ -149,32 +149,15 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
 
 void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en)
 {
-    float tcount = 5;
+    freq.id = alt_frequency_packet::gid++;
+    freq.emitted_by = en.id;
 
-    for(int i=0; i < tcount; i++)
-    {
-        float ffrac = i / tcount;
-        float start_angle = ffrac * (2 * M_PI);
+    freq.cross_dim = en.r.approx_dim;
+    freq.cross_angle = en.r.rotation;
 
-        freq.id = alt_frequency_packet::gid++;
-        freq.emitted_by = en.id;
+    ignore_map[freq.id][en.id].restart();
 
-        freq.start_angle = start_angle;
-        freq.precalculated_start_angle = (vec2f){1, 0}.rot(start_angle);
-
-        freq.restrict_angle = (2 * M_PI/tcount) / 2.;
-        freq.cos_restrict_angle = cos(freq.restrict_angle);
-
-        freq.left_restrict = (vec2f){1, 0}.rot(freq.start_angle - freq.restrict_angle);
-        freq.right_restrict = (vec2f){1, 0}.rot(freq.start_angle + freq.restrict_angle);
-
-        freq.cross_dim = en.r.approx_dim;
-        freq.cross_angle = en.r.rotation;
-
-        ignore_map[freq.id][en.id].restart();
-
-        add_packet_raw(freq, pos);
-    }
+    add_packet_raw(freq, pos);
 }
 
 void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model)
