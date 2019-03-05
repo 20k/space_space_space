@@ -908,7 +908,7 @@ void ship::handle_heat(double dt_s)
         produced_heat += heat;
     }
 
-    double coolant_to_heat_drain = 200;
+    double coolant_to_heat_drain = 100;
     double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;
 
     produced_heat -= heat_drained;

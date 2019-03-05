@@ -232,7 +232,7 @@ void server_thread()
     //ls.set_no_drain_on_full_production();
     ls.set_heat(100);
 
-    coolant.add(component_info::COOLANT, 4, 200);
+    coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
     coolant.add(component_info::POWER, -1);
     coolant.set_heat(50);
