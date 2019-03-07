@@ -923,7 +923,7 @@ void ship::handle_heat(double dt_s)
 
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
-    heat.intensity = emitted;
+    heat.intensity = emitted * 10;
 
     alt_radar_field& radar = get_radar_field();
 
