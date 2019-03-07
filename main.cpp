@@ -237,9 +237,9 @@ void server_thread()
     coolant.add(component_info::POWER, -1);
     coolant.set_heat(50);
 
-    power_generator.add(component_info::POWER, 6, 50);
+    power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
-    power_generator.set_heat(6 * 200);
+    power_generator.set_heat(8 * 200);
     power_generator.set_heat_scales_by_production(true, component_info::POWER);
 
     //power_generator.info[1].held = 0;

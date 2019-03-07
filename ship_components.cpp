@@ -913,7 +913,7 @@ void ship::handle_heat(double dt_s)
 
     produced_heat -= heat_drained;
 
-    latent_heat += produced_heat;
+    latent_heat += produced_heat * dt_s;
 
     if(latent_heat < 0)
         latent_heat = 0;
