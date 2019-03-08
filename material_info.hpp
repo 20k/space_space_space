@@ -23,15 +23,12 @@ namespace material_info
 ///could also use non real materials but ehh
 struct material_fixed_properties : serialisable
 {
-    material_info::material_type type = material_info::COUNT;
-
     ///heat per unit volume
     float specific_heat = 0;
     float reflectivity = 0;
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
-        DO_SERIALISE(type);
         DO_SERIALISE(specific_heat);
         DO_SERIALISE(reflectivity);
     }
@@ -52,10 +49,12 @@ struct material_dynamic_properties : serialisable
 struct material : serialisable
 {
     material_dynamic_properties dynamic_desc;
+    material_info::material_type type = material_info::COUNT;
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
         DO_SERIALISE(dynamic_desc);
+        DO_SERIALISE(type);
     }
 };
 
