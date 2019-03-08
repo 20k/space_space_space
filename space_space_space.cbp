@@ -87,6 +87,7 @@
 		<Unit filename="fixed_clock.hpp" />
 		<Unit filename="format.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="material_info.hpp" />
 		<Unit filename="player.cpp" />
 		<Unit filename="player.hpp" />
 		<Unit filename="radar_field.cpp" />
