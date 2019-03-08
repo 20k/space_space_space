@@ -36,6 +36,8 @@ namespace component_info
         POWER,
         CAPACITOR, ///weapons
         MISSILE_STORE,
+        ORE,
+        MATERIAL,
         COUNT
     };
 
@@ -55,6 +57,8 @@ namespace component_info
         "Power",
         "Capacitor",
         "Missiles",
+        "Ore",
+        "Material",
     };
 }
 
@@ -114,6 +118,10 @@ struct component : serialisable
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(subtype);
         DO_SERIALISE(production_heat_scales);
+        DO_SERIALISE(my_volume);
+        DO_SERIALISE(internal_volume);
+        DO_SERIALISE(stored);
+        DO_SERIALISE(primary_type);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -173,6 +181,20 @@ struct component : serialisable
     double max_use_angle = 0;
 
     double heat_produced_at_full_usage = 0;
+
+    ///my volume is how large we are as a thing
+    ///internal volume is how much can be stored within me
+    ///internal volume should probably be less than my_volume
+    float my_volume = 0;
+    float internal_volume = 0;
+
+    std::vector<component> stored;
+
+    float get_my_volume() const;
+    float get_stored_volume() const;
+
+    bool can_store(const component& c);
+    void store(const component& c);
 };
 
 struct data_tracker : serialisable

@@ -292,6 +292,38 @@ void component::use(std::vector<double>& res)
     try_use = false;
 }
 
+float component::get_my_volume() const
+{
+    return my_volume;
+}
+
+float component::get_stored_volume() const
+{
+    float vol = 0;
+
+    for(const component& c : stored)
+    {
+        vol += c.get_my_volume();
+    }
+
+    return vol;
+}
+
+bool component::can_store(const component& c)
+{
+    float storeable = internal_volume - get_stored_volume();
+
+    return (storeable - c.get_my_volume()) >= 0;
+}
+
+void component::store(const component& c)
+{
+    if(!can_store(c))
+        throw std::runtime_error("Cannot store component");
+
+    stored.push_back(c);
+}
+
 std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
 {
     std::vector<double> produced_resources;
