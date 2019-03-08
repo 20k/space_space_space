@@ -158,7 +158,7 @@ void server_thread()
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, coolant, power_generator, crew;
+    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, coolant, power_generator, crew, coolant_cold, coolant_hot;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -256,6 +256,11 @@ void server_thread()
     crew.add(component_info::CREW, -0.01); ///passive death on no o2
     crew.set_heat(5);
 
+    coolant_cold.add(component_info::HP, 0, 10);
+    coolant_hot.add(component_info::HP, 0, 10);
+
+    coolant_cold.internal_volume = 50;
+    coolant_hot.internal_volume = 5;
 
     test_ship->add(thruster);
     test_ship->add(warp);
@@ -270,6 +275,8 @@ void server_thread()
     test_ship->add(coolant);
     test_ship->add(power_generator);
     test_ship->add(crew);
+    test_ship->add(coolant_cold);
+    test_ship->add(coolant_hot);
 
     test_ship->r.position = {400, 400};
 

@@ -90,6 +90,9 @@ struct component : serialisable
     std::vector<does> activate_requirements;
     bool no_drain_on_full_production = false;
 
+    static inline uint32_t gid = 0;
+    uint32_t id = gid++;
+
     std::string long_name;
 
     ///?????????????????
@@ -122,6 +125,7 @@ struct component : serialisable
         DO_SERIALISE(internal_volume);
         DO_SERIALISE(stored);
         DO_SERIALISE(primary_type);
+        DO_SERIALISE(id);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -195,6 +199,7 @@ struct component : serialisable
 
     bool can_store(const component& c);
     void store(const component& c);
+    bool is_storage();
 };
 
 struct data_tracker : serialisable

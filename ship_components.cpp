@@ -311,6 +311,9 @@ float component::get_stored_volume() const
 
 bool component::can_store(const component& c)
 {
+    if(internal_volume <= 0)
+        return false;
+
     float storeable = internal_volume - get_stored_volume();
 
     return (storeable - c.get_my_volume()) >= 0;
@@ -322,6 +325,11 @@ void component::store(const component& c)
         throw std::runtime_error("Cannot store component");
 
     stored.push_back(c);
+}
+
+bool component::is_storage()
+{
+    return internal_volume > 0;
 }
 
 std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
@@ -1101,6 +1109,17 @@ std::string ship::show_resources()
     }
 
     ret += "Heat: " + to_string_with_variable_prec(heat_to_kelvin(latent_heat)) + "\n";
+
+    for(component& c : components)
+    {
+        if(!c.is_storage())
+            continue;
+
+        float max_stored = c.internal_volume;
+        float cur_stored = c.get_stored_volume();
+
+        ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";
+    }
 
     return ret;
 }
