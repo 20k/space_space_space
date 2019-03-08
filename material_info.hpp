@@ -3,6 +3,8 @@
 
 #include <networking/serialisable.hpp>
 
+struct material_fixed_properties;
+
 namespace material_info
 {
     enum material_type
@@ -10,9 +12,11 @@ namespace material_info
         HYDROGEN,
         IRON,
         COPPER,
-        WATER,
+        H2O,
         COUNT,
     };
+
+    material_fixed_properties fetch(material_type type);
 }
 
 ///making the executive decision that most of this won't be physically based
@@ -47,12 +51,10 @@ struct material_dynamic_properties : serialisable
 
 struct material : serialisable
 {
-    material_fixed_properties fixed_desc;
     material_dynamic_properties dynamic_desc;
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
-        DO_SERIALISE(fixed_desc);
         DO_SERIALISE(dynamic_desc);
     }
 };
