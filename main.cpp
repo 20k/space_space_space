@@ -305,6 +305,11 @@ void server_thread()
         i._pid = get_next_persistent_id();
     }
 
+    for(component& c : test_ship2->components)
+    {
+        c._pid = get_next_persistent_id();
+    }
+
     //std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
     test_ship2->network_owner = 1;
     test_ship2->r.network_owner = 1;
@@ -731,7 +736,7 @@ int main()
     conn.connect("192.168.0.54", 11000);
     //conn.connect("77.97.17.179", 11000);
 
-    data_model<persistent<ship>> model;
+    data_model<ship> model;
     client_entities renderables;
 
     sf::Clock imgui_delta;
@@ -790,7 +795,7 @@ int main()
         {
             //model.cleanup();
             //std::cout << conn.read() << std::endl;
-            model = conn.reads_from<data_model<persistent<ship>>>().data;
+            conn.reads_from<data_model<ship>>(model);
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
 
@@ -880,7 +885,7 @@ int main()
 
         conn.writes_to(cinput, -1);
 
-        for(persistent<ship>& s : model.ships)
+        for(ship& s : model.ships)
         {
             /*ImGui::Begin(std::to_string(s.network_owner).c_str());
 
@@ -888,9 +893,12 @@ int main()
 
             ImGui::End();*/
 
-            s->show_resources();
 
-            s->advanced_ship_display();
+            //printf("fpid %i\n", s._pid);
+
+            s.show_resources();
+
+            s.advanced_ship_display();
         }
 
         render_radar_data(window, sample);

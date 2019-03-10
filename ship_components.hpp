@@ -85,7 +85,7 @@ struct does : serialisable
     }
 };
 
-struct component : serialisable
+struct component : virtual serialisable, owned
 {
     std::vector<does> info;
     std::vector<does> activate_requirements;
@@ -241,7 +241,7 @@ struct alt_radar_field;
 struct client_fire;
 struct player_model;
 
-struct ship : heatable_entity, host_persistent<ship>
+struct ship : heatable_entity, owned
 {
     size_t network_owner = 0;
 
@@ -320,10 +320,10 @@ struct ship : heatable_entity, host_persistent<ship>
 
     double data_track_elapsed_s = 0;
 
+    bool test = false;
+
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
-        host_persistent<ship>::serialise(data, encode);
-
         DO_SERIALISE(data_track);
         DO_SERIALISE(network_owner);
         DO_SERIALISE(components);
