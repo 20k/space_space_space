@@ -1148,7 +1148,7 @@ void ship::show_resources()
         if(!c.detailed_view_open)
             continue;
 
-        ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), nullptr);
+        ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), &c.detailed_view_open);
 
         for(component& stored : c.stored)
         {
@@ -1158,6 +1158,10 @@ void ship::show_resources()
 
             ImGui::Text(str.c_str());
         }
+
+        std::string total = "Storage: " + to_string_with_variable_prec(c.get_stored_volume()) + "/" + to_string_with_variable_prec(c.get_my_volume());
+
+        ImGui::Text(total.c_str());
 
         ImGui::End();
     }

@@ -320,8 +320,6 @@ struct ship : heatable_entity, owned
 
     double data_track_elapsed_s = 0;
 
-    bool test = false;
-
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(data_track);
