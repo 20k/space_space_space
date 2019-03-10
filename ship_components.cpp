@@ -1139,7 +1139,7 @@ void ship::show_resources()
 
         if(ImGui::IsItemClicked(0))
         {
-            c.detailed_view_open = true;
+            c.detailed_view_open = !c.detailed_view_open;
         }
     }
 
@@ -1150,6 +1150,14 @@ void ship::show_resources()
 
         ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), nullptr);
 
+        for(component& stored : c.stored)
+        {
+            std::string str = stored.long_name;
+
+            str += " (" + to_string_with_variable_prec(stored.my_volume) + ")";
+
+            ImGui::Text(str.c_str());
+        }
 
         ImGui::End();
     }
