@@ -309,6 +309,32 @@ float component::get_stored_volume() const
     return vol;
 }
 
+float component::get_stored_temperature()
+{
+    return my_temperature;
+}
+
+void component::add_heat_to_stored(float temperature)
+{
+    for(component& c : stored)
+    {
+        float total_heat = 0;
+
+        for(material& m : c.composition)
+        {
+            total_heat += material_info::fetch(m.type).specific_heat * m.dynamic_desc.volume;
+        }
+
+        if(total_heat < 0.0001)
+            continue;
+
+        for(component& c : stored)
+        {
+            c.my_temperature += temperature / total_heat;
+        }
+    }
+}
+
 bool component::can_store(const component& c)
 {
     if(internal_volume <= 0)
@@ -1150,18 +1176,18 @@ void ship::show_resources()
 
         ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), &c.detailed_view_open);
 
+        std::string total = "Storage: " + to_string_with_variable_prec(c.get_stored_volume()) + "/" + to_string_with_variable_prec(c.internal_volume);
+
+        ImGui::Text(total.c_str());
+
         for(component& stored : c.stored)
         {
             std::string str = stored.long_name;
 
-            str += " (" + to_string_with_variable_prec(stored.my_volume) + ")";
+            str += " (" + to_string_with_variable_prec(stored.my_volume) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
 
             ImGui::Text(str.c_str());
         }
-
-        std::string total = "Storage: " + to_string_with_variable_prec(c.get_stored_volume()) + "/" + to_string_with_variable_prec(c.get_my_volume());
-
-        ImGui::Text(total.c_str());
 
         ImGui::End();
     }

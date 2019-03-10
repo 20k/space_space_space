@@ -273,6 +273,7 @@ void server_thread()
 
     assert(coolant_cold.can_store(coolant_material));
     coolant_cold.store(coolant_material);
+    coolant_cold.add_heat_to_stored(500);
 
     test_ship->add(thruster);
     test_ship->add(warp);

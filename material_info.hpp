@@ -44,12 +44,12 @@ struct material_fixed_properties : serialisable
 
 struct material_dynamic_properties : serialisable
 {
-    float total_heat = 0;
+    //float total_heat = 0;
     float volume = 0;
 
     virtual void serialise(nlohmann::json& data, bool encode)
     {
-        DO_SERIALISE(total_heat);
+        //DO_SERIALISE(total_heat);
         DO_SERIALISE(volume);
     }
 };

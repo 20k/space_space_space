@@ -128,6 +128,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(primary_type);
         DO_SERIALISE(id);
         DO_SERIALISE(composition);
+        DO_SERIALISE(my_temperature);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -197,13 +198,20 @@ struct component : virtual serialisable, owned
     std::vector<component> stored;
     std::vector<material> composition;
 
+    float my_temperature = 0;
+
     float get_my_volume() const;
     float get_stored_volume() const;
+
+    float get_stored_temperature();
+
+    void add_heat_to_stored(float heat);
 
     bool can_store(const component& c);
     void store(const component& c);
     bool is_storage();
 
+    ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
 
     ///do not network
