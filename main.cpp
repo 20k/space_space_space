@@ -298,6 +298,7 @@ void server_thread()
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
     test_ship2->data_track.resize(component_info::COUNT);
+    test_ship2->_pid = get_next_persistent_id();
 
     for(auto& i : test_ship2->data_track)
     {
@@ -890,8 +891,6 @@ int main()
             s->show_resources();
 
             s->advanced_ship_display();
-
-            printf("PID %i\n", s._pid);
         }
 
         render_radar_data(window, sample);
