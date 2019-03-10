@@ -332,6 +332,17 @@ bool component::is_storage()
     return internal_volume > 0;
 }
 
+void component::add_composition(material_info::material_type type, double volume)
+{
+    material new_mat;
+    new_mat.type = type;
+    new_mat.dynamic_desc.volume = volume;
+
+    my_volume += volume;
+
+    composition.push_back(new_mat);
+}
+
 std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
 {
     std::vector<double> produced_resources;
@@ -1025,7 +1036,7 @@ void ship::set_thrusters_active(double active)
     return ret;
 }*/
 
-std::string ship::show_resources()
+void ship::show_resources()
 {
     std::vector<std::string> strings;
 
@@ -1110,6 +1121,10 @@ std::string ship::show_resources()
 
     ret += "Heat: " + to_string_with_variable_prec(heat_to_kelvin(latent_heat)) + "\n";
 
+    ImGui::Begin((std::string("Tship##") + std::to_string(network_owner)).c_str());
+
+    ImGui::Text(ret.c_str());
+
     for(component& c : components)
     {
         if(!c.is_storage())
@@ -1118,10 +1133,28 @@ std::string ship::show_resources()
         float max_stored = c.internal_volume;
         float cur_stored = c.get_stored_volume();
 
-        ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";
+        //ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";
+
+        ImGui::Text(("Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored)).c_str());
+
+        if(ImGui::IsItemClicked(0))
+        {
+            c.detailed_view_open = true;
+        }
     }
 
-    return ret;
+    for(component& c : components)
+    {
+        if(!c.detailed_view_open)
+            continue;
+
+        ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), nullptr);
+
+
+        ImGui::End();
+    }
+
+    ImGui::End();
 }
 
 std::vector<double> ship::get_capacity()

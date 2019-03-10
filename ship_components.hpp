@@ -127,6 +127,7 @@ struct component : serialisable
         DO_SERIALISE(stored);
         DO_SERIALISE(primary_type);
         DO_SERIALISE(id);
+        DO_SERIALISE(composition);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -194,6 +195,7 @@ struct component : serialisable
     float internal_volume = 0;
 
     std::vector<component> stored;
+    std::vector<material> composition;
 
     float get_my_volume() const;
     float get_stored_volume() const;
@@ -201,6 +203,12 @@ struct component : serialisable
     bool can_store(const component& c);
     void store(const component& c);
     bool is_storage();
+
+    void add_composition(material_info::material_type type, double volume);
+
+    ///do not network
+    ///needs some adjustments to the network, need to fix ownership n stuff
+    bool detailed_view_open = false;
 };
 
 struct data_tracker : serialisable
@@ -233,7 +241,7 @@ struct alt_radar_field;
 struct client_fire;
 struct player_model;
 
-struct ship : heatable_entity
+struct ship : heatable_entity, host_persistent<ship>
 {
     size_t network_owner = 0;
 
@@ -278,7 +286,7 @@ struct ship : heatable_entity
     std::vector<double> last_sat_percentage;
 
     //std::string show_components();
-    std::string show_resources();
+    void show_resources();
 
     template<typename T, typename U>
     std::vector<T> sum(U in)
@@ -314,6 +322,8 @@ struct ship : heatable_entity
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
+        host_persistent<ship>::serialise(data, encode);
+
         DO_SERIALISE(data_track);
         DO_SERIALISE(network_owner);
         DO_SERIALISE(components);

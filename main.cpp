@@ -262,6 +262,17 @@ void server_thread()
     coolant_cold.internal_volume = 50;
     coolant_hot.internal_volume = 5;
 
+    coolant_cold.add_composition(material_info::IRON, 55);
+    coolant_hot.add_composition(material_info::IRON, 10);
+
+    component coolant_material;
+    ///????
+    coolant_material.add(component_info::HP, 0, 1);
+    coolant_material.add_composition(material_info::HYDROGEN, 50);
+
+    assert(coolant_cold.can_store(coolant_material));
+    coolant_cold.store(coolant_material);
+
     test_ship->add(thruster);
     test_ship->add(warp);
     test_ship->add(shields);
@@ -290,7 +301,7 @@ void server_thread()
 
     for(auto& i : test_ship2->data_track)
     {
-        i.pid = get_next_persistent_id();
+        i._pid = get_next_persistent_id();
     }
 
     //std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
@@ -719,7 +730,7 @@ int main()
     conn.connect("192.168.0.54", 11000);
     //conn.connect("77.97.17.179", 11000);
 
-    data_model<ship> model;
+    data_model<persistent<ship>> model;
     client_entities renderables;
 
     sf::Clock imgui_delta;
@@ -778,7 +789,7 @@ int main()
         {
             //model.cleanup();
             //std::cout << conn.read() << std::endl;
-            model = conn.reads_from<data_model<ship>>().data;
+            model = conn.reads_from<data_model<persistent<ship>>>().data;
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read();
 
@@ -868,15 +879,19 @@ int main()
 
         conn.writes_to(cinput, -1);
 
-        for(ship& s : model.ships)
+        for(persistent<ship>& s : model.ships)
         {
-            ImGui::Begin(std::to_string(s.network_owner).c_str());
+            /*ImGui::Begin(std::to_string(s.network_owner).c_str());
 
             ImGui::Text(s.show_resources().c_str());
 
-            ImGui::End();
+            ImGui::End();*/
 
-            s.advanced_ship_display();
+            s->show_resources();
+
+            s->advanced_ship_display();
+
+            printf("PID %i\n", s._pid);
         }
 
         render_radar_data(window, sample);

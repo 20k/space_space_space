@@ -16,6 +16,14 @@ namespace material_info
         COUNT,
     };
 
+    static std::vector<std::string> long_names
+    {
+        "Hydrogen",
+        "Iron",
+        "Copper",
+        "H2O",
+    };
+
     material_fixed_properties fetch(material_type type);
 }
 
