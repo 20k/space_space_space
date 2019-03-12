@@ -36,16 +36,12 @@ struct client_renderable : serialisable
 
     void serialise(nlohmann::json& data, bool encode)
     {
-        //if(!encode)
-
         DO_SERIALISE(position);
         DO_SERIALISE(rotation);
 
         DO_SERIALISE(vert_dist);
         DO_SERIALISE(vert_angle);
         DO_SERIALISE(vert_cols);
-        //if(!encode)
-        //    std::cout <<" VCOL " << vert_cols[0].x() << std::endl;
 
         DO_SERIALISE(approx_rad);
         DO_SERIALISE(scale);

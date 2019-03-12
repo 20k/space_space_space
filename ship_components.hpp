@@ -85,6 +85,24 @@ struct does : serialisable
     }
 };
 
+struct storage_pipe : serialisable
+{
+    size_t id_1 = 0;
+    size_t id_2 = 0;
+
+    ///+ve = id_1 -> id_2
+    ///-ve = id_2 -> id_1
+    float flow_rate = 0;
+
+    virtual void serialise(nlohmann::json& data, bool encode) override
+    {
+        DO_SERIALISE(id_1);
+        DO_SERIALISE(id_2);
+
+        DO_SERIALISE(flow_rate);
+    }
+};
+
 struct component : virtual serialisable, owned
 {
     std::vector<does> info;
