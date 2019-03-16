@@ -1392,6 +1392,15 @@ void ship::take_damage(double amount)
     }
 }
 
+void ship::add_pipe(const component& c1, const component& c2)
+{
+    storage_pipe pipe;
+    pipe.id_1 = c1._pid;
+    pipe.id_2 = c2._pid;
+
+    pipes.push_back(pipe);
+}
+
 void ship::on_collide(entity_manager& em, entity& other)
 {
     if(dynamic_cast<asteroid*>(&other) != nullptr || dynamic_cast<ship*>(&other))
@@ -1431,6 +1440,37 @@ void ship::on_collide(entity_manager& em, entity& other)
         {
             dynamic_cast<ship*>(&other)->take_damage(their_change.length()/2);
         }
+    }
+}
+
+void ship::new_network_copy()
+{
+    data_track.resize(component_info::COUNT);
+    _pid = get_next_persistent_id();
+
+    for(auto& i : data_track)
+    {
+        i._pid = get_next_persistent_id();
+    }
+
+    for(component& c : components)
+    {
+        auto next_id = get_next_persistent_id();
+
+        for(storage_pipe& p : pipes)
+        {
+            if(p.id_1 == c._pid)
+            {
+                p.id_1 = next_id;
+            }
+
+            if(p.id_2 == c._pid)
+            {
+                p.id_2 = next_id;
+            }
+        }
+
+        c._pid = next_id;
     }
 }
 

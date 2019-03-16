@@ -299,18 +299,7 @@ void server_thread()
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
-    test_ship2->data_track.resize(component_info::COUNT);
-    test_ship2->_pid = get_next_persistent_id();
-
-    for(auto& i : test_ship2->data_track)
-    {
-        i._pid = get_next_persistent_id();
-    }
-
-    for(component& c : test_ship2->components)
-    {
-        c._pid = get_next_persistent_id();
-    }
+    test_ship2->new_network_copy();
 
     //std::cout << "TS2 " << test_ship2->data_track.pid << std::endl;
     test_ship2->network_owner = 1;

@@ -272,6 +272,7 @@ struct ship : heatable_entity, owned
     size_t network_owner = 0;
 
     std::vector<component> components;
+    std::vector<storage_pipe> pipes;
 
     std::vector<component_info::does_type> tracked
     {
@@ -346,6 +347,8 @@ struct ship : heatable_entity, owned
 
     double data_track_elapsed_s = 0;
 
+    void add_pipe(const component& c1, const component& c2);
+
     virtual void serialise(nlohmann::json& data, bool encode) override
     {
         DO_SERIALISE(data_track);
@@ -353,9 +356,12 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(components);
         DO_SERIALISE(last_sat_percentage);
         DO_SERIALISE(latent_heat);
+        DO_SERIALISE(pipes);
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override;
+
+    void new_network_copy();
 
 private:
     double thrusters_active = 0;
