@@ -75,7 +75,7 @@ struct does : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(capacity);
         DO_SERIALISE(held);
@@ -99,12 +99,27 @@ struct storage_pipe : serialisable, owned
     ///ui
     bool is_open = false;
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    ///uh ok rpcs
+    ///how doth implement
+
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(id_1);
         DO_SERIALISE(id_2);
 
         DO_SERIALISE(flow_rate);
+        DO_SERIALISE(max_flow_rate);
+    }
+
+    ///ok, this is the function i'd like to rpc
+    void set_flow_rate(float in)
+    {
+        if(isnan(in) || isinf(in))
+            return;
+
+        flow_rate = in;
+
+        flow_rate = clamp(flow_rate, -max_flow_rate, max_flow_rate);
     }
 };
 
@@ -134,7 +149,7 @@ struct component : virtual serialisable, owned
     bool production_heat_scales = false;
     component_info::does_type primary_type = component_info::COUNT;
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(info);
         DO_SERIALISE(activate_requirements);
@@ -252,7 +267,7 @@ struct data_tracker : serialisable
 
     void add(double sat, double held);
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(vsat);
         DO_SERIALISE(vheld);
@@ -358,7 +373,7 @@ struct ship : heatable_entity, owned
 
     void add_pipe(const storage_pipe& p);
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(data_track);
         DO_SERIALISE(network_owner);
@@ -392,7 +407,7 @@ struct data_model : serialisable
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(ships);
         DO_SERIALISE(renderables);
@@ -418,7 +433,7 @@ struct client_entities : serialisable
 
     void render(camera& cam, sf::RenderWindow& win);
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(entities);
     }
@@ -429,7 +444,7 @@ struct client_fire : serialisable
     uint32_t weapon_offset = 0;
     float fire_angle = 0;
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(weapon_offset);
         DO_SERIALISE(fire_angle);
@@ -444,7 +459,7 @@ struct client_input : serialisable
     bool ping = false;
     vec2f mouse_world_pos = {0,0};
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(direction);
         DO_SERIALISE(rotation);

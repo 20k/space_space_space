@@ -1081,7 +1081,7 @@ void component::render_inline_ui()
 
     for(component& stored : stored)
     {
-        std::string str = stored.long_name;
+        std::string str = "    " + stored.long_name;
 
         str += " (" + to_string_with_variable_prec(stored.my_volume) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
 
@@ -1229,7 +1229,7 @@ void ship::show_resources()
 
         ImGui::Begin(wstring.c_str(), &p.is_open);
 
-        std::string conn_str = "Connects " + std::to_string(p.id_1) + " with " + std::to_string(p.id_2);
+        std::string conn_str = "Connects pipe " + std::to_string(p.id_1) + " with " + std::to_string(p.id_2);
 
         ImGui::Text(conn_str.c_str());
 
@@ -1240,6 +1240,10 @@ void ship::show_resources()
         {
             c1.value()->render_inline_ui();
             c2.value()->render_inline_ui();
+
+            ///the problem with this is that its not being communicated back to the server
+            ImGui::SliderFloat("", &p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
+            //ImGui::DragFloat("", &p.flow_rate, 0.01f, -p.max_flow_rate, p.max_flow_rate);
         }
 
         ImGui::End();

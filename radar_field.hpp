@@ -167,7 +167,7 @@ struct alt_object_property : serialisable
 
     }
 
-    virtual void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(id_e);
         DO_SERIALISE(id_r);
@@ -196,7 +196,7 @@ struct alt_radar_sample : serialisable
 
     bool fresh = false;
 
-    virtual void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(location);
         DO_SERIALISE(frequencies);

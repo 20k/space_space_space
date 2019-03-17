@@ -58,7 +58,7 @@ struct common_renderable : serialisable, uncertain
     client_renderable r;
     vec2f velocity = {0,0};
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(type);
         DO_SERIALISE(r);

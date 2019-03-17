@@ -34,7 +34,7 @@ struct client_renderable : serialisable
 
     uint32_t network_owner = -1;
 
-    void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(position);
         DO_SERIALISE(rotation);
@@ -115,7 +115,7 @@ struct entity : virtual serialisable
 
     virtual ~entity(){}
 
-    void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         /*DO_SERIALISE(position);
         DO_SERIALISE(rotation);
@@ -124,7 +124,7 @@ struct entity : virtual serialisable
         DO_SERIALISE(vert_angle);
         DO_SERIALISE(vert_cols);*/
 
-        r.serialise(data, encode);
+        r.serialise(ctx, data, encode);
     }
 };
 
@@ -584,7 +584,7 @@ struct entity_manager : serialisable
         }
     }
 
-    virtual void serialise(nlohmann::json& data, bool encode) override
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(entities);
     }

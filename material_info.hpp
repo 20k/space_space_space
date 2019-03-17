@@ -35,7 +35,7 @@ struct material_fixed_properties : serialisable
     float specific_heat = 0;
     float reflectivity = 0;
 
-    virtual void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(specific_heat);
         DO_SERIALISE(reflectivity);
@@ -47,7 +47,7 @@ struct material_dynamic_properties : serialisable
     //float total_heat = 0;
     float volume = 0;
 
-    virtual void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         //DO_SERIALISE(total_heat);
         DO_SERIALISE(volume);
@@ -59,7 +59,7 @@ struct material : serialisable
     material_dynamic_properties dynamic_desc;
     material_info::material_type type = material_info::COUNT;
 
-    virtual void serialise(nlohmann::json& data, bool encode)
+    SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(dynamic_desc);
         DO_SERIALISE(type);
