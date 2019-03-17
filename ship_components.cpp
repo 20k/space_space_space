@@ -1169,6 +1169,18 @@ void ship::show_resources()
         }
     }
 
+    for(storage_pipe& p : pipes)
+    {
+        std::string str = "Pipe " + std::to_string(p.id_1) + "/" + std::to_string(p.id_2);
+
+        ImGui::Text(str.c_str());
+
+        if(ImGui::IsItemClicked(0))
+        {
+            p.is_open = !p.is_open;
+        }
+    }
+
     for(component& c : components)
     {
         if(!c.detailed_view_open)
@@ -1188,6 +1200,22 @@ void ship::show_resources()
 
             ImGui::Text(str.c_str());
         }
+
+        ImGui::End();
+    }
+
+    for(storage_pipe& p : pipes)
+    {
+        if(!p.is_open)
+            continue;
+
+        std::string wstring = "PPipe##" + std::to_string(p._pid);
+
+        ImGui::Begin(wstring.c_str(), &p.is_open);
+
+        std::string conn_str = "Connects " + std::to_string(p.id_1) + " with " + std::to_string(p.id_2);
+
+        ImGui::Text(conn_str.c_str());
 
         ImGui::End();
     }
@@ -1451,6 +1479,11 @@ void ship::new_network_copy()
     for(auto& i : data_track)
     {
         i._pid = get_next_persistent_id();
+    }
+
+    for(storage_pipe& p : pipes)
+    {
+        p._pid = get_next_persistent_id();
     }
 
     for(component& c : components)

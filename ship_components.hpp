@@ -85,7 +85,7 @@ struct does : serialisable
     }
 };
 
-struct storage_pipe : serialisable
+struct storage_pipe : serialisable, owned
 {
     size_t id_1 = 0;
     size_t id_2 = 0;
@@ -93,6 +93,9 @@ struct storage_pipe : serialisable
     ///+ve = id_1 -> id_2
     ///-ve = id_2 -> id_1
     float flow_rate = 0;
+
+    ///ui
+    bool is_open = false;
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {

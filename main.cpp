@@ -141,7 +141,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -290,6 +290,8 @@ void server_thread()
     test_ship->add(crew);
     test_ship->add(coolant_cold);
     test_ship->add(coolant_hot);
+
+    test_ship->add_pipe(coolant_cold, coolant_hot);
 
     test_ship->r.position = {400, 400};
 
