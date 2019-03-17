@@ -891,6 +891,17 @@ void ship::tick(double dt_s)
     }
 }
 
+std::optional<component*> ship::get_component_from_id(uint64_t id)
+{
+    for(component& c : components)
+    {
+        if(c._pid == id)
+            return &c;
+    }
+
+    return std::nullopt;
+}
+
 void ship::handle_heat(double dt_s)
 {
     std::vector<double> all_produced = sum<double>([](auto c)
@@ -1221,6 +1232,15 @@ void ship::show_resources()
         std::string conn_str = "Connects " + std::to_string(p.id_1) + " with " + std::to_string(p.id_2);
 
         ImGui::Text(conn_str.c_str());
+
+        auto c1 = get_component_from_id(p.id_1);
+        auto c2 = get_component_from_id(p.id_2);
+
+        if(c1 && c2)
+        {
+            c1.value()->render_inline_ui();
+            c2.value()->render_inline_ui();
+        }
 
         ImGui::End();
     }

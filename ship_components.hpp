@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <vec/vec.hpp>
+#include <optional>
 
 #include "entity.hpp"
 #include "networking/networking.hpp"
@@ -301,6 +302,8 @@ struct ship : heatable_entity, owned
     std::vector<persistent<data_tracker>> data_track;
 
     ship();
+
+    std::optional<component*> get_component_from_id(uint64_t id);
 
     void handle_heat(double dt_s);
     void tick(double dt_s) override;
