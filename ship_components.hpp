@@ -93,6 +93,7 @@ struct storage_pipe : serialisable, owned
     ///+ve = id_1 -> id_2
     ///-ve = id_2 -> id_1
     float flow_rate = 0;
+    float max_flow_rate = 0;
 
     ///ui
     bool is_open = false;
@@ -235,6 +236,8 @@ struct component : virtual serialisable, owned
     ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
 
+    void render_inline_ui();
+
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff
     bool detailed_view_open = false;
@@ -350,7 +353,7 @@ struct ship : heatable_entity, owned
 
     double data_track_elapsed_s = 0;
 
-    void add_pipe(const component& c1, const component& c2);
+    void add_pipe(const storage_pipe& p);
 
     virtual void serialise(nlohmann::json& data, bool encode) override
     {

@@ -1062,6 +1062,22 @@ void ship::set_thrusters_active(double active)
     return ret;
 }*/
 
+void component::render_inline_ui()
+{
+    std::string total = "Storage: " + to_string_with_variable_prec(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
+
+    ImGui::Text(total.c_str());
+
+    for(component& stored : stored)
+    {
+        std::string str = stored.long_name;
+
+        str += " (" + to_string_with_variable_prec(stored.my_volume) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
+
+        ImGui::Text(str.c_str());
+    }
+}
+
 void ship::show_resources()
 {
     std::vector<std::string> strings;
@@ -1188,18 +1204,7 @@ void ship::show_resources()
 
         ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), &c.detailed_view_open);
 
-        std::string total = "Storage: " + to_string_with_variable_prec(c.get_stored_volume()) + "/" + to_string_with_variable_prec(c.internal_volume);
-
-        ImGui::Text(total.c_str());
-
-        for(component& stored : c.stored)
-        {
-            std::string str = stored.long_name;
-
-            str += " (" + to_string_with_variable_prec(stored.my_volume) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
-
-            ImGui::Text(str.c_str());
-        }
+        c.render_inline_ui();
 
         ImGui::End();
     }
@@ -1420,13 +1425,9 @@ void ship::take_damage(double amount)
     }
 }
 
-void ship::add_pipe(const component& c1, const component& c2)
+void ship::add_pipe(const storage_pipe& p)
 {
-    storage_pipe pipe;
-    pipe.id_1 = c1._pid;
-    pipe.id_2 = c2._pid;
-
-    pipes.push_back(pipe);
+    pipes.push_back(p);
 }
 
 void ship::on_collide(entity_manager& em, entity& other)

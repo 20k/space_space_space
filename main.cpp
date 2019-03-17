@@ -291,7 +291,12 @@ void server_thread()
     test_ship->add(coolant_cold);
     test_ship->add(coolant_hot);
 
-    test_ship->add_pipe(coolant_cold, coolant_hot);
+    storage_pipe rpipe;
+    rpipe.id_1 = coolant_cold._pid;
+    rpipe.id_2 = coolant_hot._pid;
+    rpipe.max_flow_rate = 1;
+
+    test_ship->add_pipe(rpipe);
 
     test_ship->r.position = {400, 400};
 
