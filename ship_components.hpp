@@ -111,6 +111,7 @@ struct storage_pipe : serialisable, owned
         DO_SERIALISE(max_flow_rate);
     }
 
+    DECLARE_RPC(set_flow_rate);
     ///ok, this is the function i'd like to rpc
     void set_flow_rate(float in)
     {
