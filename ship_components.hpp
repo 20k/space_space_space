@@ -111,8 +111,18 @@ struct storage_pipe : serialisable, owned
         DO_SERIALISE(max_flow_rate);
     }
 
-    DECLARE_RPC(set_flow_rate);
-    ///ok, this is the function i'd like to rpc
+    HACKY_REGISRATION();
+
+    RPC_SIGNATURE()
+    {
+        DO_RPC(set_flow_rate);
+    }
+
+    CHECK_RPC_SIGNATURE()
+    {
+        CHECK_ALL_RPC();
+    }
+
     void set_flow_rate(float in)
     {
         if(isnan(in) || isinf(in))
@@ -384,6 +394,14 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(pipes);
     }
 
+    CHECK_RPC_SIGNATURE()
+    {
+        for(storage_pipe& p : pipes)
+        {
+            p.check_rpcs(inf);
+        }
+    }
+
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void new_network_copy();
@@ -459,6 +477,7 @@ struct client_input : serialisable
     std::vector<client_fire> fired;
     bool ping = false;
     vec2f mouse_world_pos = {0,0};
+    global_serialise_info rpcs;
 
     SERIALISE_SIGNATURE()
     {
@@ -467,6 +486,7 @@ struct client_input : serialisable
         DO_SERIALISE(fired);
         DO_SERIALISE(ping);
         DO_SERIALISE(mouse_world_pos);
+        DO_SERIALISE(rpcs);
     }
 };
 

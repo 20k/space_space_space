@@ -379,7 +379,7 @@ void server_thread()
         /*auto clients = conn.clients();
 
         for(auto& i : clients)
-        {c
+        {
             conn.writes_to(entities, i);
         }*/
 
@@ -485,25 +485,32 @@ void server_thread()
 
                 if(s && s->network_owner == read.id)
                 {
-                    double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
-
-                    s->apply_force(read.data.direction * time);
-                    s->apply_rotation_force(read.data.rotation * time);
-
-                    double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
-
-                    thruster_active_percent = clamp(thruster_active_percent, 0, 1);
-
-                    s->set_thrusters_active(thruster_active_percent);
-
-                    if(read.data.fired.size() > 0)
+                    ///acceleration etc
                     {
-                        s->fire(read.data.fired);
+                        double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
+
+                        s->apply_force(read.data.direction * time);
+                        s->apply_rotation_force(read.data.rotation * time);
+
+                        double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
+
+                        thruster_active_percent = clamp(thruster_active_percent, 0, 1);
+
+                        s->set_thrusters_active(thruster_active_percent);
+
+                        if(read.data.fired.size() > 0)
+                        {
+                            s->fire(read.data.fired);
+                        }
+
+                        if(read.data.ping)
+                        {
+                            s->ping();
+                        }
                     }
 
-                    if(read.data.ping)
                     {
-                        s->ping();
+                        s->check_rpcs(read.data.rpcs);
                     }
                 }
             }
@@ -880,6 +887,9 @@ int main()
         }
 
         cinput.mouse_world_pos = cam.screen_to_world(mpos);
+        cinput.rpcs = get_global_serialise_info();
+
+        get_global_serialise_info().all_rpcs.clear();
 
         conn.writes_to(cinput, -1);
 
