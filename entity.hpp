@@ -124,7 +124,9 @@ struct entity : virtual serialisable
         DO_SERIALISE(vert_angle);
         DO_SERIALISE(vert_cols);*/
 
-        r.serialise(ctx, data);
+        DO_SERIALISE(r);
+
+        //r.serialise(ctx, data);
     }
 };
 

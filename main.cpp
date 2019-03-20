@@ -514,6 +514,7 @@ void server_thread()
                         ctx.inf = read.data.rpcs;
                         ctx.exec_rpcs = true;
 
+                        //s->serialise(ctx, ctx.faux);
                         do_recurse(ctx, s);
                     }
                 }
