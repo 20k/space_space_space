@@ -514,7 +514,7 @@ void server_thread()
                         ctx.inf = read.data.rpcs;
                         ctx.exec_rpcs = true;
 
-                        s->check_rpcs(ctx);
+                        do_recurse(ctx, s);
                     }
                 }
             }

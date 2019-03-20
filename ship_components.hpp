@@ -109,16 +109,8 @@ struct storage_pipe : serialisable, owned
 
         DO_SERIALISE(flow_rate);
         DO_SERIALISE(max_flow_rate);
-    }
 
-    RPC_SIGNATURE()
-    {
         DO_RPC(set_flow_rate);
-    }
-
-    CHECK_RPC_SIGNATURE()
-    {
-        CHECK_ALL_RPC();
     }
 
     void set_flow_rate(float in)
@@ -390,14 +382,6 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(last_sat_percentage);
         DO_SERIALISE(latent_heat);
         DO_SERIALISE(pipes);
-    }
-
-    CHECK_RPC_SIGNATURE()
-    {
-        for(storage_pipe& p : pipes)
-        {
-            p.check_rpcs(ctx);
-        }
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override;
