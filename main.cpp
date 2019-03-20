@@ -510,7 +510,11 @@ void server_thread()
                     }
 
                     {
-                        s->check_rpcs(read.data.rpcs);
+                        serialise_context ctx;
+                        ctx.inf = read.data.rpcs;
+                        ctx.exec_rpcs = true;
+
+                        s->check_rpcs(ctx);
                     }
                 }
             }

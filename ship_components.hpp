@@ -111,8 +111,6 @@ struct storage_pipe : serialisable, owned
         DO_SERIALISE(max_flow_rate);
     }
 
-    HACKY_REGISRATION();
-
     RPC_SIGNATURE()
     {
         DO_RPC(set_flow_rate);
@@ -398,7 +396,7 @@ struct ship : heatable_entity, owned
     {
         for(storage_pipe& p : pipes)
         {
-            p.check_rpcs(inf);
+            p.check_rpcs(ctx);
         }
     }
 
