@@ -269,7 +269,8 @@ void server_thread()
     ///????
     coolant_material.add(component_info::HP, 0, 1);
     coolant_material.add_composition(material_info::HYDROGEN, 50);
-    coolant_material.long_name = "Coolant";
+    coolant_material.long_name = "Fluid";
+    coolant_material.flows = true;
 
     assert(coolant_cold.can_store(coolant_material));
     coolant_cold.store(coolant_material);

@@ -139,6 +139,7 @@ struct component : virtual serialisable, owned
     std::string subtype;
 
     double last_sat = 1;
+    bool flows = false;
 
     ///how active i need to be
     ///only applies to no_drain_on_full_production
@@ -156,12 +157,13 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(activate_requirements);
         DO_SERIALISE(long_name);
         DO_SERIALISE(last_sat);
+        DO_SERIALISE(flows);
         DO_SERIALISE(no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(subtype);
         DO_SERIALISE(production_heat_scales);
-        DO_SERIALISE(my_volume);
+        //DO_SERIALISE(my_volume);
         DO_SERIALISE(internal_volume);
         DO_SERIALISE(stored);
         DO_SERIALISE(primary_type);
@@ -231,7 +233,9 @@ struct component : virtual serialisable, owned
     ///my volume is how large we are as a thing
     ///internal volume is how much can be stored within me
     ///internal volume should probably be less than my_volume
-    float my_volume = 0;
+    //float my_volume = 0;
+
+    ///no longer have a concept of my_volume, purely based off composition
     float internal_volume = 0;
 
     std::vector<component> stored;
@@ -239,8 +243,13 @@ struct component : virtual serialisable, owned
 
     float my_temperature = 0;
 
+    //std::vector<component> drain_amount_from_storage(float amount);
+
+    static void drain_from_to(component& c1, component& c2, float amount);
+
     float get_my_volume() const;
     float get_stored_volume() const;
+    float drain_volume(float vol); ///returns real
 
     float get_stored_temperature();
 

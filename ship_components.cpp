@@ -294,7 +294,14 @@ void component::use(std::vector<double>& res)
 
 float component::get_my_volume() const
 {
-    return my_volume;
+    float amount = 0;
+
+    for(const material& m : composition)
+    {
+        amount += m.dynamic_desc.volume;
+    }
+
+    return amount;
 }
 
 float component::get_stored_volume() const
@@ -308,6 +315,15 @@ float component::get_stored_volume() const
 
     return vol;
 }
+
+/*float component::drain_volume(float vol)
+{
+    float to_drain = clamp(vol, 0, get_my_volume());
+
+    my_volume -= to_drain;
+
+    return to_drain;
+}*/
 
 float component::get_stored_temperature()
 {
@@ -364,7 +380,7 @@ void component::add_composition(material_info::material_type type, double volume
     new_mat.type = type;
     new_mat.dynamic_desc.volume = volume;
 
-    my_volume += volume;
+    //my_volume += volume;
 
     composition.push_back(new_mat);
 }
@@ -410,6 +426,157 @@ double component::get_sat(const std::vector<double>& sat)
     }
 
     return min_sat;
+}
+
+/*std::vector<component> component::drain_amount_from_storage(float amount)
+{
+    std::vector<component> ret;
+
+    float total_drainable = 0;
+
+    for(component& c : stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float stored = c.get_my_volume();
+
+        total_drainable += stored;
+    }
+
+    if(total_drainable <= 0.00001f)
+        return ret;
+
+    if(amount > total_drainable)
+        amount = total_drainable;
+
+    for(component& c : stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float stored = c.get_my_volume();
+
+        if(stored < 0.00001f)
+            continue;
+
+        float my_frac = stored / total_drainable;
+
+        float to_drain = my_frac * amount;
+
+        component next = c;
+        c.drain_volume(amount);
+
+        ret.push_back(next);
+    }
+}*/
+
+void component::drain_from_to(component& c1_in, component& c2_in, float amount)
+{
+    if(amount < 0)
+        return drain_from_to(c2_in, c1_in, -amount);
+
+    float total_drainable = 0;
+
+    for(component& c : c1_in.stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float stored = c.get_my_volume();
+
+        total_drainable += stored;
+    }
+
+    if(total_drainable <= 0.00001f)
+        return;
+
+    if(amount > total_drainable)
+        amount = total_drainable;
+
+    float internal_storage = c2_in.internal_volume;
+
+    float free_volume = internal_storage - c2_in.get_stored_volume();
+
+    if(amount > free_volume)
+    {
+        amount = free_volume;
+    }
+
+    for(component& c : c1_in.stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float stored = c.get_my_volume();
+
+        if(stored < 0.00001f)
+            continue;
+
+        float my_frac = stored / total_drainable;
+
+        float to_drain = my_frac * amount;
+
+        if(to_drain < 0.00001f)
+            continue;
+
+        component* found = nullptr;
+
+        ///asserts that there is only ever one flowable component
+        for(component& other : c2_in.stored)
+        {
+            if(!other.flows)
+                continue;
+
+            found = &other;
+        }
+
+        if(found == nullptr)
+        {
+            component next;
+            next.add(component_info::HP, 0, 1);
+            next.long_name = "Fluid";
+            next.flows = true;
+
+            c2_in.stored.push_back(next);
+
+            found = &c2_in.stored.back();
+        }
+
+        assert(found);
+
+        for(material& m : c.composition)
+        {
+            bool processed = false;
+
+            float material_drain_volume = (m.dynamic_desc.volume / stored) * to_drain;
+
+            material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
+
+            m.dynamic_desc.volume -= material_drain_volume;
+
+            for(material& om : found->composition)
+            {
+                if(m.type == om.type)
+                {
+                    om.dynamic_desc.volume += material_drain_volume;
+
+                    processed = true;
+
+                    break;
+                }
+            }
+
+            if(!processed)
+            {
+                material next;
+                next.type = m.type;
+                next.dynamic_desc.volume += material_drain_volume;
+
+                found->composition.push_back(next);
+            }
+        }
+    }
 }
 
 std::vector<double> ship::get_sat_percentage()
@@ -852,6 +1019,22 @@ void ship::tick(double dt_s)
         }
     }
 
+    for(storage_pipe& p : pipes)
+    {
+        p.flow_rate = clamp(p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
+
+        auto c1_o = get_component_from_id(p.id_1);
+        auto c2_o = get_component_from_id(p.id_2);
+
+        if(c1_o && c2_o)
+        {
+            component& c1 = *c1_o.value();
+            component& c2 = *c2_o.value();
+
+            component::drain_from_to(c1, c2, p.flow_rate * dt_s);
+        }
+    }
+
     handle_heat(dt_s);
 
     std::vector<double> diff;
@@ -1083,7 +1266,7 @@ void component::render_inline_ui()
     {
         std::string str = "    " + stored.long_name;
 
-        str += " (" + to_string_with_variable_prec(stored.my_volume) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
+        str += " (" + to_string_with_variable_prec(stored.get_my_volume()) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
 
         ImGui::Text(str.c_str());
     }
