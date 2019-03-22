@@ -1340,7 +1340,16 @@ void ship::handle_heat(double dt_s)
 
     for(component& c : components)
     {
-        current_max_ship_temperature = std::max(c.get_stored_temperature(), current_max_ship_temperature);
+        float vol = c.get_stored_volume();
+
+        float stored_temp = c.get_stored_temperature();
+
+        if(vol < enough_pressure)
+        {
+            stored_temp = mix(0, stored_temp, vol / enough_pressure);
+        }
+
+        current_max_ship_temperature = std::max(stored_temp, current_max_ship_temperature);
         current_max_ship_temperature = std::max(c.get_my_temperature(), current_max_ship_temperature);
     }
 
