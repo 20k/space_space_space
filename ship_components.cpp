@@ -574,8 +574,6 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
         float donater_temp = c.get_my_temperature();
 
-        std::cout << "donate t " << donater_temp << std::endl;
-
         for(material& m : c.composition)
         {
             bool processed = false;
