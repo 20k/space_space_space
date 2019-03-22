@@ -141,7 +141,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -300,6 +300,13 @@ void server_thread()
     rpipe.max_flow_rate = 1;
 
     test_ship->add_pipe(rpipe);
+
+    storage_pipe space_pipe;
+    space_pipe.id_1 = coolant_hot._pid;
+    space_pipe.goes_to_space = true;
+    space_pipe.max_flow_rate = 0.5;
+
+    test_ship->add_pipe(space_pipe);
 
     test_ship->r.position = {400, 400};
 

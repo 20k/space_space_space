@@ -96,6 +96,8 @@ struct storage_pipe : serialisable, owned
     float flow_rate = 0;
     float max_flow_rate = 0;
 
+    bool goes_to_space = false;
+
     ///ui
     bool is_open = false;
 
@@ -109,6 +111,7 @@ struct storage_pipe : serialisable, owned
 
         DO_SERIALISE(flow_rate);
         DO_SERIALISE(max_flow_rate);
+        DO_SERIALISE(goes_to_space);
 
         DO_RPC(set_flow_rate);
     }
@@ -247,6 +250,7 @@ struct component : virtual serialisable, owned
 
     //std::vector<component> drain_amount_from_storage(float amount);
 
+    float drain(float amount);
     static void drain_from_to(component& c1, component& c2, float amount);
 
     float get_my_volume() const;
@@ -254,6 +258,7 @@ struct component : virtual serialisable, owned
 
     float get_my_temperature();
     float get_my_contained_heat();
+    float get_stored_temperature();
     float get_stored_heat_capacity();
 
     void add_heat_to_stored(float heat);

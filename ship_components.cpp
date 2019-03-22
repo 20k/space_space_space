@@ -342,6 +342,18 @@ float component::get_my_contained_heat()
     return final_temp;
 }
 
+float component::get_stored_temperature()
+{
+    float temp = 0;
+
+    for(component& c : stored)
+    {
+        temp += c.get_my_temperature();
+    }
+
+    return temp;
+}
+
 float component::get_stored_heat_capacity()
 {
     float temp = 0;
@@ -452,6 +464,59 @@ double component::get_sat(const std::vector<double>& sat)
     return min_sat;
 }
 
+float component::drain(float amount)
+{
+    if(amount <= 0)
+        return 0;
+
+    float total_drainable = 0;
+
+    for(component& c : stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float vstored = c.get_my_volume();
+
+        total_drainable += vstored;
+    }
+
+    if(total_drainable <= 0.00001f)
+        return 0;
+
+     if(amount > total_drainable)
+        amount = total_drainable;
+
+    for(component& c : stored)
+    {
+        if(!c.flows)
+            continue;
+
+        float vstored = c.get_my_volume();
+
+        if(vstored < 0.00001f)
+            continue;
+
+        float my_frac = vstored / total_drainable;
+
+        float to_drain = my_frac * amount;
+
+        if(to_drain < 0.00001f)
+            continue;
+
+        for(material& m : c.composition)
+        {
+            float material_drain_volume = (m.dynamic_desc.volume / vstored) * to_drain;
+
+            material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
+
+            m.dynamic_desc.volume -= material_drain_volume;
+        }
+    }
+
+    return amount;
+}
+
 void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 {
     if(amount < 0)
@@ -529,7 +594,7 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
         ///temp * specific heat * volume
         float old_stored_heat_capacity = found->get_my_contained_heat();
 
-        float donater_temp = c.get_my_temperature();
+        float donator_temp = c.get_my_temperature();
 
         for(material& m : c.composition)
         {
@@ -541,7 +606,7 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
             m.dynamic_desc.volume -= material_drain_volume;
 
-            float heat_increase = donater_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
+            float heat_increase = donator_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
 
             old_stored_heat_capacity += heat_increase;
 
@@ -1032,12 +1097,43 @@ void ship::tick(double dt_s)
         auto c1_o = get_component_from_id(p.id_1);
         auto c2_o = get_component_from_id(p.id_2);
 
-        if(c1_o && c2_o)
+        if(c1_o && c2_o && !p.goes_to_space)
         {
             component& c1 = *c1_o.value();
             component& c2 = *c2_o.value();
 
             component::drain_from_to(c1, c2, p.flow_rate * dt_s);
+        }
+
+        if(c1_o && p.goes_to_space)
+        {
+            component& c1 = *c1_o.value();
+
+            if(p.flow_rate > 0)
+            {
+                float real_drain = c1.drain(p.flow_rate * dt_s);
+
+                ///so
+                ///going to make an extremely crude assumption
+                ///em signature out is proportional to temperature of emitted gas * emission
+
+                ///theoretically something with a higher specific heat should emit for longer
+
+                ///but like.. really i want a mechanic where emitting less hot stuff is worse than more cold stuff?
+                float real_emissions = real_drain * c1.get_stored_temperature();
+
+
+                alt_frequency_packet heat;
+                heat.frequency = HEAT_FREQ;
+                heat.intensity = real_emissions * 100;
+
+                alt_radar_field& radar = get_radar_field();
+
+                if(!model)
+                    radar.emit(heat, r.position, *this);
+                else
+                    radar.emit_with_imaginary_packet(heat, r.position, *this, model);
+            }
         }
     }
 
@@ -1452,7 +1548,7 @@ void ship::show_resources()
         auto c1 = get_component_from_id(p.id_1);
         auto c2 = get_component_from_id(p.id_2);
 
-        if(c1 && c2)
+        if(c1 && c2 && !p.goes_to_space)
         {
             c1.value()->render_inline_ui();
             c2.value()->render_inline_ui();
@@ -1460,6 +1556,19 @@ void ship::show_resources()
             ///the problem with this is that its not being communicated back to the server
             bool changed = ImGui::SliderFloat("", &p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
             //ImGui::DragFloat("", &p.flow_rate, 0.01f, -p.max_flow_rate, p.max_flow_rate);
+
+            if(changed)
+                rpc("set_flow_rate", p, p.set_flow_rate, p.flow_rate);
+        }
+
+        if(c1 && p.goes_to_space)
+        {
+            c1.value()->render_inline_ui();
+
+            ///have sun temperature here
+            ImGui::Text("Space");
+
+            bool changed = ImGui::SliderFloat("", &p.flow_rate, 0, p.max_flow_rate);
 
             if(changed)
                 rpc("set_flow_rate", p, p.set_flow_rate, p.flow_rate);
