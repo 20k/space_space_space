@@ -251,7 +251,9 @@ struct component : virtual serialisable, owned
     float get_stored_volume() const;
     float drain_volume(float vol); ///returns real
 
-    float get_stored_temperature();
+    float get_my_temperature();
+    float get_my_contained_heat();
+    float get_stored_heat_capacity();
 
     void add_heat_to_stored(float heat);
 

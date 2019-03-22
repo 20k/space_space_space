@@ -325,9 +325,33 @@ float component::get_stored_volume() const
     return to_drain;
 }*/
 
-float component::get_stored_temperature()
+float component::get_my_temperature()
 {
     return my_temperature;
+}
+
+float component::get_my_contained_heat()
+{
+    float final_temp = 0;
+
+    for(material& m : composition)
+    {
+        final_temp += my_temperature * m.dynamic_desc.volume * fetch(m.type).specific_heat;
+    }
+
+    return final_temp;
+}
+
+float component::get_stored_heat_capacity()
+{
+    float temp = 0;
+
+    for(component& c : stored)
+    {
+        temp += c.get_my_contained_heat();
+    }
+
+    return temp;
 }
 
 void component::add_heat_to_stored(float temperature)
@@ -545,6 +569,13 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
         assert(found);
 
+        ///temp * specific heat * volume
+        float old_stored_heat_capacity = found->get_my_contained_heat();
+
+        float donater_temp = c.get_my_temperature();
+
+        std::cout << "donate t " << donater_temp << std::endl;
+
         for(material& m : c.composition)
         {
             bool processed = false;
@@ -554,6 +585,10 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
             material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
 
             m.dynamic_desc.volume -= material_drain_volume;
+
+            float heat_increase = donater_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
+
+            old_stored_heat_capacity += heat_increase;
 
             for(material& om : found->composition)
             {
@@ -576,6 +611,22 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
                 found->composition.push_back(next);
             }
         }
+
+        float next_stored_heat_capacity = old_stored_heat_capacity;
+
+        float total_heat_capacity = 0;
+
+        for(material& m : found->composition)
+        {
+            total_heat_capacity += m.dynamic_desc.volume * material_info::fetch(m.type).specific_heat;
+        }
+
+        float ntemp = 0;
+
+        if(total_heat_capacity > 0.00001f)
+            ntemp = next_stored_heat_capacity / total_heat_capacity;
+
+        found->my_temperature = ntemp;
     }
 }
 
@@ -1266,7 +1317,7 @@ void component::render_inline_ui()
     {
         std::string str = "    " + stored.long_name;
 
-        str += " (" + to_string_with_variable_prec(stored.get_my_volume()) + ") " + to_string_with_variable_prec(stored.get_stored_temperature()) + "K";
+        str += " (" + to_string_with_variable_prec(stored.get_my_volume()) + ") " + to_string_with_variable_prec(stored.get_my_temperature()) + "K";
 
         ImGui::Text(str.c_str());
     }
