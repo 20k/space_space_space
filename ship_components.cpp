@@ -10,6 +10,8 @@
 #include "radar_field.hpp"
 #include "random.hpp"
 
+double apply_to_does(double amount, does& d);
+
 ship::ship()
 {
     last_sat_percentage.resize(component_info::COUNT);
@@ -1137,8 +1139,6 @@ void ship::tick(double dt_s)
         }
     }
 
-    handle_heat(dt_s);
-
     std::vector<double> diff;
     diff.resize(component_info::COUNT);
 
@@ -1155,6 +1155,7 @@ void ship::tick(double dt_s)
     last_sat_percentage = all_sat;
 
 
+    handle_heat(dt_s);
 
     data_track_elapsed_s += dt_s;
 
@@ -1333,6 +1334,42 @@ void ship::handle_heat(double dt_s)
     }
 
     latent_heat = 0;
+
+    float current_max_ship_temperature = 0;
+    float enough_pressure = 1;
+
+    for(component& c : components)
+    {
+        current_max_ship_temperature = std::max(c.get_stored_temperature(), current_max_ship_temperature);
+        current_max_ship_temperature = std::max(c.get_my_temperature(), current_max_ship_temperature);
+    }
+
+    ///handle heating damage
+    for(component& c : components)
+    {
+        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
+
+        material_fixed_properties& fixed = props.second;
+
+        if(current_max_ship_temperature >= fixed.melting_point)
+        {
+            float damage_max = fixed.melting_point * 2;
+            float damage_min = fixed.melting_point;
+
+            float damage_fraction = (current_max_ship_temperature - damage_min) / (damage_max - damage_min);
+
+            damage_fraction = clamp(damage_fraction, 0, 1);
+
+            float real_damage = 1 * damage_fraction * dt_s;
+
+            if(c.has(component_info::HP))
+            {
+                does& d = c.get(component_info::HP);
+
+                apply_to_does(-real_damage, d);
+            }
+        }
+    }
 
     //std::cout << "lheat " << latent_heat << std::endl;
 
