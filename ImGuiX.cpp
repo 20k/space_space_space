@@ -273,3 +273,21 @@ void ImGuiX::PlotMultiEx(
 
     ImGui::RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, inner_bb.Min.y), label);
 }
+
+bool ImGuiX::SliderFloat(const std::string& label, float* v, float v_min, float v_max)
+{
+    bool ret = ImGui::SliderFloat(label.c_str(), v, v_min, v_max);
+
+    if(v_min == 0)
+    {
+        if(fabs(*v) < 0.01)
+            *v = 0;
+    }
+    else
+    {
+        if(fabs(*v) < 0.05)
+            *v = 0;
+    }
+
+    return ret;
+}

@@ -1554,7 +1554,7 @@ void ship::show_resources()
             c2.value()->render_inline_ui();
 
             ///the problem with this is that its not being communicated back to the server
-            bool changed = ImGui::SliderFloat("", &p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
+            bool changed = ImGuiX::SliderFloat("", &p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
             //ImGui::DragFloat("", &p.flow_rate, 0.01f, -p.max_flow_rate, p.max_flow_rate);
 
             if(changed)
@@ -1568,7 +1568,7 @@ void ship::show_resources()
             ///have sun temperature here
             ImGui::Text("Space");
 
-            bool changed = ImGui::SliderFloat("", &p.flow_rate, 0, p.max_flow_rate);
+            bool changed = ImGuiX::SliderFloat("", &p.flow_rate, 0, p.max_flow_rate);
 
             if(changed)
                 rpc("set_flow_rate", p, p.set_flow_rate, p.flow_rate);

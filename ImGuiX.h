@@ -19,6 +19,8 @@ namespace ImGuiX
     float scale_min,
     float scale_max,
     ImVec2 graph_size);
+
+    bool SliderFloat(const std::string& label, float* v, float v_min, float v_max);
 }
 
 #endif // IMGUIX_H_INCLUDED

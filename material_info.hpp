@@ -13,6 +13,7 @@ namespace material_info
         IRON,
         COPPER,
         H2O,
+        COMPOSITE,
         COUNT,
     };
 
@@ -22,6 +23,7 @@ namespace material_info
         "Iron",
         "Copper",
         "H2O",
+        "Composite",
     };
 
     material_fixed_properties fetch(material_type type);
@@ -34,6 +36,7 @@ struct material_fixed_properties : serialisable
     ///heat per unit volume
     float specific_heat = 0;
     float reflectivity = 0;
+    float melting_point = 0;
 
     SERIALISE_SIGNATURE()
     {
@@ -65,5 +68,7 @@ struct material : serialisable
         DO_SERIALISE(type);
     }
 };
+
+std::pair<material_dynamic_properties, material_fixed_properties> get_material_composite(const std::vector<material>& in);
 
 #endif // MATERIAL_INFO_HPP_INCLUDED
