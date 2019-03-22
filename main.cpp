@@ -291,9 +291,19 @@ void server_thread()
     coolant_material.long_name = "Fluid";
     coolant_material.flows = true;
 
+    component coolant_material2;
+    ///????
+    coolant_material2.add(component_info::HP, 0, 1);
+    coolant_material2.add_composition(material_info::HYDROGEN, 5);
+    coolant_material2.long_name = "Fluid";
+    coolant_material2.flows = true;
+
     assert(coolant_cold.can_store(coolant_material));
     coolant_cold.store(coolant_material);
     coolant_cold.add_heat_to_stored(500);
+
+    coolant_hot.store(coolant_material2);
+    coolant_hot.add_heat_to_stored(500);
 
     test_ship->add(thruster);
     test_ship->add(warp);
