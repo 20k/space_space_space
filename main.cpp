@@ -163,7 +163,7 @@ void server_thread()
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
     thruster.add(component_info::HP, 0, 1);
-    thruster.set_heat(100);
+    thruster.set_heat(10);
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
@@ -171,20 +171,20 @@ void server_thread()
     warp.add(component_info::WARP, 0.1);
     warp.add(component_info::HP, 0, 5);
     warp.set_no_drain_on_full_production();
-    warp.set_heat(1000);
+    warp.set_heat(100);
 
     shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -3);
     shields.add(component_info::HP, 0, 5);
     shields.set_no_drain_on_full_production();
-    shields.set_heat(200);
+    shields.set_heat(20);
 
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
     missile.add(component_info::MISSILE_STORE, 0.01, 10);
     missile.set_no_drain_on_full_production();
-    missile.set_heat(50);
+    missile.set_heat(5);
 
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
@@ -194,7 +194,7 @@ void server_thread()
     laser.add(component_info::HP, 0, 2);
     laser.add(component_info::CAPACITOR, 1.5, 20);
     laser.set_no_drain_on_full_production();
-    laser.set_heat(50);
+    laser.set_heat(5);
 
     laser.add_on_use(component_info::CAPACITOR, -10, 1);
     laser.subtype = "laser";
@@ -209,12 +209,12 @@ void server_thread()
 
     sensor.add_on_use(component_info::POWER, -35, 1);
 
-    sensor.set_heat(20);
+    sensor.set_heat(2);
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
     comms.add(component_info::HP, 0, 1);
-    comms.set_heat(10);
+    comms.set_heat(1);
 
     /*sysrepair.add(component_info::POWER, -1);
     sysrepair.add(component_info::SYSTEM, 1);
@@ -224,22 +224,22 @@ void server_thread()
     armour.add(component_info::POWER, -0.5);
     armour.add(component_info::HP, 0, 10);
     armour.set_no_drain_on_full_production();
-    armour.set_heat(50);
+    armour.set_heat(5);
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
     ls.add(component_info::HP, 0.01, 5);
     //ls.set_no_drain_on_full_production();
-    ls.set_heat(100);
+    ls.set_heat(10);
 
     coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
     coolant.add(component_info::POWER, -1);
-    coolant.set_heat(50);
+    coolant.set_heat(5);
 
     power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
-    power_generator.set_heat(8 * 200);
+    power_generator.set_heat(8 * 20);
     power_generator.set_heat_scales_by_production(true, component_info::POWER);
 
     //power_generator.info[1].held = 0;
@@ -254,7 +254,7 @@ void server_thread()
     crew.add(component_info::COMMS, 0.1);
     crew.add(component_info::CREW, 0.01, 100);
     crew.add(component_info::CREW, -0.01); ///passive death on no o2
-    crew.set_heat(5);
+    crew.set_heat(1);
 
     coolant_cold.add(component_info::HP, 0, 10);
     coolant_hot.add(component_info::HP, 0, 10);
@@ -264,6 +264,8 @@ void server_thread()
 
     coolant_cold.add_composition(material_info::IRON, 55);
     coolant_hot.add_composition(material_info::IRON, 10);
+
+    coolant_hot.heat_sink = true;
 
     component coolant_material;
     ///????

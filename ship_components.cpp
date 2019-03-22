@@ -354,7 +354,7 @@ float component::get_stored_heat_capacity()
     return temp;
 }
 
-void component::add_heat_to_stored(float temperature)
+void component::add_heat_to_stored(float heat)
 {
     for(component& c : stored)
     {
@@ -370,7 +370,7 @@ void component::add_heat_to_stored(float temperature)
 
         for(component& c : stored)
         {
-            c.my_temperature += temperature / total_heat;
+            c.my_temperature += heat / total_heat;
         }
     }
 }
@@ -451,49 +451,6 @@ double component::get_sat(const std::vector<double>& sat)
 
     return min_sat;
 }
-
-/*std::vector<component> component::drain_amount_from_storage(float amount)
-{
-    std::vector<component> ret;
-
-    float total_drainable = 0;
-
-    for(component& c : stored)
-    {
-        if(!c.flows)
-            continue;
-
-        float stored = c.get_my_volume();
-
-        total_drainable += stored;
-    }
-
-    if(total_drainable <= 0.00001f)
-        return ret;
-
-    if(amount > total_drainable)
-        amount = total_drainable;
-
-    for(component& c : stored)
-    {
-        if(!c.flows)
-            continue;
-
-        float stored = c.get_my_volume();
-
-        if(stored < 0.00001f)
-            continue;
-
-        float my_frac = stored / total_drainable;
-
-        float to_drain = my_frac * amount;
-
-        component next = c;
-        c.drain_volume(amount);
-
-        ret.push_back(next);
-    }
-}*/
 
 void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 {
@@ -1228,11 +1185,12 @@ void ship::handle_heat(double dt_s)
         produced_heat += heat;
     }
 
-    double coolant_to_heat_drain = 100;
+    /*double coolant_to_heat_drain = 100;
     double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;
 
-    produced_heat -= heat_drained;
+    produced_heat -= heat_drained;*/
 
+    #if 0
     latent_heat += produced_heat * dt_s;
 
     if(latent_heat < 0)
@@ -1253,6 +1211,32 @@ void ship::handle_heat(double dt_s)
         radar.emit_with_imaginary_packet(heat, r.position, *this, model);
 
     latent_heat -= emitted;
+    #endif // 0
+
+    int num_hs = 0;
+
+    for(component& c : components)
+    {
+        if(!c.heat_sink)
+            continue;
+
+        num_hs++;
+    }
+
+    if(num_hs == 0)
+        return;
+
+    float produced_heat_ps = produced_heat * dt_s + latent_heat;
+
+    for(component& c : components)
+    {
+        if(!c.heat_sink)
+            continue;
+
+        c.add_heat_to_stored(produced_heat_ps / num_hs);
+    }
+
+    latent_heat = 0;
 
     //std::cout << "lheat " << latent_heat << std::endl;
 
@@ -1307,7 +1291,7 @@ void ship::set_thrusters_active(double active)
 
 void component::render_inline_ui()
 {
-    std::string total = "Storage: " + to_string_with_variable_prec(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
+    std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
 
     ImGui::Text(total.c_str());
 
@@ -1315,7 +1299,7 @@ void component::render_inline_ui()
     {
         std::string str = "    " + stored.long_name;
 
-        str += " (" + to_string_with_variable_prec(stored.get_my_volume()) + ") " + to_string_with_variable_prec(stored.get_my_temperature()) + "K";
+        str += " (" + to_string_with(stored.get_my_volume()) + ") " + to_string_with(stored.get_my_temperature()) + "K";
 
         ImGui::Text(str.c_str());
     }

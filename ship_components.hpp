@@ -140,6 +140,7 @@ struct component : virtual serialisable, owned
 
     double last_sat = 1;
     bool flows = false;
+    bool heat_sink = false;
 
     ///how active i need to be
     ///only applies to no_drain_on_full_production
@@ -158,6 +159,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(long_name);
         DO_SERIALISE(last_sat);
         DO_SERIALISE(flows);
+        DO_SERIALISE(heat_sink);
         DO_SERIALISE(no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
         DO_SERIALISE(max_use_angle);
@@ -249,7 +251,6 @@ struct component : virtual serialisable, owned
 
     float get_my_volume() const;
     float get_stored_volume() const;
-    float drain_volume(float vol); ///returns real
 
     float get_my_temperature();
     float get_my_contained_heat();
