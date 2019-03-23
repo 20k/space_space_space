@@ -84,6 +84,11 @@ void component::set_no_drain_on_full_production()
     no_drain_on_full_production = true;
 }
 
+void component::set_complex_no_drain_on_full_production()
+{
+    complex_no_drain_on_full_production = true;
+}
+
 /*double component::satisfied_percentage(double dt_s, const std::vector<double>& res)
 {
     assert(res.size() == component_info::COUNT);
@@ -155,6 +160,55 @@ void component::apply(const std::vector<double>& all_sat, double dt_s, std::vect
     last_sat = min_sat;
 }
 #endif // 0
+
+std::vector<double> component::get_theoretical_produced()
+{
+    std::vector<double> needed;
+    needed.resize(component_info::COUNT);
+
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
+
+    for(does& d : info)
+    {
+        double mod = last_sat;
+
+        if(d.recharge < 0)
+            continue;
+
+        float hacky_lpf = last_production_frac;
+
+        if(complex_no_drain_on_full_production)
+            hacky_lpf = 1;
+
+        needed[d.type] += d.recharge * (hp / max_hp) * mod * activation_level * hacky_lpf;
+    }
+
+    return needed;
+}
+
+std::vector<double> component::get_theoretical_consumed()
+{
+    std::vector<double> needed;
+    needed.resize(component_info::COUNT);
+
+    double hp = get_held()[component_info::HP];
+    double max_hp = get_capacity()[component_info::HP];
+
+    assert(max_hp > 0);
+
+    for(does& d : info)
+    {
+        if(d.recharge > 0)
+            continue;
+
+        needed[d.type] += fabs(d.recharge) * (hp / max_hp) * activation_level * last_production_frac;
+    }
+
+    return needed;
+}
 
 std::vector<double> component::get_produced()
 {
@@ -956,18 +1010,30 @@ struct laser : projectile
 void ship::tick(double dt_s)
 {
     std::vector<double> resource_status = sum<double>([](component& c)
-                                                      {
-                                                          return c.get_held();
-                                                      });
+    {
+        return c.get_held();
+    });
 
     std::vector<double> max_resource_status = sum<double>([](component& c)
     {
         return c.get_capacity();
     });
 
+    std::vector<double> theoretical_resource_produced = sum<double>([](component& c)
+    {
+        return c.get_theoretical_produced();
+    });
+
+    std::vector<double> theoretical_resource_consumed = sum<double>([](component& c)
+    {
+        return c.get_theoretical_consumed();
+    });
+
     for(component& c : components)
     {
         bool any_under = false;
+
+        double max_theoretical_activation_fraction = 0;
 
         for(does& d : c.info)
         {
@@ -977,8 +1043,19 @@ void ship::tick(double dt_s)
             if(resource_status[d.type] < max_resource_status[d.type])
             {
                 any_under = true;
-                break;
             }
+
+            if(theoretical_resource_produced[d.type] <= 0.00001f)
+                continue;
+
+            double theoretical_delta = theoretical_resource_consumed[d.type];
+
+            if(theoretical_resource_produced[d.type] < 0.00001)
+                continue;
+
+            double global_production_fraction = fabs(theoretical_delta) / theoretical_resource_produced[d.type];
+
+            max_theoretical_activation_fraction = std::max(max_theoretical_activation_fraction, global_production_fraction);
         }
 
         if(!any_under && c.no_drain_on_full_production)
@@ -988,6 +1065,20 @@ void ship::tick(double dt_s)
         else
         {
             c.last_production_frac = 1;
+        }
+
+        if(c.complex_no_drain_on_full_production)
+        {
+            if(!any_under)
+            {
+                max_theoretical_activation_fraction = clamp(max_theoretical_activation_fraction, 0, 1);
+
+                c.last_production_frac = max_theoretical_activation_fraction + 0.01;
+            }
+            else
+            {
+                c.last_production_frac = 1;
+            }
         }
     }
 
@@ -1287,7 +1378,7 @@ void ship::handle_heat(double dt_s)
         produced_heat += heat;
     }
 
-    std::cout << "PHEAT " << produced_heat << std::endl;
+    //std::cout << "PHEAT " << produced_heat << std::endl;
 
     /*double coolant_to_heat_drain = 100;
     double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;

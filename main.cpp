@@ -266,7 +266,9 @@ void server_thread()
     power_generator.add_composition(material_info::IRON, 30);
     power_generator.add_composition(material_info::COPPER, 20);
     power_generator.set_heat(8 * 20);
-    power_generator.set_heat_scales_by_production(true, component_info::POWER);
+    //power_generator.set_heat_scales_by_production(true, component_info::POWER);
+
+    power_generator.set_complex_no_drain_on_full_production();
     power_generator.long_name = "Power Generator";
 
     //power_generator.info[1].held = 0;

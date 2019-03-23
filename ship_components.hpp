@@ -132,6 +132,7 @@ struct component : virtual serialisable, owned
     std::vector<does> info;
     std::vector<does> activate_requirements;
     bool no_drain_on_full_production = false;
+    bool complex_no_drain_on_full_production = false;
 
     static inline uint32_t gid = 0;
     uint32_t id = gid++;
@@ -166,6 +167,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(flows);
         DO_SERIALISE(heat_sink);
         DO_SERIALISE(no_drain_on_full_production);
+        DO_SERIALISE(complex_no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(subtype);
@@ -193,6 +195,7 @@ struct component : virtual serialisable, owned
     void set_heat_scales_by_production(bool status, component_info::does_type primary);
 
     void set_no_drain_on_full_production();
+    void set_complex_no_drain_on_full_production();
 
     bool has(component_info::does_type type)
     {
@@ -220,6 +223,8 @@ struct component : virtual serialisable, owned
     }
 
     ///ignores anything < 0
+    std::vector<double> get_theoretical_produced();
+    std::vector<double> get_theoretical_consumed();
     std::vector<double> get_produced();
     ///both > 0 && < 0
     std::vector<double> get_needed();
