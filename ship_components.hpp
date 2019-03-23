@@ -285,7 +285,7 @@ struct component : virtual serialisable, owned
         if(isinf(level) || isnan(level))
             return;
 
-        activation_level = level;
+        activation_level = clamp(level, 0., 1.);
     }
 };
 

@@ -173,7 +173,7 @@ std::vector<double> component::get_produced()
         if(d.recharge < 0)
             continue;
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod * last_production_frac;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod * last_production_frac * activation_level;
     }
 
     return needed;
@@ -198,7 +198,7 @@ std::vector<double> component::get_needed()
             mod = last_sat;
         }
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod  * last_production_frac;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod  * last_production_frac * activation_level;
     }
 
     return needed;
@@ -440,9 +440,9 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
         for(does& d : c.info)
         {
             if(d.recharge > 0)
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac;
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level;
             else
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac;
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac * c.activation_level;
         }
 
         c.last_sat = min_sat;
@@ -670,10 +670,10 @@ std::vector<double> ship::get_sat_percentage()
         for(does& d : c.info)
         {
             if(d.recharge < 0)
-                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac;
+                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level;
 
             if(d.recharge > 0)
-                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac;
+                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac * c.activation_level;
         }
     }
 
@@ -1253,7 +1253,12 @@ void ship::handle_heat(double dt_s)
 
     for(component& c : components)
     {
-        double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac);
+        double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac * c.activation_level);
+
+        /*if(c.long_name == "Power Generator")
+        {
+            std::cout << "HEAT " << heat << std::endl;
+        }*/
 
         if(c.production_heat_scales)
         {
@@ -1281,6 +1286,8 @@ void ship::handle_heat(double dt_s)
 
         produced_heat += heat;
     }
+
+    std::cout << "PHEAT " << produced_heat << std::endl;
 
     /*double coolant_to_heat_drain = 100;
     double heat_drained = all_produced[component_info::COOLANT] * coolant_to_heat_drain;
