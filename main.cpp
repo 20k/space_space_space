@@ -141,7 +141,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -165,6 +165,7 @@ void server_thread()
     thruster.add(component_info::HP, 0, 1);
     thruster.add_composition(material_info::COPPER, 10);
     thruster.set_heat(10);
+    thruster.long_name = "Thruster";
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
@@ -175,6 +176,7 @@ void server_thread()
     warp.add_composition(material_info::IRON, 10);
     warp.set_no_drain_on_full_production();
     warp.set_heat(100);
+    warp.long_name = "Warp Drive";
 
     shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -3);
@@ -183,6 +185,7 @@ void server_thread()
     shields.add_composition(material_info::COPPER, 5);
     shields.set_no_drain_on_full_production();
     shields.set_heat(20);
+    shields.long_name = "Shields";
 
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
@@ -194,6 +197,7 @@ void server_thread()
 
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
+    missile.long_name = "Missile Launcher";
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
@@ -202,6 +206,7 @@ void server_thread()
     laser.add_composition(material_info::COPPER, 5);
     laser.set_no_drain_on_full_production();
     laser.set_heat(5);
+    laser.long_name = "Laser";
 
     laser.add_on_use(component_info::CAPACITOR, -10, 1);
     laser.subtype = "laser";
@@ -218,6 +223,7 @@ void server_thread()
     sensor.add_on_use(component_info::POWER, -35, 1);
 
     sensor.set_heat(2);
+    sensor.long_name = "Sensors";
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
@@ -225,6 +231,7 @@ void server_thread()
     comms.add_composition(material_info::COPPER, 1);
     comms.add_composition(material_info::IRON, 1);
     comms.set_heat(1);
+    comms.long_name = "Communications";
 
     /*sysrepair.add(component_info::POWER, -1);
     sysrepair.add(component_info::SYSTEM, 1);
@@ -236,6 +243,7 @@ void server_thread()
     armour.add_composition(material_info::IRON, 30);
     armour.set_no_drain_on_full_production();
     armour.set_heat(5);
+    armour.long_name = "Armour";
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
@@ -244,12 +252,14 @@ void server_thread()
     ls.add_composition(material_info::COPPER, 2);
     //ls.set_no_drain_on_full_production();
     ls.set_heat(10);
+    ls.long_name = "Life Support";
 
     coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
     coolant.add(component_info::POWER, -1);
     coolant.add_composition(material_info::IRON, 5);
     coolant.set_heat(5);
+    coolant.long_name = "I smell like poop";
 
     power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
@@ -257,6 +267,7 @@ void server_thread()
     power_generator.add_composition(material_info::COPPER, 20);
     power_generator.set_heat(8 * 20);
     power_generator.set_heat_scales_by_production(true, component_info::POWER);
+    power_generator.long_name = "Power Generator";
 
     //power_generator.info[1].held = 0;
     //power_generator.info[0].held = 0;
@@ -272,6 +283,10 @@ void server_thread()
     crew.add(component_info::CREW, -0.01); ///passive death on no o2
     crew.add_composition(material_info::IRON, 5);
     crew.set_heat(1);
+    crew.long_name = "Crew";
+
+    coolant_cold.long_name = "Cold Storage";
+    coolant_hot.long_name = "Heat Sink";
 
     coolant_cold.add(component_info::HP, 0, 10);
     coolant_hot.add(component_info::HP, 0, 10);
@@ -751,7 +766,7 @@ int main()
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
 
-    sf::RenderWindow window(sf::VideoMode(1200, 800), "hi", sf::Style::Default, sett);
+    sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
     camera cam({window.getSize().x, window.getSize().y});
 
@@ -949,6 +964,8 @@ int main()
             s.show_resources();
 
             s.advanced_ship_display();
+
+            s.show_power();
         }
 
         render_radar_data(window, sample);

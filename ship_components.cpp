@@ -1626,6 +1626,37 @@ void ship::show_resources()
     ImGui::End();
 }
 
+void ship::show_power()
+{
+    std::string ppower = "Power##" + std::to_string(network_owner);
+
+    ImGui::Begin(ppower.c_str());
+
+    for(component& c : components)
+    {
+        std::string name = c.long_name;
+
+        float as_percentage = c.activation_level * 100;
+
+        ImGui::PushItemWidth(80);
+
+        bool changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
+
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        ImGui::Text(name.c_str());
+
+        c.activation_level = as_percentage / 100.f;
+
+        if(changed)
+            rpc("set_activation_level", c, c.set_activation_level, c.activation_level);
+    }
+
+    ImGui::End();
+}
+
 std::vector<double> ship::get_capacity()
 {
     return sum<double>

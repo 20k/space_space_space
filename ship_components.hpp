@@ -149,6 +149,8 @@ struct component : virtual serialisable, owned
     ///only applies to no_drain_on_full_production
     ///has a minimum value to prevent accidental feedback loops
     double last_production_frac = 1;
+    ///user requested activation level
+    float activation_level = 1;
 
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
@@ -175,6 +177,8 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(id);
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
+        DO_SERIALISE(activation_level);
+        DO_RPC(set_activation_level);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -275,6 +279,14 @@ struct component : virtual serialisable, owned
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff
     bool detailed_view_open = false;
+
+    void set_activation_level(double level)
+    {
+        if(isinf(level) || isnan(level))
+            return;
+
+        activation_level = level;
+    }
 };
 
 struct data_tracker : serialisable
@@ -359,6 +371,7 @@ struct ship : heatable_entity, owned
 
     //std::string show_components();
     void show_resources();
+    void show_power();
 
     template<typename T, typename U>
     std::vector<T> sum(U in)
