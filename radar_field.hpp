@@ -298,7 +298,7 @@ struct alt_radar_field
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
-    alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player = std::nullopt);
+    alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player = std::nullopt, double radar_mult = 1);
 
     void add_player_model(player_model*);
     std::vector<player_model*> models;

@@ -958,6 +958,9 @@ random_constants& get_random_constants_for(uint32_t uid)
 {
     static std::map<uint32_t, random_constants> cst;
     static std::minstd_rand0 mrng;
+    static std::mutex mut;
+
+    std::lock_guard guard(mut);
 
     random_constants& rconst = cst[uid];
 
@@ -975,7 +978,7 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
     return dim.max_elem();
 }
 
-alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player)
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player, double radar_mult)
 {
     /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
@@ -1135,7 +1138,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
         ///THIS WILL NOT BE TRUE IF I MAKE IT DECREASE IN INTENSITY AFTER A REFLECTION SO THIS IS KIND OF WEIRD
-        float intensity = packet.intensity;
+        float intensity = packet.intensity * radar_mult;
         //float intensity = get_intensity_at_of(pos, packet);
         float frequency = packet.frequency;
 
@@ -1243,8 +1246,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         if(!found)
         {
-            s.frequencies.push_back(frequency);
-            s.intensities.push_back(intensity);
+            s.frequencies.push_back(packet.frequency);
+            s.intensities.push_back(packet.intensity);
         }
     }
 
@@ -1259,7 +1262,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(packet.emitted_by == uid && packet.reflected_by == -1)
                 continue;
 
-            float intensity = packet.intensity;
+            float intensity = packet.intensity * radar_mult;
 
             if(intensity == 0)
                 continue;
