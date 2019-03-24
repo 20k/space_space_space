@@ -1165,7 +1165,8 @@ void ship::tick(double dt_s)
 
                     alt_frequency_packet em;
                     em.frequency = 2000;
-                    em.intensity = 100000;
+                    ///getting a bit complex to determine this value
+                    em.intensity = 100000 * c.last_sat * c.activation_level;
 
                     if(!model)
                         radar.emit(em, r.position, *this);
