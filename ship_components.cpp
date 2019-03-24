@@ -478,6 +478,11 @@ float component::get_hp_frac()
     return hp_frac;
 }
 
+float component::get_operating_efficiency()
+{
+     return last_sat * activation_level * get_hp_frac();
+}
+
 void component::add_composition(material_info::material_type type, double volume)
 {
     material new_mat;
@@ -1178,7 +1183,7 @@ void ship::tick(double dt_s)
                     alt_frequency_packet em;
                     em.frequency = 2000;
                     ///getting a bit complex to determine this value
-                    em.intensity = 100000 * c.last_sat * c.activation_level * c.get_hp_frac();
+                    em.intensity = 100000 * c.get_operating_efficiency();
 
                     if(!model)
                         radar.emit(em, r.position, *this);
