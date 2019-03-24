@@ -276,6 +276,8 @@ struct component : virtual serialisable, owned
     void store(const component& c);
     bool is_storage();
 
+    float get_hp_frac();
+
     ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
 

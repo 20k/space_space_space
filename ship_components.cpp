@@ -466,6 +466,18 @@ bool component::is_storage()
     return internal_volume > 0;
 }
 
+float component::get_hp_frac()
+{
+    double hp_frac = 1;
+
+    if(has(component_info::HP) && get(component_info::HP).capacity > 0.00001)
+    {
+        hp_frac = get(component_info::HP).held / get(component_info::HP).capacity;
+    }
+
+    return hp_frac;
+}
+
 void component::add_composition(material_info::material_type type, double volume)
 {
     material new_mat;
@@ -1166,7 +1178,7 @@ void ship::tick(double dt_s)
                     alt_frequency_packet em;
                     em.frequency = 2000;
                     ///getting a bit complex to determine this value
-                    em.intensity = 100000 * c.last_sat * c.activation_level;
+                    em.intensity = 100000 * c.last_sat * c.activation_level * c.get_hp_frac();
 
                     if(!model)
                         radar.emit(em, r.position, *this);
