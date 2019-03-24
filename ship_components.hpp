@@ -415,6 +415,8 @@ struct ship : heatable_entity, owned
 
     void add_pipe(const storage_pipe& p);
 
+    double get_radar_strength();
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(data_track);

@@ -958,9 +958,6 @@ random_constants& get_random_constants_for(uint32_t uid)
 {
     static std::map<uint32_t, random_constants> cst;
     static std::minstd_rand0 mrng;
-    static std::mutex mut;
-
-    std::lock_guard guard(mut);
 
     random_constants& rconst = cst[uid];
 
@@ -1124,7 +1121,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(packet.emitted_by == uid && packet.reflected_by == -1)
                 continue;
 
-            if(packet.intensity >= 0.01)
+            if(packet.intensity * radar_mult >= 0.01)
                 pseudo_packets.insert(search_entity);
         }
     }
@@ -1144,7 +1141,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         if(intensity == 0)
             continue;
-
 
         /*uint32_t reflected_by = packet.reflected_by;
         vec2f reflected_position = packet.reflected_position;
@@ -1207,7 +1203,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         #endif // RECT_RECV
 
         ///specifically excludes self because we never need to know where we are
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0)
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0.01)
         {
             vec2f next_dir = (consider.reflected_position - pos).norm();
 
@@ -1216,7 +1212,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
         }
 
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0)
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0.01)
         {
             vec2f next_dir = (consider.origin - pos).norm();
 
@@ -1238,7 +1234,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         {
             if(s.frequencies[i] == frequency)
             {
-                s.intensities[i] += intensity;
+                s.intensities[i] += packet.intensity;
                 found = true;
                 break;
             }
@@ -1264,9 +1260,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
             float intensity = packet.intensity * radar_mult;
 
-            if(intensity == 0)
-                continue;
-
             uint64_t search_entity = packet.emitted_by;
 
             if(packet.reflected_by != -1)
@@ -1277,7 +1270,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 high_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);
             }
-            else if(intensity >= 0.01)
+            else if(intensity >= 0.1)
             {
                 low_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);

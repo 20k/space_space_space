@@ -700,7 +700,7 @@ void server_thread()
 
             if(network_ships[i] != nullptr)
             {
-                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_manage.fetch_by_network_id(i));
+                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_manage.fetch_by_network_id(i), network_ships[i]->get_radar_strength());
             }
             else
             {

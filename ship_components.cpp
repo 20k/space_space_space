@@ -1975,6 +1975,17 @@ void ship::add_pipe(const storage_pipe& p)
     pipes.push_back(p);
 }
 
+double ship::get_radar_strength()
+{
+    std::vector<double> net = sum<double>
+    ([](component& c)
+    {
+        return c.get_needed();
+    });
+
+    return clamp(net[component_info::SENSORS], 0, 1);
+}
+
 void ship::on_collide(entity_manager& em, entity& other)
 {
     if(dynamic_cast<asteroid*>(&other) != nullptr || dynamic_cast<ship*>(&other))
