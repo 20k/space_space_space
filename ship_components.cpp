@@ -437,6 +437,24 @@ void component::add_heat_to_me(float heat)
     my_temperature += heat / total_heat;
 }
 
+void component::remove_heat_from_me(float heat)
+{
+    float total_heat = 0;
+
+    for(material& m : composition)
+    {
+        total_heat += material_info::fetch(m.type).specific_heat * m.dynamic_desc.volume;
+    }
+
+    if(total_heat < 0.0001)
+        return;
+
+    my_temperature -= heat / total_heat;
+
+    if(my_temperature < 0)
+        my_temperature = 0;
+}
+
 void component::add_heat_to_stored(float heat)
 {
     float stored_num = stored.size();
@@ -1372,7 +1390,7 @@ void ship::handle_heat(double dt_s)
     #endif // 0
 
     double min_heat = 50;
-    double produced_heat = 0;
+    //double produced_heat = 0;
 
     for(component& c : components)
     {
@@ -1407,7 +1425,8 @@ void ship::handle_heat(double dt_s)
             }
         }
 
-        produced_heat += heat;
+        c.add_heat_to_me(heat * dt_s);
+        //produced_heat += heat;
     }
 
     //std::cout << "PHEAT " << produced_heat << std::endl;
@@ -1453,7 +1472,7 @@ void ship::handle_heat(double dt_s)
     if(num_hs == 0)
         return;
 
-    float produced_heat_ps = produced_heat * dt_s + latent_heat;
+    /*float produced_heat_ps = produced_heat * dt_s + latent_heat;
 
     for(component& c : components)
     {
@@ -1461,10 +1480,64 @@ void ship::handle_heat(double dt_s)
             continue;
 
         c.add_heat_to_stored(produced_heat_ps / num_hs);
+    }*/
+
+    std::vector<component*> heat_sinks;
+
+    for(component& c : components)
+    {
+        if(!c.heat_sink)
+            continue;
+
+        heat_sinks.push_back(&c);
     }
+
+    ///long term use blueprint
+    for(component& c : components)
+    {
+        float latent_fraction = latent_heat / components.size();
+
+        if(!c.heat_sink)
+            c.add_heat_to_me(latent_fraction);
+        else
+            c.add_heat_to_stored(latent_fraction);
+    }
+
+    for(component& c : components)
+    {
+        if(c.heat_sink)
+            continue;
+
+        float my_temp = c.get_my_temperature();
+
+        for(component* hsp : heat_sinks)
+        {
+            component& hs = *hsp;
+
+            assert(hs.heat_sink);
+
+            float hs_stored = hs.get_stored_temperature();
+
+            float temperature_difference = my_temp - hs_stored;
+
+            if(temperature_difference <= 0)
+                continue;
+
+            ///ok
+            ///assume every material has the same conductivity
+
+            float heat_coeff = 1;
+            float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
+
+            c.remove_heat_from_me(heat_transfer_rate);
+            hs.add_heat_to_stored(heat_transfer_rate);
+        }
+    }
+
 
     latent_heat = 0;
 
+    #if 0
     float current_max_ship_temperature = 0;
     float enough_pressure = 1;
 
@@ -1496,6 +1569,35 @@ void ship::handle_heat(double dt_s)
             float damage_min = fixed.melting_point;
 
             float damage_fraction = (current_max_ship_temperature - damage_min) / (damage_max - damage_min);
+
+            damage_fraction = clamp(damage_fraction, 0, 1);
+
+            float real_damage = 1 * damage_fraction * dt_s;
+
+            if(c.has(component_info::HP))
+            {
+                does& d = c.get(component_info::HP);
+
+                apply_to_does(-real_damage, d);
+            }
+        }
+    }
+    #endif // 0
+
+    for(component& c : components)
+    {
+        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
+
+        material_fixed_properties& fixed = props.second;
+
+        float current_temperature = c.get_my_temperature();
+
+        if(current_temperature >= fixed.melting_point)
+        {
+            float damage_max = fixed.melting_point * 2;
+            float damage_min = fixed.melting_point;
+
+            float damage_fraction = (current_temperature - damage_min) / (damage_max - damage_min);
 
             damage_fraction = clamp(damage_fraction, 0, 1);
 
@@ -1767,6 +1869,12 @@ void ship::show_power()
         std::string name = c.long_name;
 
         float as_percentage = c.activation_level * 100;
+
+        std::string temperature = to_string_with(c.get_my_temperature());
+
+        ImGui::Text((temperature + "K").c_str());
+
+        ImGui::SameLine();
 
         ImGui::PushItemWidth(80);
 
