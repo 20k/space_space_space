@@ -475,6 +475,29 @@ void component::add_heat_to_stored(float heat)
     }
 }
 
+void component::remove_heat_from_stored(float heat)
+{
+    float stored_num = stored.size();
+
+    for(component& c : stored)
+    {
+        float total_heat = 0;
+
+        for(material& m : c.composition)
+        {
+            total_heat += material_info::fetch(m.type).specific_heat * m.dynamic_desc.volume;
+        }
+
+        if(total_heat < 0.0001)
+            continue;
+
+        c.my_temperature -= (heat / total_heat) / stored_num;
+
+        if(c.my_temperature < 0)
+            c.my_temperature = 0;
+    }
+}
+
 bool component::can_store(const component& c)
 {
     if(internal_volume <= 0)
@@ -1503,12 +1526,42 @@ void ship::handle_heat(double dt_s)
             c.add_heat_to_stored(latent_fraction);
     }
 
+    float heat_coeff = 1;
+
+    ///equalise heat between storage and stored
+    for(component& c : components)
+    {
+        if(c.stored.size() == 0)
+            continue;
+
+        float my_temperature = c.get_my_temperature();
+
+        float stored_temperature = c.get_stored_temperature();
+
+        float temperature_difference = my_temperature - stored_temperature;
+
+        float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
+
+        ///my_temperature > stored_temperature
+        if(temperature_difference > 0)
+        {
+            c.remove_heat_from_me(heat_transfer_rate);
+            c.add_heat_to_stored(heat_transfer_rate);
+        }
+
+        if(temperature_difference < 0)
+        {
+            c.remove_heat_from_stored(-heat_transfer_rate);
+            c.add_heat_to_me(-heat_transfer_rate);
+        }
+    }
+
     for(component& c : components)
     {
         if(c.heat_sink)
             continue;
 
-        float my_temp = c.get_my_temperature();
+        float my_temperature = c.get_my_temperature();
 
         for(component* hsp : heat_sinks)
         {
@@ -1518,15 +1571,13 @@ void ship::handle_heat(double dt_s)
 
             float hs_stored = hs.get_stored_temperature();
 
-            float temperature_difference = my_temp - hs_stored;
+            float temperature_difference = my_temperature - hs_stored;
 
             if(temperature_difference <= 0)
                 continue;
 
             ///ok
             ///assume every material has the same conductivity
-
-            float heat_coeff = 1;
             float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
 
             c.remove_heat_from_me(heat_transfer_rate);
