@@ -1203,7 +1203,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         #endif // RECT_RECV
 
         ///specifically excludes self because we never need to know where we are
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0.01)
+        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0.1)
         {
             vec2f next_dir = (consider.reflected_position - pos).norm();
 
@@ -1212,7 +1212,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
         }
 
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0.01)
+        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0.1)
         {
             vec2f next_dir = (consider.origin - pos).norm();
 
