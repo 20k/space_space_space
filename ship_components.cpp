@@ -422,8 +422,25 @@ float component::get_stored_heat_capacity()
     return temp;
 }
 
+void component::add_heat_to_me(float heat)
+{
+    float total_heat = 0;
+
+    for(material& m : composition)
+    {
+        total_heat += material_info::fetch(m.type).specific_heat * m.dynamic_desc.volume;
+    }
+
+    if(total_heat < 0.0001)
+        return;
+
+    my_temperature += heat / total_heat;
+}
+
 void component::add_heat_to_stored(float heat)
 {
+    float stored_num = stored.size();
+
     for(component& c : stored)
     {
         float total_heat = 0;
@@ -436,10 +453,7 @@ void component::add_heat_to_stored(float heat)
         if(total_heat < 0.0001)
             continue;
 
-        for(component& c : stored)
-        {
-            c.my_temperature += heat / total_heat;
-        }
+        c.my_temperature += (heat / total_heat) / stored_num;
     }
 }
 
