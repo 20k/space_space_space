@@ -291,3 +291,21 @@ bool ImGuiX::SliderFloat(const std::string& label, float* v, float v_min, float 
 
     return ret;
 }
+
+bool ImGuiX::VSliderFloat(const std::string& label, float* v, float v_min, float v_max, std::string display_format)
+{
+    bool ret = ImGui::VSliderFloat(label.c_str(), ImVec2(20, 80), v, v_min, v_max, display_format.c_str());
+
+    if(v_min == 0)
+    {
+        if(fabs(*v) < 0.01)
+            *v = 0;
+    }
+    else
+    {
+        if(fabs(*v) < 0.05)
+            *v = 0;
+    }
+
+    return ret;
+}

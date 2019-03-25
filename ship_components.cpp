@@ -1875,6 +1875,8 @@ void ship::show_power()
 
         std::string temperature = to_string_with(c.get_my_temperature());
 
+        #define HORIZONTAL
+        #ifdef HORIZONTAL
         ImGui::Text((temperature + "K").c_str());
 
         ImGui::SameLine();
@@ -1888,6 +1890,16 @@ void ship::show_power()
         ImGui::SameLine();
 
         ImGui::Text(name.c_str());
+        #endif // HORIZONTAL
+
+        //#define VERTICAL
+        #ifdef VERTICAL
+
+        bool changed = ImGuiX::VSliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
+
+        ImGui::SameLine();
+
+        #endif // VERTICAL
 
         c.activation_level = as_percentage / 100.f;
 
