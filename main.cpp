@@ -271,7 +271,7 @@ void server_thread()
     coolant.long_name = "I smell like poop";
     coolant.activation_type = component_info::SLIDER_ACTIVATION;*/
 
-    radiator.add(component_info::RADIATOR, 1);
+    radiator.add(component_info::RADIATOR, 0.05);
     radiator.add(component_info::HP, 0, 1);
     radiator.add_composition(material_info::IRON, 5);
     radiator.long_name = "Radiator";

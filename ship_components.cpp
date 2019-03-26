@@ -1417,7 +1417,9 @@ void ship::handle_heat(double dt_s)
 
     for(component& c : components)
     {
-        double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac * c.activation_level);
+        //double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac * c.activation_level);
+
+        double heat = c.heat_produced_at_full_usage * c.get_operating_efficiency();
 
         /*if(c.long_name == "Power Generator")
         {
@@ -1590,12 +1592,16 @@ void ship::handle_heat(double dt_s)
 
     ///radiators
 
+    double heat_to_radiate = 0;
+
     for(component& c : components)
     {
         if(!c.has(component_info::RADIATOR))
             continue;
 
         does& d = c.get(component_info::RADIATOR);
+
+        float my_temperature = c.get_my_temperature();
 
         for(component* hsp : heat_sinks)
         {
@@ -1604,7 +1610,7 @@ void ship::handle_heat(double dt_s)
             if(hs.get_stored_volume() < 0.1)
                 continue;
 
-            float hs_stored = hs.get_stored_temperature();
+            /*float hs_stored = hs.get_stored_temperature();
 
             ///so latent heat is added to us, which is environmental heat
             ///so we can emit ignoring environmental heat and the equation is fine
@@ -1612,7 +1618,29 @@ void ship::handle_heat(double dt_s)
             float heat_transfer_rate = hs_stored * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency() / heat_sinks.size();
 
             hs.remove_heat_from_stored(heat_transfer_rate);
+
+            heat_to_radiate += heat_transfer_rate;*/
+
+            float hs_stored = hs.get_stored_temperature();
+
+            ///ok so due to the above big block we already transfer heat from me to them, but need to do vice versa
+
+            float temperature_difference = my_temperature - hs_stored;
+
+            if(temperature_difference >= 0)
+                continue;
+
+            float heat_transfer_rate = -temperature_difference * heat_coeff * dt_s * c.get_operating_efficiency() / heat_sinks.size();
+
+            c.add_heat_to_me(heat_transfer_rate);
+            hs.remove_heat_from_stored(heat_transfer_rate);
         }
+
+        float heat_transfer_rate = c.get_my_temperature() * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency();
+
+        c.remove_heat_from_me(heat_transfer_rate);
+
+        heat_to_radiate += heat_transfer_rate;
     }
 
     latent_heat = 0;
@@ -1643,6 +1671,17 @@ void ship::handle_heat(double dt_s)
                 apply_to_does(-real_damage, d);
             }
         }
+    }
+
+    {
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet heat;
+        heat.frequency = HEAT_FREQ;
+        heat.intensity = permanent_heat + heat_to_radiate * 100;
+        //heat.packet_wavefront_width *= ticks_between_emissions;
+
+        radar.emit(heat, r.position, *this);
     }
 
     //std::cout << "lheat " << latent_heat << std::endl;
