@@ -158,7 +158,7 @@ void server_thread()
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, coolant, power_generator, crew, coolant_cold, coolant_hot;
+    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, radiator, power_generator, crew, coolant_cold, coolant_hot;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -263,13 +263,19 @@ void server_thread()
     ls.long_name = "Life Support";
     ls.activation_type = component_info::SLIDER_ACTIVATION;
 
-    coolant.add(component_info::COOLANT, 10, 200);
+    /*coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
     coolant.add(component_info::POWER, -1);
     coolant.add_composition(material_info::IRON, 5);
     coolant.set_heat(5);
     coolant.long_name = "I smell like poop";
-    coolant.activation_type = component_info::SLIDER_ACTIVATION;
+    coolant.activation_type = component_info::SLIDER_ACTIVATION;*/
+
+    radiator.add(component_info::RADIATOR, 1);
+    radiator.add(component_info::HP, 0, 1);
+    radiator.add_composition(material_info::IRON, 5);
+    radiator.long_name = "Radiator";
+    radiator.activation_type = component_info::NO_ACTIVATION;
 
     power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
@@ -347,7 +353,7 @@ void server_thread()
     //test_ship.add(sysrepair);
     test_ship->add(armour);
     test_ship->add(ls);
-    test_ship->add(coolant);
+    test_ship->add(radiator);
     test_ship->add(power_generator);
     test_ship->add(crew);
     test_ship->add(coolant_cold);

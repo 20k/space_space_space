@@ -1588,6 +1588,33 @@ void ship::handle_heat(double dt_s)
         }
     }
 
+    ///radiators
+
+    for(component& c : components)
+    {
+        if(!c.has(component_info::RADIATOR))
+            continue;
+
+        does& d = c.get(component_info::RADIATOR);
+
+        for(component* hsp : heat_sinks)
+        {
+            component& hs = *hsp;
+
+            if(hs.get_stored_volume() < 0.1)
+                continue;
+
+            float hs_stored = hs.get_stored_temperature();
+
+            ///so latent heat is added to us, which is environmental heat
+            ///so we can emit ignoring environmental heat and the equation is fine
+
+            float heat_transfer_rate = hs_stored * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency() / heat_sinks.size();
+
+            hs.remove_heat_from_stored(heat_transfer_rate);
+        }
+    }
+
     latent_heat = 0;
 
     for(component& c : components)

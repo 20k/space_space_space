@@ -33,7 +33,7 @@ namespace component_info
         COMMS,
         ARMOUR,
         LIFE_SUPPORT,
-        COOLANT,
+        RADIATOR,
         CREW,
         POWER,
         CAPACITOR, ///weapons
@@ -54,7 +54,7 @@ namespace component_info
         "Comms",
         "Armour",
         "Oxygen",
-        "Coolant",
+        "Radiator",
         "Crew",
         "Power",
         "Capacitor",
@@ -369,7 +369,6 @@ struct ship : heatable_entity, owned
         component_info::SHIELDS,
         component_info::ARMOUR,
         component_info::HP,
-        component_info::COOLANT,
         component_info::POWER,
         component_info::CAPACITOR
     };
