@@ -535,7 +535,7 @@ float component::get_hp_frac()
 
 float component::get_operating_efficiency()
 {
-     return last_sat * activation_level * get_hp_frac();
+     return std::min(last_sat, last_production_frac) * activation_level * get_hp_frac();
 }
 
 void component::add_composition(material_info::material_type type, double volume)

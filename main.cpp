@@ -164,7 +164,7 @@ void server_thread()
     thruster.add(component_info::THRUST, 1);
     thruster.add(component_info::HP, 0, 1);
     thruster.add_composition(material_info::COPPER, 10);
-    thruster.set_heat(10);
+    thruster.set_heat(20);
     thruster.long_name = "Thruster";
     thruster.activation_type = component_info::SLIDER_ACTIVATION;
 
@@ -186,7 +186,7 @@ void server_thread()
     shields.add_composition(material_info::IRON, 10);
     shields.add_composition(material_info::COPPER, 5);
     shields.set_no_drain_on_full_production();
-    shields.set_heat(20);
+    shields.set_heat(200);
     shields.long_name = "Shields";
     shields.activation_type = component_info::SLIDER_ACTIVATION;
 
@@ -261,7 +261,7 @@ void server_thread()
     //ls.set_no_drain_on_full_production();
     ls.set_heat(10);
     ls.long_name = "Life Support";
-    ls.activation_type = component_info::SLIDER_ACTIVATION;
+    ls.activation_type = component_info::TOGGLE_ACTIVATION;
 
     /*coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
