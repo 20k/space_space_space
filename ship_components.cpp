@@ -1761,7 +1761,12 @@ void component::render_inline_ui()
 
         float val = store.get_my_volume();
 
-        ImGui::Text("Fluid:");
+        //ImGui::Text("Fluid:");
+
+        std::string ext = "(s)";
+
+        if(store.flows)
+            ext = "(g)";
 
         std::string ext_str = std::to_string(_pid) + "." + std::to_string(store._pid);
 
@@ -1777,7 +1782,7 @@ void component::render_inline_ui()
 
         ImGui::PushItemWidth(80);
 
-        ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.1fK");
+        ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.1fK " + ext);
 
         ImGui::PopItemWidth();
     }
@@ -2349,6 +2354,8 @@ void ship::show_power()
             ImGui::Text("Space");
         }
     }
+
+    ImGui::NewLine();
 
     for(auto id : storage_comps)
     {
