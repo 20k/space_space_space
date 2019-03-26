@@ -1520,7 +1520,7 @@ void ship::handle_heat(double dt_s)
     {
         float latent_fraction = latent_heat / components.size();
 
-        if(!c.heat_sink)
+        if(!c.heat_sink || c.get_stored_volume() < 0.1)
             c.add_heat_to_me(latent_fraction);
         else
             c.add_heat_to_stored(latent_fraction);
@@ -1531,7 +1531,7 @@ void ship::handle_heat(double dt_s)
     ///equalise heat between storage and stored
     for(component& c : components)
     {
-        if(c.stored.size() == 0)
+        if(c.stored.size() == 0 || c.get_stored_volume() < 0.1)
             continue;
 
         float my_temperature = c.get_my_temperature();
@@ -1566,6 +1566,9 @@ void ship::handle_heat(double dt_s)
         for(component* hsp : heat_sinks)
         {
             component& hs = *hsp;
+
+            if(hs.get_stored_volume() < 0.1)
+                continue;
 
             assert(hs.heat_sink);
 
