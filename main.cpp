@@ -229,7 +229,7 @@ void server_thread()
 
     sensor.set_heat(2);
     sensor.long_name = "Sensors";
-    sensor.activation_type = component_info::SLIDER_ACTIVATION;
+    sensor.activation_type = component_info::TOGGLE_ACTIVATION;
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
