@@ -1875,17 +1875,70 @@ void ship::show_power()
 
         std::string temperature = to_string_with(c.get_my_temperature());
 
+        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
+
+        material_fixed_properties& fixed = props.second;
+
+        float current_temperature = c.get_my_temperature();
+
+        bool changed = false;
+
+        //if(current_temperature >= fixed.melting_point)
+
         #define HORIZONTAL
         #ifdef HORIZONTAL
-        ImGui::Text((temperature + "K").c_str());
+        //ImGui::Text((temperature + "K").c_str());
+
+        {
+            float min_bad_temp = fixed.melting_point * 0.8;
+            float max_bad_temp = fixed.melting_point;
+
+            float bad_fraction = (current_temperature - min_bad_temp) / (max_bad_temp - min_bad_temp);
+
+            float good_fraction = clamp(bad_fraction, 0, 1);
+
+            bad_fraction = clamp(1 - bad_fraction, 0, 1);
+
+            ImVec4 default_col = ImGui::GetStyleColorVec4(ImGuiCol_SliderGrab);
+            ImVec4 bad_col = ImVec4(1, 0, 0, 1);
+
+            ImVec4 ccol = ImVec4(mix(default_col.x, bad_col.x, good_fraction),
+                                 mix(default_col.y, bad_col.y, good_fraction),
+                                 mix(default_col.z, bad_col.z, good_fraction),
+                                 mix(default_col.w, bad_col.w, good_fraction));
+
+
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,bad_fraction,bad_fraction,1));
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
+
+            ImGui::PushItemWidth(80);
+
+            std::string fmt_string = "%.1fK";
+
+            if(current_temperature > fixed.melting_point)
+                fmt_string = "!" + fmt_string + "!";
+            if(current_temperature > fixed.melting_point * 1.2)
+                fmt_string = "!" + fmt_string + "!";
+            if(current_temperature > fixed.melting_point * 1.5)
+                fmt_string = "!" + fmt_string + "!";
+
+            ImGuiX::SliderFloat("##b" + std::to_string(c._pid), &current_temperature, 0, fixed.melting_point, fmt_string);
+
+            ImGui::PopItemWidth();
+
+            ImGui::PopStyleColor(2);
+        }
 
         ImGui::SameLine();
 
-        ImGui::PushItemWidth(80);
+        {
+            ImGui::PushItemWidth(80);
 
-        bool changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
+            changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
 
-        ImGui::PopItemWidth();
+            ImGui::PopItemWidth();
+        }
+
 
         ImGui::SameLine();
 
