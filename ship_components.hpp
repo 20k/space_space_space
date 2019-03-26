@@ -62,6 +62,13 @@ namespace component_info
         "Ore",
         "Material",
     };
+
+    enum activation_type
+    {
+        NO_ACTIVATION,
+        TOGGLE_ACTIVATION,
+        SLIDER_ACTIVATION,
+    };
 }
 
 struct does : serialisable
@@ -152,6 +159,7 @@ struct component : virtual serialisable, owned
     double last_production_frac = 1;
     ///user requested activation level
     float activation_level = 1;
+    component_info::activation_type activation_type = component_info::NO_ACTIVATION;
 
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
@@ -180,6 +188,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
         DO_SERIALISE(activation_level);
+        DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
     }
 
@@ -275,7 +284,6 @@ struct component : virtual serialisable, owned
     void add_heat_to_stored(float heat);
     void remove_heat_from_stored(float heat);
 
-
     bool can_store(const component& c);
     void store(const component& c);
     bool is_storage();
@@ -296,6 +304,20 @@ struct component : virtual serialisable, owned
     {
         if(isinf(level) || isnan(level))
             return;
+
+        if(activation_type == component_info::NO_ACTIVATION)
+        {
+            activation_level = 1;
+            return;
+        }
+
+        if(activation_type == component_info::TOGGLE_ACTIVATION)
+        {
+            if(level < 0.5)
+                level = 0;
+            if(level >= 0.5)
+                level = 1;
+        }
 
         activation_level = clamp(level, 0., 1.);
     }

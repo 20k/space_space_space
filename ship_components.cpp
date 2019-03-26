@@ -1870,8 +1870,22 @@ void ship::show_power()
 
     ImGui::Begin(ppower.c_str());
 
+    std::vector<component*> ui_sorted;
+
     for(component& c : components)
     {
+        ui_sorted.push_back(&c);
+    }
+
+    std::sort(ui_sorted.begin(), ui_sorted.end(), [](component* c1, component* c2)
+    {
+        return c1->activation_type > c2->activation_type;
+    });
+
+    for(component* pc : ui_sorted)
+    {
+        component& c = *pc;
+
         std::string name = c.long_name;
 
         float as_percentage = c.activation_level * 100;
@@ -1934,6 +1948,7 @@ void ship::show_power()
 
         ImGui::SameLine();
 
+        if(c.activation_type == component_info::SLIDER_ACTIVATION)
         {
             ImGui::PushItemWidth(80);
 
@@ -1942,6 +1957,20 @@ void ship::show_power()
             ImGui::PopItemWidth();
         }
 
+        if(c.activation_type == component_info::TOGGLE_ACTIVATION)
+        {
+            bool enabled = as_percentage == 100;
+
+            changed = ImGui::Checkbox(("##" + std::to_string(c._pid)).c_str(), &enabled);
+
+            as_percentage = ((int)enabled) * 100;
+        }
+
+        ///well
+        if(c.activation_type == component_info::NO_ACTIVATION)
+        {
+
+        }
 
         ImGui::SameLine();
 

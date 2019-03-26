@@ -166,6 +166,7 @@ void server_thread()
     thruster.add_composition(material_info::COPPER, 10);
     thruster.set_heat(10);
     thruster.long_name = "Thruster";
+    thruster.activation_type = component_info::SLIDER_ACTIVATION;
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
@@ -177,6 +178,7 @@ void server_thread()
     warp.set_no_drain_on_full_production();
     warp.set_heat(100);
     warp.long_name = "Warp Drive";
+    warp.activation_type = component_info::TOGGLE_ACTIVATION;
 
     shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -3);
@@ -186,6 +188,7 @@ void server_thread()
     shields.set_no_drain_on_full_production();
     shields.set_heat(20);
     shields.long_name = "Shields";
+    shields.activation_type = component_info::SLIDER_ACTIVATION;
 
     missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
@@ -194,6 +197,7 @@ void server_thread()
     missile.add_composition(material_info::IRON, 1);
     missile.set_no_drain_on_full_production();
     missile.set_heat(5);
+    missile.activation_type = component_info::TOGGLE_ACTIVATION;
 
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
@@ -207,6 +211,7 @@ void server_thread()
     laser.set_no_drain_on_full_production();
     laser.set_heat(5);
     laser.long_name = "Laser";
+    laser.activation_type = component_info::TOGGLE_ACTIVATION;
 
     laser.add_on_use(component_info::CAPACITOR, -10, 1);
     laser.subtype = "laser";
@@ -224,6 +229,7 @@ void server_thread()
 
     sensor.set_heat(2);
     sensor.long_name = "Sensors";
+    sensor.activation_type = component_info::SLIDER_ACTIVATION;
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
@@ -232,6 +238,7 @@ void server_thread()
     comms.add_composition(material_info::IRON, 1);
     comms.set_heat(1);
     comms.long_name = "Communications";
+    comms.activation_type = component_info::TOGGLE_ACTIVATION;
 
     /*sysrepair.add(component_info::POWER, -1);
     sysrepair.add(component_info::SYSTEM, 1);
@@ -244,6 +251,7 @@ void server_thread()
     armour.set_no_drain_on_full_production();
     armour.set_heat(5);
     armour.long_name = "Armour";
+    armour.activation_type = component_info::TOGGLE_ACTIVATION;
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
@@ -253,6 +261,7 @@ void server_thread()
     //ls.set_no_drain_on_full_production();
     ls.set_heat(10);
     ls.long_name = "Life Support";
+    ls.activation_type = component_info::SLIDER_ACTIVATION;
 
     coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
@@ -260,6 +269,7 @@ void server_thread()
     coolant.add_composition(material_info::IRON, 5);
     coolant.set_heat(5);
     coolant.long_name = "I smell like poop";
+    coolant.activation_type = component_info::SLIDER_ACTIVATION;
 
     power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
@@ -270,6 +280,7 @@ void server_thread()
 
     power_generator.set_complex_no_drain_on_full_production();
     power_generator.long_name = "Power Generator";
+    power_generator.activation_type = component_info::SLIDER_ACTIVATION;
 
     //power_generator.info[1].held = 0;
     //power_generator.info[0].held = 0;
@@ -286,9 +297,13 @@ void server_thread()
     crew.add_composition(material_info::IRON, 5);
     crew.set_heat(1);
     crew.long_name = "Crew";
+    crew.activation_type = component_info::NO_ACTIVATION;
 
     coolant_cold.long_name = "Cold Storage";
     coolant_hot.long_name = "Heat Sink";
+
+    coolant_cold.activation_type = component_info::NO_ACTIVATION;
+    coolant_hot.activation_type = component_info::NO_ACTIVATION;
 
     coolant_cold.add(component_info::HP, 0, 10);
     coolant_hot.add(component_info::HP, 0, 10);
