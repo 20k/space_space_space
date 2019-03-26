@@ -1864,6 +1864,14 @@ void ship::show_resources()
     ImGui::End();
 }
 
+ImVec4 im4_mix(ImVec4 one, ImVec4 two, float a)
+{
+     return ImVec4(mix(one.x, two.x, a),
+                   mix(one.y, two.y, a),
+                   mix(one.z, two.z, a),
+                   mix(one.w, two.w, a));
+}
+
 void ship::show_power()
 {
     std::string ppower = "Power##" + std::to_string(network_owner);
@@ -1900,12 +1908,17 @@ void ship::show_power()
 
         bool changed = false;
 
+        ImVec4 default_slider_col = ImGui::GetStyleColorVec4(ImGuiCol_SliderGrab);
+        ImVec4 red_col = ImVec4(1, 0, 0, 1);
+
+
         //if(current_temperature >= fixed.melting_point)
 
         #define HORIZONTAL
         #ifdef HORIZONTAL
         //ImGui::Text((temperature + "K").c_str());
 
+        ///temperature
         {
             float min_bad_temp = fixed.melting_point * 0.8;
             float max_bad_temp = fixed.melting_point;
@@ -1916,14 +1929,7 @@ void ship::show_power()
 
             bad_fraction = clamp(1 - bad_fraction, 0, 1);
 
-            ImVec4 default_col = ImGui::GetStyleColorVec4(ImGuiCol_SliderGrab);
-            ImVec4 bad_col = ImVec4(1, 0, 0, 1);
-
-            ImVec4 ccol = ImVec4(mix(default_col.x, bad_col.x, good_fraction),
-                                 mix(default_col.y, bad_col.y, good_fraction),
-                                 mix(default_col.z, bad_col.z, good_fraction),
-                                 mix(default_col.w, bad_col.w, good_fraction));
-
+            ImVec4 ccol = im4_mix(default_slider_col, red_col, good_fraction);
 
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,bad_fraction,bad_fraction,1));
             ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
@@ -1940,6 +1946,28 @@ void ship::show_power()
                 fmt_string = "!" + fmt_string + "!";
 
             ImGuiX::SliderFloat("##b" + std::to_string(c._pid), &current_temperature, 0, fixed.melting_point, fmt_string);
+
+            ImGui::PopItemWidth();
+
+            ImGui::PopStyleColor(2);
+        }
+
+        ImGui::SameLine();
+
+        ///HP
+        {
+            float hp = c.get_hp_frac() * 100;
+
+            ImVec4 ccol = im4_mix(default_slider_col, red_col, 1 - c.get_hp_frac());
+
+            ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
+
+            ImGui::PushStyleColor(ImGuiCol_Text, text_col);
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
+
+            ImGui::PushItemWidth(80);
+
+            ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
 
             ImGui::PopItemWidth();
 
