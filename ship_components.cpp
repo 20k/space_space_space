@@ -2120,6 +2120,7 @@ void ship::show_power()
 
     ImGui::NewLine();
 
+    #if 0
     std::map<size_t, bool> processed_pipes;
     std::set<size_t> storage_comps;
 
@@ -2182,6 +2183,45 @@ void ship::show_power()
 
             if(changed)
                 rpc("set_flow_rate", first, first.set_flow_rate, first.flow_rate);
+
+            ///nice idea but too distracting
+            /*if(ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+
+                auto c2 = get_component_from_id(first.id_2);
+
+                ImGui::BeginGroup();
+
+                c1.value()->render_inline_ui();
+
+                ImGui::SameLine();
+
+                ImGui::Text("to");
+
+                ImGui::EndGroup();
+
+                ImGui::SameLine();
+
+                if(c2 && !first.goes_to_space)
+                {
+                    ImGui::SameLine();
+
+                    ImGui::BeginGroup();
+
+                    c2.value()->render_inline_ui();
+
+                    ImGui::EndGroup();
+                }
+                else
+                {
+                    ImGui::SameLine();
+
+                    ImGui::Text("Space");
+                }
+
+                ImGui::EndTooltip();
+            }*/
         }
 
         ImGui::PopItemWidth();
@@ -2240,6 +2280,74 @@ void ship::show_power()
     if(pipes.size() > 0)
     {
         ImGui::Text("");
+    }
+    #endif // 0
+
+    std::vector<std::string> formatted_names;
+
+    for(storage_pipe& pipe : pipes)
+    {
+        auto c1 = get_component_from_id(pipe.id_1);
+
+        if(!c1)
+            continue;
+
+        formatted_names.push_back(c1.value()->long_name);
+    }
+
+    std::set<size_t> storage_comps;
+
+    //for(storage_pipe& pipe : pipes)
+
+    for(storage_pipe& pipe : pipes)
+    {
+        auto c1 = get_component_from_id(pipe.id_1);
+        auto c2 = get_component_from_id(pipe.id_2);
+        float lbound = -pipe.max_flow_rate;
+
+        if(pipe.goes_to_space)
+        {
+            lbound = 0;
+        }
+
+        ImGui::PushItemWidth(80);
+
+        bool changed = ImGuiX::SliderFloat("##" + std::to_string(pipe._pid), &pipe.flow_rate, lbound, pipe.max_flow_rate);
+
+        if(changed)
+            rpc("set_flow_rate", pipe, pipe.set_flow_rate, pipe.flow_rate);
+
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        if(c1)
+        {
+            component& c = *c1.value();
+
+            ImGui::Text((format(c.long_name, formatted_names) + " <-> ").c_str());
+
+            //ImGui::SameLine();
+
+            storage_comps.insert(pipe.id_1);
+        }
+
+        if(c2 && !pipe.goes_to_space)
+        {
+            component& c = *c2.value();
+
+            ImGui::SameLine();
+
+            ImGui::Text(c.long_name.c_str());
+
+            storage_comps.insert(pipe.id_2);
+        }
+        else
+        {
+            ImGui::SameLine();
+
+            ImGui::Text("Space");
+        }
     }
 
     for(auto id : storage_comps)
