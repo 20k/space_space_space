@@ -1760,6 +1760,7 @@ void component::render_inline_ui()
         std::string name = store.long_name;
 
         float val = store.get_my_volume();
+        float temperature = store.get_my_temperature();
 
         //ImGui::Text("Fluid:");
 
@@ -1770,21 +1771,23 @@ void component::render_inline_ui()
 
         std::string ext_str = std::to_string(_pid) + "." + std::to_string(store._pid);
 
-        ImGui::PushItemWidth(80);
+        {
+            ImGui::PushItemWidth(80);
 
-        ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, internal_volume, "%.1f");
+            ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, internal_volume, "%.1f");
 
-        ImGui::PopItemWidth();
+            ImGui::PopItemWidth();
+        }
 
         ImGui::SameLine();
 
-        float temperature = store.get_my_temperature();
+        {
+            ImGui::PushItemWidth(80);
 
-        ImGui::PushItemWidth(80);
+            ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.0fK " + ext);
 
-        ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.1fK " + ext);
-
-        ImGui::PopItemWidth();
+            ImGui::PopItemWidth();
+        }
     }
 }
 
@@ -2021,6 +2024,28 @@ void ship::show_power()
         #ifdef HORIZONTAL
         //ImGui::Text((temperature + "K").c_str());
 
+        ///HP
+        {
+            float hp = c.get_hp_frac() * 100;
+
+            ImVec4 ccol = im4_mix(default_slider_col, red_col, 1 - c.get_hp_frac());
+
+            ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
+
+            ImGui::PushStyleColor(ImGuiCol_Text, text_col);
+            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
+
+            ImGui::PushItemWidth(80);
+
+            ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
+
+            ImGui::PopItemWidth();
+
+            ImGui::PopStyleColor(2);
+        }
+
+        ImGui::SameLine();
+
         ///temperature
         {
             float min_bad_temp = fixed.melting_point * 0.8;
@@ -2039,7 +2064,7 @@ void ship::show_power()
 
             ImGui::PushItemWidth(80);
 
-            std::string fmt_string = "%.1fK";
+            std::string fmt_string = "%.0fK";
 
             if(current_temperature > fixed.melting_point)
                 fmt_string = "!" + fmt_string + "!";
@@ -2049,28 +2074,6 @@ void ship::show_power()
                 fmt_string = "!" + fmt_string + "!";
 
             ImGuiX::SliderFloat("##b" + std::to_string(c._pid), &current_temperature, 0, fixed.melting_point, fmt_string);
-
-            ImGui::PopItemWidth();
-
-            ImGui::PopStyleColor(2);
-        }
-
-        ImGui::SameLine();
-
-        ///HP
-        {
-            float hp = c.get_hp_frac() * 100;
-
-            ImVec4 ccol = im4_mix(default_slider_col, red_col, 1 - c.get_hp_frac());
-
-            ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
-
-            ImGui::PushStyleColor(ImGuiCol_Text, text_col);
-            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
-
-            ImGui::PushItemWidth(80);
-
-            ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
 
             ImGui::PopItemWidth();
 
