@@ -595,7 +595,7 @@ void server_thread()
                 }
             }
 
-            conn.pop_read();
+            conn.pop_read(read.id);
         }
 
         if(key.isKeyPressed(sf::Keyboard::P))
@@ -880,9 +880,9 @@ int main()
         {
             //model.cleanup();
             //std::cout << conn.read() << std::endl;
-            conn.reads_from<data_model<ship>>(model);
+            writes_data<data_model<ship>> rdata = conn.reads_from<data_model<ship>>(model);
             //renderables = conn.reads_from<client_entities>().data;
-            conn.pop_read();
+            conn.pop_read(rdata.id);
 
             if(model.sample.fresh)
             {
