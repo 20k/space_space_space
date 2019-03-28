@@ -1279,7 +1279,26 @@ void ship::tick(double dt_s)
                 ///at minimum make it so it has to bust open the container, armour, and shields of us first
                 if(c.has(component_info::SELF_DESTRUCT))
                 {
+                    for(component& store : c.stored)
+                    {
+                        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(store.composition);
+                        material_dynamic_properties& dynamic = props.first;
+                        material_fixed_properties& fixed = props.second;
 
+                        double power = dynamic.volume * fixed.specific_explosiveness;
+
+                        if(power < resource_status[component_info::HP])
+                        {
+                            take_damage(power, true);
+                        }
+                        else
+                        {
+                            take_damage(resource_status[component_info::HP], true);
+                            power -= resource_status[component_info::HP];
+
+                            double radius = sqrt(power);
+                        }
+                    }
                 }
             }
 
@@ -2583,31 +2602,34 @@ double apply_to_does(double amount, does& d)
     return next - prev;
 }
 
-void ship::take_damage(double amount)
+void ship::take_damage(double amount, bool internal_damage)
 {
     double remaining = -amount;
 
-    for(component& c : components)
+    if(!internal_damage)
     {
-        if(c.has(component_info::SHIELDS))
+        for(component& c : components)
         {
-            does& d = c.get(component_info::SHIELDS);
+            if(c.has(component_info::SHIELDS))
+            {
+                does& d = c.get(component_info::SHIELDS);
 
-            double diff = apply_to_does(remaining, d);
+                double diff = apply_to_does(remaining, d);
 
-            remaining -= diff;
+                remaining -= diff;
+            }
         }
-    }
 
-    for(component& c : components)
-    {
-        if(c.has(component_info::ARMOUR))
+        for(component& c : components)
         {
-            does& d = c.get(component_info::ARMOUR);
+            if(c.has(component_info::ARMOUR))
+            {
+                does& d = c.get(component_info::ARMOUR);
 
-            double diff = apply_to_does(remaining, d);
+                double diff = apply_to_does(remaining, d);
 
-            remaining -= diff;
+                remaining -= diff;
+            }
         }
     }
 

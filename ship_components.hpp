@@ -442,7 +442,7 @@ struct ship : heatable_entity, owned
 
     void fire(const std::vector<client_fire>& fired);
     void ping();
-    void take_damage(double amount);
+    void take_damage(double amount, bool internal_damage = false);
 
     double data_track_elapsed_s = 0;
 
