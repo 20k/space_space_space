@@ -10,6 +10,7 @@
 #include "radar_field.hpp"
 #include "random.hpp"
 #include <set>
+#include "aoe_damage.hpp"
 
 double apply_to_does(double amount, does& d);
 
@@ -1297,6 +1298,16 @@ void ship::tick(double dt_s)
                             power -= resource_status[component_info::HP];
 
                             double radius = sqrt(power);
+
+                            if(parent == nullptr)
+                                throw std::runtime_error("Broken");
+
+                            aoe_damage* aoe = parent->make_new<aoe_damage>();
+
+                            aoe->max_radius = radius;
+                            aoe->damage = power;
+                            aoe->collided_with[id] = true;
+                            aoe->r.position = r.position;
                         }
                     }
                 }

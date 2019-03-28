@@ -12,6 +12,7 @@
 #include "stardust.hpp"
 #include "player.hpp"
 #include "fixed_clock.hpp"
+#include "aoe_damage.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -141,7 +142,7 @@ void server_thread()
 
     data_model<ship*> model;
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -649,6 +650,13 @@ void server_thread()
             for(entity* e : entities.entities)
             {
                 ship* s = dynamic_cast<ship*>(e);
+                aoe_damage* aoe = dynamic_cast<aoe_damage*>(e);
+
+                if(aoe)
+                {
+                    renderables.push_back(aoe->r);
+                    continue;
+                }
 
                 if(s)
                 {
