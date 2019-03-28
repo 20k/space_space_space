@@ -285,6 +285,7 @@ struct alt_radar_field
 
     void emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en);
     void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model);
+    void emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren);
 
     bool packet_expired(const alt_frequency_packet& packet);
 

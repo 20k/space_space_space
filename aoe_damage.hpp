@@ -9,6 +9,10 @@ struct aoe_damage : entity
     float max_radius = 0;
     float damage = 0;
 
+    uint32_t emitted_by = -1;
+
+    bool emitted = false;
+
     double accumulated_time = 0;
 
     std::map<uint64_t, bool> collided_with;

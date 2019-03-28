@@ -1,5 +1,6 @@
 #include "aoe_damage.hpp"
 #include "ship_components.hpp"
+#include "radar_field.hpp"
 
 aoe_damage::aoe_damage()
 {
@@ -23,6 +24,21 @@ void aoe_damage::tick(double dt_s)
 
     if(accumulated_time > 1)
         cleanup = true;
+
+    if(!emitted)
+    {
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet alt_pack;
+        alt_pack.intensity = damage * 100;
+        alt_pack.frequency = HEAT_FREQ;
+
+        radar.ignore_map[alt_frequency_packet::gid][emitted_by].restart();
+
+        radar.emit_raw(alt_pack, r.position, id, r);
+
+        emitted = true;
+    }
 }
 
 void aoe_damage::on_collide(entity_manager& em, entity& other)

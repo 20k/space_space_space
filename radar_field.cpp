@@ -184,6 +184,19 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
     imaginary_collideable_list[freq.id] = model;
 }
 
+void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren)
+{
+    freq.id = alt_frequency_packet::gid++;
+    freq.emitted_by = id;
+
+    freq.cross_dim = ren.approx_dim;
+    freq.cross_angle = ren.rotation;
+
+    ignore_map[freq.id][id].restart();
+
+    add_packet_raw(freq, pos);
+}
+
 void alt_radar_field::add_player_model(player_model* model)
 {
     models.push_back(model);
