@@ -192,6 +192,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(activation_level);
         DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
+        DO_RPC(set_use);
     }
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
@@ -322,6 +323,11 @@ struct component : virtual serialisable, owned
         }
 
         activation_level = clamp(level, 0., 1.);
+    }
+
+    void set_use()
+    {
+        try_use = true;
     }
 };
 

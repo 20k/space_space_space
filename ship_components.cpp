@@ -2513,7 +2513,19 @@ void ship::advanced_ship_display()
 
             if(ImGui::IsItemClicked())
             {
-                c.try_use = true;
+                rpc("set_use", c, c.set_use);
+
+                //c.try_use = true;
+            }
+        }
+
+        if(c.has(component_info::SELF_DESTRUCT))
+        {
+            ImGui::Button("DESTRUCT");
+
+            if(ImGui::IsItemClicked())
+            {
+                rpc("set_use", c, c.set_use);
             }
         }
     }

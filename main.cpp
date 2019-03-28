@@ -306,6 +306,7 @@ void server_thread()
     crew.activation_type = component_info::NO_ACTIVATION;
 
     destruct.add(component_info::HP, 0, 1);
+    destruct.add(component_info::SELF_DESTRUCT, 1);
     destruct.add_composition(material_info::IRON, 6);
     destruct.internal_volume = 5;
     destruct.long_name = "Self Destruct";

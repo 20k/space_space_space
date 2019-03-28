@@ -131,7 +131,7 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         int next = (i + 1) % vert_dist.size();
 
         vec4f lcol1 = vert_cols[cur] * 255;
-        vec4f lcol2 = vert_cols[next] * 255;
+        //vec4f lcol2 = vert_cols[next] * 255;
 
         float d1 = vert_dist[cur];
         float d2 = vert_dist[next];
