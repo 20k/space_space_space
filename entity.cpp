@@ -45,6 +45,35 @@ bool collides(entity& e1, entity& e2)
     return false;
 }
 
+void client_renderable::init_xagonal(float rad, int n)
+{
+    vert_angle.resize(n);
+    vert_dist.resize(n);
+    vert_cols.resize(n);
+
+    for(auto& i : vert_dist)
+    {
+        i = rad;
+    }
+
+    float fangle = 0;
+
+    for(auto& i : vert_angle)
+    {
+        i = fangle;
+
+        fangle += (M_PI * 2) / n;
+    }
+
+    for(auto& i : vert_cols)
+    {
+        i = {1,1,1,1};
+    }
+
+    approx_rad = n;
+    approx_dim = {n, n};
+}
+
 void client_renderable::init_rectangular(vec2f dim)
 {
     float corner_rads = dim.length();

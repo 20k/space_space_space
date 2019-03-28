@@ -48,6 +48,7 @@ struct client_renderable : serialisable
         DO_SERIALISE(network_owner);
     }
 
+    void init_xagonal(float rad, int n);
     void init_rectangular(vec2f dim);
     void render(camera& cam, sf::RenderWindow& window);
 
