@@ -37,7 +37,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
     {
         fixed.specific_heat = 0.2;
         fixed.reflectivity = 0.1;
-        fixed.melting_point = 1500;
+        fixed.melting_point = 1523;
         fixed.specific_explosiveness = 50;
     }
 

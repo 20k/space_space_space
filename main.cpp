@@ -158,7 +158,7 @@ void server_thread()
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, radiator, power_generator, crew, coolant_cold, coolant_hot;
+    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, radiator, power_generator, crew, destruct, coolant_cold, coolant_hot;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -305,6 +305,21 @@ void server_thread()
     crew.long_name = "Crew";
     crew.activation_type = component_info::NO_ACTIVATION;
 
+    destruct.add(component_info::HP, 0, 1);
+    destruct.add_composition(material_info::IRON, 6);
+    destruct.internal_volume = 5;
+    destruct.long_name = "Self Destruct";
+    destruct.activation_type = component_info::NO_ACTIVATION;
+
+    {
+        component explosives;
+        explosives.add(component_info::HP, 1);
+        explosives.add_composition(material_info::HTX, 5);
+        explosives.long_name = "HTX";
+
+        destruct.store(explosives);
+    }
+
     coolant_cold.long_name = "Cold Storage";
     coolant_hot.long_name = "Heat Sink";
 
@@ -358,6 +373,7 @@ void server_thread()
     test_ship->add(crew);
     test_ship->add(coolant_cold);
     test_ship->add(coolant_hot);
+    test_ship->add(destruct);
 
     storage_pipe rpipe;
     rpipe.id_1 = coolant_cold._pid;
