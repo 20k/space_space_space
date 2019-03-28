@@ -29,7 +29,7 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
         vec2f max_dist = (vec2f){100, 100} * 20;
 
         vec2f rpos = rand_det(rng, min_dist, max_dist);
-        float z_level = rand_det_s(rng, 1, 5);
+        //float z_level = rand_det_s(rng, 1, 5);
 
         entity* em = manage.make_new<stardust>();
 

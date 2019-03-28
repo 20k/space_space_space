@@ -413,9 +413,9 @@ void alt_radar_field::tick(double dt_s)
 
     //profile_dumper exec_time("etime");
 
-    int num_hit = 0;
-    std::set<int> hitp;
-    int num_hit_rects = 0;
+    //int num_hit = 0;
+    //std::set<int> hitp;
+    //int num_hit_rects = 0;
 
     ///so
     ///6000 packets
@@ -722,7 +722,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     if(distance_to_packet > packet.packet_wavefront_width)
         return 0;
 
-    float my_packet_angle = (pos - packet.origin).angle();
+    //float my_packet_angle = (pos - packet.origin).angle();
 
     if(!angle_lies_between_vectors_cos(packet_vector.norm(), packet.precalculated_start_angle, packet.cos_restrict_angle))
         return 0;
@@ -734,7 +734,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         for(alt_frequency_packet& shadow : f_it->second)
         {
             float shadow_real_distance = (iteration_count - shadow.start_iteration) * speed_of_light_per_tick;
-            float shadow_next_real_distance = shadow_real_distance * speed_of_light_per_tick;
+            //float shadow_next_real_distance = shadow_real_distance * speed_of_light_per_tick;
 
             vec2f shadow_vector = (pos - shadow.origin).norm() * shadow_real_distance;
             vec2f shadow_position = shadow_vector + shadow.origin;
@@ -803,7 +803,7 @@ float alt_radar_field::get_refl_intensity_at(vec2f pos)
 
     for(alt_frequency_packet& packet : packets)
     {
-        if(packet.reflected_by == -1)
+        if(packet.reflected_by == (uint32_t)-1)
             continue;
 
         total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
@@ -1115,10 +1115,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
             uint64_t search_entity = packet.emitted_by;
 
-            if(packet.reflected_by != -1)
+            if(packet.reflected_by != (uint32_t)-1)
                 search_entity = packet.reflected_by;
 
-            if(packet.emitted_by == uid && packet.reflected_by == -1)
+            if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
                 continue;
 
             if(packet.intensity * radar_mult >= 0.01)
@@ -1130,7 +1130,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
     for(alt_frequency_packet& packet : post_intensity_calculate)
     {
-        if(packet.emitted_by == uid && packet.reflected_by == -1)
+        if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
             continue;
 
         ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
@@ -1155,7 +1155,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         uint64_t search_entity = packet.emitted_by;
 
-        if(packet.reflected_by != -1)
+        if(packet.reflected_by != (uint32_t)-1)
             search_entity = packet.reflected_by;
 
         if(intensity >= 0.01f)
@@ -1174,7 +1174,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         #if 1
         #define RECT
         #ifdef RECT
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 1)
+        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > 1)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
@@ -1189,7 +1189,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         #define RECT_RECV
         #ifdef RECT_RECV
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 1)
+        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > 1)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
@@ -1203,7 +1203,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         #endif // RECT_RECV
 
         ///specifically excludes self because we never need to know where we are
-        if(consider.emitted_by == uid && consider.reflected_by != -1 && consider.reflected_by != uid && intensity > 0.1)
+        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > 0.1)
         {
             vec2f next_dir = (consider.reflected_position - pos).norm();
 
@@ -1212,7 +1212,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
         }
 
-        if(consider.emitted_by != uid && consider.reflected_by == -1 && intensity > 0.1)
+        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > 0.1)
         {
             vec2f next_dir = (consider.origin - pos).norm();
 
@@ -1255,14 +1255,14 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         for(alt_frequency_packet& packet : post_intensity_calculate)
         {
-            if(packet.emitted_by == uid && packet.reflected_by == -1)
+            if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
                 continue;
 
             float intensity = packet.intensity * radar_mult;
 
             uint64_t search_entity = packet.emitted_by;
 
-            if(packet.reflected_by != -1)
+            if(packet.reflected_by != (uint32_t)-1)
                 search_entity = packet.reflected_by;
 
             if(intensity >= 1)

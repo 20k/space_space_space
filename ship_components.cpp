@@ -1056,7 +1056,7 @@ struct torpedo : projectile
 
             phys_ignore.clear();
 
-            float max_speed = 100;
+            //float max_speed = 100;
             //float max_speed_ps = 30;
 
             /*velocity = velocity + (vec2f){max_speed_ps, 0}.rot(point_angle) * dt_s;
@@ -1461,7 +1461,6 @@ void ship::handle_heat(double dt_s)
     latent_heat -= emitted;
     #endif // 0
 
-    double min_heat = 50;
     //double produced_heat = 0;
 
     for(component& c : components)
@@ -3222,7 +3221,7 @@ void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample)
         double lower_band = ((double)i / frequency_bands) * (max_freq - min_freq) + min_freq;
         double upper_band = ((double)(i + 1) / frequency_bands) * (max_freq - min_freq) + min_freq;
 
-        for(int kk=0; kk < sample.frequencies.size(); kk++)
+        for(int kk=0; kk < (int)sample.frequencies.size(); kk++)
         {
             float freq = sample.frequencies[kk];
             float intensity = sample.intensities[kk];

@@ -173,7 +173,7 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
         v[3].position = sf::Vector2f(v4.x(), v4.y());
 
         sf::Color scol1 = sf::Color(lcol1.x(), lcol1.y(), lcol1.z(), lcol1.w());
-        sf::Color scol2 = sf::Color(lcol2.x(), lcol2.y(), lcol2.z(), lcol2.w());
+        //sf::Color scol2 = sf::Color(lcol2.x(), lcol2.y(), lcol2.z(), lcol2.w());
 
         #ifdef PROGRESSIVE
         v[0].color = scol1;
@@ -445,7 +445,7 @@ bool entity::point_within(vec2f point)
 
     for(int i=0; i < (int)r.vert_dist.size(); i++)
     {
-        int cur = i;
+        //int cur = i;
         int next = (i + 1) % (int)r.vert_dist.size();
 
         vec2f p1 = last_pos;

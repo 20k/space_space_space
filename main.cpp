@@ -662,13 +662,12 @@ void server_thread()
                     if(s->network_owner != i)
                         continue;
 
+                    #ifdef MOUSE_TRACK
                     vec2f mpos = last_mouse_pos[i];
 
                     vec2f to_mouse = mpos - s->r.position;
-
                     vec2f front_dir = (vec2f){1, 0}.rot(s->r.rotation);
 
-                    #ifdef MOUSE_TRACK
                     for(component& c : s->components)
                     {
                         if(c.max_use_angle == 0)
@@ -939,7 +938,7 @@ int main()
         transients.tick(frametime_dt);
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
-        vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
+        //vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
