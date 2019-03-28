@@ -292,7 +292,16 @@ void component::deplete_me(std::vector<double>& diff, const std::vector<double>&
         double my_held = d.held;
         double my_cap = d.capacity;
 
+        double free_of_type = free_storage[d.type];
+
         double change = diff[d.type];
+
+        if(free_of_type > 0.0001)
+        {
+            change = diff[d.type] / free_of_type;
+
+            change = clamp(change, 0, diff[d.type]);
+        }
 
         double next = my_held + change;
 
