@@ -55,13 +55,12 @@ std::pair<material_dynamic_properties, material_fixed_properties> get_material_c
 
         auto them_fixed = material_info::fetch(m.type);
 
-        fixed.reflectivity += them_fixed.reflectivity;
-
         if(fixed.melting_point == 0)
             fixed.melting_point = them_fixed.melting_point;
         else
             fixed.melting_point = std::min(fixed.melting_point, them_fixed.melting_point);
 
+        fixed.reflectivity += m.dynamic_desc.volume * them_fixed.reflectivity;
         fixed.specific_heat += m.dynamic_desc.volume * them_fixed.specific_heat;
         fixed.specific_explosiveness += m.dynamic_desc.volume * them_fixed.specific_explosiveness;
     }
@@ -69,6 +68,10 @@ std::pair<material_dynamic_properties, material_fixed_properties> get_material_c
     if(in.size() == 0)
         return {dyn, fixed};
 
+    if(dyn.volume <= 0.00001)
+        return {dyn, fixed};
+
+    fixed.reflectivity = fixed.reflectivity / dyn.volume;
     fixed.specific_heat = fixed.specific_heat / dyn.volume;
     fixed.specific_explosiveness = fixed.specific_explosiveness / dyn.volume;
 
