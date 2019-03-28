@@ -242,7 +242,7 @@ struct component : virtual serialisable, owned
 
     double get_sat(const std::vector<double>& sat);
 
-    void deplete_me(std::vector<double>& diff);
+    void deplete_me(std::vector<double>& diff, const std::vector<double>& free_storage);
 
     bool can_use(const std::vector<double>& res);
     void use(std::vector<double>& res);

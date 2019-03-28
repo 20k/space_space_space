@@ -392,6 +392,11 @@ void server_thread()
     std::minstd_rand rng;
     rng.seed(0);
 
+    test_ship->take_damage(80);
+
+    for(int i=0; i < 10; i++)
+        test_ship->take_damage(2);
+
     player_model_manager player_manage;
 
     /*int num_asteroids = 10;
@@ -441,8 +446,8 @@ void server_thread()
         sf::Clock tickclock;
         entities.tick(frametime_dt);
 
-        double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
-        std::cout << "tclock " << tclock_time << std::endl;
+        //double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
+        //std::cout << "tclock " << tclock_time << std::endl;
 
         entities.cleanup();
 

@@ -687,12 +687,12 @@ void alt_radar_field::tick(double dt_s)
     }*/
 
     //pdump.dump();
-    pdump.stop();
-    profile_dumper::dump();
+    //pdump.stop();
+    //profile_dumper::dump();
 
     //collideables.clear();
 
-    std::cout << "mpackets " << packets.size() << std::endl;
+    //std::cout << "mpackets " << packets.size() << std::endl;
 
     iteration_count++;
 

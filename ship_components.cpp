@@ -285,7 +285,7 @@ std::vector<double> component::get_held()
     return needed;
 }
 
-void component::deplete_me(std::vector<double>& diff)
+void component::deplete_me(std::vector<double>& diff, const std::vector<double>& free_storage)
 {
     for(does& d : info)
     {
@@ -1312,9 +1312,31 @@ void ship::tick(double dt_s)
         diff[i] = next_resource_status[i] - resource_status[i];
     }
 
+    std::vector<double> free_storage = sum<double>([](component& c)
+    {
+        std::vector<double> held = c.get_held();
+        std::vector<double> capacity = c.get_capacity();
+
+        std::vector<double> ret;
+
+        if(held.size() != capacity.size())
+            throw std::runtime_error("Bad sizes in sum free storage");
+
+        for(int i=0; i < (int)held.size(); i++)
+        {
+            ret.push_back(capacity[i] - held[i]);
+        }
+
+        return ret;
+    });
+
+    ///so the problem with this is that we're applying the diff sequentially
+    ///need to pass in the total required of a thing, and then only take a fraction of whats available
+    ///will give averaging hp repair
+    ///then combine the two together and we get a priority system
     for(component& c : components)
     {
-        c.deplete_me(diff);
+        c.deplete_me(diff, free_storage);
     }
 
     last_sat_percentage = all_sat;
