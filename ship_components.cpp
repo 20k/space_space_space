@@ -285,37 +285,53 @@ std::vector<double> component::get_held()
     return needed;
 }
 
-void component::deplete_me(std::vector<double>& diff, const std::vector<double>& free_storage)
+void component::deplete_me(const std::vector<double>& diff, const std::vector<double>& free_storage, const std::vector<double>& used_storage)
 {
     for(does& d : info)
     {
         double my_held = d.held;
         double my_cap = d.capacity;
 
-        double free_of_type = free_storage[d.type];
-
-        double change = diff[d.type];
-
-        if(free_of_type > 0.0001)
+        if(diff[d.type] > 0)
         {
-            change = diff[d.type] / free_of_type;
+            double my_free = my_cap - my_held;
 
-            change = clamp(change, 0, diff[d.type]);
+            if(my_free <= 0)
+                continue;
+
+            double free_of_type = free_storage[d.type];
+
+            if(fabs(free_of_type) <= 0.00001)
+                continue;
+
+            double deplete_frac = my_free / free_of_type;
+
+            double to_change = deplete_frac * diff[d.type];
+
+            double next = clamp(my_held + to_change, 0, my_cap);
+
+            d.held = next;
         }
+        else
+        {
+            double my_used = d.held;
 
-        double next = my_held + change;
+            if(my_used <= 0)
+                continue;
 
-        if(next < 0)
-            next = 0;
+            double used_of_type = used_storage[d.type];
 
-        if(next > my_cap)
-            next = my_cap;
+            if(fabs(used_of_type) <= 0.00001)
+                continue;
 
-        double real = next - my_held;
+            double deplete_frac = my_used / used_of_type;
 
-        diff[d.type] -= real;
+            double to_change = deplete_frac * diff[d.type];
 
-        d.held = next;
+            double next = clamp(my_held + to_change, 0, my_cap);
+
+            d.held = next;
+        }
     }
 }
 
@@ -1343,9 +1359,10 @@ void ship::tick(double dt_s)
     ///need to pass in the total required of a thing, and then only take a fraction of whats available
     ///will give averaging hp repair
     ///then combine the two together and we get a priority system
+
     for(component& c : components)
     {
-        c.deplete_me(diff, free_storage);
+        c.deplete_me(diff, free_storage, resource_status);
     }
 
     last_sat_percentage = all_sat;

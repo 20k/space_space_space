@@ -318,7 +318,7 @@ void server_thread()
     coolant_hot.internal_volume = 5;
 
     coolant_cold.add_composition(material_info::IRON, 55);
-    coolant_hot.add_composition(material_info::IRON, 10);
+    coolant_hot.add_composition(material_info::IRON, 1);
 
     coolant_hot.heat_sink = true;
 
@@ -392,10 +392,10 @@ void server_thread()
     std::minstd_rand rng;
     rng.seed(0);
 
-    test_ship->take_damage(80);
+    /*test_ship->take_damage(80);
 
     for(int i=0; i < 10; i++)
-        test_ship->take_damage(2);
+        test_ship->take_damage(2);*/
 
     player_model_manager player_manage;
 
