@@ -65,6 +65,7 @@ struct entity : virtual serialisable
     bool cleanup = false;
     int cleanup_rounds = 0;
     bool collides = true;
+    bool is_collided_with = true;
     int ticks_between_collisions = 1;
 
     float mass = 1;
@@ -320,6 +321,9 @@ struct entity_manager : serialisable
 
                         for(entity* e2 : fine.data)
                         {
+                            if(!e2->is_collided_with)
+                                continue;
+
                             if(!e2->collides)
                                 continue;
 
@@ -372,6 +376,9 @@ struct entity_manager : serialisable
                     {
                         continue;
                     }
+
+                    if(!last_entities[j]->is_collided_with)
+                        continue;
 
                     vec2f p2 = last_entities[j]->r.position;
                     float r2 = last_entities[j]->r.approx_rad;
@@ -430,7 +437,18 @@ struct entity_manager : serialisable
     ///only fully reaggregate on a spawn for the moment?
     void handle_aggregates()
     {
-        all_aggregates<entity*> nsecond = collect_aggregates(entities, 20);
+        std::vector<entity*> my_entities;
+        my_entities.reserve(entities.size());
+
+        for(entity* e : entities)
+        {
+            if(e->collides && e->is_collided_with)
+            {
+                my_entities.push_back(e);
+            }
+        }
+
+        all_aggregates<entity*> nsecond = collect_aggregates(my_entities, 20);
 
         collision.data.clear();
         collision.data.reserve(nsecond.data.size());
