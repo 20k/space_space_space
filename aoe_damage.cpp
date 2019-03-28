@@ -6,7 +6,7 @@ aoe_damage::aoe_damage()
     collides = true;
     is_collided_with = false;
 
-    r.init_rectangular({10, 10});
+    //r.init_rectangular({10, 10});
 }
 
 void aoe_damage::tick(double dt_s)
@@ -15,7 +15,7 @@ void aoe_damage::tick(double dt_s)
 
     my_rad = clamp(my_rad, 0, max_radius);
 
-    //r.init_rectangular({my_rad, my_rad});
+    r.init_rectangular({my_rad, my_rad});
 
     accumulated_time += dt_s;
 
