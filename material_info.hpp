@@ -13,6 +13,7 @@ namespace material_info
         IRON,
         COPPER,
         H2O,
+        HTX,
         COMPOSITE,
         COUNT,
     };
@@ -23,6 +24,7 @@ namespace material_info
         "Iron",
         "Copper",
         "H2O",
+        "HTX",
         "Composite",
     };
 
@@ -37,11 +39,14 @@ struct material_fixed_properties : serialisable
     float specific_heat = 0;
     float reflectivity = 0;
     float melting_point = 0;
+    float specific_explosiveness = 0; ///damage per volume
 
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(specific_heat);
         DO_SERIALISE(reflectivity);
+        DO_SERIALISE(melting_point);
+        DO_SERIALISE(specific_explosiveness);
     }
 };
 

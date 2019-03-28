@@ -9,6 +9,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 1;
         fixed.reflectivity = 0.5;
         fixed.melting_point = 1;
+        fixed.specific_explosiveness = 1;
     }
 
     if(type == material_info::IRON)
@@ -30,6 +31,14 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 0.4;
         fixed.reflectivity = 0.8;
         fixed.melting_point = 273.15;
+    }
+
+    if(type == material_info::HTX)
+    {
+        fixed.specific_heat = 0.2;
+        fixed.reflectivity = 0.1;
+        fixed.melting_point = 1500;
+        fixed.specific_explosiveness = 50;
     }
 
     return fixed;
@@ -54,12 +63,14 @@ std::pair<material_dynamic_properties, material_fixed_properties> get_material_c
             fixed.melting_point = std::min(fixed.melting_point, them_fixed.melting_point);
 
         fixed.specific_heat += m.dynamic_desc.volume * them_fixed.specific_heat;
+        fixed.specific_explosiveness += m.dynamic_desc.volume * them_fixed.specific_explosiveness;
     }
 
     if(in.size() == 0)
         return {dyn, fixed};
 
     fixed.specific_heat = fixed.specific_heat / dyn.volume;
+    fixed.specific_explosiveness = fixed.specific_explosiveness / dyn.volume;
 
     return {dyn, fixed};
 }

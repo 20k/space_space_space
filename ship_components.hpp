@@ -40,6 +40,7 @@ namespace component_info
         MISSILE_STORE,
         ORE,
         MATERIAL,
+        SELF_DESTRUCT,
         COUNT
     };
 
@@ -61,6 +62,7 @@ namespace component_info
         "Missiles",
         "Ore",
         "Material",
+        "Self Destruct",
     };
 
     enum activation_type
