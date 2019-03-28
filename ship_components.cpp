@@ -1271,6 +1271,16 @@ void ship::tick(double dt_s)
                     else
                         radar.emit_with_imaginary_packet(em, r.position, *this, model);
                 }
+
+                ///damage surrounding targets
+                ///should not be instantaneous but an expanding explosion ring, repurposable
+                ///apply progressive damage to targets
+                ///subtract damage from self before propagating to friends, or at least
+                ///at minimum make it so it has to bust open the container, armour, and shields of us first
+                if(c.has(component_info::SELF_DESTRUCT))
+                {
+
+                }
             }
 
             c.try_use = false;
