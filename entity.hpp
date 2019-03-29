@@ -35,6 +35,8 @@ struct client_renderable : serialisable
     uint32_t network_owner = -1;
     bool transient = false;
 
+    bool dirty = false;
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(position);

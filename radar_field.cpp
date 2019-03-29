@@ -197,11 +197,6 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
     add_packet_raw(freq, pos);
 }
 
-void alt_radar_field::add_player_model(player_model* model)
-{
-    models.push_back(model);
-}
-
 bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 {
     if(packet.force_cleanup)

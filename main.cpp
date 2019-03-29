@@ -626,7 +626,7 @@ void server_thread()
         if(key.isKeyPressed(sf::Keyboard::P))
             std::cout << "test ship " << test_ship->r.position << std::endl;
 
-        #define SEE_ONLY_REAL
+        //#define SEE_ONLY_REAL
 
         std::map<uint32_t, ship*> network_ships;
 
