@@ -397,6 +397,8 @@ void server_thread()
 
     test_ship->r.position = {323.986694, 242.469727};
 
+    test_ship->r.position = {585, 400};
+
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
     test_ship2->new_network_copy();
