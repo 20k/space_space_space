@@ -1315,14 +1315,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 client_renderable rs;
                 entity* found = nullptr;
 
-                for(entity* e : entities.entities)
+                std::optional<entity*> found_entity = entities.fetch(id);
+
+                if(found_entity)
                 {
-                    if(e->id == id)
-                    {
-                        rs = e->r;
-                        found = e;
-                        break;
-                    }
+                    found = found_entity.value();
+                    rs = found->r;
                 }
 
                 if(found && rs.vert_dist.size() >= 3)
@@ -1378,14 +1376,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 client_renderable rs;
                 entity* found = nullptr;
 
-                for(entity* e : entities.entities)
+                std::optional<entity*> found_entity = entities.fetch(id);
+
+                if(found_entity)
                 {
-                    if(e->id == id)
-                    {
-                        rs = e->r;
-                        found = e;
-                        break;
-                    }
+                    found = found_entity.value();
+                    rs = found->r;
                 }
 
                 if(found && rs.vert_dist.size() >= 3)
