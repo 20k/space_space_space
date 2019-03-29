@@ -478,20 +478,9 @@ void server_thread()
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;
 
-        /*nlohmann::json dat;
-        entities.serialise(dat, true);*/
-
-        /*auto clients = conn.clients();
-
-        for(auto& i : clients)
-        {
-            conn.writes_to(entities, i);
-        }*/
-
         alt_frequency_packet alt_pack;
         alt_pack.intensity = 50000;
         alt_pack.frequency = 1000;
-
 
         #ifdef SERVER_VIEW
         /*vec2f mpos = {mouse.getPosition(debug).x, mouse.getPosition(debug).y};
