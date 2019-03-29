@@ -1309,6 +1309,7 @@ void ship::tick(double dt_s)
                             aoe->collided_with[id] = true;
                             aoe->r.position = r.position;
                             aoe->emitted_by = id;
+                            aoe->velocity = velocity;
                         }
                     }
                 }

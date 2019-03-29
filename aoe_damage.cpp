@@ -63,6 +63,4 @@ void aoe_damage::on_collide(entity_manager& em, entity& other)
     float final_damage = mix(damage, 0, radius / max_radius);
 
     s->take_damage(final_damage);
-
-    std::cout << "did " << final_damage << std::endl;
 }
