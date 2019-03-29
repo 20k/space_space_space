@@ -19,6 +19,7 @@ void aoe_damage::tick(double dt_s)
     //r.init_rectangular({my_rad, my_rad});
 
     r.init_xagonal(my_rad, 6);
+    r.transient = true;
 
     accumulated_time += dt_s;
 

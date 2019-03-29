@@ -1361,6 +1361,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                     split.velocity = found->velocity;
                     split.type = 0;
 
+                    if(rs.transient)
+                    {
+                        split.r = rs;
+                    }
+
                     player.value()->renderables[id] = split;
                 }
             }
@@ -1400,6 +1405,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                     split.r.approx_rad = rs.approx_rad;
                     split.velocity = found->velocity;
                     split.type = 1;
+
+                    if(rs.transient)
+                    {
+                        split.r = rs;
+                    }
 
                     player.value()->renderables[id] = split;
                 }

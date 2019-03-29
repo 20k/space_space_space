@@ -650,13 +650,13 @@ void server_thread()
             for(entity* e : entities.entities)
             {
                 ship* s = dynamic_cast<ship*>(e);
-                aoe_damage* aoe = dynamic_cast<aoe_damage*>(e);
+                /*aoe_damage* aoe = dynamic_cast<aoe_damage*>(e);
 
                 if(aoe)
                 {
                     renderables.push_back(aoe->r);
                     continue;
-                }
+                }*/
 
                 if(s)
                 {
@@ -748,18 +748,33 @@ void server_thread()
             model.ships = ships;
             model.renderables = renderables;
 
+            std::optional<player_model*> player_mod = player_manage.fetch_by_network_id(i);
+
             if(network_ships[i] != nullptr)
             {
-                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_manage.fetch_by_network_id(i), network_ships[i]->get_radar_strength());
+                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_mod, network_ships[i]->get_radar_strength());
             }
             else
             {
                 model.sample = decltype(model.sample)();
             }
 
-            //std::cout << "srv write " << read_clock.restart().asMicroseconds() / 1000. << std::endl;
-
             conn.writes_to(model, i);
+
+            if(player_mod)
+            {
+                for(auto it = player_mod.value()->renderables.begin(); it != player_mod.value()->renderables.end();)
+                {
+                    if(it->second.r.transient)
+                    {
+                        it = player_mod.value()->renderables.erase(it);
+                    }
+                    else
+                    {
+                        it++;
+                    }
+                }
+            }
         }
 
         #ifdef SERVER_VIEW
