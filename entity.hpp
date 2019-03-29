@@ -128,6 +128,7 @@ struct entity : virtual serialisable
         DO_SERIALISE(vert_cols);*/
 
         DO_SERIALISE(r);
+        DO_SERIALISE(velocity);
 
         //r.serialise(ctx, data);
     }
