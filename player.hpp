@@ -67,6 +67,8 @@ struct common_renderable : serialisable, uncertain
     }
 };
 
+///i think the reason why the code is a mess is this inversion of ownership
+///this needs to own everything about a player, ships etc
 struct player_model : serialisable
 {
     ///oh goodie raw pointers
@@ -74,6 +76,8 @@ struct player_model : serialisable
     uint32_t network_id = -1;
 
     std::map<uint32_t, common_renderable> renderables;
+
+    entity* controlled_ship = nullptr;
 
     void cleanup(vec2f my_pos);
 

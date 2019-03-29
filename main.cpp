@@ -468,6 +468,11 @@ void server_thread()
 
         //double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
         //std::cout << "tclock " << tclock_time << std::endl;
+        for(player_model* mod : player_manage.models)
+        {
+            if(mod->controlled_ship->cleanup)
+                mod->controlled_ship = nullptr;
+        }
 
         entities.cleanup();
 
@@ -526,20 +531,6 @@ void server_thread()
             render = !render;
         }
 
-        /*for(entity* e : entities.entities)
-        {
-            asteroid* a = dynamic_cast<asteroid*>(e);
-
-            if(a)
-            {
-                alt_frequency_packet heat;
-                heat.frequency = HEAT_FREQ;
-                heat.intensity = a->permanent_heat;
-
-                radar.emit(heat, e->r.position, e->id);
-            }
-        }*/
-
         radar.tick(frametime_dt);
         player_manage.tick(frametime_dt);
 
@@ -567,6 +558,8 @@ void server_thread()
                 if(s->network_owner == pid)
                 {
                     s->model = fmodel;
+
+                    fmodel->controlled_ship = s;
                 }
             }
 
@@ -579,9 +572,13 @@ void server_thread()
 
             last_mouse_pos[read.id] = read.data.mouse_world_pos;
 
-            for(entity* e : entities.entities)
+            std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
+
+            if(mod_opt)
             {
-                ship* s = dynamic_cast<ship*>(e);
+                player_model* mod = mod_opt.value();
+
+                ship* s = dynamic_cast<ship*>(mod->controlled_ship);
 
                 if(s && s->network_owner == read.id)
                 {
@@ -628,37 +625,16 @@ void server_thread()
 
         //#define SEE_ONLY_REAL
 
-        std::map<uint32_t, ship*> network_ships;
-
-        for(entity* e : entities.entities)
-        {
-            ship* s = dynamic_cast<ship*>(e);
-
-            if(s)
-            {
-                network_ships[s->network_owner] = s;
-            }
-        }
-
         auto clients = conn.clients();
 
         for(auto& i : clients)
         {
-            //model.sample = radar.sample()
-
             std::vector<ship*> ships;
             std::vector<client_renderable> renderables;
 
             for(entity* e : entities.entities)
             {
                 ship* s = dynamic_cast<ship*>(e);
-                /*aoe_damage* aoe = dynamic_cast<aoe_damage*>(e);
-
-                if(aoe)
-                {
-                    renderables.push_back(aoe->r);
-                    continue;
-                }*/
 
                 if(s)
                 {
@@ -752,9 +728,14 @@ void server_thread()
 
             std::optional<player_model*> player_mod = player_manage.fetch_by_network_id(i);
 
-            if(network_ships[i] != nullptr)
+            if(player_mod)
             {
-                model.sample = radar.sample_for(network_ships[i]->r.position, network_ships[i]->id, entities, player_mod, network_ships[i]->get_radar_strength());
+                ship* s = dynamic_cast<ship*>(player_mod.value()->controlled_ship);
+
+                if(s)
+                {
+                    model.sample = radar.sample_for(s->r.position, s->id, entities, player_mod, s->get_radar_strength());
+                }
             }
             else
             {
