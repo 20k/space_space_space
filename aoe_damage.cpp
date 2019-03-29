@@ -15,6 +15,7 @@ void aoe_damage::tick(double dt_s)
     double my_rad = accumulated_time * max_radius;
 
     my_rad = clamp(my_rad, 0, max_radius);
+    radius = my_rad;
 
     //r.init_rectangular({my_rad, my_rad});
 
@@ -54,5 +55,14 @@ void aoe_damage::on_collide(entity_manager& em, entity& other)
     if(s == nullptr)
         return;
 
-    s->take_damage(damage);
+    float rad = radius;
+
+    if(rad < 1)
+        rad = 1;
+
+    float final_damage = mix(damage, 0, radius / max_radius);
+
+    s->take_damage(final_damage);
+
+    std::cout << "did " << final_damage << std::endl;
 }
