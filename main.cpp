@@ -796,6 +796,8 @@ void server_thread()
 
 int main()
 {
+    serialise_tests();
+
     #define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread).detach();

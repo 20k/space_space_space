@@ -331,7 +331,7 @@ struct component : virtual serialisable, owned
     }
 };
 
-struct data_tracker : serialisable
+struct data_tracker : serialisable, owned
 {
     delta_container<std::vector<float>> vsat;
     delta_container<std::vector<float>> vheld;
@@ -388,7 +388,7 @@ struct ship : heatable_entity, owned
 
     player_model* model = nullptr;
 
-    std::vector<persistent<data_tracker>> data_track;
+    std::vector<data_tracker> data_track;
 
     ship();
 

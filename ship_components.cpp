@@ -1425,7 +1425,7 @@ void ship::tick(double dt_s)
 
             //std::cout << "dtrack size " << (*data_track).size() << std::endl;
 
-            data_track[type]->add(sat, held);
+            data_track[type].add(sat, held);
         }
 
         data_track_elapsed_s -= time_between_datapoints_s;
@@ -2515,12 +2515,12 @@ void ship::advanced_ship_display()
     //for(int kk=0; kk < (int)data_track.size(); kk++)
     for(auto& kk : tracked)
     {
-        if(data_track[kk]->vheld.size() == 0)
+        if(data_track[kk].vheld.size() == 0)
             continue;
 
         std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &(data_track[kk]->vheld)[0], data_track[kk]->vheld.size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(data_track[kk].vheld)[0], data_track[kk].vheld.size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
     }
 
     ImGui::NextColumn();
@@ -2531,7 +2531,7 @@ void ship::advanced_ship_display()
 
     for(auto& kk : tracked)
     {
-        if((data_track)[kk]->vsat.size() == 0)
+        if((data_track)[kk].vsat.size() == 0)
             continue;
 
         if(kk == component_info::CAPACITOR)
@@ -2542,7 +2542,7 @@ void ship::advanced_ship_display()
 
         std::string name_1 = component_info::dname[kk];
 
-        ImGui::PlotLines(name_1.c_str(), &(data_track[kk]->vsat)[0], data_track[kk]->vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
+        ImGui::PlotLines(name_1.c_str(), &(data_track[kk].vsat)[0], data_track[kk].vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
     }
 
     ImGui::EndColumns();
