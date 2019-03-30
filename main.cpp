@@ -614,7 +614,7 @@ void server_thread()
         if(key.isKeyPressed(sf::Keyboard::P))
             std::cout << "test ship " << test_ship->r.position << std::endl;
 
-        //#define SEE_ONLY_REAL
+        #define SEE_ONLY_REAL
 
         auto clients = conn.clients();
 
@@ -733,6 +733,9 @@ void server_thread()
                 model.sample = decltype(model.sample)();
             }
 
+            ///ah
+            ///so the problem is... we need to clone not copy, as its copying pointers
+
             if(last_models.find(i) != last_models.end())
             {
                 nlohmann::json ret = serialise_against(model, last_models[i]);
@@ -746,6 +749,7 @@ void server_thread()
                 conn.write_to(dat);
 
                 std::cout << "partial data " << cb.size() << std::endl;
+
             }
             else
             {
@@ -764,7 +768,16 @@ void server_thread()
                 //conn.writes_to(model, i);
             }
 
-            last_models[i] = model;
+            ///HACKY AS CRAP ALERT
+            for(ship* s : last_models[i].ships)
+            {
+                delete s;
+            }
+
+            last_models[i] = data_model<ship*>();
+            serialisable_clone(model, last_models[i]);
+
+            //last_models[i] = model;
 
             if(player_mod)
             {

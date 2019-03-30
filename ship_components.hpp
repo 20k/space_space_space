@@ -333,8 +333,8 @@ struct component : virtual serialisable, owned
 
 struct data_tracker : serialisable, owned
 {
-    delta_container<std::vector<float>> vsat;
-    delta_container<std::vector<float>> vheld;
+    std::vector<float> vsat;
+    std::vector<float> vheld;
     int max_data = 500;
 
     void add(double sat, double held);
