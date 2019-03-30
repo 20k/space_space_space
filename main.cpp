@@ -142,6 +142,8 @@ void server_thread()
 
     data_model<ship*> model;
 
+    std::map<uint64_t, data_model<ship*>> last_models;
+
     #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
@@ -731,7 +733,38 @@ void server_thread()
                 model.sample = decltype(model.sample)();
             }
 
-            conn.writes_to(model, i);
+            if(last_models.find(i) != last_models.end())
+            {
+                nlohmann::json ret = serialise_against(model, last_models[i]);
+
+                std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
+
+                write_data dat;
+                dat.id = i;
+                dat.data = std::string(cb.begin(), cb.end());
+
+                conn.write_to(dat);
+
+                std::cout << "partial data " << cb.size() << std::endl;
+            }
+            else
+            {
+                nlohmann::json ret = serialise(model);
+
+                std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
+
+                write_data dat;
+                dat.id = i;
+                dat.data = std::string(cb.begin(), cb.end());
+
+                conn.write_to(dat);
+
+                std::cout << "full data " << cb.size() << std::endl;
+
+                //conn.writes_to(model, i);
+            }
+
+            last_models[i] = model;
 
             if(player_mod)
             {
