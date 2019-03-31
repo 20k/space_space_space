@@ -4,8 +4,6 @@
 #include <vec/vec.hpp>
 #include <networking/serialisable.hpp>
 #include "aggregates.hpp"
-#include <SFML/Graphics.hpp>
-#include "camera.hpp"
 
 namespace sf
 {

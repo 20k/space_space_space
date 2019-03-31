@@ -4,6 +4,7 @@
 #include "player.hpp"
 #include "aggregates.hpp"
 #include <iostream>
+#include "camera.hpp"
 
 std::map<std::string, double> info_dump;
 

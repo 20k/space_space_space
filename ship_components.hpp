@@ -9,7 +9,6 @@
 
 #include "entity.hpp"
 #include "networking/networking.hpp"
-#include <memory>
 #include "radar_field.hpp"
 #include "material_info.hpp"
 
