@@ -1396,17 +1396,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         ///initialise player collide
         {
-            std::optional<entity*> e = entities.fetch(en.id);
+            common_renderable play;
+            play.type = 1;
+            play.r = en.r;
+            play.velocity = en.velocity;
 
-            if(e)
-            {
-                common_renderable play;
-                play.type = 1;
-                play.r = e.value()->r;
-                play.velocity = e.value()->velocity;
-
-                player.value()->renderables[en.id] = play;
-            }
+            player.value()->renderables[en.id] = play;
         }
 
         for(uint32_t id : low_detail_entities)
