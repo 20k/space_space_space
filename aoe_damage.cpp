@@ -35,7 +35,7 @@ void aoe_damage::tick(double dt_s)
         alt_pack.intensity = damage * 100;
         alt_pack.frequency = HEAT_FREQ;
 
-        radar.ignore_map[alt_frequency_packet::gid][emitted_by].restart();
+        radar.ignore(alt_frequency_packet::gid, emitted_by);
 
         radar.emit_raw(alt_pack, r.position, id, r);
 

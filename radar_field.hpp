@@ -288,6 +288,7 @@ struct alt_radar_field
     void emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren);
 
     bool packet_expired(const alt_frequency_packet& packet);
+    void ignore(uint32_t packet_id, uint32_t collideable_id);
 
     void tick(double dt_s);
     void render(camera& cam, sf::RenderWindow& win);

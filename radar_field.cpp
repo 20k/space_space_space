@@ -155,7 +155,7 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity
     freq.cross_dim = en.r.approx_dim;
     freq.cross_angle = en.r.rotation;
 
-    ignore_map[freq.id][en.id].restart();
+    ignore(freq.id, en.id);
 
     add_packet_raw(freq, pos);
 }
@@ -170,7 +170,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
     freq.cross_angle = en.r.rotation;
     freq.start_iteration = iteration_count;
 
-    ignore_map[freq.id][en.id].restart();
+    ignore(freq.id, en.id);
 
     freq.origin = pos;
 
@@ -178,7 +178,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     freq.id = alt_frequency_packet::gid++;
 
-    ignore_map[freq.id][en.id].restart();
+    ignore(freq.id, en.id);
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
@@ -192,7 +192,7 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
     freq.cross_dim = ren.approx_dim;
     freq.cross_angle = ren.rotation;
 
-    ignore_map[freq.id][id].restart();
+    ignore(freq.id, id);
 
     add_packet_raw(freq, pos);
 }
@@ -210,6 +210,11 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     float real_intensity = packet.intensity / (real_distance * real_distance);
 
     return real_intensity < RADAR_CUTOFF;
+}
+
+void alt_radar_field::ignore(uint32_t packet_id, uint32_t collideable_id)
+{
+    ignore_map[packet_id][collideable_id].restart();
 }
 
 std::optional<reflect_info>
@@ -321,7 +326,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
-        ignore_map[packet.id][collide.id].restart();
+        ignore(packet.id, collide.id);
 
         //return {{std::nullopt, collide_packet}};
 
@@ -330,7 +335,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             return {{std::nullopt, collide_packet}};
         }
 
-        ignore_map[reflect.id][collide.id].restart();
+        ignore(reflect.id, collide.id);
 
         return {{reflect, collide_packet}};
     }

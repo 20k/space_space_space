@@ -400,7 +400,7 @@ void server_thread()
 
     test_ship->r.position = {323.986694, 242.469727};
 
-    test_ship->r.position = {585, 400};
+    //test_ship->r.position = {585, 400};
 
     ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
@@ -478,8 +478,9 @@ void server_thread()
         sf::Clock tickclock;
         entities.tick(frametime_dt);
 
-        //double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
-        //std::cout << "tclock " << tclock_time << std::endl;
+        double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
+        std::cout << "tclock " << tclock_time << std::endl;
+
         for(player_model* mod : player_manage.models)
         {
             if(mod->controlled_ship->cleanup)
@@ -645,7 +646,7 @@ void server_thread()
             }
         }*/
 
-        //#define SEE_ONLY_REAL
+        #define SEE_ONLY_REAL
 
         auto clients = conn.clients();
 
@@ -778,7 +779,7 @@ void server_thread()
 
                 conn.write_to(dat);
 
-                std::cout << "partial data " << cb.size() << std::endl;
+                //std::cout << "partial data " << cb.size() << std::endl;
 
                 last_diff[i] = ret;
 
@@ -803,7 +804,7 @@ void server_thread()
 
                 conn.write_to(dat);
 
-                std::cout << "full data " << cb.size() << std::endl;
+                //std::cout << "full data " << cb.size() << std::endl;
 
                 last_diff[i] = ret;
 
