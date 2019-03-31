@@ -460,7 +460,7 @@ struct entity_manager : serialisable
 
         for(aggregate<entity*>& to_process : nsecond.data)
         {
-            collision.data.push_back(collect_aggregates(to_process.data, 10));
+            collision.data.emplace_back(collect_aggregates(to_process.data, 10));
         }
     }
 

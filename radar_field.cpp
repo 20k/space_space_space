@@ -317,11 +317,11 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
 
         reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
+        reflect.last_packet->last_packet = std::shared_ptr<alt_frequency_packet>();
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
         ignore_map[packet.id][collide.id].restart();
-        ignore_map[reflect.id][collide.id].restart();
 
         //return {{std::nullopt, collide_packet}};
 
@@ -329,6 +329,8 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         {
             return {{std::nullopt, collide_packet}};
         }
+
+        ignore_map[reflect.id][collide.id].restart();
 
         return {{reflect, collide_packet}};
     }
@@ -359,6 +361,13 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
                 subtractive_packets.erase(f_it);
             }
 
+            auto ignore_it = field.ignore_map.find(it->id);
+
+            if(ignore_it != field.ignore_map.end())
+            {
+                field.ignore_map.erase(ignore_it);
+            }
+
             ret.push_back(it->id);
         }
     }
@@ -370,7 +379,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 
 void alt_radar_field::tick(double dt_s)
 {
-    profile_dumper pdump("newtick");
+    //profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 

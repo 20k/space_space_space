@@ -143,8 +143,9 @@ void server_thread()
     data_model<ship*> model;
 
     std::map<uint64_t, data_model<ship*>> last_models;
+    std::map<uint64_t, nlohmann::json> last_diff;
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -470,6 +471,8 @@ void server_thread()
 
     //std::cout << "server ship " << test_ship->_pid << std::endl;
 
+    //entities.use_aggregates = false;
+
     while(1)
     {
         sf::Clock tickclock;
@@ -750,6 +753,8 @@ void server_thread()
 
             if(last_models.find(i) != last_models.end())
             {
+                //sf::Clock total_encode;
+
                 nlohmann::json ret = serialise_against(model, last_models[i]);
 
                 std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
@@ -762,6 +767,16 @@ void server_thread()
 
                 std::cout << "partial data " << cb.size() << std::endl;
 
+                last_diff[i] = ret;
+
+                sf::Clock clone_clock;
+
+                ///basically clones model, by applying the current diff to last model
+                ///LEAKS MEMORY ON POINTERS
+                deserialise(ret, last_models[i]);
+
+                //double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
+                //std::cout << "total " << ftime << std::endl;
             }
             else
             {
@@ -777,23 +792,13 @@ void server_thread()
 
                 std::cout << "full data " << cb.size() << std::endl;
 
+                last_diff[i] = ret;
+
+                last_models[i] = data_model<ship*>();
+                serialisable_clone(model, last_models[i]);
+
                 //conn.writes_to(model, i);
             }
-
-            ///HACKY AS CRAP ALERT
-            for(ship* s : last_models[i].ships)
-            {
-                delete s;
-            }
-
-            sf::Clock clone_clock;
-
-            last_models[i] = data_model<ship*>();
-            serialisable_clone(model, last_models[i]);
-
-            std::cout << "cclock " << clone_clock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-
-            //last_models[i] = model;
 
             if(player_mod)
             {
@@ -851,8 +856,6 @@ void server_thread()
         //Sleep(10);
 
         fixed_clock::increment();
-
-        //Sleep(100);
     }
 }
 
