@@ -463,6 +463,13 @@ void server_thread()
     cam.position = {400, 400};
     #endif // SERVER_VIEW
 
+    /*for(component& c : test_ship->components)
+    {
+        std::cout << "cpid server " << c._pid << std::endl;
+    }*/
+
+    //std::cout << "server ship " << test_ship->_pid << std::endl;
+
     while(1)
     {
         sf::Clock tickclock;
@@ -614,6 +621,14 @@ void server_thread()
         if(key.isKeyPressed(sf::Keyboard::P))
             std::cout << "test ship " << test_ship->r.position << std::endl;
 
+        /*for(component& c : test_ship->components)
+        {
+            if(c._pid == 24)
+            {
+                std::cout << "activation level " << c.activation_level << " " << c.long_name << " " << c._pid << std::endl;
+            }
+        }*/
+
         #define SEE_ONLY_REAL
 
         auto clients = conn.clients();
@@ -733,9 +748,6 @@ void server_thread()
                 model.sample = decltype(model.sample)();
             }
 
-            ///ah
-            ///so the problem is... we need to clone not copy, as its copying pointers
-
             if(last_models.find(i) != last_models.end())
             {
                 nlohmann::json ret = serialise_against(model, last_models[i]);
@@ -774,8 +786,12 @@ void server_thread()
                 delete s;
             }
 
+            sf::Clock clone_clock;
+
             last_models[i] = data_model<ship*>();
             serialisable_clone(model, last_models[i]);
+
+            std::cout << "cclock " << clone_clock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             //last_models[i] = model;
 
@@ -1053,6 +1069,18 @@ int main()
             s.advanced_ship_display();
 
             s.show_power();
+        }
+
+        if(model.ships.size() > 0)
+        {
+            /*for(component& c : model.ships[0].components)
+            {
+                std::cout << "cpid client " << c._pid << std::endl;
+            }*/
+
+            //std::cout << "client ship " << model.ships[0]._pid << std::endl;
+
+            //std::cout << "mnum " << model.ships[0].components.size() << std::endl;
         }
 
         render_radar_data(window, sample);
