@@ -1119,6 +1119,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     for(alt_frequency_packet packet : packets)
     {
+        float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
+
+        if(intensity <= 0.01)
+            continue;
+
         #ifndef REVERSE_IGNORE
         auto it_packet = ignore_map.find(packet.id);
         #endif // REVERSE_IGNORE
@@ -1146,11 +1151,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                     lpacket.id = packet.id;
 
                     packet = lpacket;
+
+                    intensity = get_intensity_at_of(pos, packet, subtractive_packets);
                 }
             }
         }
-
-        float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
 
         packet.intensity = intensity;
 
