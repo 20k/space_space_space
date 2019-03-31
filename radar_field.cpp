@@ -217,6 +217,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 void alt_radar_field::ignore(uint32_t packet_id, uint32_t collideable_id)
 {
     ignore_map[packet_id][collideable_id].restart();
+    //ignore_map[packet_id][collideable_id].restart();
 }
 
 std::optional<reflect_info>
@@ -386,7 +387,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 
 void alt_radar_field::tick(double dt_s)
 {
-    //profile_dumper pdump("newtick");
+    profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
@@ -713,9 +714,9 @@ void alt_radar_field::tick(double dt_s)
         }
     }*/
 
-    //pdump.dump();
-    //pdump.stop();
-    //profile_dumper::dump();
+    pdump.dump();
+    pdump.stop();
+    profile_dumper::dump();
 
     //collideables.clear();
 
