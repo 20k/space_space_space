@@ -831,6 +831,8 @@ void server_thread()
 
         #endif // SERVER_VIEW
 
+        //std::cout << "FULL FRAME " << tickclock.restart().asMicroseconds()/1000. << std::endl;
+
         double elapsed_ms = frame_pacing_clock.getElapsedTime().asMicroseconds() / 1000.;
 
         double to_sleep = clamp(time_between_ticks_ms - elapsed_ms, 0, time_between_ticks_ms);
