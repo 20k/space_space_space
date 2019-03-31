@@ -157,7 +157,7 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity
     freq.cross_dim = en.r.approx_dim;
     freq.cross_angle = en.r.rotation;
 
-    ignore(freq.id, en.id);
+    ignore(freq.id, en);
 
     add_packet_raw(freq, pos);
 }
@@ -172,7 +172,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
     freq.cross_angle = en.r.rotation;
     freq.start_iteration = iteration_count;
 
-    ignore(freq.id, en.id);
+    ignore(freq.id, en);
 
     freq.origin = pos;
 
@@ -180,7 +180,7 @@ void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2
 
     freq.id = alt_frequency_packet::gid++;
 
-    ignore(freq.id, en.id);
+    ignore(freq.id, en);
 
     imaginary_packets.push_back(freq);
     imaginary_collideable_list[freq.id] = model;
@@ -194,7 +194,7 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
     freq.cross_dim = ren.approx_dim;
     freq.cross_angle = ren.rotation;
 
-    ignore(freq.id, id);
+    //ignore(freq.id, id);
 
     add_packet_raw(freq, pos);
 }
@@ -214,10 +214,17 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     return real_intensity < RADAR_CUTOFF;
 }
 
-void alt_radar_field::ignore(uint32_t packet_id, uint32_t collideable_id)
+//#define REVERSE_IGNORE
+
+void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
 {
+    /*#ifndef REVERSE_IGNORE
     ignore_map[packet_id][collideable_id].restart();
-    //ignore_map[packet_id][collideable_id].restart();
+    #else
+    ignore_map[collideable_id][packet_id].restart();
+    #endif // REVERSE_IGNORE*/
+
+    en.ignore_packets[packet_id].restart();
 }
 
 std::optional<reflect_info>
@@ -249,7 +256,15 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
+        /*#ifndef REVERSE_IGNORE
         if(ignore_map[packet.id][collide.id].should_ignore())
+            return std::nullopt;
+        #else
+        if(ignore_map[collide.id][packet.id].should_ignore())
+            return std::nullopt;
+        #endif*/
+
+        if(collide.ignore_packets[packet.id].should_ignore())
             return std::nullopt;
 
         float local_intensity = get_intensity_at_of(collide.r.position, packet, subtractive);
@@ -329,7 +344,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
-        ignore(packet.id, collide.id);
+        ignore(packet.id, collide);
 
         //return {{std::nullopt, collide_packet}};
 
@@ -338,7 +353,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             return {{std::nullopt, collide_packet}};
         }
 
-        ignore(reflect.id, collide.id);
+        ignore(reflect.id, collide);
 
         return {{reflect, collide_packet}};
     }
@@ -358,6 +373,8 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
                                 return field.packet_expired(in);
                            };
 
+    std::set<uint32_t> expired;
+
     for(auto it = packets.begin(); it != packets.end(); it++)
     {
         if(field.packet_expired(*it))
@@ -369,14 +386,56 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
                 subtractive_packets.erase(f_it);
             }
 
+            expired.insert(it->id);
+
+            /*#ifndef REVERSE_IGNORE
             auto ignore_it = field.ignore_map.find(it->id);
 
             if(ignore_it != field.ignore_map.end())
             {
                 field.ignore_map.erase(ignore_it);
             }
+            #else // REVERSE_IGNORE
+
+            for(auto found_collide = field.ignore_map.begin(); found_collide != field.ignore_map.end();)
+            {
+                //'it' is collideable
+
+                auto found_packet = found_collide->second.find(it->id);
+
+                if(found_packet != found_collide->second.end())
+                {
+                    found_collide->second.erase(found_packet);
+                }
+
+                if(found_collide->second.size() == 0)
+                {
+                    found_collide = field.ignore_map.erase(found_collide);
+                }
+                else
+                {
+                    found_collide++;
+                }
+            }
+            #endif*/
 
             ret.push_back(it->id);
+        }
+    }
+
+    for(entity* en : field.em->entities)
+    {
+        if(!en->is_heat)
+            continue;
+
+        heatable_entity* hen = (heatable_entity*)en;
+
+        if(hen->ignore_packets.size() == 0)
+            continue;
+
+        for(auto& i : expired)
+        {
+            hen->ignore_packets.erase(i);
         }
     }
 
@@ -1003,7 +1062,7 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
     return dim.max_elem();
 }
 
-alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player, double radar_mult)
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, std::optional<player_model*> player, double radar_mult)
 {
     /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
@@ -1017,14 +1076,14 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         return sam;
     }*/
 
-    sample_time[uid].restart();
+    sample_time[en.id].restart();
 
     alt_radar_sample s;
     s.location = pos;
 
     ///need to sum packets first, then iterate them
     ///need to sum packets with the same emitted id and frequency
-    random_constants rconst = get_random_constants_for(uid);
+    random_constants rconst = get_random_constants_for(en.id);
 
     /*std::vector<alt_frequency_packet> merged;
 
@@ -1051,17 +1110,30 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     ///ok so the problem with merging is that we calculate intensity analytically, which means that issues are caused by naively combining them
     ///need to combine POST intensity merge
 
+    #ifdef REVERSE_IGNORE
+    auto it_packet = ignore_map.find(uid);
+    #endif // REVERSE_IGNORE
+
+
     std::vector<alt_frequency_packet> post_intensity_calculate;
 
     for(alt_frequency_packet packet : packets)
     {
+        /*#ifndef REVERSE_IGNORE
         auto it_packet = ignore_map.find(packet.id);
+        #endif // REVERSE_IGNORE
 
-        if(it_packet != ignore_map.end())
+        if(it_packet != ignore_map.end())*/
         {
+            /*#ifndef REVERSE_IGNORE
             auto it_collide = it_packet->second.find(uid);
+            #else
+            auto it_collide = it_packet->second.find(packet.id);
+            #endif*/
 
-            if(it_collide != it_packet->second.end())
+            auto it_collide = en.ignore_packets.find(packet.id);
+
+            if(it_collide != en.ignore_packets.end())
             {
                 if(it_collide->second.should_ignore())
                 {
@@ -1115,13 +1187,21 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     {
         for(alt_frequency_packet packet : imaginary_packets)
         {
+            /*#ifndef REVERSE_IGNORE
             auto it_packet = ignore_map.find(packet.id);
+            #endif // REVERSE_IGNORE
 
-            if(it_packet != ignore_map.end())
+            if(it_packet != ignore_map.end())*/
             {
+                /*#ifndef REVERSE_IGNORE
                 auto it_collide = it_packet->second.find(uid);
+                #else
+                auto it_collide = it_packet->second.find(packet.id);
+                #endif*/
 
-                if(it_collide != it_packet->second.end())
+                auto it_collide = en.ignore_packets.find(packet.id);
+
+                if(it_collide != en.ignore_packets.end())
                 {
                     if(it_collide->second.should_ignore())
                     {
@@ -1146,7 +1226,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
             if(packet.reflected_by != (uint32_t)-1)
                 search_entity = packet.reflected_by;
 
-            if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
+            if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
                 continue;
 
             if(packet.intensity * radar_mult >= 0.01)
@@ -1158,7 +1238,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
     for(alt_frequency_packet& packet : post_intensity_calculate)
     {
-        if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
+        if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
             continue;
 
         ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
@@ -1198,6 +1278,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
+
+        uint32_t uid = en.id;
 
         #if 1
         #define RECT
@@ -1283,7 +1365,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         for(alt_frequency_packet& packet : post_intensity_calculate)
         {
-            if(packet.emitted_by == uid && packet.reflected_by == (uint32_t)-1)
+            if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
                 continue;
 
             float intensity = packet.intensity * radar_mult;
@@ -1307,7 +1389,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         ///initialise player collide
         {
-            std::optional<entity*> e = entities.fetch(uid);
+            std::optional<entity*> e = entities.fetch(en.id);
 
             if(e)
             {
@@ -1316,13 +1398,13 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
                 play.r = e.value()->r;
                 play.velocity = e.value()->velocity;
 
-                player.value()->renderables[uid] = play;
+                player.value()->renderables[en.id] = play;
             }
         }
 
         for(uint32_t id : low_detail_entities)
         {
-            if(id != uid)
+            if(id != en.id)
             {
                 client_renderable rs;
                 entity* found = nullptr;
@@ -1383,7 +1465,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
 
         for(uint32_t id : high_detail_entities)
         {
-            if(id != uid)
+            if(id != en.id)
             {
                 client_renderable rs;
                 entity* found = nullptr;
@@ -1435,7 +1517,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
         ///start a timer to erase it
         ///cancel the timer if we receive more packets
 
-        std::optional<entity*> plr = entities.fetch(uid);
+        std::optional<entity*> plr = entities.fetch(en.id);
 
         if(plr && player)
         {
@@ -1481,7 +1563,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, uint32_t uid, entity_man
     }*/
 
     s.fresh = true;
-    cached_samples[uid] = s;
+    cached_samples[en.id] = s;
 
     return s;
 }

@@ -241,6 +241,8 @@ struct heatable_entity : entity, heatable
     }
 
     void dissipate(int ticks_between_emissions = 1);
+
+    std::unordered_map<uint32_t, hacky_clock> ignore_packets;
 };
 
 struct alt_radar_field
@@ -263,7 +265,7 @@ struct alt_radar_field
 
     //std::vector<alt_collideable> collideables;
 
-    std::unordered_map<uint32_t, std::unordered_map<uint32_t, hacky_clock>> ignore_map;
+    //std::unordered_map<uint32_t, std::unordered_map<uint32_t, hacky_clock>> ignore_map;
 
     std::map<uint32_t, fixed_clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
@@ -288,7 +290,7 @@ struct alt_radar_field
     void emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren);
 
     bool packet_expired(const alt_frequency_packet& packet);
-    void ignore(uint32_t packet_id, uint32_t collideable_id);
+    void ignore(uint32_t packet_id, heatable_entity& en);
 
     void tick(double dt_s);
     void render(camera& cam, sf::RenderWindow& win);
@@ -300,7 +302,7 @@ struct alt_radar_field
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
-    alt_radar_sample sample_for(vec2f pos, uint32_t uid, entity_manager& entities, std::optional<player_model*> player = std::nullopt, double radar_mult = 1);
+    alt_radar_sample sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, std::optional<player_model*> player = std::nullopt, double radar_mult = 1);
 };
 
 inline

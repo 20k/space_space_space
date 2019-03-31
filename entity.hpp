@@ -85,6 +85,7 @@ struct entity : virtual serialisable
     bool drag = false;
 
     ///this is a performance compromise
+    ///TODO: store typeid
     bool is_heat = false;
 
     virtual void tick(double dt_s) {};

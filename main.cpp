@@ -757,7 +757,7 @@ void server_thread()
 
                 if(s)
                 {
-                    model.sample = radar.sample_for(s->r.position, s->id, entities, player_mod, s->get_radar_strength());
+                    model.sample = radar.sample_for(s->r.position, *s, entities, player_mod, s->get_radar_strength());
                 }
             }
             else

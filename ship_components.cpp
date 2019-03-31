@@ -919,7 +919,7 @@ struct torpedo : projectile
 
         alt_radar_field& radar = get_radar_field();
 
-        alt_radar_sample sam = radar.sample_for(r.position, id, *parent);
+        alt_radar_sample sam = radar.sample_for(r.position, *this, *parent);
 
         vec2f best_dir = {0, 0};
         float best_intensity = 0;

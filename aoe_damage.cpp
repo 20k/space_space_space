@@ -35,7 +35,13 @@ void aoe_damage::tick(double dt_s)
         alt_pack.intensity = damage * 100;
         alt_pack.frequency = HEAT_FREQ;
 
-        radar.ignore(alt_frequency_packet::gid, emitted_by);
+        std::optional<entity*> en = parent->fetch(emitted_by);
+
+        if(en && dynamic_cast<heatable_entity*>(en.value()))
+        {
+            heatable_entity* hen = (heatable_entity*)en.value();
+            radar.ignore(alt_frequency_packet::gid, *hen);
+        }
 
         radar.emit_raw(alt_pack, r.position, id, r);
 
