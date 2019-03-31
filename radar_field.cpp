@@ -3,6 +3,7 @@
 #include <set>
 #include "player.hpp"
 #include "aggregates.hpp"
+#include <iostream>
 
 std::map<std::string, double> info_dump;
 
