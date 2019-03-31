@@ -218,13 +218,13 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
 void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
 {
-    /*#ifndef REVERSE_IGNORE
-    ignore_map[packet_id][collideable_id].restart();
+    #ifndef REVERSE_IGNORE
+    ignore_map[packet_id][en.id].restart();
     #else
-    ignore_map[collideable_id][packet_id].restart();
-    #endif // REVERSE_IGNORE*/
+    ignore_map[en.id][packet_id].restart();
+    #endif // REVERSE_IGNORE
 
-    en.ignore_packets[packet_id].restart();
+    //en.ignore_packets[packet_id].restart();
 }
 
 std::optional<reflect_info>
@@ -256,16 +256,16 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
-        /*#ifndef REVERSE_IGNORE
+        #ifndef REVERSE_IGNORE
         if(ignore_map[packet.id][collide.id].should_ignore())
             return std::nullopt;
         #else
         if(ignore_map[collide.id][packet.id].should_ignore())
             return std::nullopt;
-        #endif*/
+        #endif
 
-        if(collide.ignore_packets[packet.id].should_ignore())
-            return std::nullopt;
+        /*if(collide.ignore_packets[packet.id].should_ignore())
+            return std::nullopt;*/
 
         float local_intensity = get_intensity_at_of(collide.r.position, packet, subtractive);
 
@@ -388,7 +388,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
 
             expired.insert(it->id);
 
-            /*#ifndef REVERSE_IGNORE
+            #ifndef REVERSE_IGNORE
             auto ignore_it = field.ignore_map.find(it->id);
 
             if(ignore_it != field.ignore_map.end())
@@ -417,13 +417,13 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
                     found_collide++;
                 }
             }
-            #endif*/
+            #endif
 
             ret.push_back(it->id);
         }
     }
 
-    for(entity* en : field.em->entities)
+    /*for(entity* en : field.em->entities)
     {
         if(!en->is_heat)
             continue;
@@ -437,7 +437,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
         {
             hen->ignore_packets.erase(i);
         }
-    }
+    }*/
 
     packets.erase(std::remove_if(packets.begin(), packets.end(), packet_expired), packets.end());
 
@@ -1119,21 +1119,22 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     for(alt_frequency_packet packet : packets)
     {
-        /*#ifndef REVERSE_IGNORE
+        #ifndef REVERSE_IGNORE
         auto it_packet = ignore_map.find(packet.id);
         #endif // REVERSE_IGNORE
 
-        if(it_packet != ignore_map.end())*/
+        if(it_packet != ignore_map.end())
         {
-            /*#ifndef REVERSE_IGNORE
-            auto it_collide = it_packet->second.find(uid);
+            #ifndef REVERSE_IGNORE
+            auto it_collide = it_packet->second.find(en.id);
             #else
             auto it_collide = it_packet->second.find(packet.id);
-            #endif*/
+            #endif
 
-            auto it_collide = en.ignore_packets.find(packet.id);
+            //auto it_collide = en.ignore_packets.find(packet.id);
 
-            if(it_collide != en.ignore_packets.end())
+            //if(it_collide != en.ignore_packets.end())
+            if(it_collide != it_packet->second.end())
             {
                 if(it_collide->second.should_ignore())
                 {
@@ -1187,21 +1188,22 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     {
         for(alt_frequency_packet packet : imaginary_packets)
         {
-            /*#ifndef REVERSE_IGNORE
+            #ifndef REVERSE_IGNORE
             auto it_packet = ignore_map.find(packet.id);
             #endif // REVERSE_IGNORE
 
-            if(it_packet != ignore_map.end())*/
+            if(it_packet != ignore_map.end())
             {
-                /*#ifndef REVERSE_IGNORE
-                auto it_collide = it_packet->second.find(uid);
+                #ifndef REVERSE_IGNORE
+                auto it_collide = it_packet->second.find(en.id);
                 #else
                 auto it_collide = it_packet->second.find(packet.id);
-                #endif*/
+                #endif
 
-                auto it_collide = en.ignore_packets.find(packet.id);
+                //auto it_collide = en.ignore_packets.find(packet.id);
 
-                if(it_collide != en.ignore_packets.end())
+                //if(it_collide != en.ignore_packets.end())
+                if(it_collide != it_packet->second.end())
                 {
                     if(it_collide->second.should_ignore())
                     {
