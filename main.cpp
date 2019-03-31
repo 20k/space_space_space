@@ -486,6 +486,19 @@ void server_thread()
                 mod->controlled_ship = nullptr;
         }
 
+        for(auto& m : last_models)
+        {
+            for(int i=0; i < (int)m.second.ships.size(); i++)
+            {
+                if(m.second.ships[i]->cleanup)
+                {
+                    m.second.ships.erase(m.second.ships.begin() + i);
+                    i--;
+                    continue;
+                }
+            }
+        }
+
         entities.cleanup();
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;
@@ -632,7 +645,7 @@ void server_thread()
             }
         }*/
 
-        #define SEE_ONLY_REAL
+        //#define SEE_ONLY_REAL
 
         auto clients = conn.clients();
 
