@@ -53,6 +53,8 @@ struct design_editor
 
     bool open = false;
 
+    std::optional<component*> fetch(uint32_t id);
+
     bool dragging = false;
     uint32_t dragging_id = -1;
 };

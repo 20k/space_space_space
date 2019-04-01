@@ -1,6 +1,7 @@
 #include "design_editor.hpp"
 #include <SFML/Graphics.hpp>
 #include <ImGui/ImGui.h>
+#include <iostream>
 
 void render_component_simple(const component& c)
 {
@@ -56,7 +57,10 @@ void blueprint_node::render()
 
 void blueprint::render()
 {
-
+    for(blueprint_node& node : nodes)
+    {
+        node.render();
+    }
 }
 
 void design_editor::tick(double dt_s)
@@ -64,10 +68,27 @@ void design_editor::tick(double dt_s)
 
 }
 
+std::optional<component*> design_editor::fetch(uint32_t id)
+{
+    for(component& c : research.components)
+    {
+        if(c.id != id)
+            continue;
+
+        return &c;
+    }
+
+    return std::nullopt;
+}
+
 void design_editor::render(sf::RenderWindow& win)
 {
     if(!open)
         return;
+
+    sf::Mouse mouse;
+
+    vec2f mpos = {mouse.getPosition(win).x, mouse.getPosition(win).y};
 
     ImGui::SetNextWindowPos(ImVec2(300, 50), ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(1000, 800), ImGuiCond_Appearing);
@@ -76,23 +97,48 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::Begin("Blueprint Designer", &open);
 
+    ImVec2 win_screen = ImGui::GetWindowPos();
+
     auto main_dim = ImGui::GetWindowSize();
+
+    auto tl_mpos = ImGui::GetCursorScreenPos();
 
     research.render(*this, {main_dim.x, main_dim.y});
 
     cur.render();
 
-    if(!ImGui::IsMouseDown(0))
+    if(!ImGui::IsMouseDown(0) && dragging)
     {
+        std::optional<component*> comp = fetch(dragging_id);
+
+        if(comp)
+        {
+            component& c = *comp.value();
+
+            //auto tlpos = (vec2f){mpos.x() - tl_mpos.x, mpos.y() - tl_mpos.y};
+
+            //vec2f tlpos = mpos;
+
+            vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
+
+            blueprint_node node;
+            node.my_comp = c;
+            node.name = c.long_name;
+            node.pos = tlpos;
+
+            cur.nodes.push_back(node);
+        }
+
         dragging = false;
     }
 
     if(dragging)
     {
-        for(component& c : research.components)
+        std::optional<component*> comp = fetch(dragging_id);
+
+        if(comp)
         {
-            if(c.id != dragging_id)
-                continue;
+            component& c = *comp.value();
 
             ImGui::BeginTooltip();
 
