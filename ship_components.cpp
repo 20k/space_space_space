@@ -1826,6 +1826,53 @@ void ship::set_thrusters_active(double active)
     return ret;
 }*/
 
+void component::render_inline_stats()
+{
+    std::string rname = long_name;
+
+    ImGui::Text(rname.c_str());
+
+    /*for(does& d : info)
+    {
+        std::string dname = component_info::dname[d.type] + " " + to_string_with_variable_prec(d.recharge);
+
+        ImGui::Text(dname.c_str());
+    }*/
+
+    std::vector<double> net;
+    std::vector<double> stored;
+
+    net.resize(component_info::COUNT);
+    stored.resize(component_info::COUNT);
+
+    for(does& d : info)
+    {
+        net[d.type] += d.recharge;
+        stored[d.type] += d.capacity;
+    }
+
+    for(int i=0; i < (int)component_info::COUNT; i++)
+    {
+        if(net[i] == 0)
+            continue;
+
+        //std::string dname = component_info::dname[i] + " " + to_string_with(net[i], 1, true);
+
+        std::string dname = component_info::dname[i];
+
+        ImGui::Text(dname.c_str());
+
+        ImGui::SameLine();
+
+        std::string net_v = to_string_with(net[i], 1, true);
+
+        if(net[i] < 0)
+            ImGui::TextColored(ImVec4(1, 0.2, 0.2, 1), net_v.c_str());
+        if(net[i] > 0)
+            ImGui::TextColored(ImVec4(0.2, 1, 0.2, 1), net_v.c_str());
+    }
+}
+
 void component::render_inline_ui()
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);

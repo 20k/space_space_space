@@ -36,6 +36,15 @@ void player_research::render(design_editor& edit, vec2f upper_size)
             edit.dragging_id = c.id;
         }
 
+        if(ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+
+            c.render_inline_stats();
+
+            ImGui::EndTooltip();
+        }
+
         //ImGui::Text(txt.c_str());
     }
 
@@ -58,6 +67,15 @@ void blueprint_node::render(design_editor& edit)
         edit.dragging_id = my_comp.id;
 
         cleanup = true;
+    }
+
+    if(ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+
+        my_comp.render_inline_stats();
+
+        ImGui::EndTooltip();
     }
 
     ImGui::SetCursorPos(old_pos);
