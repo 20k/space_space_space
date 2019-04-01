@@ -2,7 +2,12 @@
 #include <SFML/Graphics.hpp>
 #include <ImGui/ImGui.h>
 
-void player_research::render(vec2f upper_size)
+void render_component_simple(const component& c)
+{
+    ImGui::Button(c.long_name.c_str(), ImVec2(190, 0));
+}
+
+void player_research::render(design_editor& edit, vec2f upper_size)
 {
     float fixed_width = 200;
 
@@ -16,7 +21,21 @@ void player_research::render(vec2f upper_size)
     {
         std::string txt = c.long_name;
 
-        ImGui::Text(txt.c_str());
+        render_component_simple(c);
+
+        if((ImGui::IsItemHovered() || ImGui::IsItemClicked()) && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0) && !edit.dragging)
+        {
+            /*ImGui::BeginTooltip();
+
+            render_component_simple(c);
+
+            ImGui::EndTooltip();*/
+
+            edit.dragging = true;
+            edit.dragging_id = c.id;
+        }
+
+        //ImGui::Text(txt.c_str());
     }
 
     ImGui::EndChild();
@@ -28,7 +47,9 @@ void blueprint_node::render()
 
     ImGui::SetCursorPos(ImVec2(pos.x(), pos.y()));
 
-    ImGui::Text(my_comp.long_name.c_str());
+    //ImGui::Text(my_comp.long_name.c_str());
+
+    render_component_simple(my_comp);
 
     ImGui::SetCursorPos(old_pos);
 }
@@ -57,9 +78,29 @@ void design_editor::render(sf::RenderWindow& win)
 
     auto main_dim = ImGui::GetWindowSize();
 
-    research.render({main_dim.x, main_dim.y});
+    research.render(*this, {main_dim.x, main_dim.y});
 
     cur.render();
+
+    if(!ImGui::IsMouseDown(0))
+    {
+        dragging = false;
+    }
+
+    if(dragging)
+    {
+        for(component& c : research.components)
+        {
+            if(c.id != dragging_id)
+                continue;
+
+            ImGui::BeginTooltip();
+
+            render_component_simple(c);
+
+            ImGui::EndTooltip();
+        }
+    }
 
     ImGui::End();
 }
