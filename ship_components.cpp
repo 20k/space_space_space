@@ -1856,9 +1856,14 @@ void component::render_inline_stats()
         if(net[i] == 0)
             continue;
 
-        //std::string dname = component_info::dname[i] + " " + to_string_with(net[i], 1, true);
+        std::string dname = component_info::dname[i] + " " + to_string_with(net[i], 1, true);
 
-        std::string dname = component_info::dname[i];
+        if(net[i] < 0)
+            ImGui::TextColored(ImVec4(1, 0.2, 0.2, 1), dname.c_str());
+        if(net[i] > 0)
+            ImGui::TextColored(ImVec4(0.2, 1, 0.2, 1), dname.c_str());
+
+        /*std::string dname = component_info::dname[i];
 
         ImGui::Text(dname.c_str());
 
@@ -1869,7 +1874,7 @@ void component::render_inline_stats()
         if(net[i] < 0)
             ImGui::TextColored(ImVec4(1, 0.2, 0.2, 1), net_v.c_str());
         if(net[i] > 0)
-            ImGui::TextColored(ImVec4(0.2, 1, 0.2, 1), net_v.c_str());
+            ImGui::TextColored(ImVec4(0.2, 1, 0.2, 1), net_v.c_str());*/
     }
 }
 
