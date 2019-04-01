@@ -12,8 +12,6 @@
 #include "radar_field.hpp"
 #include "material_info.hpp"
 
-struct heatable;
-
 namespace sf
 {
     struct RenderWindow;
@@ -475,23 +473,6 @@ struct projectile : heatable_entity
     void tick(double dt_s) override;
 };
 
-template<typename T>
-struct data_model : serialisable
-{
-    std::vector<T> ships;
-    std::vector<client_renderable> renderables;
-    alt_radar_sample sample;
-    uint32_t client_network_id = 0;
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(ships);
-        DO_SERIALISE(renderables);
-        DO_SERIALISE(sample);
-        DO_SERIALISE(client_network_id);
-    }
-};
-
 struct asteroid : heatable_entity
 {
     asteroid();
@@ -502,49 +483,5 @@ struct asteroid : heatable_entity
 
 void tick_radar_data(entity_manager& entities, alt_radar_sample& sample, entity* ship_proxy);
 void render_radar_data(sf::RenderWindow& window, const alt_radar_sample& sample);
-
-struct client_entities : serialisable
-{
-    std::vector<client_renderable> entities;
-
-    void render(camera& cam, sf::RenderWindow& win);
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(entities);
-    }
-};
-
-struct client_fire : serialisable
-{
-    uint32_t weapon_offset = 0;
-    float fire_angle = 0;
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(weapon_offset);
-        DO_SERIALISE(fire_angle);
-    }
-};
-
-struct client_input : serialisable
-{
-    vec2f direction = {0,0};
-    float rotation = 0;
-    std::vector<client_fire> fired;
-    bool ping = false;
-    vec2f mouse_world_pos = {0,0};
-    global_serialise_info rpcs;
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(direction);
-        DO_SERIALISE(rotation);
-        DO_SERIALISE(fired);
-        DO_SERIALISE(ping);
-        DO_SERIALISE(mouse_world_pos);
-        DO_SERIALISE(rpcs);
-    }
-};
 
 #endif // SHIP_COMPONENTS_HPP_INCLUDED

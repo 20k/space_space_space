@@ -5,67 +5,10 @@
 #include <optional>
 #include <SFML/System/Clock.hpp>
 #include "fixed_clock.hpp"
+#include "design_editor.hpp"
+#include "radar_field.hpp"
 
-struct uncertain
-{
-    fixed_clock elapsed;
-    fixed_clock received_signal;
-
-    bool begin_cleanup = false;
-    bool is_unknown = false;
-
-    bool bad(vec2f player_pos, vec2f my_pos)
-    {
-        return elapsed.getElapsedTime().asMilliseconds() > 500 && begin_cleanup;
-
-        //return elapsed.getElapsedTime().asSeconds() > 1 && (player_pos - my_pos).length() < 10;
-    }
-
-    void unknown(bool state)
-    {
-        is_unknown = state;
-    }
-
-    void no_signal()
-    {
-        if(received_signal.getElapsedTime().asMicroseconds() / 1000. < 1000)
-            return;
-
-        if(begin_cleanup)
-            return;
-
-        begin_cleanup = true;
-        elapsed.restart();
-    }
-
-    void got_signal()
-    {
-        //is_unknown = false;
-
-        if(!begin_cleanup)
-            return;
-
-        begin_cleanup = false;
-        received_signal.restart();
-    }
-};
-
-struct common_renderable : serialisable, uncertain
-{
-    ///0 = low detail, 1 = high
-    int type = 0;
-
-    client_renderable r;
-    vec2f velocity = {0,0};
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(type);
-        DO_SERIALISE(r);
-        DO_SERIALISE(velocity);
-        DO_SERIALISE(is_unknown);
-    }
-};
+struct common_renderable;
 
 ///i think the reason why the code is a mess is this inversion of ownership
 ///this needs to own everything about a player, ships etc
@@ -115,6 +58,67 @@ struct player_model_manager
         {
             i->tick(dt_s);
         }
+    }
+};
+
+template<typename T>
+struct data_model : serialisable
+{
+    std::vector<T> ships;
+    std::vector<client_renderable> renderables;
+    alt_radar_sample sample;
+    uint32_t client_network_id = 0;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(ships);
+        DO_SERIALISE(renderables);
+        DO_SERIALISE(sample);
+        DO_SERIALISE(client_network_id);
+    }
+};
+
+struct client_entities : serialisable
+{
+    std::vector<client_renderable> entities;
+
+    void render(camera& cam, sf::RenderWindow& win);
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(entities);
+    }
+};
+
+struct client_fire : serialisable
+{
+    uint32_t weapon_offset = 0;
+    float fire_angle = 0;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(weapon_offset);
+        DO_SERIALISE(fire_angle);
+    }
+};
+
+struct client_input : serialisable
+{
+    vec2f direction = {0,0};
+    float rotation = 0;
+    std::vector<client_fire> fired;
+    bool ping = false;
+    vec2f mouse_world_pos = {0,0};
+    global_serialise_info rpcs;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(direction);
+        DO_SERIALISE(rotation);
+        DO_SERIALISE(fired);
+        DO_SERIALISE(ping);
+        DO_SERIALISE(mouse_world_pos);
+        DO_SERIALISE(rpcs);
     }
 };
 

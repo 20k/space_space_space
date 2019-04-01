@@ -74,6 +74,7 @@
 		<Unit filename="aoe_damage.hpp" />
 		<Unit filename="camera.cpp" />
 		<Unit filename="camera.hpp" />
+		<Unit filename="common_renderable.hpp" />
 		<Unit filename="deps/imgui-sfml/imgui-SFML.cpp" />
 		<Unit filename="deps/imgui/imgui.cpp" />
 		<Unit filename="deps/imgui/imgui_demo.cpp" />
@@ -84,6 +85,8 @@
 		<Unit filename="deps/networking/networking.hpp" />
 		<Unit filename="deps/networking/serialisable.cpp" />
 		<Unit filename="deps/networking/serialisable.hpp" />
+		<Unit filename="design_editor.cpp" />
+		<Unit filename="design_editor.hpp" />
 		<Unit filename="entity.cpp" />
 		<Unit filename="entity.hpp" />
 		<Unit filename="fixed_clock.hpp" />

@@ -10,7 +10,7 @@
 #include "fixed_clock.hpp"
 #include <networking/serialisable.hpp>
 #include "entity.hpp"
-#include "player.hpp"
+#include "common_renderable.hpp"
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1

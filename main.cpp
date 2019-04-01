@@ -13,6 +13,7 @@
 #include "player.hpp"
 #include "fixed_clock.hpp"
 #include "aoe_damage.hpp"
+#include "design_editor.hpp"
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -908,8 +909,8 @@ int main()
 
     style.FrameRounding = 0;
     style.WindowRounding = 0;
-    style.ChildRounding = 0;
-    style.ChildBorderSize = 0;
+    //style.ChildRounding = 0;
+    //style.ChildBorderSize = 0;
     style.FrameBorderSize = 0;
     //style.PopupBorderSize = 0;
     //style.WindowBorderSize = 0;
@@ -943,6 +944,9 @@ int main()
     transients.use_aggregates = false;
 
     sf::Clock read_clock;
+
+    design_editor design;
+    design.open = true;
 
     while(window.isOpen())
     {
@@ -1015,6 +1019,7 @@ int main()
         tick_radar_data(transients, sample, ship_proxy);
         entities.tick(frametime_dt);
         transients.tick(frametime_dt);
+        design.tick(frametime_dt);
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         //vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
@@ -1065,6 +1070,11 @@ int main()
             cinput.fired.push_back(fire);
         }
 
+        if(ONCE_MACRO(sf::Keyboard::F1))
+        {
+            design.open = !design.open;
+        }
+
         cinput.mouse_world_pos = cam.screen_to_world(mpos);
         cinput.rpcs = get_global_serialise_info();
 
@@ -1106,6 +1116,7 @@ int main()
 
         entities.render(cam, window);
         transients.render(cam, window);
+        design.render(window);
 
         ImGui::SFML::Render(window);
         window.display();

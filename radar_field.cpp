@@ -5,6 +5,7 @@
 #include "aggregates.hpp"
 #include <iostream>
 #include "camera.hpp"
+#include "common_renderable.hpp"
 
 std::map<std::string, double> info_dump;
 

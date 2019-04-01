@@ -11,6 +11,7 @@
 #include "random.hpp"
 #include <set>
 #include "aoe_damage.hpp"
+#include "player.hpp"
 
 double apply_to_does(double amount, does& d);
 
