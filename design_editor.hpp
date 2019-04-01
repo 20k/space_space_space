@@ -36,11 +36,19 @@ struct blueprint_node
     void render(design_editor& edit);
 };
 
+struct blueprint_render_state
+{
+    vec2f pos;
+    bool is_hovered = false;
+};
+
 struct blueprint
 {
     std::vector<blueprint_node> nodes;
 
-    void render(design_editor& edit);
+    blueprint_render_state render(design_editor& edit, vec2f upper_size);
+
+    ship to_ship();
 };
 
 struct design_editor

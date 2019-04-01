@@ -81,8 +81,10 @@ void blueprint_node::render(design_editor& edit)
     ImGui::SetCursorPos(old_pos);
 }
 
-void blueprint::render(design_editor& edit)
+blueprint_render_state blueprint::render(design_editor& edit, vec2f upper_size)
 {
+    ImGui::BeginChild("Test", ImVec2(500, upper_size.y() - 50), true);
+
     for(blueprint_node& node : nodes)
     {
         node.render(edit);
@@ -97,6 +99,26 @@ void blueprint::render(design_editor& edit)
             continue;
         }
     }
+
+    bool hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
+    auto win_pos = ImGui::GetWindowPos();
+
+    ImGui::EndChild();
+
+    return {{win_pos.x, win_pos.y},  hovered};
+}
+
+ship blueprint::to_ship()
+{
+    ship nship;
+
+    for(blueprint_node& c : nodes)
+    {
+        nship.add(c.my_comp);
+    }
+
+    return nship;
 }
 
 void design_editor::tick(double dt_s)
@@ -133,17 +155,19 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::Begin("Blueprint Designer", &open);
 
-    ImVec2 win_screen = ImGui::GetWindowPos();
+    //ImVec2 win_screen = ImGui::GetWindowPos();
 
     auto main_dim = ImGui::GetWindowSize();
 
     //auto tl_mpos = ImGui::GetCursorScreenPos();
 
-    bool main_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-
     research.render(*this, {main_dim.x, main_dim.y});
 
-    cur.render(*this);
+    ImGui::SameLine();
+
+    blueprint_render_state brender = cur.render(*this, {main_dim.x, main_dim.y});
+
+    bool main_hovered = brender.is_hovered;
 
     if(!ImGui::IsMouseDown(0) && dragging)
     {
@@ -159,7 +183,9 @@ void design_editor::render(sf::RenderWindow& win)
 
                 //vec2f tlpos = mpos;
 
-                vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
+                //vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
+
+                vec2f tlpos = mpos - brender.pos;
 
                 blueprint_node node;
                 node.my_comp = c;
@@ -192,6 +218,19 @@ void design_editor::render(sf::RenderWindow& win)
             ImGui::EndTooltip();
         }
     }
+
+    //ImGui::SetNextWindowPos(ImVec2(600, 60));
+
+    /*vec2f next_dim = {100, main_dim.y - 50};
+    vec2f real_screen_pos = {win_screen.x + main_dim.x - next_dim.x(), win_screen.y};
+
+    ImGui::SetNextWindowPos(ImVec2(real_screen_pos.x(), real_screen_pos.y()));
+
+    ImGui::BeginChild("ship_child", ImVec2(100, main_dim.y - 50), true);
+
+    ImGui::Text("Ship child");
+
+    ImGui::EndChild();*/
 
     ImGui::End();
 }
