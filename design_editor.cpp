@@ -24,7 +24,7 @@ void player_research::render(design_editor& edit, vec2f upper_size)
 
         render_component_simple(c);
 
-        if((ImGui::IsItemHovered() || ImGui::IsItemClicked()) && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0) && !edit.dragging)
+        if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
         {
             /*ImGui::BeginTooltip();
 
@@ -101,7 +101,9 @@ void design_editor::render(sf::RenderWindow& win)
 
     auto main_dim = ImGui::GetWindowSize();
 
-    auto tl_mpos = ImGui::GetCursorScreenPos();
+    //auto tl_mpos = ImGui::GetCursorScreenPos();
+
+    bool main_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
     research.render(*this, {main_dim.x, main_dim.y});
 
@@ -109,24 +111,31 @@ void design_editor::render(sf::RenderWindow& win)
 
     if(!ImGui::IsMouseDown(0) && dragging)
     {
-        std::optional<component*> comp = fetch(dragging_id);
-
-        if(comp)
+        if(main_hovered)
         {
-            component& c = *comp.value();
+            std::optional<component*> comp = fetch(dragging_id);
 
-            //auto tlpos = (vec2f){mpos.x() - tl_mpos.x, mpos.y() - tl_mpos.y};
+            if(comp)
+            {
+                component& c = *comp.value();
 
-            //vec2f tlpos = mpos;
+                //auto tlpos = (vec2f){mpos.x() - tl_mpos.x, mpos.y() - tl_mpos.y};
 
-            vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
+                //vec2f tlpos = mpos;
 
-            blueprint_node node;
-            node.my_comp = c;
-            node.name = c.long_name;
-            node.pos = tlpos;
+                vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
 
-            cur.nodes.push_back(node);
+                blueprint_node node;
+                node.my_comp = c;
+                node.name = c.long_name;
+                node.pos = tlpos;
+
+                cur.nodes.push_back(node);
+            }
+        }
+        else
+        {
+            ///do nothing
         }
 
         dragging = false;
