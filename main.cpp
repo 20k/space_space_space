@@ -421,6 +421,21 @@ void server_thread()
     for(int i=0; i < 10; i++)
         test_ship->take_damage(2);*/
 
+    player_research default_research;
+    default_research.components.push_back(thruster);
+    default_research.components.push_back(warp);
+    default_research.components.push_back(shields);
+    default_research.components.push_back(missile);
+    default_research.components.push_back(laser);
+    default_research.components.push_back(sensor);
+    default_research.components.push_back(comms);
+    default_research.components.push_back(armour);
+    default_research.components.push_back(ls);
+    default_research.components.push_back(radiator);
+    default_research.components.push_back(power_generator);
+    default_research.components.push_back(crew);
+    default_research.components.push_back(destruct);
+
     player_model_manager player_manage;
 
     /*int num_asteroids = 10;
@@ -578,6 +593,8 @@ void server_thread()
                     fmodel->controlled_ship = s;
                 }
             }
+
+            fmodel->research = default_research;
 
             conn.pop_new_client();
         }
@@ -760,6 +777,8 @@ void server_thread()
                 {
                     model.sample = radar.sample_for(s->r.position, *s, entities, player_mod, s->get_radar_strength());
                 }
+
+                model.research = player_mod.value()->research;
             }
             else
             {
@@ -885,7 +904,6 @@ int main()
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
 
-
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
 
@@ -1000,6 +1018,8 @@ int main()
             //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
 
             //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
+
+            design.research = model.research;
 
             renderables.entities = model.renderables;
         }

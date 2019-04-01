@@ -21,6 +21,7 @@ struct player_model : serialisable
     std::map<uint32_t, common_renderable> renderables;
 
     entity* controlled_ship = nullptr;
+    player_research research;
 
     void cleanup(vec2f my_pos);
 
@@ -68,6 +69,7 @@ struct data_model : serialisable
     std::vector<client_renderable> renderables;
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
+    player_research research;
 
     SERIALISE_SIGNATURE()
     {
@@ -75,6 +77,7 @@ struct data_model : serialisable
         DO_SERIALISE(renderables);
         DO_SERIALISE(sample);
         DO_SERIALISE(client_network_id);
+        DO_SERIALISE(research);
     }
 };
 
