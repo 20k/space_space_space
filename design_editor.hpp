@@ -31,15 +31,16 @@ struct blueprint_node
     component my_comp;
     std::string name;
     vec2f pos = {0,0};
+    bool cleanup = false;
 
-    void render();
+    void render(design_editor& edit);
 };
 
 struct blueprint
 {
     std::vector<blueprint_node> nodes;
 
-    void render();
+    void render(design_editor& edit);
 };
 
 struct design_editor

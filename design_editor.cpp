@@ -42,7 +42,7 @@ void player_research::render(design_editor& edit, vec2f upper_size)
     ImGui::EndChild();
 }
 
-void blueprint_node::render()
+void blueprint_node::render(design_editor& edit)
 {
     auto old_pos = ImGui::GetCursorPos();
 
@@ -52,14 +52,32 @@ void blueprint_node::render()
 
     render_component_simple(my_comp);
 
+    if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
+    {
+        edit.dragging = true;
+        edit.dragging_id = my_comp.id;
+
+        cleanup = true;
+    }
+
     ImGui::SetCursorPos(old_pos);
 }
 
-void blueprint::render()
+void blueprint::render(design_editor& edit)
 {
     for(blueprint_node& node : nodes)
     {
-        node.render();
+        node.render(edit);
+    }
+
+    for(int i=0; i < (int)nodes.size(); i++)
+    {
+        if(nodes[i].cleanup)
+        {
+            nodes.erase(nodes.begin() + i);
+            i--;
+            continue;
+        }
     }
 }
 
@@ -107,7 +125,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     research.render(*this, {main_dim.x, main_dim.y});
 
-    cur.render();
+    cur.render(*this);
 
     if(!ImGui::IsMouseDown(0) && dragging)
     {
