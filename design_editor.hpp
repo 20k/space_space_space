@@ -71,6 +71,7 @@ struct design_editor
 
     bool dragging = false;
     uint32_t dragging_id = -1;
+    float dragging_size = 1;
 };
 
 #endif // DESIGN_EDITOR_HPP_INCLUDED

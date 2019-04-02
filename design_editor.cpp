@@ -61,6 +61,7 @@ void player_research::render(design_editor& edit, vec2f upper_size)
         {
             edit.dragging = true;
             edit.dragging_id = c.id;
+            edit.dragging_size = 1;
         }
 
         if(ImGui::IsItemHovered())
@@ -90,6 +91,7 @@ void blueprint_node::render(design_editor& edit)
     {
         edit.dragging = true;
         edit.dragging_id = my_comp.id;
+        edit.dragging_size = size;
 
         cleanup = true;
     }
@@ -238,6 +240,7 @@ void design_editor::render(sf::RenderWindow& win)
                 node.my_comp = c;
                 node.name = c.long_name;
                 node.pos = tlpos;
+                node.size = dragging_size;
 
                 cur.nodes.push_back(node);
             }
