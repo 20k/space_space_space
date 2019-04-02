@@ -10,6 +10,7 @@ namespace sf
 }
 
 void render_component_simple(const component& c);
+void render_component_compact(const component& c, int id);
 
 struct design_editor;
 
@@ -28,6 +29,9 @@ struct player_research : serialisable, owned
 
 struct blueprint_node
 {
+    static inline int gid = 0;
+    int id = gid++;
+
     component my_comp;
     std::string name;
     vec2f pos = {0,0};

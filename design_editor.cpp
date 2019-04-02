@@ -2,10 +2,47 @@
 #include <SFML/Graphics.hpp>
 #include <ImGui/ImGui.h>
 #include <iostream>
+#include "imgui/imgui_internal.h"
 
 void render_component_simple(const component& c)
 {
     ImGui::Button(c.long_name.c_str(), ImVec2(190, 0));
+}
+
+void render_component_compact(const component& c, int id)
+{
+    ImDrawList* lst = ImGui::GetWindowDrawList();
+
+    std::string name = c.short_name;
+
+    float radius = 35;
+
+    vec2f cursor_pos = {ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y};
+
+    //ImGui::Button(c.short_name.c_str(), ImVec2(190, 0));
+
+    vec2f text_dim = xy_to_vec(ImGui::CalcTextSize(name.c_str()));
+
+    lst->AddCircleFilled(ImVec2(cursor_pos.x(), cursor_pos.y()), radius, IM_COL32(128, 128, 128, 128), 80);
+    lst->AddText(ImVec2(cursor_pos.x() - text_dim.x()/2, cursor_pos.y() - text_dim.y()/2), IM_COL32(255,255,255,255), name.c_str());
+
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+    std::string full_id = std::to_string(id);
+
+    ImGuiID iguid = window->GetID(full_id.c_str());
+
+    ImVec2 size = ImVec2(radius*2, radius*2);
+
+    const ImRect bb(ImVec2(cursor_pos.x() - radius, cursor_pos.y() - radius), ImVec2(cursor_pos.x() + size.x - radius, cursor_pos.y() + size.y - radius));
+    ImGui::ItemSize(bb, 0);
+
+    if(!ImGui::ItemAdd(bb, iguid))
+        return;
+
+    bool hovered, held;
+
+    bool pressed = ImGui::ButtonBehavior(bb, iguid, &hovered, &held, 0);
 }
 
 void player_research::render(design_editor& edit, vec2f upper_size)
@@ -59,7 +96,7 @@ void blueprint_node::render(design_editor& edit)
 
     //ImGui::Text(my_comp.long_name.c_str());
 
-    render_component_simple(my_comp);
+    render_component_compact(my_comp, id);
 
     if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
     {
