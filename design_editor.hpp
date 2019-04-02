@@ -10,7 +10,7 @@ namespace sf
 }
 
 void render_component_simple(const component& c);
-void render_component_compact(const component& c, int id);
+void render_component_compact(const component& c, int id, float size);
 
 struct design_editor;
 
@@ -36,6 +36,7 @@ struct blueprint_node
     std::string name;
     vec2f pos = {0,0};
     bool cleanup = false;
+    float size = 1;
 
     void render(design_editor& edit);
 };

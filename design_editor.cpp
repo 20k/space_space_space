@@ -9,13 +9,13 @@ void render_component_simple(const component& c)
     ImGui::Button(c.long_name.c_str(), ImVec2(190, 0));
 }
 
-void render_component_compact(const component& c, int id)
+void render_component_compact(const component& c, int id, float rad_mult)
 {
     ImDrawList* lst = ImGui::GetWindowDrawList();
 
     std::string name = c.short_name;
 
-    float radius = 35;
+    float radius = 35 * rad_mult;
 
     vec2f cursor_pos = {ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y};
 
@@ -82,7 +82,9 @@ void blueprint_node::render(design_editor& edit)
 
     ImGui::SetCursorPos(ImVec2(pos.x(), pos.y()));
 
-    render_component_compact(my_comp, id);
+    float rad_mult = sqrt(size);
+
+    render_component_compact(my_comp, id, rad_mult);
 
     if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
     {
@@ -91,6 +93,24 @@ void blueprint_node::render(design_editor& edit)
 
         cleanup = true;
     }
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if(ImGui::IsItemHovered() && fabs(io.MouseWheel) > 0)
+    {
+        if(io.MouseWheel > 0)
+        {
+            size -= 0.25;
+        }
+        else
+        {
+            size += 0.25;
+        }
+
+        size = round(clamp(size * 4, 0.25*4, 4*4)) / 4;
+    }
+
+    //if(ImGui::IsItemHovered() && ImGui::S)
 
     if(ImGui::IsItemHovered())
     {
