@@ -51,10 +51,6 @@ void player_research::render(design_editor& edit, vec2f upper_size)
 
     ImGui::BeginChild("Components", ImVec2(fixed_width, upper_size.y() - 50), true);
 
-    //ImGui::BeginChild("Hello there");
-
-    //ImGui::Text("Hello");
-
     for(component& c : components)
     {
         std::string txt = c.long_name;
@@ -63,12 +59,6 @@ void player_research::render(design_editor& edit, vec2f upper_size)
 
         if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
         {
-            /*ImGui::BeginTooltip();
-
-            render_component_simple(c);
-
-            ImGui::EndTooltip();*/
-
             edit.dragging = true;
             edit.dragging_id = c.id;
         }
@@ -81,8 +71,6 @@ void player_research::render(design_editor& edit, vec2f upper_size)
 
             ImGui::EndTooltip();
         }
-
-        //ImGui::Text(txt.c_str());
     }
 
     ImGui::EndChild();
@@ -93,8 +81,6 @@ void blueprint_node::render(design_editor& edit)
     auto old_pos = ImGui::GetCursorPos();
 
     ImGui::SetCursorPos(ImVec2(pos.x(), pos.y()));
-
-    //ImGui::Text(my_comp.long_name.c_str());
 
     render_component_compact(my_comp, id);
 
@@ -214,7 +200,6 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::EndChild();
 
-
     bool main_hovered = brender.is_hovered;
 
     if(!ImGui::IsMouseDown(0) && dragging)
@@ -226,12 +211,6 @@ void design_editor::render(sf::RenderWindow& win)
             if(comp)
             {
                 component& c = *comp.value();
-
-                //auto tlpos = (vec2f){mpos.x() - tl_mpos.x, mpos.y() - tl_mpos.y};
-
-                //vec2f tlpos = mpos;
-
-                //vec2f tlpos = {mpos.x() - win_screen.x, mpos.y() - win_screen.y};
 
                 vec2f tlpos = mpos - brender.pos;
 
@@ -266,19 +245,6 @@ void design_editor::render(sf::RenderWindow& win)
             ImGui::EndTooltip();
         }
     }
-
-    //ImGui::SetNextWindowPos(ImVec2(600, 60));
-
-    /*vec2f next_dim = {100, main_dim.y - 50};
-    vec2f real_screen_pos = {win_screen.x + main_dim.x - next_dim.x(), win_screen.y};
-
-    ImGui::SetNextWindowPos(ImVec2(real_screen_pos.x(), real_screen_pos.y()));
-
-    ImGui::BeginChild("ship_child", ImVec2(100, main_dim.y - 50), true);
-
-    ImGui::Text("Ship child");
-
-    ImGui::EndChild();*/
 
     ImGui::End();
 }
