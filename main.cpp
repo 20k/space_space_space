@@ -994,6 +994,11 @@ int main()
             }
         }
 
+        if(ImGui::IsAnyWindowHovered())
+        {
+            mouse_delta = 0;
+        }
+
         cam.screen_size = {window.getSize().x, window.getSize().y};
         cam.add_linear_zoom(mouse_delta);
 
