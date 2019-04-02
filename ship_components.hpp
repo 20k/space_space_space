@@ -144,8 +144,10 @@ struct component : virtual serialisable, owned
     uint32_t id = gid++;
 
     std::string long_name;
+    std::string short_name;
 
     ///?????????????????
+    ///this will go to the house
     std::string subtype;
 
     double last_sat = 1;
@@ -170,6 +172,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(info);
         DO_SERIALISE(activate_requirements);
         DO_SERIALISE(long_name);
+        DO_SERIALISE(short_name);
         DO_SERIALISE(last_sat);
         DO_SERIALISE(flows);
         DO_SERIALISE(heat_sink);

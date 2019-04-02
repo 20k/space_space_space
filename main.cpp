@@ -171,6 +171,7 @@ void server_thread()
     thruster.add_composition(material_info::COPPER, 10);
     thruster.set_heat(20);
     thruster.long_name = "Thruster";
+    thruster.short_name = "THRST";
     thruster.activation_type = component_info::SLIDER_ACTIVATION;
 
     warp.add(component_info::POWER, -1);
@@ -183,6 +184,7 @@ void server_thread()
     warp.set_no_drain_on_full_production();
     warp.set_heat(100);
     warp.long_name = "Warp Drive";
+    warp.short_name = "WARP";
     warp.activation_type = component_info::TOGGLE_ACTIVATION;
 
     shields.add(component_info::SHIELDS, 0.5, 50);
@@ -193,6 +195,7 @@ void server_thread()
     shields.set_no_drain_on_full_production();
     shields.set_heat(200);
     shields.long_name = "Shields";
+    shields.short_name = "SHLD";
     shields.activation_type = component_info::SLIDER_ACTIVATION;
 
     missile.add(component_info::POWER, -1);
@@ -207,6 +210,7 @@ void server_thread()
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
     missile.long_name = "Missile Launcher";
+    missile.short_name = "MISL";
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
@@ -216,6 +220,7 @@ void server_thread()
     laser.set_no_drain_on_full_production();
     laser.set_heat(5);
     laser.long_name = "Laser";
+    laser.short_name = "LAS";
     laser.activation_type = component_info::TOGGLE_ACTIVATION;
 
     laser.add_on_use(component_info::CAPACITOR, -10, 1);
@@ -234,6 +239,7 @@ void server_thread()
 
     sensor.set_heat(2);
     sensor.long_name = "Sensors";
+    sensor.short_name = "SENS";
     sensor.activation_type = component_info::TOGGLE_ACTIVATION;
 
     comms.add(component_info::POWER, -0.5);
@@ -243,6 +249,7 @@ void server_thread()
     comms.add_composition(material_info::IRON, 1);
     comms.set_heat(1);
     comms.long_name = "Communications";
+    comms.short_name = "COMM";
     comms.activation_type = component_info::TOGGLE_ACTIVATION;
 
     /*sysrepair.add(component_info::POWER, -1);
@@ -256,6 +263,7 @@ void server_thread()
     armour.set_no_drain_on_full_production();
     armour.set_heat(5);
     armour.long_name = "Armour";
+    armour.short_name = "ARMR";
     armour.activation_type = component_info::TOGGLE_ACTIVATION;
 
     ls.add(component_info::POWER, -1);
@@ -266,6 +274,7 @@ void server_thread()
     //ls.set_no_drain_on_full_production();
     ls.set_heat(10);
     ls.long_name = "Life Support";
+    ls.short_name = "LS";
     ls.activation_type = component_info::TOGGLE_ACTIVATION;
 
     /*coolant.add(component_info::COOLANT, 10, 200);
@@ -280,6 +289,7 @@ void server_thread()
     radiator.add(component_info::HP, 0, 1);
     radiator.add_composition(material_info::IRON, 5);
     radiator.long_name = "Radiator";
+    radiator.short_name = "RAD";
     radiator.activation_type = component_info::NO_ACTIVATION;
 
     power_generator.add(component_info::POWER, 8, 50);
@@ -291,6 +301,7 @@ void server_thread()
 
     power_generator.set_complex_no_drain_on_full_production();
     power_generator.long_name = "Power Generator";
+    power_generator.short_name = "PWR";
     power_generator.activation_type = component_info::SLIDER_ACTIVATION;
 
     //power_generator.info[1].held = 0;
@@ -308,6 +319,7 @@ void server_thread()
     crew.add_composition(material_info::IRON, 5);
     crew.set_heat(1);
     crew.long_name = "Crew";
+    crew.short_name = "CRW";
     crew.activation_type = component_info::NO_ACTIVATION;
 
     destruct.add(component_info::HP, 0, 1);
@@ -315,6 +327,7 @@ void server_thread()
     destruct.add_composition(material_info::IRON, 6);
     destruct.internal_volume = 5;
     destruct.long_name = "Self Destruct";
+    destruct.short_name = "DEST";
     destruct.activation_type = component_info::NO_ACTIVATION;
 
     {
@@ -328,6 +341,9 @@ void server_thread()
 
     coolant_cold.long_name = "Cold Storage";
     coolant_hot.long_name = "Heat Sink";
+
+    coolant_cold.short_name = "COOL";
+    coolant_hot.short_name = "HSNK";
 
     coolant_cold.activation_type = component_info::NO_ACTIVATION;
     coolant_hot.activation_type = component_info::NO_ACTIVATION;
@@ -348,6 +364,7 @@ void server_thread()
     coolant_material.add(component_info::HP, 0, 1);
     coolant_material.add_composition(material_info::HYDROGEN, 50);
     coolant_material.long_name = "Fluid";
+    coolant_material.short_name = "FLUI";
     coolant_material.flows = true;
 
     component coolant_material2;
@@ -355,6 +372,7 @@ void server_thread()
     coolant_material2.add(component_info::HP, 0, 1);
     coolant_material2.add_composition(material_info::HYDROGEN, 5);
     coolant_material2.long_name = "Fluid";
+    coolant_material2.short_name = "FLUI";
     coolant_material2.flows = true;
 
     assert(coolant_cold.can_store(coolant_material));
