@@ -167,6 +167,17 @@ void design_editor::render(sf::RenderWindow& win)
 
     blueprint_render_state brender = cur.render(*this, {main_dim.x, main_dim.y});
 
+    ImGui::SameLine();
+
+    ImGui::BeginChild("Shippy", ImVec2(250, main_dim.y - 50), true);
+
+    ship s = cur.to_ship();
+
+    s.show_resources(false);
+
+    ImGui::EndChild();
+
+
     bool main_hovered = brender.is_hovered;
 
     if(!ImGui::IsMouseDown(0) && dragging)

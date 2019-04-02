@@ -409,7 +409,7 @@ struct ship : heatable_entity, owned
     std::vector<double> last_sat_percentage;
 
     //std::string show_components();
-    void show_resources();
+    void show_resources(bool window = true);
     void show_power();
 
     template<typename T, typename U>
@@ -428,6 +428,11 @@ struct ship : heatable_entity, owned
             {
                 ret[i] += vec[i];
             }
+        }
+
+        if(ret.size() != component_info::COUNT)
+        {
+            ret.resize(component_info::COUNT);
         }
 
         return ret;

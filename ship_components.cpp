@@ -1933,7 +1933,7 @@ void component::render_inline_ui()
     }
 }
 
-void ship::show_resources()
+void ship::show_resources(bool window)
 {
     std::vector<std::string> strings;
 
@@ -2018,7 +2018,8 @@ void ship::show_resources()
 
     ret += "Heat: " + to_string_with_variable_prec(heat_to_kelvin(latent_heat)) + "\n";
 
-    ImGui::Begin((std::string("Tship##") + std::to_string(network_owner)).c_str());
+    if(window)
+        ImGui::Begin((std::string("Tship##") + std::to_string(network_owner)).c_str());
 
     ImGui::Text(ret.c_str());
 
@@ -2109,7 +2110,8 @@ void ship::show_resources()
         ImGui::End();
     }
 
-    ImGui::End();
+    if(window)
+        ImGui::End();
 }
 
 ImVec4 im4_mix(ImVec4 one, ImVec4 two, float a)
