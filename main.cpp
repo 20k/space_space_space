@@ -1176,9 +1176,6 @@ int main()
 
         ImGui::SFML::Render(window);
 
-        sf::Sprite spr(font_atlas);
-        window.draw(spr);
-
         window.display();
         window.clear();
 
