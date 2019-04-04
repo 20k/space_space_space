@@ -85,12 +85,15 @@ void blueprint_node::render(design_editor& edit)
 
     float rad_mult = sqrt(size);
 
+    my_comp = original;
+    my_comp.scale(size);
+
     render_component_compact(my_comp, id, rad_mult);
 
     if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
     {
         edit.dragging = true;
-        edit.dragging_id = my_comp.id;
+        edit.dragging_id = original.id;
         edit.dragging_size = size;
 
         cleanup = true;
@@ -237,10 +240,13 @@ void design_editor::render(sf::RenderWindow& win)
                 vec2f tlpos = mpos - brender.pos;
 
                 blueprint_node node;
+                node.original = c;
                 node.my_comp = c;
                 node.name = c.long_name;
                 node.pos = tlpos;
                 node.size = dragging_size;
+
+                node.my_comp.scale(node.size);
 
                 cur.nodes.push_back(node);
             }

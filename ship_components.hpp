@@ -294,6 +294,8 @@ struct component : virtual serialisable, owned
     float get_hp_frac();
     float get_operating_efficiency();
 
+    void scale(float size);
+
     ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
 

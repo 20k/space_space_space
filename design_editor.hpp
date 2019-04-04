@@ -33,6 +33,7 @@ struct blueprint_node
     int id = gid++;
 
     component my_comp;
+    component original;
     std::string name;
     vec2f pos = {0,0};
     bool cleanup = false;

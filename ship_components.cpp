@@ -566,6 +566,37 @@ float component::get_operating_efficiency()
      return std::min(last_sat, last_production_frac) * activation_level * get_hp_frac();
 }
 
+void component::scale(float size)
+{
+    for(does& d : info)
+    {
+        d.capacity *= size;
+        d.held *= size;
+        d.recharge *= size;
+        d.time_between_use_s *= size;
+    }
+
+    for(does& d : activate_requirements)
+    {
+        d.capacity *= size;
+        d.held *= size;
+        d.recharge *= size;
+        d.time_between_use_s *= size;
+    }
+
+    for(material& m : composition)
+    {
+        m.dynamic_desc.volume *= size;
+    }
+
+    internal_volume *= size;
+
+    for(component& c : stored)
+    {
+        c.scale(size);
+    }
+}
+
 void component::add_composition(material_info::material_type type, double volume)
 {
     material new_mat;
