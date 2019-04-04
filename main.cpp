@@ -947,9 +947,23 @@ int main()
 
     std::cout << atlas->TexID << std::endl;
 
-    ImGuiFreeType::BuildFontAtlas(atlas, 0);
+    auto write_data =  [](unsigned char* data, void* tex_id, int width, int height)
+    {
+        sf::Texture* tex = (sf::Texture*)tex_id;
 
-    unsigned char* pixels;
+        std::cout << "data " << data << " ptr " << tex << std::endl;
+
+        tex->create(width, height);
+        tex->update((const unsigned char*)data);
+    };
+
+    std::cout << "prefont " << &font_atlas << std::endl;
+
+    ImGuiFreeType::BuildFontAtlas(atlas, 0, ImGuiFreeType::DISABLE_SUBPIXEL_AA, write_data, (void*)&font_atlas);
+
+    atlas->TexID = (void*)font_atlas.getNativeHandle();
+
+    /*unsigned char* pixels;
     int width, height;
 
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
@@ -957,7 +971,7 @@ int main()
     font_atlas.create(width, height);
     font_atlas.update(pixels);
 
-    atlas->TexID = (void*)font_atlas.getNativeHandle();
+    atlas->TexID = (void*)font_atlas.getNativeHandle();*/
 
     std::cout << atlas->TexID << std::endl;
 
