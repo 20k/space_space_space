@@ -917,7 +917,7 @@ int main()
 {
     serialise_tests();
 
-    //#define WITH_SERVER
+    #define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
@@ -939,41 +939,20 @@ int main()
     //io.Fonts->AddFontDefault();
     ImFont* font = io.Fonts->AddFontFromFileTTF("VeraMono.ttf", 14.f);
 
-    std::cout << io.Fonts->TexID << std::endl;
-
-    //ImGuiFreeType::BuildFontAtlas(font_atlas, io.Fonts, 0, 1);
-
     ImFontAtlas* atlas = ImGui::SFML::GetFontAtlas();
-
-    std::cout << atlas->TexID << std::endl;
 
     auto write_data =  [](unsigned char* data, void* tex_id, int width, int height)
     {
         sf::Texture* tex = (sf::Texture*)tex_id;
 
-        std::cout << "data " << data << " ptr " << tex << std::endl;
-
         tex->create(width, height);
         tex->update((const unsigned char*)data);
     };
 
-    std::cout << "prefont " << &font_atlas << std::endl;
-
-    ImGuiFreeType::BuildFontAtlas(atlas, 0, ImGuiFreeType::DISABLE_SUBPIXEL_AA, write_data, (void*)&font_atlas);
+    ImGuiFreeType::BuildFontAtlas(atlas, 0, ImGuiFreeType::LEGACY, write_data, (void*)&font_atlas);
 
     atlas->TexID = (void*)font_atlas.getNativeHandle();
 
-    /*unsigned char* pixels;
-    int width, height;
-
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-
-    font_atlas.create(width, height);
-    font_atlas.update(pixels);
-
-    atlas->TexID = (void*)font_atlas.getNativeHandle();*/
-
-    std::cout << atlas->TexID << std::endl;
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1196,6 +1175,10 @@ int main()
         design.render(window);
 
         ImGui::SFML::Render(window);
+
+        sf::Sprite spr(font_atlas);
+        window.draw(spr);
+
         window.display();
         window.clear();
 
