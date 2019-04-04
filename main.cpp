@@ -950,7 +950,7 @@ int main()
         tex->update((const unsigned char*)data);
     };
 
-    ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::LEGACY, write_data, (void*)&font_atlas);
+    ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::DEFAULT, write_data, (void*)&font_atlas);
 
     atlas->TexID = (void*)font_atlas.getNativeHandle();
 
