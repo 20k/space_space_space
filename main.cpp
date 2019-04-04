@@ -917,7 +917,7 @@ int main()
 {
     serialise_tests();
 
-    #define WITH_SERVER
+    //#define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread).detach();
     #endif // WITH_SERVER
@@ -939,7 +939,27 @@ int main()
     //io.Fonts->AddFontDefault();
     ImFont* font = io.Fonts->AddFontFromFileTTF("VeraMono.ttf", 14.f);
 
-    ImGuiFreeType::BuildFontAtlas(font_atlas, io.Fonts, 0, 1);
+    std::cout << io.Fonts->TexID << std::endl;
+
+    //ImGuiFreeType::BuildFontAtlas(font_atlas, io.Fonts, 0, 1);
+
+    ImFontAtlas* atlas = ImGui::SFML::GetFontAtlas();
+
+    std::cout << atlas->TexID << std::endl;
+
+    ImGuiFreeType::BuildFontAtlas(atlas, 0);
+
+    unsigned char* pixels;
+    int width, height;
+
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+
+    font_atlas.create(width, height);
+    font_atlas.update(pixels);
+
+    atlas->TexID = (void*)font_atlas.getNativeHandle();
+
+    std::cout << atlas->TexID << std::endl;
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -951,7 +971,7 @@ int main()
     //style.PopupBorderSize = 0;
     //style.WindowBorderSize = 0;
 
-    assert(font != nullptr);
+    //assert(font != nullptr);
 
     connection conn;
     conn.connect("192.168.0.54", 11000);
