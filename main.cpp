@@ -924,6 +924,7 @@ int main()
 
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
+    sett.sRgbCapable = false;
 
     sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
@@ -949,7 +950,7 @@ int main()
         tex->update((const unsigned char*)data);
     };
 
-    ImGuiFreeType::BuildFontAtlas(atlas, 0, ImGuiFreeType::LEGACY, write_data, (void*)&font_atlas);
+    ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::LEGACY, write_data, (void*)&font_atlas);
 
     atlas->TexID = (void*)font_atlas.getNativeHandle();
 
@@ -963,6 +964,8 @@ int main()
     style.FrameBorderSize = 0;
     //style.PopupBorderSize = 0;
     //style.WindowBorderSize = 0;
+
+    ImGui::SetStyleLinearColor(sett.sRgbCapable);
 
     //assert(font != nullptr);
 

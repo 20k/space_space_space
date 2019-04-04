@@ -155,7 +155,7 @@ void ImGuiX::PlotMultiEx(
     if (window->SkipItems)
         return;
 
-    ImGuiContext& g = *GImGui;
+    ImGuiContext& g = *ImGui::GetCurrentContext();
     const ImGuiStyle& style = g.Style;
 
     const ImVec2 label_size = ImGui::CalcTextSize(label, NULL, true);

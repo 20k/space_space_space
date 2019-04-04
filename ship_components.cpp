@@ -2158,9 +2158,8 @@ void ship::show_power()
 
         bool changed = false;
 
-        ImVec4 default_slider_col = ImGui::GetStyleColorVec4(ImGuiCol_SliderGrab);
+        ImVec4 default_slider_col = ImGui::GetLinearStyleColorVec4(ImGuiCol_SliderGrab);
         ImVec4 red_col = ImVec4(1, 0, 0, 1);
-
 
         //if(current_temperature >= fixed.melting_point)
 
@@ -2176,8 +2175,8 @@ void ship::show_power()
 
             ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
 
-            ImGui::PushStyleColor(ImGuiCol_Text, text_col);
-            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
+            ImGui::PushLinearStyleColor(ImGuiCol_Text, text_col);
+            ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
 
             ImGui::PushItemWidth(80);
 
@@ -2203,8 +2202,8 @@ void ship::show_power()
 
             ImVec4 ccol = im4_mix(default_slider_col, red_col, good_fraction);
 
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,bad_fraction,bad_fraction,1));
-            ImGui::PushStyleColor(ImGuiCol_SliderGrab, ccol);
+            ImGui::PushLinearStyleColor(ImGuiCol_Text, ImVec4(1,bad_fraction,bad_fraction,1));
+            ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
 
             ImGui::PushItemWidth(80);
 
