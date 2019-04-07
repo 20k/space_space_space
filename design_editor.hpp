@@ -36,14 +36,15 @@ struct blueprint_node : serialisable
     component original;
     std::string name;
     vec2f pos = {0,0};
-    bool cleanup = false;
     float size = 1;
+
+    bool cleanup = false;
 
     void render(design_editor& edit);
 
     SERIALISE_SIGNATURE()
     {
-        DO_SERIALISE(original);
+        DO_SERIALISE(original._pid);
         DO_SERIALISE(name);
         DO_SERIALISE(pos);
         DO_SERIALISE(size);
@@ -56,7 +57,7 @@ struct blueprint_render_state
     bool is_hovered = false;
 };
 
-struct blueprint : serialisable
+struct blueprint : serialisable, owned
 {
     std::vector<blueprint_node> nodes;
     std::string name;
@@ -72,11 +73,30 @@ struct blueprint : serialisable
     }
 };
 
+struct blueprint_manager : serialisable, owned
+{
+    std::vector<blueprint> blueprints;
+    int currently_selected = -1;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(blueprints);
+        DO_SERIALISE(currently_selected);
+        DO_RPC(create_blueprint);
+    }
+
+    void create_blueprint()
+    {
+        blueprints.push_back(blueprint());
+        currently_selected = blueprints.size() - 1;
+    }
+};
+
 struct design_editor
 {
     player_research research;
-
-    blueprint cur;
+    blueprint_manager server_blueprint_manage;
+    blueprint_manager blueprint_manage;
 
     void tick(double dt_s);
     void render(sf::RenderWindow& win);

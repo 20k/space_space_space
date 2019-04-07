@@ -624,6 +624,9 @@ void server_thread()
             fmodel.research = default_research;
             fmodel.research._pid = get_next_persistent_id();
 
+            if(fmodel.blueprint_manage.blueprints.size() == 0)
+                fmodel.blueprint_manage.create_blueprint();
+
             conn.pop_new_client();
         }
 
@@ -1064,6 +1067,7 @@ int main()
             //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
 
             design.research = model.networked_model.research;
+            design.server_blueprint_manage = model.networked_model.blueprint_manage;
 
             renderables.entities = model.renderables;
         }

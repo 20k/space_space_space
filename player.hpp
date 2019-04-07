@@ -22,6 +22,7 @@ struct player_model : serialisable, owned
 
     entity* controlled_ship = nullptr;
     player_research research;
+    blueprint_manager blueprint_manage;
 
     void cleanup(vec2f my_pos);
 
@@ -30,6 +31,7 @@ struct player_model : serialisable, owned
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(research);
+        DO_SERIALISE(blueprint_manage);
     }
 };
 

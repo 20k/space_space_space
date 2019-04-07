@@ -203,6 +203,32 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::Begin("Blueprint Designer", &open);
 
+    if(blueprint_manage.blueprints.size() == 0)
+    {
+        blueprint_manage.create_blueprint();
+        //rpc("create_blueprint", server_blueprint_manage, &server_blueprint_manage.create_blueprint);
+
+        ImGui::End();
+        return;
+    }
+
+    blueprint* current_blueprint = nullptr;
+
+    for(blueprint& print : blueprint_manage.blueprints)
+    {
+        if(print._pid == blueprint_manage._pid)
+        {
+            current_blueprint = &print;
+        }
+    }
+
+    if(current_blueprint == nullptr)
+    {
+        current_blueprint = &blueprint_manage.blueprints.front();
+    }
+
+    blueprint& cur = *current_blueprint;
+
     cur.name.resize(100);
 
     ImGui::PushItemWidth(160);
