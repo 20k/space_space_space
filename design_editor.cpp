@@ -203,11 +203,36 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::Begin("Blueprint Designer", &open);
 
+    for(blueprint& p1 : server_blueprint_manage.blueprints)
+    {
+        bool found = false;
+
+        for(blueprint& p2 : blueprint_manage.blueprints)
+        {
+            if(p2._pid == p1._pid)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            blueprint_manage.blueprints.push_back(p1);
+        }
+    }
+
+    if(blueprint_manage.blueprints.size() == 0 && !rpcd_default_blueprint)
+    {
+        rpc("create_blueprint", server_blueprint_manage, &server_blueprint_manage.create_blueprint);
+        rpcd_default_blueprint = true;
+
+        ImGui::End();
+        return;
+    }
+
     if(blueprint_manage.blueprints.size() == 0)
     {
-        blueprint_manage.create_blueprint();
-        //rpc("create_blueprint", server_blueprint_manage, &server_blueprint_manage.create_blueprint);
-
         ImGui::End();
         return;
     }

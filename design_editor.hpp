@@ -94,6 +94,8 @@ struct blueprint_manager : serialisable, owned
 
 struct design_editor
 {
+    bool rpcd_default_blueprint = false;
+
     player_research research;
     blueprint_manager server_blueprint_manage;
     blueprint_manager blueprint_manage;

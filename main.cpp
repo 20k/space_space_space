@@ -678,6 +678,14 @@ void server_thread()
                     //s->serialise(ctx, ctx.faux);
                     do_recurse(ctx, s);
                 }
+
+                {
+                    serialise_context ctx;
+                    ctx.inf = read.data.rpcs;
+                    ctx.exec_rpcs = true;
+
+                    do_recurse(ctx, mod);
+                }
             }
 
             conn.pop_read(read.id);
