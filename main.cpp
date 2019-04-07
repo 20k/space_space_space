@@ -510,7 +510,7 @@ void server_thread()
         entities.tick(frametime_dt);
 
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
-        std::cout << "tclock " << tclock_time << std::endl;
+        //std::cout << "tclock " << tclock_time << std::endl;
 
         for(auto& i : data_manage.backup)
         {

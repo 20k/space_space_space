@@ -224,7 +224,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     if(blueprint_manage.blueprints.size() == 0 && !rpcd_default_blueprint)
     {
-        rpc("create_blueprint", server_blueprint_manage, &server_blueprint_manage.create_blueprint);
+        server_blueprint_manage.create_blueprint_rpc();
         rpcd_default_blueprint = true;
 
         ImGui::End();
@@ -266,7 +266,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     if(ImGui::Button("Upload"))
     {
-        rpc("upload_blueprint", server_blueprint_manage, &server_blueprint_manage.upload_blueprint, cur);
+        server_blueprint_manage.upload_blueprint_rpc(cur);
     }
 
     //ImVec2 win_screen = ImGui::GetWindowPos();

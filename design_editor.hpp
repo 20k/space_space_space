@@ -103,6 +103,9 @@ struct blueprint_manager : serialisable, owned
             }
         }
     }
+
+    FRIENDLY_RPC_NAME(create_blueprint);
+    FRIENDLY_RPC_NAME(upload_blueprint);
 };
 
 struct design_editor
