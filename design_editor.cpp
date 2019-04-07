@@ -266,6 +266,8 @@ void design_editor::render(sf::RenderWindow& win)
 
     if(ImGui::Button("Upload"))
     {
+        printf("ClientUpload\n");
+
         server_blueprint_manage.upload_blueprint_rpc(cur);
     }
 

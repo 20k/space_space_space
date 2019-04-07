@@ -809,6 +809,8 @@ void server_thread()
 
             player_model* player_model = &data.networked_model;
 
+            //std::cout << "sending blupe " << player_model->blueprint_manage._pid << std::endl;
+
             if(player_model)
             {
                 ship* s = dynamic_cast<ship*>(player_model->controlled_ship);
@@ -1076,6 +1078,8 @@ int main()
 
             design.research = model.networked_model.research;
             design.server_blueprint_manage = model.networked_model.blueprint_manage;
+
+            //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 
             renderables.entities = model.renderables;
         }

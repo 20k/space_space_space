@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "ship_components.hpp"
+#include <iostream>
 
 namespace sf
 {
@@ -88,20 +89,39 @@ struct blueprint_manager : serialisable, owned
 
     void create_blueprint()
     {
+        printf("Create\n");
+
         blueprints.push_back(blueprint());
         currently_selected = blueprints.size() - 1;
     }
 
     void upload_blueprint(blueprint print)
     {
+        printf("UBlueprint\n");
+
         for(blueprint& p : blueprints)
         {
             if(p._pid == print._pid)
             {
                 p = print;
+                save("temp.blueprint");
                 return;
             }
         }
+    }
+
+    void save(const std::string& file)
+    {
+        printf("My save\n");
+
+        save_to_file(file, ::serialise(*this));
+    }
+
+    void load(const std::string& file)
+    {
+        nlohmann::json data = load_from_file(file);
+
+        deserialise(data, *this);
     }
 
     FRIENDLY_RPC_NAME(create_blueprint);
