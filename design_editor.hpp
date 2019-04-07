@@ -83,12 +83,25 @@ struct blueprint_manager : serialisable, owned
         DO_SERIALISE(blueprints);
         DO_SERIALISE(currently_selected);
         DO_RPC(create_blueprint);
+        DO_RPC(upload_blueprint);
     }
 
     void create_blueprint()
     {
         blueprints.push_back(blueprint());
         currently_selected = blueprints.size() - 1;
+    }
+
+    void upload_blueprint(blueprint print)
+    {
+        for(blueprint& p : blueprints)
+        {
+            if(p._pid == print._pid)
+            {
+                p = print;
+                return;
+            }
+        }
     }
 };
 

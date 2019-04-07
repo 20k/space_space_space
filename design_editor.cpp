@@ -262,6 +262,13 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::PopItemWidth();
 
+    ImGui::SameLine();
+
+    if(ImGui::Button("Upload"))
+    {
+        rpc("upload_blueprint", server_blueprint_manage, &server_blueprint_manage.upload_blueprint, cur);
+    }
+
     //ImVec2 win_screen = ImGui::GetWindowPos();
 
     auto main_dim = ImGui::GetWindowSize();
