@@ -27,7 +27,7 @@ struct player_research : serialisable, owned
     }
 };
 
-struct blueprint_node
+struct blueprint_node : serialisable
 {
     static inline int gid = 0;
     int id = gid++;
@@ -40,6 +40,14 @@ struct blueprint_node
     float size = 1;
 
     void render(design_editor& edit);
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(original);
+        DO_SERIALISE(name);
+        DO_SERIALISE(pos);
+        DO_SERIALISE(size);
+    }
 };
 
 struct blueprint_render_state
@@ -48,13 +56,20 @@ struct blueprint_render_state
     bool is_hovered = false;
 };
 
-struct blueprint
+struct blueprint : serialisable
 {
     std::vector<blueprint_node> nodes;
+    std::string name;
 
     blueprint_render_state render(design_editor& edit, vec2f upper_size);
 
     ship to_ship();
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(nodes);
+        DO_SERIALISE(name);
+    }
 };
 
 struct design_editor

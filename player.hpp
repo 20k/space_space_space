@@ -12,7 +12,7 @@ struct common_renderable;
 
 ///i think the reason why the code is a mess is this inversion of ownership
 ///this needs to own everything about a player, ships etc
-struct player_model : serialisable
+struct player_model : serialisable, owned
 {
     ///oh goodie raw pointers
     //entity* en = nullptr;
@@ -26,9 +26,14 @@ struct player_model : serialisable
     void cleanup(vec2f my_pos);
 
     void tick(double dt_s);
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(research);
+    }
 };
 
-struct player_model_manager
+/*struct player_model_manager
 {
     std::vector<player_model*> models;
 
@@ -60,7 +65,7 @@ struct player_model_manager
             i->tick(dt_s);
         }
     }
-};
+};*/
 
 template<typename T>
 struct data_model : serialisable
@@ -69,7 +74,7 @@ struct data_model : serialisable
     std::vector<client_renderable> renderables;
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
-    player_research research;
+    player_model networked_model;
 
     SERIALISE_SIGNATURE()
     {
@@ -77,7 +82,21 @@ struct data_model : serialisable
         DO_SERIALISE(renderables);
         DO_SERIALISE(sample);
         DO_SERIALISE(client_network_id);
-        DO_SERIALISE(research);
+        DO_SERIALISE(networked_model);
+    }
+};
+
+template<typename T>
+struct data_model_manager
+{
+    std::map<uint64_t, data_model<T>> data;
+    std::map<uint64_t, data_model<T>> backup;
+
+    data_model<T>& fetch_by_id(uint64_t id)
+    {
+        backup[id];
+
+        return data[id];
     }
 };
 

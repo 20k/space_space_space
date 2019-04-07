@@ -141,11 +141,6 @@ void server_thread()
     connection conn;
     conn.host("192.168.0.54", 11000);
 
-    data_model<ship*> model;
-
-    std::map<uint64_t, data_model<ship*>> last_models;
-    std::map<uint64_t, nlohmann::json> last_diff;
-
     //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
@@ -439,6 +434,8 @@ void server_thread()
     for(int i=0; i < 10; i++)
         test_ship->take_damage(2);*/
 
+    data_model_manager<ship*> data_manage;
+
     player_research default_research;
     default_research.components.push_back(thruster);
     default_research.components.push_back(warp);
@@ -454,7 +451,7 @@ void server_thread()
     default_research.components.push_back(crew);
     default_research.components.push_back(destruct);
 
-    player_model_manager player_manage;
+    //player_model_manager player_manage;
 
     /*int num_asteroids = 10;
 
@@ -515,13 +512,18 @@ void server_thread()
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
         std::cout << "tclock " << tclock_time << std::endl;
 
-        for(player_model* mod : player_manage.models)
+        for(auto& i : data_manage.backup)
         {
+            player_model* mod = &i.second.networked_model;
+
+            if(mod->controlled_ship == nullptr)
+                continue;
+
             if(mod->controlled_ship->cleanup)
                 mod->controlled_ship = nullptr;
         }
 
-        for(auto& m : last_models)
+        for(auto& m : data_manage.backup)
         {
             for(int i=0; i < (int)m.second.ships.size(); i++)
             {
@@ -581,7 +583,12 @@ void server_thread()
         }
 
         radar.tick(frametime_dt);
-        player_manage.tick(frametime_dt);
+        //player_manage.tick(frametime_dt);
+
+        for(auto& i : data_manage.data)
+        {
+            i.second.networked_model.tick(frametime_dt);
+        }
 
         iterations++;
 
@@ -598,7 +605,9 @@ void server_thread()
         {
             uint32_t pid = conn.has_new_client().value();
 
-            player_model* fmodel = player_manage.make_new(pid);
+            data_model<ship*>& data = data_manage.fetch_by_id(pid);
+
+            player_model& fmodel = data.networked_model;
 
             std::vector<ship*> ships = entities.fetch<ship>();
 
@@ -606,13 +615,14 @@ void server_thread()
             {
                 if(s->network_owner == pid)
                 {
-                    s->model = fmodel;
+                    s->model = &fmodel;
 
-                    fmodel->controlled_ship = s;
+                    fmodel.controlled_ship = s;
                 }
             }
 
-            fmodel->research = default_research;
+            fmodel.research = default_research;
+            fmodel.research._pid = get_next_persistent_id();
 
             conn.pop_new_client();
         }
@@ -623,48 +633,47 @@ void server_thread()
 
             last_mouse_pos[read.id] = read.data.mouse_world_pos;
 
-            std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
+            data_model<ship*>& data = data_manage.fetch_by_id(read.id);
 
-            if(mod_opt)
+            player_model& mod = data.networked_model;
+
+            //std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
+
+            ship* s = dynamic_cast<ship*>(mod.controlled_ship);
+
+            if(s && s->network_owner == read.id)
             {
-                player_model* mod = mod_opt.value();
-
-                ship* s = dynamic_cast<ship*>(mod->controlled_ship);
-
-                if(s && s->network_owner == read.id)
+                ///acceleration etc
                 {
-                    ///acceleration etc
+                    double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
+
+                    s->apply_force(read.data.direction * time);
+                    s->apply_rotation_force(read.data.rotation * time);
+
+                    double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
+
+                    thruster_active_percent = clamp(thruster_active_percent, 0, 1);
+
+                    s->set_thrusters_active(thruster_active_percent);
+
+                    if(read.data.fired.size() > 0)
                     {
-                        double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
-
-                        s->apply_force(read.data.direction * time);
-                        s->apply_rotation_force(read.data.rotation * time);
-
-                        double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
-
-                        thruster_active_percent = clamp(thruster_active_percent, 0, 1);
-
-                        s->set_thrusters_active(thruster_active_percent);
-
-                        if(read.data.fired.size() > 0)
-                        {
-                            s->fire(read.data.fired);
-                        }
-
-                        if(read.data.ping)
-                        {
-                            s->ping();
-                        }
+                        s->fire(read.data.fired);
                     }
 
+                    if(read.data.ping)
                     {
-                        serialise_context ctx;
-                        ctx.inf = read.data.rpcs;
-                        ctx.exec_rpcs = true;
-
-                        //s->serialise(ctx, ctx.faux);
-                        do_recurse(ctx, s);
+                        s->ping();
                     }
+                }
+
+                {
+                    serialise_context ctx;
+                    ctx.inf = read.data.rpcs;
+                    ctx.exec_rpcs = true;
+
+                    //s->serialise(ctx, ctx.faux);
+                    do_recurse(ctx, s);
                 }
             }
 
@@ -781,33 +790,33 @@ void server_thread()
                 }
             }
 
-            model.client_network_id = i;
-            model.ships = ships;
-            model.renderables = renderables;
+            data_model<ship*>& data = data_manage.fetch_by_id(i);
 
-            std::optional<player_model*> player_mod = player_manage.fetch_by_network_id(i);
+            data.client_network_id = i;
+            data.ships = ships;
+            data.renderables = renderables;
 
-            if(player_mod)
+            player_model* player_model = &data.networked_model;
+
+            if(player_model)
             {
-                ship* s = dynamic_cast<ship*>(player_mod.value()->controlled_ship);
+                ship* s = dynamic_cast<ship*>(player_model->controlled_ship);
 
                 if(s)
                 {
-                    model.sample = radar.sample_for(s->r.position, *s, entities, player_mod, s->get_radar_strength());
+                    data.sample = radar.sample_for(s->r.position, *s, entities, player_model, s->get_radar_strength());
                 }
-
-                model.research = player_mod.value()->research;
             }
             else
             {
-                model.sample = decltype(model.sample)();
+                data.sample = decltype(data.sample)();
             }
 
-            if(last_models.find(i) != last_models.end())
+            if(data_manage.backup.find(i) != data_manage.backup.end())
             {
                 //sf::Clock total_encode;
 
-                nlohmann::json ret = serialise_against(model, last_models[i]);
+                nlohmann::json ret = serialise_against(data, data_manage.backup[i]);
 
                 std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
 
@@ -819,20 +828,18 @@ void server_thread()
 
                 //std::cout << "partial data " << cb.size() << std::endl;
 
-                last_diff[i] = ret;
-
                 sf::Clock clone_clock;
 
                 ///basically clones model, by applying the current diff to last model
                 ///LEAKS MEMORY ON POINTERS
-                deserialise(ret, last_models[i]);
+                deserialise(ret, data_manage.backup[i]);
 
                 //double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
                 //std::cout << "total " << ftime << std::endl;
             }
             else
             {
-                nlohmann::json ret = serialise(model);
+                nlohmann::json ret = serialise(data);
 
                 std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
 
@@ -844,21 +851,19 @@ void server_thread()
 
                 //std::cout << "full data " << cb.size() << std::endl;
 
-                last_diff[i] = ret;
-
-                last_models[i] = data_model<ship*>();
-                serialisable_clone(model, last_models[i]);
+                data_manage.backup[i] = data_model<ship*>();
+                serialisable_clone(data, data_manage.backup[i]);
 
                 //conn.writes_to(model, i);
             }
 
-            if(player_mod)
+            if(player_model)
             {
-                for(auto it = player_mod.value()->renderables.begin(); it != player_mod.value()->renderables.end();)
+                for(auto it = player_model->renderables.begin(); it != player_model->renderables.end();)
                 {
                     if(it->second.r.transient)
                     {
-                        it = player_mod.value()->renderables.erase(it);
+                        it = player_model->renderables.erase(it);
                     }
                     else
                     {
@@ -1058,7 +1063,7 @@ int main()
 
             //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
 
-            design.research = model.research;
+            design.research = model.networked_model.research;
 
             renderables.entities = model.renderables;
         }
