@@ -3,12 +3,14 @@
 #include <ImGui/ImGui.h>
 #include <iostream>
 #include "imgui/imgui_internal.h"
+#include "format.hpp"
 
 void render_component_simple(const component& c)
 {
     ImGui::Button(c.long_name.c_str(), ImVec2(190, 0));
 }
 
+///in star ruler info is displayed in a stack above it
 void render_component_compact(const component& c, int id, float rad_mult)
 {
     ImDrawList* lst = ImGui::GetWindowDrawList();
@@ -43,6 +45,15 @@ void render_component_compact(const component& c, int id, float rad_mult)
     bool hovered, held;
 
     bool pressed = ImGui::ButtonBehavior(bb, iguid, &hovered, &held, 0);
+
+
+    std::string object_size = to_string_with(c.current_scale, 2, false);
+
+    auto size_dim = ImGui::CalcTextSize(object_size.c_str());
+
+    float y_pad = 10;
+
+    lst->AddText(ImVec2(cursor_pos.x() - size_dim.x/2, cursor_pos.y() - size_dim.y / 2 - radius - y_pad), IM_COL32(255, 255, 255, 255), object_size.c_str());
 }
 
 void player_research::render(design_editor& edit, vec2f upper_size)

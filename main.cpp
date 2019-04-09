@@ -14,6 +14,7 @@
 #include "fixed_clock.hpp"
 #include "aoe_damage.hpp"
 #include "design_editor.hpp"
+#include <fstream>
 
 template<sf::Keyboard::Key k, int n, int c>
 bool once()
@@ -623,6 +624,9 @@ void server_thread()
 
             fmodel.research = default_research;
             fmodel.research._pid = get_next_persistent_id();
+
+            if(std::ifstream("temp.blueprint").good())
+                fmodel.blueprint_manage.load("temp.blueprint");
 
             if(fmodel.blueprint_manage.blueprints.size() == 0)
                 fmodel.blueprint_manage.create_blueprint();

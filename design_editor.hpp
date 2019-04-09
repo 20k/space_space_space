@@ -45,7 +45,7 @@ struct blueprint_node : serialisable
 
     SERIALISE_SIGNATURE()
     {
-        DO_SERIALISE(original._pid);
+        DO_SERIALISE(original);
         DO_SERIALISE(name);
         DO_SERIALISE(pos);
         DO_SERIALISE(size);
@@ -104,6 +104,7 @@ struct blueprint_manager : serialisable, owned
             if(p._pid == print._pid)
             {
                 p = print;
+
                 save("temp.blueprint");
                 return;
             }
@@ -112,8 +113,6 @@ struct blueprint_manager : serialisable, owned
 
     void save(const std::string& file)
     {
-        printf("My save\n");
-
         save_to_file(file, ::serialise(*this));
     }
 

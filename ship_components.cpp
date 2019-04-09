@@ -568,6 +568,8 @@ float component::get_operating_efficiency()
 
 void component::scale(float size)
 {
+    current_scale = size;
+
     for(does& d : info)
     {
         d.capacity *= size;

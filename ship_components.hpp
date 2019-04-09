@@ -184,6 +184,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(production_heat_scales);
         //DO_SERIALISE(my_volume);
         DO_SERIALISE(internal_volume);
+        DO_SERIALISE(current_scale);
         DO_SERIALISE(stored);
         DO_SERIALISE(primary_type);
         DO_SERIALISE(id);
@@ -263,6 +264,7 @@ struct component : virtual serialisable, owned
 
     ///no longer have a concept of my_volume, purely based off composition
     float internal_volume = 0;
+    float current_scale = 1;
 
     std::vector<component> stored;
     std::vector<material> composition;
