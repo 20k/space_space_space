@@ -972,10 +972,11 @@ int main()
         tex->update((const unsigned char*)data);
     };
 
-    ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::LEGACY, write_data, (void*)&font_atlas);
+    ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::LEGACY);
+
+    write_data((unsigned char*)atlas->TexPixelsNewRGBA32, (void*)&font_atlas, atlas->TexWidth, atlas->TexHeight);
 
     atlas->TexID = (void*)font_atlas.getNativeHandle();
-
 
     ImGuiStyle& style = ImGui::GetStyle();
 
