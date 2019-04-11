@@ -325,7 +325,7 @@ void design_editor::render(sf::RenderWindow& win)
         cur.name.push_back(sname[i]);
     }
 
-    ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.1f");
+    ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.2f");
 
     cur.overall_size = clamp(cur.overall_size, 0.01, 100);
 
