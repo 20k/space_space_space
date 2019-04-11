@@ -77,12 +77,10 @@ struct blueprint : serialisable, owned
 struct blueprint_manager : serialisable, owned
 {
     std::vector<blueprint> blueprints;
-    int currently_selected = -1;
 
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(blueprints);
-        DO_SERIALISE(currently_selected);
         DO_RPC(create_blueprint);
         DO_RPC(upload_blueprint);
     }
@@ -92,7 +90,6 @@ struct blueprint_manager : serialisable, owned
         printf("Create\n");
 
         blueprints.push_back(blueprint());
-        currently_selected = blueprints.size() - 1;
     }
 
     void upload_blueprint(blueprint print)
@@ -130,6 +127,7 @@ struct blueprint_manager : serialisable, owned
 struct design_editor
 {
     bool rpcd_default_blueprint = false;
+    uint32_t currently_selected = -1;
 
     player_research research;
     blueprint_manager server_blueprint_manage;

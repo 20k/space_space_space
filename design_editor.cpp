@@ -210,10 +210,48 @@ void design_editor::render(sf::RenderWindow& win)
     ImGui::SetNextWindowPos(ImVec2(300, 50), ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(1000, 800), ImGuiCond_Appearing);
 
-    ImGui::SetNextWindowFocus();
+    //ImGui::SetNextWindowFocus();
 
-    ImGui::Begin("Blueprint Designer", &open);
+    ImGui::Begin("Blueprint Designer", &open, ImGuiWindowFlags_MenuBar);
 
+    if(ImGui::BeginMenuBar())
+    {
+        if(ImGui::BeginMenu("File"))
+        {
+            //ImGui::MenuItem("Hello");
+
+            if(ImGui::BeginMenu("Blueprints (local)"))
+            {
+                for(int i=0; i < blueprint_manage.blueprints.size(); i++)
+                {
+                    std::string id = blueprint_manage.blueprints[i].name + "##" + std::to_string(blueprint_manage.blueprints[i]._pid);
+
+                    if(blueprint_manage.blueprints[i].name == "")
+                    {
+                        id = std::to_string(blueprint_manage.blueprints[i]._pid) + "##" + std::to_string(blueprint_manage.blueprints[i]._pid);
+                    }
+
+                    if(ImGui::MenuItem(id.c_str()))
+                    {
+                        currently_selected = blueprint_manage.blueprints[i]._pid;
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
+            if(ImGui::MenuItem("New Blueprint"))
+            {
+                server_blueprint_manage.create_blueprint_rpc();
+            }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenuBar();
+    }
+
+    ///integrates server blueprints into client blueprints
     for(blueprint& p1 : server_blueprint_manage.blueprints)
     {
         bool found = false;
@@ -252,7 +290,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     for(blueprint& print : blueprint_manage.blueprints)
     {
-        if(print._pid == blueprint_manage._pid)
+        if(print._pid == currently_selected)
         {
             current_blueprint = &print;
         }
@@ -265,11 +303,19 @@ void design_editor::render(sf::RenderWindow& win)
 
     blueprint& cur = *current_blueprint;
 
-    cur.name.resize(100);
+    std::string sname = cur.name;
+    sname.resize(100);
 
     ImGui::PushItemWidth(160);
 
-    ImGui::InputText("Name", &cur.name[0], cur.name.size());
+    ImGui::InputText("Name", &sname[0], sname.size());
+
+    cur.name.clear();
+
+    for(int i=0; i < (int)sname.size() && sname[i] != 0; i++)
+    {
+        cur.name.push_back(sname[i]);
+    }
 
     ImGui::PopItemWidth();
 
