@@ -327,7 +327,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.1f");
 
-    cur.overall_size = clamp(cur.overall_size, 0.1, 100);
+    cur.overall_size = clamp(cur.overall_size, 0.01, 100);
 
     ImGui::PopItemWidth();
 

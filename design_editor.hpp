@@ -102,7 +102,7 @@ struct blueprint_manager : serialisable, owned
     {
         printf("UBlueprint\n");
 
-        print.overall_size = clamp(print.overall_size, 0.1, 100);
+        print.overall_size = clamp(print.overall_size, 0.01, 100);
 
         for(blueprint_node& n : print.nodes)
         {

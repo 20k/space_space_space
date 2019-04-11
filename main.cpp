@@ -159,7 +159,8 @@ void server_thread()
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    component thruster, warp, shields, missile, laser, sensor, comms, armour, ls, radiator, power_generator, crew, destruct, coolant_cold, coolant_hot;
+    component thruster, warp, shields, missile, laser, sensor, comms, armour,
+    ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -318,6 +319,20 @@ void server_thread()
     crew.short_name = "CRW";
     crew.activation_type = component_info::NO_ACTIVATION;
 
+
+    missile_core.add(component_info::HP, 0.0, 5);
+    ///hacky until we have the concept of control instead
+    missile_core.add(component_info::CREW, 0.01, 50);
+    missile_core.add(component_info::CREW, -0.01); ///passive death on no o2
+    missile_core.add(component_info::POWER, -1);
+    missile_core.add_composition(material_info::IRON, 2);
+    missile_core.add_composition(material_info::COPPER, 2);
+    missile_core.set_heat(1);
+    missile_core.long_name = "Missile Core";
+    missile_core.short_name = "MCRE";
+    missile_core.activation_type = component_info::NO_ACTIVATION;
+
+
     destruct.add(component_info::HP, 0, 1);
     destruct.add(component_info::SELF_DESTRUCT, 1);
     destruct.add_composition(material_info::IRON, 6);
@@ -453,6 +468,13 @@ void server_thread()
     default_research.components.push_back(destruct);
 
     blueprint default_missile;
+    default_missile.overall_size = 0.01;
+    default_missile.add_component_at(thruster, {50, 50}, 4);
+    default_missile.add_component_at(sensor, {100, 100}, 1);
+    default_missile.add_component_at(power_generator, {150, 150}, 4);
+    default_missile.add_component_at(destruct, {200, 200}, 4);
+    default_missile.add_component_at(missile_core, {250, 250}, 2);
+    default_missile.name = "Default Missile";
 
     //player_model_manager player_manage;
 
@@ -629,6 +651,17 @@ void server_thread()
 
             if(std::ifstream("temp.blueprint").good())
                 fmodel.blueprint_manage.load("temp.blueprint");
+
+            bool has_missile = false;
+
+            for(blueprint& p : fmodel.blueprint_manage.blueprints)
+            {
+                if(p.name == default_missile.name)
+                    has_missile = true;
+            }
+
+            if(!has_missile)
+                fmodel.blueprint_manage.blueprints.push_back(default_missile);
 
             if(fmodel.blueprint_manage.blueprints.size() == 0)
                 fmodel.blueprint_manage.create_blueprint();
