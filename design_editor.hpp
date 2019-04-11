@@ -11,7 +11,7 @@ namespace sf
 }
 
 void render_component_simple(const component& c);
-void render_component_compact(const component& c, int id, float size);
+void render_component_compact(const component& c, int id, float size_mult, float real_size);
 
 struct design_editor;
 
@@ -28,6 +28,8 @@ struct player_research : serialisable, owned
     }
 };
 
+struct blueprint;
+
 struct blueprint_node : serialisable
 {
     static inline int gid = 0;
@@ -41,7 +43,7 @@ struct blueprint_node : serialisable
 
     bool cleanup = false;
 
-    void render(design_editor& edit);
+    void render(design_editor& edit, blueprint& parent);
 
     SERIALISE_SIGNATURE()
     {
@@ -62,6 +64,9 @@ struct blueprint : serialisable, owned
 {
     std::vector<blueprint_node> nodes;
     std::string name;
+    float overall_size = 1;
+
+    void add_component_at(const component& c, vec2f pos, float size);
 
     blueprint_render_state render(design_editor& edit, vec2f upper_size);
 
@@ -71,6 +76,7 @@ struct blueprint : serialisable, owned
     {
         DO_SERIALISE(nodes);
         DO_SERIALISE(name);
+        DO_SERIALISE(overall_size);
     }
 };
 
@@ -95,6 +101,13 @@ struct blueprint_manager : serialisable, owned
     void upload_blueprint(blueprint print)
     {
         printf("UBlueprint\n");
+
+        print.overall_size = clamp(print.overall_size, 0.1, 100);
+
+        for(blueprint_node& n : print.nodes)
+        {
+            n.size = clamp(n.size, 0.25, 4);
+        }
 
         for(blueprint& p : blueprints)
         {

@@ -452,6 +452,8 @@ void server_thread()
     default_research.components.push_back(crew);
     default_research.components.push_back(destruct);
 
+    blueprint default_missile;
+
     //player_model_manager player_manage;
 
     /*int num_asteroids = 10;

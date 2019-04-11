@@ -11,7 +11,7 @@ void render_component_simple(const component& c)
 }
 
 ///in star ruler info is displayed in a stack above it
-void render_component_compact(const component& c, int id, float rad_mult)
+void render_component_compact(const component& c, int id, float rad_mult, float real_size)
 {
     ImDrawList* lst = ImGui::GetWindowDrawList();
 
@@ -47,7 +47,7 @@ void render_component_compact(const component& c, int id, float rad_mult)
     bool pressed = ImGui::ButtonBehavior(bb, iguid, &hovered, &held, 0);
 
 
-    std::string object_size = to_string_with(c.current_scale, 2, false);
+    std::string object_size = to_string_with(real_size, 2, false);
 
     auto size_dim = ImGui::CalcTextSize(object_size.c_str());
 
@@ -88,7 +88,7 @@ void player_research::render(design_editor& edit, vec2f upper_size)
     ImGui::EndChild();
 }
 
-void blueprint_node::render(design_editor& edit)
+void blueprint_node::render(design_editor& edit, blueprint& parent)
 {
     auto old_pos = ImGui::GetCursorPos();
 
@@ -97,9 +97,9 @@ void blueprint_node::render(design_editor& edit)
     float rad_mult = sqrt(size);
 
     my_comp = original;
-    my_comp.scale(size);
+    my_comp.scale(size * parent.overall_size);
 
-    render_component_compact(my_comp, id, rad_mult);
+    render_component_compact(my_comp, id, rad_mult, size);
 
     if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
     {
@@ -126,8 +126,6 @@ void blueprint_node::render(design_editor& edit)
         size = round(clamp(size * 4, 0.25*4, 4*4)) / 4;
     }
 
-    //if(ImGui::IsItemHovered() && ImGui::S)
-
     if(ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
@@ -140,13 +138,23 @@ void blueprint_node::render(design_editor& edit)
     ImGui::SetCursorPos(old_pos);
 }
 
+void blueprint::add_component_at(const component& c, vec2f pos, float size)
+{
+    blueprint_node node;
+    node.original = c;
+    node.size = size;
+    node.pos = pos;
+
+    nodes.push_back(node);
+}
+
 blueprint_render_state blueprint::render(design_editor& edit, vec2f upper_size)
 {
     ImGui::BeginChild("Test", ImVec2(500, upper_size.y() - 50), true);
 
     for(blueprint_node& node : nodes)
     {
-        node.render(edit);
+        node.render(edit, *this);
     }
 
     for(int i=0; i < (int)nodes.size(); i++)
@@ -316,6 +324,10 @@ void design_editor::render(sf::RenderWindow& win)
     {
         cur.name.push_back(sname[i]);
     }
+
+    ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.1f");
+
+    cur.overall_size = clamp(cur.overall_size, 0.1, 100);
 
     ImGui::PopItemWidth();
 
