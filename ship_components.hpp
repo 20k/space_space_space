@@ -154,6 +154,13 @@ struct storage_pipe : serialisable, owned
 
 struct ship;
 
+
+template<typename C, typename T>
+void for_each_ship_hackery(const C& c, T t);
+
+template<typename C, typename T>
+void for_each_ship_hackery(C& c, T t);
+
 struct component : virtual serialisable, owned
 {
     std::vector<does> info;
@@ -373,6 +380,18 @@ struct component : virtual serialisable, owned
     {
         try_use = true;
     }
+
+    template<typename T>
+    void for_each_stored(T t)
+    {
+        return for_each_ship_hackery(*this, t);
+    }
+
+    template<typename T>
+    void for_each_stored(T t) const
+    {
+        return for_each_ship_hackery(*this, t);
+    }
 };
 
 struct data_tracker : serialisable, owned
@@ -498,19 +517,6 @@ struct ship : heatable_entity, owned
     void add_pipe(const storage_pipe& p);
 
     double get_radar_strength();
-    float get_my_volume() const;
-    float get_my_temperature();
-    float get_stored_temperature();
-    float get_my_contained_heat();
-
-    void add_heat_to_me(float heat);
-    void remove_heat_from_me(float heat);
-
-    void scale(float size);
-
-    bool should_flow();
-
-    void drain_from_me(float amount);
 
     SERIALISE_SIGNATURE()
     {
@@ -529,6 +535,63 @@ struct ship : heatable_entity, owned
 private:
     double thrusters_active = 0;
 };
+
+template<typename T>
+void for_each_component(ship& s, T& t)
+{
+    for(component& c : s.components)
+    {
+        t(c);
+    }
+}
+
+template<typename C, typename T>
+void for_each_ship_hackery(C& c, T t)
+{
+    for(ship& ns : c.stored)
+    {
+        for(component& st : ns.components)
+        {
+            t(st);
+        }
+    }
+}
+
+template<typename C, typename T>
+void for_each_ship_hackery(const C& c, T t)
+{
+    for(const ship& ns : c.stored)
+    {
+        for(const component& st : ns.components)
+        {
+            t(st);
+        }
+    }
+}
+
+template<typename T>
+void for_each_stored(component& c, T t)
+{
+    for(ship& ns : c.stored)
+    {
+        for(component& st : ns.components)
+        {
+            t(st);
+        }
+    }
+}
+
+template<typename T>
+void for_each_stored(const component& c, T t)
+{
+    for(const ship& ns : c.stored)
+    {
+        for(const component& st : ns.components)
+        {
+            t(st);
+        }
+    }
+}
 
 struct projectile : heatable_entity
 {

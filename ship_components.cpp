@@ -400,22 +400,12 @@ float component::get_stored_volume() const
 {
     float vol = 0;
 
-    for(const ship& c : stored)
+    //for(const ship& c : stored)
+
+    for_each_stored([&](auto& c)
     {
         vol += c.get_my_volume();
-    }
-
-    return vol;
-}
-
-float ship::get_my_volume() const
-{
-    float vol = 0;
-
-    for(const component& c : components)
-    {
-        vol += c.get_my_volume();
-    }
+    });
 
     return vol;
 }
@@ -446,46 +436,16 @@ float component::get_my_contained_heat()
     return final_temp;
 }
 
-float ship::get_my_contained_heat()
-{
-    float final_temp = 0;
-
-    for(component& c : components)
-    {
-        final_temp += c.get_my_contained_heat();
-    }
-
-    return final_temp;
-}
-
 float component::get_stored_temperature()
 {
     float temp = 0;
     float total_volume = 0;
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         temp += c.get_my_temperature() * c.get_my_volume();
         total_volume += c.get_my_volume();
-    }
-
-    if(total_volume <= 0.0001)
-        return 0;
-
-    return temp / total_volume;
-}
-
-float ship::get_stored_temperature()
-{
-    float temp = 0;
-    float total_volume = 0;
-
-    ///umm this seems quite wrong
-    for(component& c : components)
-    {
-        temp += c.get_my_temperature() * c.get_my_volume();
-        total_volume += c.get_my_volume();
-    }
+    });
 
     if(total_volume <= 0.0001)
         return 0;
@@ -497,10 +457,10 @@ float component::get_stored_heat_capacity()
 {
     float temp = 0;
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         temp += c.get_my_contained_heat();
-    }
+    });
 
     return temp;
 }
@@ -518,14 +478,6 @@ void component::add_heat_to_me(float heat)
         return;
 
     my_temperature += heat / total_heat;
-}
-
-void ship::add_heat_to_me(float heat)
-{
-    for(auto& i : components)
-    {
-        i.add_heat_to_me(heat / components.size());
-    }
 }
 
 void component::remove_heat_from_me(float heat)
@@ -546,32 +498,24 @@ void component::remove_heat_from_me(float heat)
         my_temperature = 0;
 }
 
-void ship::remove_heat_from_me(float heat)
-{
-    for(component& c : components)
-    {
-        c.remove_heat_from_me(heat / components.size());
-    }
-}
-
 void component::add_heat_to_stored(float heat)
 {
     float stored_num = stored.size();
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         c.add_heat_to_me(heat / stored_num);
-    }
+    });
 }
 
 void component::remove_heat_from_stored(float heat)
 {
     float stored_num = stored.size();
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         c.remove_heat_from_me(heat / stored_num);
-    }
+    });
 }
 
 bool component::can_store(const component& c)
@@ -603,17 +547,6 @@ bool component::is_storage()
 bool component::should_flow()
 {
     return flows;
-}
-
-bool ship::should_flow()
-{
-    for(component& c : components)
-    {
-        if(!c.should_flow())
-            return false;
-    }
-
-    return true;
 }
 
 float component::get_hp_frac()
@@ -660,18 +593,10 @@ void component::scale(float size)
 
     internal_volume *= size;
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         c.scale(size);
-    }
-}
-
-void ship::scale(float size)
-{
-    for(component& c : components)
-    {
-        c.scale(size);
-    }
+    });
 }
 
 void component::add_composition(material_info::material_type type, double volume)
@@ -728,25 +653,6 @@ double component::get_sat(const std::vector<double>& sat)
     return min_sat;
 }
 
-void ship::drain_from_me(float to_drain)
-{
-    float vstored = get_my_volume();
-
-    for(component& c : components)
-    {
-        for(material& m : c.composition)
-        {
-            float this_drain = to_drain / components.size();
-
-            float material_drain_volume = (m.dynamic_desc.volume / vstored) * this_drain;
-
-            material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
-
-            m.dynamic_desc.volume -= material_drain_volume;
-        }
-    }
-}
-
 float component::drain(float amount)
 {
     if(amount <= 0)
@@ -754,15 +660,15 @@ float component::drain(float amount)
 
     float total_drainable = 0;
 
-    for(ship& c : stored)
+    for_each_stored([&](component& c)
     {
         if(!c.should_flow())
-            continue;
+            return;
 
         float vstored = c.get_my_volume();
 
         total_drainable += vstored;
-    }
+    });
 
     if(total_drainable <= 0.00001f)
         return 0;
@@ -770,25 +676,32 @@ float component::drain(float amount)
      if(amount > total_drainable)
         amount = total_drainable;
 
-    for(ship& s : stored)
+    for_each_stored([&](component& c)
     {
-        if(!s.should_flow())
-            continue;
+        if(!c.should_flow())
+            return;
 
-        float vstored = s.get_my_volume();
+        float vstored = c.get_my_volume();
 
         if(vstored < 0.00001f)
-            continue;
+            return;
 
         float my_frac = vstored / total_drainable;
 
         float to_drain = my_frac * amount;
 
         if(to_drain < 0.00001f)
-            continue;
+            return;
 
-        s.drain_from_me(to_drain);
-    }
+        for(material& m : c.composition)
+        {
+            float material_drain_volume = (m.dynamic_desc.volume / vstored) * to_drain;
+
+            material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
+
+            m.dynamic_desc.volume -= material_drain_volume;
+        }
+    });
 
     return amount;
 }
@@ -800,15 +713,15 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
     float total_drainable = 0;
 
-    for(ship& c : c1_in.stored)
+    c1_in.for_each_stored([&](component& c)
     {
         if(!c.should_flow())
-            continue;
+            return;
 
         float stored = c.get_my_volume();
 
         total_drainable += stored;
-    }
+    });
 
     if(total_drainable <= 0.00001f)
         return;
@@ -825,33 +738,33 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
         amount = free_volume;
     }
 
-    for(ship& c : c1_in.stored)
+    c1_in.for_each_stored([&](component& c)
     {
         if(!c.should_flow())
-            continue;
+            return;
 
         float stored = c.get_my_volume();
 
         if(stored < 0.00001f)
-            continue;
+            return;
 
         float my_frac = stored / total_drainable;
 
         float to_drain = my_frac * amount;
 
         if(to_drain < 0.00001f)
-            continue;
+            return;
 
-        ship* found = nullptr;
+        component* found = nullptr;
 
         ///asserts that there is only ever one flowable component
-        for(ship& other : c2_in.stored)
+        c2_in.for_each_stored([&](component& other)
         {
             if(!other.should_flow())
-                continue;
+                return;
 
             found = &other;
-        }
+        });
 
         if(found == nullptr)
         {
@@ -865,94 +778,68 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
             c2_in.stored.push_back(nnext);
 
-            found = &c2_in.stored.back();
+            found = &c2_in.stored.back().components.back();
         }
 
         assert(found);
 
         ///temp * specific heat * volume
-        //float old_stored_heat_capacity = found->get_my_contained_heat();
-        float added_heat_capacity = 0;
+        float old_stored_heat_capacity = found->get_my_contained_heat();
 
         float donator_temp = c.get_my_temperature();
 
-        for(component& hlc : c.components)
+        for(material& m : c.composition)
         {
-            for(material& m : hlc.composition)
+            bool processed = false;
+
+            float material_drain_volume = (m.dynamic_desc.volume / stored) * to_drain;
+
+            material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
+
+            m.dynamic_desc.volume -= material_drain_volume;
+
+            float heat_increase = donator_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
+
+            old_stored_heat_capacity += heat_increase;
+
+            for(material& om : found->composition)
             {
-                bool processed = false;
-
-                float material_drain_volume = (m.dynamic_desc.volume / stored) * to_drain;
-
-                material_drain_volume = clamp(material_drain_volume, 0, m.dynamic_desc.volume);
-
-                m.dynamic_desc.volume -= material_drain_volume;
-
-                float heat_increase = donator_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
-
-                //old_stored_heat_capacity += heat_increase;
-                added_heat_capacity += heat_increase;
-
-                for(component& omhlc : found->components)
+                if(m.type == om.type)
                 {
-                    for(material& om : omhlc.composition)
-                    {
-                        if(m.type == om.type)
-                        {
-                            om.dynamic_desc.volume += material_drain_volume;
+                    om.dynamic_desc.volume += material_drain_volume;
 
-                            processed = true;
+                    processed = true;
 
-                            break;
-                        }
-                    }
-
-                    if(processed)
-                        break;
+                    break;
                 }
+            }
 
-                if(!processed)
-                {
-                    material next;
-                    next.type = m.type;
-                    next.dynamic_desc.volume += material_drain_volume;
+            if(!processed)
+            {
+                material next;
+                next.type = m.type;
+                next.dynamic_desc.volume += material_drain_volume;
 
-                    component dummy;
-                    dummy.add(component_info::HP, 0, 1);
-                    dummy.long_name = "Fluid";
-                    dummy.flows = true;
-
-                    /*ship nnext;
-                    nnext.add(dummy);*/
-
-                    dummy.composition.push_back(next);
-
-                    found->components.push_back(dummy);
-                }
+                found->composition.push_back(next);
             }
         }
 
-        /*float next_stored_heat_capacity = old_stored_heat_capacity;
+        float next_stored_heat_capacity = old_stored_heat_capacity;
 
         float total_heat_capacity = 0;
 
-        for(component& hlc : found->components)
+        for(material& m : found->composition)
         {
-            for(material& m : hlc.composition)
-            {
-                total_heat_capacity += m.dynamic_desc.volume * material_info::fetch(m.type).specific_heat;
-            }
+            total_heat_capacity += m.dynamic_desc.volume * material_info::fetch(m.type).specific_heat;
         }
 
         float ntemp = 0;
 
         if(total_heat_capacity > 0.00001f)
-            ntemp = next_stored_heat_capacity / total_heat_capacity;*/
+            ntemp = next_stored_heat_capacity / total_heat_capacity;
 
-        found->add_heat_to_me(added_heat_capacity);
-
-        //found->my_temperature = ntemp;
-    }
+        found->my_temperature = ntemp;
+    });
 }
 
 std::vector<double> ship::get_sat_percentage()
