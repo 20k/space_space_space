@@ -419,14 +419,23 @@ void server_thread()
     missile.long_name = "Component Launcher";
     missile.short_name = "CLNCH";
 
-    for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
     {
-        ///need to be able to store ships
-        ///a single component on its own should really be a ship... right?
-        ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
-        ///which isn't totally insane but it is a bit odd
-        ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
+        ship mship = default_missile.to_ship();
+
+        for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
+        {
+            ///need to be able to store ships
+            ///a single component on its own should really be a ship... right?
+            ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
+            ///which isn't totally insane but it is a bit odd
+            ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
+
+            missile.store(mship);
+        }
     }
+
+
+    std::cout << "num missiles " << missile.stored.size() << std::endl;
 
     test_ship->add(thruster);
     test_ship->add(warp);
