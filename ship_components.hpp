@@ -536,15 +536,6 @@ private:
     double thrusters_active = 0;
 };
 
-template<typename T>
-void for_each_component(ship& s, T& t)
-{
-    for(component& c : s.components)
-    {
-        t(c);
-    }
-}
-
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)
 {
@@ -559,30 +550,6 @@ void for_each_ship_hackery(C& c, T t)
 
 template<typename C, typename T>
 void for_each_ship_hackery(const C& c, T t)
-{
-    for(const ship& ns : c.stored)
-    {
-        for(const component& st : ns.components)
-        {
-            t(st);
-        }
-    }
-}
-
-template<typename T>
-void for_each_stored(component& c, T t)
-{
-    for(ship& ns : c.stored)
-    {
-        for(component& st : ns.components)
-        {
-            t(st);
-        }
-    }
-}
-
-template<typename T>
-void for_each_stored(const component& c, T t)
 {
     for(const ship& ns : c.stored)
     {
