@@ -195,7 +195,7 @@ void server_thread()
     shields.short_name = "SHLD";
     shields.activation_type = component_info::SLIDER_ACTIVATION;
 
-    missile.add(component_info::POWER, -1);
+    /*missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
     missile.add(component_info::MISSILE_STORE, 0.01, 10);
@@ -208,7 +208,8 @@ void server_thread()
     missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
     missile.subtype = "missile";
     missile.long_name = "Missile Launcher";
-    missile.short_name = "MISL";
+    missile.short_name = "MISL";*/
+
 
     laser.add(component_info::POWER, -1);
     laser.add(component_info::WEAPONS, 1);
@@ -394,6 +395,39 @@ void server_thread()
     coolant_hot.store(coolant_material2);
     coolant_hot.add_heat_to_stored(500);
 
+
+    blueprint default_missile;
+    default_missile.overall_size = 0.01;
+    default_missile.add_component_at(thruster, {50, 50}, 4);
+    default_missile.add_component_at(sensor, {100, 100}, 1);
+    default_missile.add_component_at(power_generator, {150, 150}, 4);
+    default_missile.add_component_at(destruct, {200, 200}, 4);
+    default_missile.add_component_at(missile_core, {250, 250}, 2);
+    default_missile.name = "Default Missile";
+
+
+    missile.add(component_info::POWER, -1);
+    missile.add(component_info::HP, 0, 2);
+    missile.add(tag_info::TAG_EJECTOR);
+    missile.add_composition(material_info::IRON, 1);
+    missile.set_no_drain_on_full_production();
+    missile.set_heat(5);
+    missile.activation_type = component_info::TOGGLE_ACTIVATION;
+
+    missile.internal_volume = 10;
+
+    missile.long_name = "Component Launcher";
+    missile.short_name = "CLNCH";
+
+    for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
+    {
+        ///need to be able to store ships
+        ///a single component on its own should really be a ship... right?
+        ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
+        ///which isn't totally insane but it is a bit odd
+        ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
+    }
+
     test_ship->add(thruster);
     test_ship->add(warp);
     test_ship->add(shields);
@@ -467,15 +501,6 @@ void server_thread()
     default_research.components.push_back(power_generator);
     default_research.components.push_back(crew);
     default_research.components.push_back(destruct);
-
-    blueprint default_missile;
-    default_missile.overall_size = 0.01;
-    default_missile.add_component_at(thruster, {50, 50}, 4);
-    default_missile.add_component_at(sensor, {100, 100}, 1);
-    default_missile.add_component_at(power_generator, {150, 150}, 4);
-    default_missile.add_component_at(destruct, {200, 200}, 4);
-    default_missile.add_component_at(missile_core, {250, 250}, 2);
-    default_missile.name = "Default Missile";
 
     //player_model_manager player_manage;
 

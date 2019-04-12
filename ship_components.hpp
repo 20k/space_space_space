@@ -152,6 +152,8 @@ struct storage_pipe : serialisable, owned
     }
 };
 
+struct ship;
+
 struct component : virtual serialisable, owned
 {
     std::vector<does> info;
@@ -300,7 +302,7 @@ struct component : virtual serialisable, owned
     float internal_volume = 0;
     float current_scale = 1;
 
-    std::vector<component> stored;
+    std::vector<ship> stored;
     std::vector<material> composition;
 
     float my_temperature = 0;
@@ -324,8 +326,11 @@ struct component : virtual serialisable, owned
     void remove_heat_from_stored(float heat);
 
     bool can_store(const component& c);
+    bool can_store(const ship& s);
     void store(const component& c);
+    void store(const ship& s);
     bool is_storage();
+    bool should_flow();
 
     float get_hp_frac();
     float get_operating_efficiency();
@@ -493,6 +498,19 @@ struct ship : heatable_entity, owned
     void add_pipe(const storage_pipe& p);
 
     double get_radar_strength();
+    float get_my_volume() const;
+    float get_my_temperature();
+    float get_stored_temperature();
+    float get_my_contained_heat();
+
+    void add_heat_to_me(float heat);
+    void remove_heat_from_me(float heat);
+
+    void scale(float size);
+
+    bool should_flow();
+
+    void drain_from_me(float amount);
 
     SERIALISE_SIGNATURE()
     {
