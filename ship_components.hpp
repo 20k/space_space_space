@@ -70,6 +70,15 @@ namespace component_info
     };
 }
 
+namespace tag_info
+{
+    enum tag_type
+    {
+        TAG_NONE,
+        TAG_EJECTOR,
+    };
+}
+
 struct does : serialisable
 {
     double capacity = 0;
@@ -88,6 +97,16 @@ struct does : serialisable
         DO_SERIALISE(recharge);
         DO_SERIALISE(time_between_use_s);
         DO_SERIALISE(last_use_s);
+        DO_SERIALISE(type);
+    }
+};
+
+struct tag : serialisable
+{
+    tag_info::tag_type type = tag_info::TAG_NONE;
+
+    SERIALISE_SIGNATURE()
+    {
         DO_SERIALISE(type);
     }
 };
@@ -137,6 +156,8 @@ struct component : virtual serialisable, owned
 {
     std::vector<does> info;
     std::vector<does> activate_requirements;
+    std::vector<tag> tags;
+
     bool no_drain_on_full_production = false;
     bool complex_no_drain_on_full_production = false;
 
@@ -171,6 +192,7 @@ struct component : virtual serialisable, owned
     {
         DO_SERIALISE(info);
         DO_SERIALISE(activate_requirements);
+        DO_SERIALISE(tags);
         DO_SERIALISE(long_name);
         DO_SERIALISE(short_name);
         DO_SERIALISE(last_sat);
@@ -201,6 +223,7 @@ struct component : virtual serialisable, owned
 
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
+    void add(tag_info::tag_type);
 
     void add_on_use(component_info::does_type, double amount, double time_between_use_s);
 
@@ -215,6 +238,17 @@ struct component : virtual serialisable, owned
         for(auto& i : info)
         {
             if(i.type == type)
+                return true;
+        }
+
+        return false;
+    }
+
+    bool has_tag(tag_info::tag_type tag)
+    {
+        for(auto& i : tags)
+        {
+            if(i.type == tag)
                 return true;
         }
 

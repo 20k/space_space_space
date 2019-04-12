@@ -60,6 +60,14 @@ void component::add(component_info::does_type type, double amount, double capaci
     info.push_back(d);
 }
 
+void component::add(tag_info::tag_type type)
+{
+    tag t;
+    t.type = type;
+
+    tags.push_back(t);
+}
+
 void component::add_on_use(component_info::does_type type, double amount, double time_between_use_s)
 {
     does d;

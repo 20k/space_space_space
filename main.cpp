@@ -199,6 +199,7 @@ void server_thread()
     missile.add(component_info::WEAPONS, 1);
     missile.add(component_info::HP, 0, 2);
     missile.add(component_info::MISSILE_STORE, 0.01, 10);
+    missile.add(tag_info::TAG_EJECTOR);
     missile.add_composition(material_info::IRON, 1);
     missile.set_no_drain_on_full_production();
     missile.set_heat(5);
