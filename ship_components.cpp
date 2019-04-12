@@ -528,6 +528,23 @@ bool component::can_store(const component& c)
     return (storeable - c.get_my_volume()) >= 0;
 }
 
+bool component::can_store(const ship& s)
+{
+    if(internal_volume <= 0)
+        return false;
+
+    float storeable = internal_volume - get_stored_volume();
+
+    float to_store_volume = 0;
+
+    for(const component& c : s.components)
+    {
+        to_store_volume += c.get_my_volume();
+    }
+
+    return (storeable - to_store_volume) >= 0;
+}
+
 void component::store(const component& c)
 {
     if(!can_store(c))
@@ -535,6 +552,17 @@ void component::store(const component& c)
 
     ship nship;
     nship.add(c);
+
+    stored.push_back(nship);
+}
+
+void component::store(const ship& s)
+{
+    if(!can_store(s))
+        throw std::runtime_error("Cannot store ship");
+
+    ship nship = s;
+    nship.new_network_copy();
 
     stored.push_back(nship);
 }
