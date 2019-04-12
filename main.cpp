@@ -434,7 +434,6 @@ void server_thread()
         }
     }
 
-
     std::cout << "num missiles " << missile.stored.size() << std::endl;
 
     test_ship->add(thruster);
@@ -706,11 +705,12 @@ void server_thread()
 
         while(conn.has_read())
         {
-            writes_data<client_input> read = conn.reads_from<client_input>();
+            client_input read_data;
+            uint64_t read_id = conn.reads_from<client_input>(read_data);
 
-            last_mouse_pos[read.id] = read.data.mouse_world_pos;
+            last_mouse_pos[read_id] = read_data.mouse_world_pos;
 
-            data_model<ship*>& data = data_manage.fetch_by_id(read.id);
+            data_model<ship*>& data = data_manage.fetch_by_id(read_id);
 
             player_model& mod = data.networked_model;
 
@@ -718,27 +718,27 @@ void server_thread()
 
             ship* s = dynamic_cast<ship*>(mod.controlled_ship);
 
-            if(s && s->network_owner == read.id)
+            if(s && s->network_owner == read_id)
             {
                 ///acceleration etc
                 {
-                    double time = (control_elapsed[read.id].restart().asMicroseconds() / 1000.) / 1000.;
+                    double time = (control_elapsed[read_id].restart().asMicroseconds() / 1000.) / 1000.;
 
-                    s->apply_force(read.data.direction * time);
-                    s->apply_rotation_force(read.data.rotation * time);
+                    s->apply_force(read_data.direction * time);
+                    s->apply_rotation_force(read_data.rotation * time);
 
-                    double thruster_active_percent = read.data.direction.length() + fabs(read.data.rotation);
+                    double thruster_active_percent = read_data.direction.length() + fabs(read_data.rotation);
 
                     thruster_active_percent = clamp(thruster_active_percent, 0, 1);
 
                     s->set_thrusters_active(thruster_active_percent);
 
-                    if(read.data.fired.size() > 0)
+                    if(read_data.fired.size() > 0)
                     {
-                        s->fire(read.data.fired);
+                        s->fire(read_data.fired);
                     }
 
-                    if(read.data.ping)
+                    if(read_data.ping)
                     {
                         s->ping();
                     }
@@ -746,7 +746,7 @@ void server_thread()
 
                 {
                     serialise_context ctx;
-                    ctx.inf = read.data.rpcs;
+                    ctx.inf = read_data.rpcs;
                     ctx.exec_rpcs = true;
 
                     //s->serialise(ctx, ctx.faux);
@@ -755,14 +755,14 @@ void server_thread()
 
                 {
                     serialise_context ctx;
-                    ctx.inf = read.data.rpcs;
+                    ctx.inf = read_data.rpcs;
                     ctx.exec_rpcs = true;
 
                     do_recurse(ctx, mod);
                 }
             }
 
-            conn.pop_read(read.id);
+            conn.pop_read(read_id);
         }
 
         if(key.isKeyPressed(sf::Keyboard::P))
@@ -1131,11 +1131,15 @@ int main()
 
         while(conn.has_read())
         {
+            sf::Clock rtime;
+
             //model.cleanup();
             //std::cout << conn.read() << std::endl;
-            writes_data<data_model<ship>> rdata = conn.reads_from<data_model<ship>>(model);
+            uint64_t rdata_id = conn.reads_from<data_model<ship>>(model);
             //renderables = conn.reads_from<client_entities>().data;
-            conn.pop_read(rdata.id);
+            conn.pop_read(rdata_id);
+
+            std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             if(model.sample.fresh)
             {
@@ -1157,6 +1161,7 @@ int main()
             //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 
             renderables.entities = model.renderables;
+
         }
 
         for(client_renderable& r : model.renderables)
