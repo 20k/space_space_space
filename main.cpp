@@ -1075,8 +1075,6 @@ int main()
     sf::Keyboard key;
     sf::Mouse mouse;
 
-    std::map<uint64_t, ship> network_ships;
-
     entity_manager entities;
     entities.use_aggregates = false;
 
