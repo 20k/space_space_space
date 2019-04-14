@@ -1016,7 +1016,7 @@ int main()
 
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
-    sett.sRgbCapable = false;
+    sett.sRgbCapable = true;
 
     sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
