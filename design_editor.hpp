@@ -32,8 +32,8 @@ struct blueprint;
 
 struct blueprint_node : serialisable
 {
-    static inline int gid = 0;
-    int id = gid++;
+    //static inline int gid = 0;
+    //int id = gid++;
 
     component my_comp;
     component original;
@@ -131,6 +131,19 @@ struct blueprint_manager : serialisable, owned
         nlohmann::json data = load_from_file(file);
 
         deserialise(data, *this);
+
+        _pid = get_next_persistent_id();
+
+        for(blueprint& p : blueprints)
+        {
+            p._pid = get_next_persistent_id();
+
+            for(blueprint_node& node : p.nodes)
+            {
+                node.original._pid = get_next_persistent_id();
+                node.my_comp._pid = get_next_persistent_id();
+            }
+        }
     }
 
     FRIENDLY_RPC_NAME(create_blueprint);
@@ -154,7 +167,8 @@ struct design_editor
     std::optional<component*> fetch(uint32_t id);
 
     bool dragging = false;
-    uint32_t dragging_id = -1;
+    //uint32_t dragging_id = -1;
+    component dragged;
     float dragging_size = 1;
 };
 

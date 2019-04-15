@@ -170,8 +170,8 @@ struct component : virtual serialisable, owned
     bool no_drain_on_full_production = false;
     bool complex_no_drain_on_full_production = false;
 
-    static inline uint32_t gid = 0;
-    uint32_t id = gid++;
+    //static inline uint32_t gid = 0;
+    //uint32_t id = gid++;
 
     std::string long_name;
     std::string short_name;
@@ -218,7 +218,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(current_scale);
         DO_SERIALISE(stored);
         DO_SERIALISE(primary_type);
-        DO_SERIALISE(id);
+        //DO_SERIALISE(id);
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
         DO_SERIALISE(activation_level);

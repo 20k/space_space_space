@@ -2128,7 +2128,7 @@ void ship::show_resources(bool window)
         if(!c.detailed_view_open)
             continue;
 
-        ImGui::Begin((std::string("Tcomp##") + std::to_string(c.id)).c_str(), &c.detailed_view_open);
+        ImGui::Begin((std::string("Tcomp##") + std::to_string(c._pid)).c_str(), &c.detailed_view_open);
 
         c.render_inline_ui();
 

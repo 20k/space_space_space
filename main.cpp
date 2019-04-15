@@ -683,6 +683,8 @@ void server_thread()
             fmodel.research = default_research;
             fmodel.research._pid = get_next_persistent_id();
 
+            get_next_persistent_id();
+
             if(std::ifstream("temp.blueprint").good())
                 fmodel.blueprint_manage.load("temp.blueprint");
 
@@ -692,6 +694,14 @@ void server_thread()
             {
                 if(p.name == default_missile.name)
                     has_missile = true;
+            }
+
+            for(blueprint& p : fmodel.blueprint_manage.blueprints)
+            {
+                for(blueprint_node& node : p.nodes)
+                {
+                    std::cout << "node pid " << node.original._pid << std::endl;
+                }
             }
 
             if(!has_missile)
@@ -1137,7 +1147,7 @@ int main()
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read(rdata_id);
 
-            std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+            //std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             if(model.sample.fresh)
             {
@@ -1276,7 +1286,11 @@ int main()
         transients.render(cam, window);
         design.render(window);
 
+        sf::Clock render_clock;
+
         ImGui::SFML::Render(window);
+
+        std::cout << "rclock " << render_clock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         window.display();
         window.clear();

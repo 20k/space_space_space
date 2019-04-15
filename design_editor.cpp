@@ -71,7 +71,8 @@ void player_research::render(design_editor& edit, vec2f upper_size)
         if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
         {
             edit.dragging = true;
-            edit.dragging_id = c.id;
+            //edit.dragging_id = c._pid;
+            edit.dragged = c;
             edit.dragging_size = 1;
         }
 
@@ -99,12 +100,13 @@ void blueprint_node::render(design_editor& edit, blueprint& parent)
     my_comp = original;
     my_comp.scale(size * parent.overall_size);
 
-    render_component_compact(my_comp, id, rad_mult, size);
+    render_component_compact(my_comp, original._pid, rad_mult, size);
 
     if(((ImGui::IsItemHovered() && ImGui::IsMouseDown(0) && ImGui::IsMouseDragging(0)) || ImGui::IsItemClicked(0)) && !edit.dragging)
     {
         edit.dragging = true;
-        edit.dragging_id = original.id;
+        //edit.dragging_id = original._pid;
+        edit.dragged = original;
         edit.dragging_size = size;
 
         cleanup = true;
@@ -144,6 +146,8 @@ void blueprint::add_component_at(const component& c, vec2f pos, float size)
     node.original = c;
     node.size = size;
     node.pos = pos;
+
+    node.original._pid = get_next_persistent_id();
 
     nodes.push_back(node);
 }
@@ -197,10 +201,19 @@ std::optional<component*> design_editor::fetch(uint32_t id)
 {
     for(component& c : research.components)
     {
-        if(c.id != id)
+        if(c._pid != id)
             continue;
 
         return &c;
+    }
+
+    for(blueprint& p : blueprint_manage.blueprints)
+    {
+        for(blueprint_node& node : p.nodes)
+        {
+            if(node.original._pid == id)
+                return &node.original;
+        }
     }
 
     return std::nullopt;
@@ -368,11 +381,12 @@ void design_editor::render(sf::RenderWindow& win)
     {
         if(main_hovered)
         {
-            std::optional<component*> comp = fetch(dragging_id);
+            //std::optional<component*> comp = fetch(dragging_id);
 
-            if(comp)
+            //if(comp)
             {
-                component& c = *comp.value();
+                //component& c = *comp.value();
+                component& c = dragged;
 
                 vec2f tlpos = mpos - brender.pos;
 
@@ -398,11 +412,12 @@ void design_editor::render(sf::RenderWindow& win)
 
     if(dragging)
     {
-        std::optional<component*> comp = fetch(dragging_id);
+        //std::optional<component*> comp = fetch(dragging_id);
 
-        if(comp)
+        //if(comp)
         {
-            component& c = *comp.value();
+            //component& c = *comp.value();
+            component& c = dragged;
 
             ImGui::BeginTooltip();
 
@@ -410,6 +425,10 @@ void design_editor::render(sf::RenderWindow& win)
 
             ImGui::EndTooltip();
         }
+        /*else
+        {
+            std::cout << "COMP " << dragging_id << std::endl;
+        }*/
     }
 
     ImGui::End();
