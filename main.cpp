@@ -444,8 +444,6 @@ void server_thread()
         for(const component& c : mship.components)
         {
             to_store_volume += c.get_my_volume();
-
-            //std::cout << "mvol " << c.get_my_volume() << " na " << c.long_name << std::endl;
         }
 
         //std::cout << "MSIZE " << to_store_volume << std::endl;
@@ -939,7 +937,7 @@ void server_thread()
 
             if(data_manage.backup.find(i) != data_manage.backup.end())
             {
-                //sf::Clock total_encode;
+                sf::Clock total_encode;
 
                 nlohmann::json ret = serialise_against(data, data_manage.backup[i]);
 
@@ -951,7 +949,7 @@ void server_thread()
 
                 conn.write_to(dat);
 
-                //std::cout << "partial data " << cb.size() << std::endl;
+                std::cout << "partial data " << cb.size() << std::endl;
 
                 sf::Clock clone_clock;
 
@@ -959,8 +957,8 @@ void server_thread()
                 ///LEAKS MEMORY ON POINTERS
                 deserialise(ret, data_manage.backup[i]);
 
-                //double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
-                //std::cout << "total " << ftime << std::endl;
+                double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
+                std::cout << "total " << ftime << std::endl;
             }
             else
             {
