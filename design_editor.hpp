@@ -5,6 +5,8 @@
 #include "ship_components.hpp"
 #include <iostream>
 
+#define MAX_COMPONENT_SHIP_AMOUNT 15.f
+
 namespace sf
 {
     struct RenderWindow;

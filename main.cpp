@@ -445,10 +445,10 @@ void server_thread()
         {
             to_store_volume += c.get_my_volume();
 
-            std::cout << "mvol " << c.get_my_volume() << " na " << c.long_name << std::endl;
+            //std::cout << "mvol " << c.get_my_volume() << " na " << c.long_name << std::endl;
         }
 
-        std::cout << "MSIZE " << to_store_volume << std::endl;
+        //std::cout << "MSIZE " << to_store_volume << std::endl;
 
         for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
         {

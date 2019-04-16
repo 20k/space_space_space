@@ -403,6 +403,8 @@ void component::normalise_volume()
     if(real < 0.0001)
         return;
 
+    real *= MAX_COMPONENT_SHIP_AMOUNT;
+
     for(material& m : composition)
     {
         m.dynamic_desc.volume /= real;
@@ -557,8 +559,6 @@ bool component::can_store(const ship& s)
         return false;
 
     float storeable = internal_volume - get_stored_volume();
-
-    std::cout << "storable " << storeable << std::endl;
 
     float to_store_volume = 0;
 
