@@ -309,6 +309,7 @@ struct component : virtual serialisable, owned
     float internal_volume = 0;
     float current_scale = 1;
 
+
     std::vector<ship> stored;
     std::vector<material> composition;
 
@@ -319,6 +320,7 @@ struct component : virtual serialisable, owned
     float drain(float amount);
     static void drain_from_to(component& c1, component& c2, float amount);
 
+    void normalise_volume();
     float get_my_volume() const;
     float get_stored_volume() const;
 
@@ -343,6 +345,8 @@ struct component : virtual serialisable, owned
     float get_operating_efficiency();
 
     void scale(float size);
+
+    std::optional<ship> remove_first_stored_item();
 
     ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
@@ -430,6 +434,7 @@ struct player_model;
 struct ship : heatable_entity, owned
 {
     size_t network_owner = 0;
+    float my_size = 0;
 
     std::vector<component> components;
     std::vector<storage_pipe> pipes;
@@ -526,6 +531,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(last_sat_percentage);
         DO_SERIALISE(latent_heat);
         DO_SERIALISE(pipes);
+        DO_SERIALISE(my_size);
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override;

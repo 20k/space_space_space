@@ -396,6 +396,29 @@ float component::get_my_volume() const
     return amount;
 }
 
+void component::normalise_volume()
+{
+    float real = get_my_volume();
+
+    if(real < 0.0001)
+        return;
+
+    for(material& m : composition)
+    {
+        m.dynamic_desc.volume /= real;
+    }
+
+    for_each_stored([&](auto& c)
+    {
+        for(material& m : c.composition)
+        {
+            m.dynamic_desc.volume /= real;
+        }
+    });
+
+    internal_volume /= real;
+}
+
 float component::get_stored_volume() const
 {
     float vol = 0;
@@ -535,6 +558,8 @@ bool component::can_store(const ship& s)
 
     float storeable = internal_volume - get_stored_volume();
 
+    std::cout << "storable " << storeable << std::endl;
+
     float to_store_volume = 0;
 
     for(const component& c : s.components)
@@ -625,6 +650,18 @@ void component::scale(float size)
     {
         c.scale(size);
     });
+}
+
+std::optional<ship> component::remove_first_stored_item()
+{
+    if(stored.size() == 0)
+        return std::nullopt;
+
+    ship first = stored[0];
+
+    stored.erase(stored.begin());
+
+    return first;
 }
 
 void component::add_composition(material_info::material_type type, double volume)
@@ -1321,6 +1358,29 @@ void ship::tick(double dt_s)
                     em.intensity = 20000;
 
                     radar.emit(em, r.position, *this);
+                }
+
+                ///take one component out of storage, eject it into space
+                ///need to add it to the entity manager. Has a correct _pid so no worries there
+                if(c.has_tag(tag_info::TAG_EJECTOR))
+                {
+                    std::optional<ship> first = c.remove_first_stored_item();
+
+                    if(first.has_value())
+                    {
+                        ship& to_produce = first.value();
+
+                        ship* spawned = parent->take(to_produce);
+
+                        spawned->r.position = r.position;
+                        spawned->r.rotation = r.rotation;
+                        //l->r.rotation = r.rotation + eangle;
+                        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
+                        spawned->velocity = velocity + velocity.norm() * 50;
+                        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
+                        spawned->phys_ignore.push_back(id);
+                        //spawned->fired_by = id;
+                    }
                 }
 
                 if(c.has(component_info::SENSORS))
@@ -2932,6 +2992,17 @@ void ship::fire(const std::vector<client_fire>& fired)
         for(component& c : components)
         {
             if(c.has(component_info::WEAPONS))
+            {
+                if(weapon_offset == (int)fire.weapon_offset)
+                {
+                    c.try_use = true;
+                    c.use_angle = fire.fire_angle;
+                }
+
+                weapon_offset++;
+            }
+
+            if(c.has_tag(tag_info::TAG_EJECTOR))
             {
                 if(weapon_offset == (int)fire.weapon_offset)
                 {

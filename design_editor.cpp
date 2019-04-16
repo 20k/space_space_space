@@ -186,8 +186,13 @@ ship blueprint::to_ship()
 
     for(blueprint_node& c : nodes)
     {
+        c.my_comp = c.original;
+        c.my_comp.scale(c.size * overall_size);
+
         nship.add(c.my_comp);
     }
+
+    nship.my_size = overall_size;
 
     return nship;
 }
@@ -397,7 +402,7 @@ void design_editor::render(sf::RenderWindow& win)
                 node.pos = tlpos;
                 node.size = dragging_size;
 
-                node.my_comp.scale(node.size);
+                //node.my_comp.scale(node.size);
 
                 cur.nodes.push_back(node);
             }

@@ -170,6 +170,7 @@ void server_thread()
     thruster.long_name = "Thruster";
     thruster.short_name = "THRST";
     thruster.activation_type = component_info::SLIDER_ACTIVATION;
+    thruster.normalise_volume();
 
     warp.add(component_info::POWER, -1);
     warp.add(component_info::WARP, 0.5, 10);
@@ -183,6 +184,7 @@ void server_thread()
     warp.long_name = "Warp Drive";
     warp.short_name = "WARP";
     warp.activation_type = component_info::TOGGLE_ACTIVATION;
+    warp.normalise_volume();
 
     shields.add(component_info::SHIELDS, 0.5, 50);
     shields.add(component_info::POWER, -3);
@@ -194,6 +196,7 @@ void server_thread()
     shields.long_name = "Shields";
     shields.short_name = "SHLD";
     shields.activation_type = component_info::SLIDER_ACTIVATION;
+    shields.normalise_volume();
 
     /*missile.add(component_info::POWER, -1);
     missile.add(component_info::WEAPONS, 1);
@@ -226,6 +229,7 @@ void server_thread()
     laser.subtype = "laser";
 
     laser.max_use_angle = M_PI/8;
+    laser.normalise_volume();
 
     //laser.info[3].held = 0;
 
@@ -240,6 +244,7 @@ void server_thread()
     sensor.long_name = "Sensors";
     sensor.short_name = "SENS";
     sensor.activation_type = component_info::TOGGLE_ACTIVATION;
+    sensor.normalise_volume();
 
     comms.add(component_info::POWER, -0.5);
     comms.add(component_info::COMMS, 1);
@@ -250,6 +255,7 @@ void server_thread()
     comms.long_name = "Communications";
     comms.short_name = "COMM";
     comms.activation_type = component_info::TOGGLE_ACTIVATION;
+    comms.normalise_volume();
 
     /*sysrepair.add(component_info::POWER, -1);
     sysrepair.add(component_info::SYSTEM, 1);
@@ -264,6 +270,7 @@ void server_thread()
     armour.long_name = "Armour";
     armour.short_name = "ARMR";
     armour.activation_type = component_info::TOGGLE_ACTIVATION;
+    armour.normalise_volume();
 
     ls.add(component_info::POWER, -1);
     ls.add(component_info::LIFE_SUPPORT, 1, 20);
@@ -275,6 +282,7 @@ void server_thread()
     ls.long_name = "Life Support";
     ls.short_name = "LS";
     ls.activation_type = component_info::TOGGLE_ACTIVATION;
+    ls.normalise_volume();
 
     /*coolant.add(component_info::COOLANT, 10, 200);
     coolant.add(component_info::HP, 0, 1);
@@ -290,6 +298,7 @@ void server_thread()
     radiator.long_name = "Radiator";
     radiator.short_name = "RAD";
     radiator.activation_type = component_info::NO_ACTIVATION;
+    radiator.normalise_volume();
 
     power_generator.add(component_info::POWER, 8, 50);
     power_generator.add(component_info::HP, 0, 10);
@@ -302,6 +311,7 @@ void server_thread()
     power_generator.long_name = "Power Generator";
     power_generator.short_name = "PWR";
     power_generator.activation_type = component_info::SLIDER_ACTIVATION;
+    power_generator.normalise_volume();
 
     //power_generator.info[1].held = 0;
     //power_generator.info[0].held = 0;
@@ -320,6 +330,7 @@ void server_thread()
     crew.long_name = "Crew";
     crew.short_name = "CRW";
     crew.activation_type = component_info::NO_ACTIVATION;
+    crew.normalise_volume();
 
 
     missile_core.add(component_info::HP, 0.0, 5);
@@ -333,6 +344,7 @@ void server_thread()
     missile_core.long_name = "Missile Core";
     missile_core.short_name = "MCRE";
     missile_core.activation_type = component_info::NO_ACTIVATION;
+    missile_core.normalise_volume();
 
 
     destruct.add(component_info::HP, 0, 1);
@@ -351,6 +363,8 @@ void server_thread()
 
         destruct.store(explosives);
     }
+
+    destruct.normalise_volume();
 
     coolant_cold.long_name = "Cold Storage";
     coolant_hot.long_name = "Heat Sink";
@@ -395,6 +409,9 @@ void server_thread()
     coolant_hot.store(coolant_material2);
     coolant_hot.add_heat_to_stored(500);
 
+    coolant_hot.normalise_volume();
+    coolant_cold.normalise_volume();
+
 
     blueprint default_missile;
     default_missile.overall_size = 0.01;
@@ -421,6 +438,17 @@ void server_thread()
 
     {
         ship mship = default_missile.to_ship();
+
+        float to_store_volume = 0;
+
+        for(const component& c : mship.components)
+        {
+            to_store_volume += c.get_my_volume();
+
+            std::cout << "mvol " << c.get_my_volume() << " na " << c.long_name << std::endl;
+        }
+
+        std::cout << "MSIZE " << to_store_volume << std::endl;
 
         for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
         {
@@ -569,7 +597,7 @@ void server_thread()
         entities.tick(frametime_dt);
 
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
-        //std::cout << "tclock " << tclock_time << std::endl;
+        std::cout << "tclock " << tclock_time << std::endl;
 
         for(auto& i : data_manage.backup)
         {
@@ -696,13 +724,13 @@ void server_thread()
                     has_missile = true;
             }
 
-            for(blueprint& p : fmodel.blueprint_manage.blueprints)
+            /*for(blueprint& p : fmodel.blueprint_manage.blueprints)
             {
                 for(blueprint_node& node : p.nodes)
                 {
                     std::cout << "node pid " << node.original._pid << std::endl;
                 }
-            }
+            }*/
 
             if(!has_missile)
                 fmodel.blueprint_manage.blueprints.push_back(default_missile);
@@ -1290,7 +1318,7 @@ int main()
 
         ImGui::SFML::Render(window);
 
-        std::cout << "rclock " << render_clock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+        //std::cout << "rclock " << render_clock.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         window.display();
         window.clear();

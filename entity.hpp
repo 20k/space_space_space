@@ -161,6 +161,18 @@ struct entity_manager : serialisable
     }
 
     template<typename T>
+    T* take(T& in)
+    {
+        T* e = new T(in);
+
+        to_spawn.push_back(e);
+        e->parent = this;
+        e->id = gid++;
+
+        return e;
+    }
+
+    template<typename T>
     std::vector<T*> fetch()
     {
         std::vector<T*> ret;
