@@ -1513,12 +1513,12 @@ std::optional<component*> ship::get_component_from_id(uint64_t id)
 
 void ship::handle_heat(double dt_s)
 {
-    std::vector<double> all_produced = sum<double>([](auto c)
+    std::vector<double> all_produced = sum<double>([](component& c)
                                                    {
                                                        return c.get_produced();
                                                    });
 
-    std::vector<double> all_needed = sum<double>([](auto c)
+    std::vector<double> all_needed = sum<double>([](component& c)
                                                    {
                                                        return c.get_needed();
                                                    });
