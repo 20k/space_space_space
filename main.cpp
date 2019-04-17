@@ -951,6 +951,8 @@ void server_thread()
 
                 std::cout << "partial data " << cb.size() << std::endl;
 
+                //std::cout << ret.dump() << std::endl;
+
                 sf::Clock clone_clock;
 
                 ///basically clones model, by applying the current diff to last model

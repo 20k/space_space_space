@@ -1583,6 +1583,11 @@ void ship::handle_heat(double dt_s)
                                                        return c.get_needed();
                                                    });
 
+    /*for(component& c : components)
+    {
+        std::cout << "s " << c.my_temperature << std::endl;
+    }*/
+
     #if 0
     //radar.add_simple_collideable(this);
 
@@ -2221,7 +2226,7 @@ void ship::show_resources(bool window)
             //ImGui::DragFloat("", &p.flow_rate, 0.01f, -p.max_flow_rate, p.max_flow_rate);
 
             if(changed)
-                rpc("set_flow_rate", p, p.set_flow_rate, p.flow_rate);
+                rpc("set_flow_rate", p, p.flow_rate);
         }
 
         if(c1 && p.goes_to_space)
@@ -2234,7 +2239,7 @@ void ship::show_resources(bool window)
             bool changed = ImGuiX::SliderFloat("", &p.flow_rate, 0, p.max_flow_rate);
 
             if(changed)
-                rpc("set_flow_rate", p, p.set_flow_rate, p.flow_rate);
+                rpc("set_flow_rate", p, p.flow_rate);
         }
 
         ImGui::End();
@@ -2396,7 +2401,7 @@ void ship::show_power()
         c.activation_level = as_percentage / 100.f;
 
         if(changed)
-            rpc("set_activation_level", c, c.set_activation_level, c.activation_level);
+            rpc("set_activation_level", c, c.activation_level);
     }
 
     ImGui::NewLine();
@@ -2596,7 +2601,7 @@ void ship::show_power()
         bool changed = ImGuiX::SliderFloat("##" + std::to_string(pipe._pid), &pipe.flow_rate, lbound, pipe.max_flow_rate);
 
         if(changed)
-            rpc("set_flow_rate", pipe, pipe.set_flow_rate, pipe.flow_rate);
+            rpc("set_flow_rate", pipe, pipe.flow_rate);
 
         ImGui::PopItemWidth();
 
@@ -2739,7 +2744,7 @@ void ship::advanced_ship_display()
 
             if(ImGui::IsItemClicked())
             {
-                rpc("set_use", c, c.set_use);
+                rpc("set_use", c);
 
                 //c.try_use = true;
             }
@@ -2751,7 +2756,7 @@ void ship::advanced_ship_display()
 
             if(ImGui::IsItemClicked())
             {
-                rpc("set_use", c, c.set_use);
+                rpc("set_use", c);
             }
         }
     }
