@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-Og" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -38,6 +39,7 @@
 				<Compiler>
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-Og" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />
@@ -45,11 +47,13 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++17" />
 			<Add option="-fexceptions" />
 			<Add option="-Wno-narrowing" />
 			<Add option="-Werror=return-type" />
+			<Add option="-Wno-unused-parameter" />
 			<Add option="-DSFML_STATIC" />
 			<Add directory="deps" />
 			<Add directory="deps/imgui" />

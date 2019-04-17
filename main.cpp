@@ -135,7 +135,7 @@ struct solar_system
     }
 };
 
-void server_thread()
+void server_thread(std::atomic_bool& should_term)
 {
     fixed_clock::init = true;
 
@@ -381,8 +381,8 @@ void server_thread()
     coolant_cold.internal_volume = 50;
     coolant_hot.internal_volume = 5;
 
-    coolant_cold.add_composition(material_info::IRON, 55);
-    coolant_hot.add_composition(material_info::IRON, 1);
+    coolant_cold.add_composition(material_info::IRON, 10);
+    coolant_hot.add_composition(material_info::IRON, 2);
 
     coolant_hot.heat_sink = true;
 
@@ -456,11 +456,14 @@ void server_thread()
             ///which isn't totally insane but it is a bit odd
             ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
 
-            missile.store(mship);
+            //missile.store(mship);
         }
     }
 
     std::cout << "num missiles " << missile.stored.size() << std::endl;
+
+    coolant_cold.scale(50);
+    coolant_hot.scale(10);
 
     test_ship->add(thruster);
     test_ship->add(warp);
@@ -478,6 +481,14 @@ void server_thread()
     test_ship->add(coolant_cold);
     test_ship->add(coolant_hot);
     test_ship->add(destruct);
+
+    for(component& c : test_ship->components)
+    {
+        for(material& m : c.composition)
+        {
+            m.dynamic_desc.volume *= 10;
+        }
+    }
 
     storage_pipe rpipe;
     rpipe.id_1 = coolant_cold._pid;
@@ -1040,6 +1051,9 @@ void server_thread()
         //Sleep(10);
 
         fixed_clock::increment();
+
+        if(should_term)
+            return;
     }
 }
 
@@ -1047,9 +1061,11 @@ int main()
 {
     serialise_tests();
 
+    std::atomic_bool term{0};
+
     #define WITH_SERVER
     #ifdef WITH_SERVER
-    std::thread(server_thread).detach();
+    std::thread(server_thread, std::ref(term)).detach();
     #endif // WITH_SERVER
 
     sf::ContextSettings sett;
@@ -1144,6 +1160,7 @@ int main()
             if(event.type == sf::Event::Closed)
             {
                 window.close();
+                term = 1;
             }
 
             if(event.type == sf::Event::Resized)
