@@ -216,7 +216,7 @@ struct component : virtual serialisable, owned
         //DO_SERIALISE(my_volume);
         DO_SERIALISE(internal_volume);
         DO_SERIALISE(current_scale);
-        DO_SERIALISE(stored);
+        DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
         DO_SERIALISE(primary_type);
         //DO_SERIALISE(id);
         DO_SERIALISE(composition);

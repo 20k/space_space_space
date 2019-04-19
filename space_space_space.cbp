@@ -13,7 +13,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-Og" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -38,8 +37,8 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-pg" />
-					<Add option="-g" />
 					<Add option="-Og" />
+					<Add option="-g" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />

@@ -600,6 +600,8 @@ void server_thread(std::atomic_bool& should_term)
 
     //entities.use_aggregates = false;
 
+    int stagger_id = 0;
+
     while(1)
     {
         sf::Clock tickclock;
@@ -950,7 +952,7 @@ void server_thread(std::atomic_bool& should_term)
             {
                 sf::Clock total_encode;
 
-                nlohmann::json ret = serialise_against(data, data_manage.backup[i]);
+                nlohmann::json ret = serialise_against(data, data_manage.backup[i], true, stagger_id);
 
                 double partial_time = total_encode.getElapsedTime().asMicroseconds() / 1000.;
 
@@ -969,7 +971,9 @@ void server_thread(std::atomic_bool& should_term)
                 //std::cout << ret.dump() << std::endl;
 
                 /*for(auto& i : cb)
-                    std::cout << i;*/
+                    std::cout << i;
+
+                std::cout << std::endl;*/
 
                 sf::Clock clone_clock;
 
@@ -1015,6 +1019,8 @@ void server_thread(std::atomic_bool& should_term)
                 }
             }
         }
+
+        stagger_id++;
 
         #ifdef SERVER_VIEW
 
