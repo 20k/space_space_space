@@ -605,7 +605,10 @@ void server_thread(std::atomic_bool& should_term)
     while(1)
     {
         sf::Clock tickclock;
-        entities.tick(frametime_dt);
+
+        double used_frametime_dt = clamp(frametime_dt, 14 / 1000., 18 / 1000.);
+
+        entities.tick(used_frametime_dt);
 
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
         std::cout << "tclock " << tclock_time << std::endl;
@@ -680,12 +683,12 @@ void server_thread(std::atomic_bool& should_term)
             render = !render;
         }
 
-        radar.tick(frametime_dt);
+        radar.tick(used_frametime_dt);
         //player_manage.tick(frametime_dt);
 
         for(auto& i : data_manage.data)
         {
-            i.second.networked_model.tick(frametime_dt);
+            i.second.networked_model.tick(used_frametime_dt);
         }
 
         iterations++;
@@ -1207,7 +1210,7 @@ int main()
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read(rdata_id);
 
-            std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+            //std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             if(model.sample.fresh)
             {
