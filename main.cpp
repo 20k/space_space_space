@@ -456,7 +456,7 @@ void server_thread(std::atomic_bool& should_term)
             ///which isn't totally insane but it is a bit odd
             ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
 
-            //missile.store(mship);
+            missile.store(mship);
         }
     }
 
@@ -952,6 +952,10 @@ void server_thread(std::atomic_bool& should_term)
 
                 nlohmann::json ret = serialise_against(data, data_manage.backup[i]);
 
+                double partial_time = total_encode.getElapsedTime().asMicroseconds() / 1000.;
+
+                std::cout << "partial time " << partial_time << std::endl;
+
                 std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
 
                 write_data dat;
@@ -964,14 +968,17 @@ void server_thread(std::atomic_bool& should_term)
 
                 //std::cout << ret.dump() << std::endl;
 
+                /*for(auto& i : cb)
+                    std::cout << i;*/
+
                 sf::Clock clone_clock;
 
                 ///basically clones model, by applying the current diff to last model
                 ///LEAKS MEMORY ON POINTERS
                 deserialise(ret, data_manage.backup[i]);
 
-                double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
-                std::cout << "total " << ftime << std::endl;
+                //double ftime = total_encode.getElapsedTime().asMicroseconds() / 1000.;
+                //std::cout << "total " << ftime << std::endl;
             }
             else
             {
@@ -1159,6 +1166,8 @@ int main()
 
             if(event.type == sf::Event::Closed)
             {
+                exit(0);
+
                 window.close();
                 term = 1;
             }
@@ -1192,7 +1201,7 @@ int main()
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read(rdata_id);
 
-            //std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+            std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             if(model.sample.fresh)
             {
