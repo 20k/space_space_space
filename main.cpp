@@ -427,10 +427,11 @@ void server_thread(std::atomic_bool& should_term)
     default_missile.overall_size = 0.01;
     default_missile.add_component_at(thruster, {50, 50}, 2);
     default_missile.add_component_at(sensor, {100, 100}, 1);
-    default_missile.add_component_at(power_generator, {150, 150}, 4);
+    default_missile.add_component_at(power_generator, {150, 150}, 3);
     default_missile.add_component_at(destruct, {200, 200}, 4);
-    default_missile.add_component_at(missile_core, {250, 250}, 2);
+    default_missile.add_component_at(missile_core, {250, 250}, 1);
     default_missile.add_component_at(heat_block, {300, 300}, 2);
+    default_missile.add_component_at(radiator, {350, 350}, 2);
     default_missile.name = "Default Missile";
 
 
