@@ -490,6 +490,30 @@ float component::get_stored_heat_capacity()
     return temp;
 }
 
+float component::get_my_heat_x_volume()
+{
+    float total_heat_capacity = 0;
+
+    for(material& m : composition)
+    {
+        total_heat_capacity += m.dynamic_desc.volume * material_info::fetch(m.type).specific_heat;
+    }
+
+    return total_heat_capacity;
+}
+
+float component::get_stored_heat_x_volume()
+{
+    float temp = 0;
+
+    for_each_stored([&](component& c)
+    {
+        temp += c.get_my_heat_x_volume();
+    });
+
+    return temp;
+}
+
 void component::add_heat_to_me(float heat)
 {
     float total_heat = 0;
@@ -1577,6 +1601,54 @@ std::optional<component*> ship::get_component_from_id(uint64_t id)
     return std::nullopt;
 }
 
+float uniform_get_stored_temperature(component& c)
+{
+    if(c.get_stored_volume() < 0.1)
+        return c.get_my_temperature();
+    else
+        return c.get_stored_temperature();
+}
+
+float uniform_get_stored_heat(component& c)
+{
+    if(c.get_stored_volume() < 0.1)
+        return c.get_my_contained_heat();
+    else
+        return c.get_stored_heat_capacity();
+}
+
+void uniform_add_stored_heat(component& c, float amount)
+{
+    if(c.get_stored_volume() < 0.1)
+        c.add_heat_to_me(amount);
+    else
+        c.add_heat_to_stored(amount);
+}
+
+void uniform_remove_stored_heat(component& c, float amount)
+{
+    if(c.get_stored_volume() < 0.1)
+        c.remove_heat_from_me(amount);
+    else
+        c.remove_heat_from_stored(amount);
+}
+
+float uniform_get_stored_volume(component& c)
+{
+    if(c.get_stored_volume() < 0.1)
+        return c.get_my_volume();
+    else
+        return c.get_stored_volume();
+}
+
+float uniform_get_heat_x_volume(component& c)
+{
+    if(c.get_stored_volume())
+        return c.get_my_heat_x_volume();
+    else
+        return c.get_stored_heat_x_volume();
+}
+
 void ship::handle_heat(double dt_s)
 {
     std::vector<double> all_produced = sum<double>([](component& c)
@@ -1801,12 +1873,14 @@ void ship::handle_heat(double dt_s)
         {
             component& hs = *hsp;
 
-            if(hs.get_stored_volume() < 0.1)
-                continue;
+            //if(hs.get_stored_volume() < 0.1)
+            //    continue;
 
             assert(hs.heat_sink);
 
-            float hs_stored = hs.get_stored_temperature();
+            //float hs_stored = hs.get_stored_temperature();
+
+            float hs_stored = uniform_get_stored_temperature(hs);
 
             float temperature_difference = my_temperature - hs_stored;
 
@@ -1815,10 +1889,12 @@ void ship::handle_heat(double dt_s)
 
             ///ok
             ///assume every material has the same conductivity
+            ///its also assuming incorrect things about mass which is why the temperature is jittering
             float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
 
             c.remove_heat_from_me(heat_transfer_rate);
-            hs.add_heat_to_stored(heat_transfer_rate);
+            //hs.add_heat_to_stored(heat_transfer_rate);
+            uniform_add_stored_heat(hs, heat_transfer_rate);
         }
     }
 
@@ -1839,21 +1915,7 @@ void ship::handle_heat(double dt_s)
         {
             component& hs = *hsp;
 
-            if(hs.get_stored_volume() < 0.1)
-                continue;
-
-            /*float hs_stored = hs.get_stored_temperature();
-
-            ///so latent heat is added to us, which is environmental heat
-            ///so we can emit ignoring environmental heat and the equation is fine
-
-            float heat_transfer_rate = hs_stored * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency() / heat_sinks.size();
-
-            hs.remove_heat_from_stored(heat_transfer_rate);
-
-            heat_to_radiate += heat_transfer_rate;*/
-
-            float hs_stored = hs.get_stored_temperature();
+            float hs_stored = uniform_get_stored_temperature(hs);
 
             ///ok so due to the above big block we already transfer heat from me to them, but need to do vice versa
 
@@ -1862,10 +1924,55 @@ void ship::handle_heat(double dt_s)
             if(temperature_difference >= 0)
                 continue;
 
-            float heat_transfer_rate = -temperature_difference * heat_coeff * dt_s * c.get_operating_efficiency() / heat_sinks.size();
+            ///end temp is weighted volume * specific heat * temp of both
+            ///so basically add the two contained heats to get final heat
 
-            c.add_heat_to_me(heat_transfer_rate);
-            hs.remove_heat_from_stored(heat_transfer_rate);
+            ///naw this is wrong too
+            ///we need to do this on a temperature basis
+            ///no not that either
+
+            ///ok so say mat 1 is 30 degrees, volume 1, specific heat 0.5
+            ///mat 2 is 40 degrees, volume 0.1, specific heat 1
+
+            ///mat 1 has a total heat energy of 30 * 0.5 = 15
+            ///mat 2 has a total heat energy of 40 * 0.1 = 4
+
+            ///heat will flow from mat 2 to mat 1
+            ///proportion will be (40 - 30)
+
+            ///final temperature will be ... however much heat mat 2 has to lose until mat 1 has the same temperature as mat 2
+            ///equivalently, i think thats the difference between their temperatures in heat of the hotter material / 2?
+            ///no, because mat 1 has a different volume
+
+            ///ok online physics has this down https://www.physicstutorials.org/home/heat-temperature-and-thermal-expansion/83-calculations-of-heat-transfer
+
+            ///m1 c1 dt1 = m2 c2 dt2
+            ///m1 c1 (target_temp - initial_t1) = m2 * c2 * (t2_initial_temp - target_temp);
+            ///heat transfer rate = (initial_t2 - initial_t1)
+
+            ///m1 c1 tt - m1 c1 initial_t1 = m2 c2 initial_t2 - m2 c2 tt
+
+            ///m1 c1 tt + m2 c2 tt = m1 c1 initial_t1 + m2 c2 initial_t2
+            ///tt (m1 c1 + m2 c2) = m1 c1 it1 + m2 c2 it2
+            ///tt = (m1 c1 it1 + m2 c2 it2) / (m1 c1 + m2 c2);
+
+            ///so c is radiator, hs is heat sink
+            ///hs temp > 0
+
+            float final_temperature = (c.get_my_heat_x_volume() * c.get_my_temperature() + uniform_get_heat_x_volume(hs) * uniform_get_stored_temperature(hs)) / (c.get_my_heat_x_volume() + uniform_get_heat_x_volume(hs));
+
+            ///my temperature < final temperature
+            ///this val > 0
+            float radiator_to_final = final_temperature - my_temperature;
+            ///hs_stored > final_temperature
+            ///this val < 0
+            float hs_to_final = final_temperature - hs_stored;
+
+            float htr_1 = radiator_to_final * heat_coeff * dt_s * c.get_operating_efficiency() / heat_sinks.size();
+            float htr_2 = -hs_to_final * heat_coeff * dt_s * c.get_operating_efficiency() / heat_sinks.size();
+
+            c.add_heat_to_me(htr_1);
+            uniform_remove_stored_heat(hs, htr_2);
         }
 
         float heat_transfer_rate = c.get_my_temperature() * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency();

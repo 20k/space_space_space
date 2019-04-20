@@ -160,7 +160,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->r.network_owner = 0;
 
     component thruster, warp, shields, missile, laser, sensor, comms, armour,
-    ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot;
+    ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot, heat_block;
 
     thruster.add(component_info::POWER, -1);
     thruster.add(component_info::THRUST, 1);
@@ -412,14 +412,25 @@ void server_thread(std::atomic_bool& should_term)
     coolant_hot.normalise_volume();
     coolant_cold.normalise_volume();
 
+    heat_block.long_name = "Heat Block";
+    heat_block.short_name = "HBLK";
+
+    heat_block.activation_type = component_info::NO_ACTIVATION;
+    heat_block.add(component_info::HP, 0, 1);
+    heat_block.add_composition(material_info::IRON, 0.1);
+    heat_block.add_composition(material_info::LITHIUM, 0.9);
+
+    heat_block.heat_sink = true;
+    heat_block.normalise_volume();
 
     blueprint default_missile;
     default_missile.overall_size = 0.01;
-    default_missile.add_component_at(thruster, {50, 50}, 4);
+    default_missile.add_component_at(thruster, {50, 50}, 2);
     default_missile.add_component_at(sensor, {100, 100}, 1);
     default_missile.add_component_at(power_generator, {150, 150}, 4);
     default_missile.add_component_at(destruct, {200, 200}, 4);
     default_missile.add_component_at(missile_core, {250, 250}, 2);
+    default_missile.add_component_at(heat_block, {300, 300}, 2);
     default_missile.name = "Default Missile";
 
 
