@@ -43,7 +43,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
 
     if(type == material_info::LITHIUM)
     {
-        fixed.specific_heat = 3.58;
+        fixed.specific_heat = 300000.58;
         fixed.reflectivity = 0.8;
         fixed.melting_point = 453;
     }
