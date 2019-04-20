@@ -645,6 +645,7 @@ void component::scale(float size)
     }
 
     internal_volume *= size;
+    heat_produced_at_full_usage *= size;
 
     for_each_stored([&](component& c)
     {
@@ -1368,6 +1369,8 @@ void ship::tick(double dt_s)
 
                     if(first.has_value())
                     {
+                        vec2f ship_vector = (vec2f){1, 0}.rot(r.rotation);
+
                         ship& to_produce = first.value();
 
                         ship* spawned = parent->take(to_produce);
@@ -1376,10 +1379,13 @@ void ship::tick(double dt_s)
                         spawned->r.rotation = r.rotation;
                         //l->r.rotation = r.rotation + eangle;
                         //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                        spawned->velocity = velocity + velocity.norm() * 50;
+                        spawned->velocity = velocity + ship_vector.norm() * 50;
                         //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
                         spawned->phys_ignore.push_back(id);
                         //spawned->fired_by = id;
+
+                        spawned->r.init_rectangular({1, 0.2});
+                        spawned->network_owner = network_owner;
                     }
                 }
 
@@ -1717,8 +1723,8 @@ void ship::handle_heat(double dt_s)
         num_hs++;
     }
 
-    if(num_hs == 0)
-        return;
+    //if(num_hs == 0)
+    //    return;
 
     /*float produced_heat_ps = produced_heat * dt_s + latent_heat;
 
@@ -1740,10 +1746,12 @@ void ship::handle_heat(double dt_s)
         heat_sinks.push_back(&c);
     }
 
+    float my_vol = get_my_volume();
+
     ///long term use blueprint
     for(component& c : components)
     {
-        float latent_fraction = latent_heat / components.size();
+        float latent_fraction = (my_vol * latent_heat / components.size()) * 1/10.f;
 
         if(!c.heat_sink || c.get_stored_volume() < 0.1)
             c.add_heat_to_me(latent_fraction);
@@ -2154,7 +2162,7 @@ void ship::show_resources(bool window)
     ret += "Heat: " + to_string_with_variable_prec(heat_to_kelvin(latent_heat)) + "\n";
 
     if(window)
-        ImGui::Begin((std::string("Tship##") + std::to_string(network_owner)).c_str());
+        ImGui::Begin((std::string("Tship##") + std::to_string(_pid)).c_str());
 
     ImGui::Text(ret.c_str());
 
@@ -2259,7 +2267,7 @@ ImVec4 im4_mix(ImVec4 one, ImVec4 two, float a)
 
 void ship::show_power()
 {
-    std::string ppower = "Power##" + std::to_string(network_owner);
+    std::string ppower = "Power##" + std::to_string(_pid);
 
     ImGui::Begin(ppower.c_str());
 
@@ -2653,6 +2661,18 @@ void ship::show_power()
     ImGui::End();
 }
 
+float ship::get_my_volume()
+{
+    float vol = 0;
+
+    for(const component& c : components)
+    {
+        vol += c.get_my_volume();
+    }
+
+    return vol;
+}
+
 std::vector<double> ship::get_capacity()
 {
     return sum<double>
@@ -2664,7 +2684,7 @@ std::vector<double> ship::get_capacity()
 
 void ship::advanced_ship_display()
 {
-    ImGui::Begin(("Advanced Ship" + std::to_string(network_owner)).c_str());
+    ImGui::Begin(("Advanced Ship" + std::to_string(_pid)).c_str());
 
     #if 0
     for(auto& i : data_track)

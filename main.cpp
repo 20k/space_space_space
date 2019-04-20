@@ -439,12 +439,7 @@ void server_thread(std::atomic_bool& should_term)
     {
         ship mship = default_missile.to_ship();
 
-        float to_store_volume = 0;
-
-        for(const component& c : mship.components)
-        {
-            to_store_volume += c.get_my_volume();
-        }
+        float to_store_volume = mship.get_my_volume();
 
         //std::cout << "MSIZE " << to_store_volume << std::endl;
 
@@ -462,8 +457,8 @@ void server_thread(std::atomic_bool& should_term)
 
     std::cout << "num missiles " << missile.stored.size() << std::endl;
 
-    coolant_cold.scale(50);
-    coolant_hot.scale(10);
+    //coolant_cold.scale(50);
+    //coolant_hot.scale(10);
 
     test_ship->add(thruster);
     test_ship->add(warp);
@@ -482,6 +477,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(coolant_hot);
     test_ship->add(destruct);
 
+    ///HACKY SCALE UNTIL FIX STUFF
     for(component& c : test_ship->components)
     {
         for(material& m : c.composition)

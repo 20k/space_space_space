@@ -161,7 +161,7 @@ struct entity_manager : serialisable
     }
 
     template<typename T>
-    T* take(T& in)
+    T* take(const T& in)
     {
         T* e = new T(in);
 

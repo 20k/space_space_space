@@ -482,6 +482,8 @@ struct ship : heatable_entity, owned
     void show_resources(bool window = true);
     void show_power();
 
+    float get_my_volume();
+
     template<typename T, typename U>
     std::vector<T> sum(U in)
     {
