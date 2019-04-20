@@ -6,7 +6,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
 
     if(type == material_info::HYDROGEN)
     {
-        fixed.specific_heat = 1;
+        fixed.specific_heat = 14;
         fixed.reflectivity = 0.5;
         fixed.melting_point = 1;
         fixed.specific_explosiveness = 1;
@@ -14,31 +14,38 @@ material_fixed_properties material_info::fetch(material_info::material_type type
 
     if(type == material_info::IRON)
     {
-        fixed.specific_heat = 0.2;
+        fixed.specific_heat = 0.4;
         fixed.reflectivity = 0.5;
         fixed.melting_point = 1811;
     }
 
     if(type == material_info::COPPER)
     {
-        fixed.specific_heat = 0.5;
+        fixed.specific_heat = 0.385;
         fixed.reflectivity = 0.6;
         fixed.melting_point = 1358;
     }
 
     if(type == material_info::H2O)
     {
-        fixed.specific_heat = 0.4;
+        fixed.specific_heat = 4;
         fixed.reflectivity = 0.8;
         fixed.melting_point = 273.15;
     }
 
     if(type == material_info::HTX)
     {
-        fixed.specific_heat = 0.2;
+        fixed.specific_heat = 2;
         fixed.reflectivity = 0.1;
         fixed.melting_point = 1523;
         fixed.specific_explosiveness = 50;
+    }
+
+    if(type == material_info::LITHIUM)
+    {
+        fixed.specific_heat = 3.58;
+        fixed.reflectivity = 0.8;
+        fixed.melting_point = 453;
     }
 
     return fixed;

@@ -15,6 +15,7 @@ namespace material_info
         H2O,
         HTX,
         COMPOSITE,
+        LITHIUM,
         COUNT,
     };
 
@@ -26,6 +27,7 @@ namespace material_info
         "H2O",
         "HTX",
         "Composite",
+        "Lithium",
     };
 
     material_fixed_properties fetch(material_type type);
