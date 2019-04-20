@@ -1789,6 +1789,7 @@ void ship::handle_heat(double dt_s)
         }
     }
 
+    ///takes heat from a component and puts it into the heat sink
     for(component& c : components)
     {
         if(c.heat_sink)
@@ -1822,7 +1823,7 @@ void ship::handle_heat(double dt_s)
     }
 
     ///radiators
-
+    ///transfers heat from heatsink to radiator, radiates into space
     double heat_to_radiate = 0;
 
     for(component& c : components)
@@ -1876,6 +1877,7 @@ void ship::handle_heat(double dt_s)
 
     latent_heat = 0;
 
+    ///applies heat damage
     for(component& c : components)
     {
         std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
