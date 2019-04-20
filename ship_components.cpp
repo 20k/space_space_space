@@ -1643,7 +1643,7 @@ float uniform_get_stored_volume(component& c)
 
 float uniform_get_heat_x_volume(component& c)
 {
-    if(c.get_stored_volume())
+    if(c.get_stored_volume() < 0.1)
         return c.get_my_heat_x_volume();
     else
         return c.get_stored_heat_x_volume();
