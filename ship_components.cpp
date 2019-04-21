@@ -1375,6 +1375,8 @@ void ship::tick_missile_behaviour(double dt_s)
 
         vec2f accel = project + reject * accuracy;
 
+        set_thrusters_active(true);
+
         float max_thrust = get_max_velocity_thrust();
 
         if(accel.length() > max_thrust)
