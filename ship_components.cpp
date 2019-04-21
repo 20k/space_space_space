@@ -1233,6 +1233,160 @@ struct laser : projectile
     }
 };
 
+void ship::tick_missile_behaviour(double dt_s)
+{
+    float homing_frequency = HEAT_FREQ;
+
+    if(spawn_clock.getElapsedTime().asMicroseconds() / 1000. >= 50 * 1000)
+    {
+        cleanup = true;
+    }
+
+    double activate_time = 3 * 1000;
+    bool activated = (spawn_clock.getElapsedTime().asMicroseconds() / 1000.0) >= activate_time;
+
+    alt_radar_field& radar = get_radar_field();
+
+    alt_radar_sample sam = radar.sample_for(r.position, *this, *parent);
+
+    vec2f best_dir = {0, 0};
+    float best_intensity = 0;
+
+    for(auto& i : sam.receive_dir)
+    {
+        if(i.frequency != homing_frequency)
+            continue;
+
+        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+            continue;
+
+        if(i.property.length() > best_intensity)
+        {
+            best_dir = i.property;
+            best_intensity = i.property.length();
+        }
+    }
+
+    for(auto& i : sam.echo_dir)
+    {
+        if(i.frequency != homing_frequency)
+            continue;
+
+        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+            continue;
+
+        if(i.property.length() > best_intensity)
+        {
+            best_dir = i.property;
+            best_intensity = i.property.length();
+        }
+    }
+
+    for(auto& i : sam.echo_pos)
+    {
+        if(i.frequency != homing_frequency)
+            continue;
+
+        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+            continue;
+
+        best_dir = i.property - r.position;
+        best_intensity = BEST_UNCERTAINTY;
+    }
+
+    /*if((inactivity_time.getElapsedTime().asMicroseconds() / 1000.) >= 1 * 1000 && !pinged)
+    {
+        alt_frequency_packet em;
+        em.frequency = HEAT_FREQ;
+        em.intensity = 100000;
+
+        radar.emit(em, r.position, id);
+
+        pinged = true;
+
+        printf("ping\n");
+    }
+
+    if(best_dir.x() == 0 && best_dir.y() == 0)
+    {
+        best_dir = last_best_dir;
+    }
+
+    last_best_dir = best_dir;*/
+
+    if(best_dir.x() == 0 && best_dir.y() == 0)
+    {
+        return;
+    }
+
+    float accuracy = best_intensity / BEST_UNCERTAINTY;
+
+    accuracy = clamp(accuracy, 0, 1);
+
+    //accuracy = 1;
+
+    float max_angle_per_s = dt_s * M_PI / 8;
+
+    vec2f my_dir = (vec2f){1, 0}.rot(r.rotation);
+    //vec2f my_dir = velocity;
+    vec2f target_angle = best_dir;
+
+    float requested_angle = signed_angle_between_vectors(my_dir, target_angle);
+
+    if(fabs(requested_angle) > max_angle_per_s)
+    {
+        requested_angle = signum(requested_angle) * max_angle_per_s;
+    }
+
+    float angle_change = requested_angle;
+
+    r.rotation += angle_change * accuracy;
+
+    //r.rotation = point_angle;
+
+    if(activated)
+    {
+        vec2f desired_velocity = best_dir.norm() * 100;
+
+        vec2f real_velocity = velocity;
+
+        double max_speed_ps = 30;
+
+        vec2f project = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation));
+
+        if(angle_between_vectors(project, (vec2f){1, 0}.rot(r.rotation)) > M_PI/2)
+        {
+            max_speed_ps = 10;
+        }
+
+        if(project.length() > max_speed_ps)
+        {
+            project = project.norm() * max_speed_ps;
+        }
+
+        float horizontal_speed_ps = 20;
+
+        vec2f reject = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation + M_PI/2));
+
+        if(reject.length() > horizontal_speed_ps)
+        {
+            reject = reject.norm() * horizontal_speed_ps;
+        }
+
+        velocity += project * dt_s;
+        velocity += reject * dt_s * accuracy;
+
+
+        alt_frequency_packet em;
+        em.frequency = 1500;
+        em.intensity = 1000;
+
+        radar.emit(em, r.position, *this);
+
+        phys_ignore.clear();
+    }
+}
+
 void ship::tick(double dt_s)
 {
     std::vector<double> resource_status = sum<double>([](component& c)
@@ -1332,6 +1486,15 @@ void ship::tick(double dt_s)
 
     for(component& c : components)
     {
+        if(c.has_tag(tag_info::TAG_MISSILE_BEHAVIOUR))
+        {
+            tick_missile_behaviour(dt_s);
+        }
+    }
+
+    ///item uses
+    for(component& c : components)
+    {
         if(c.try_use)
         {
             if(c.can_use(next_resource_status))
@@ -1410,6 +1573,8 @@ void ship::tick(double dt_s)
 
                         spawned->r.init_rectangular({1, 0.2});
                         spawned->network_owner = network_owner;
+                        spawned->spawn_clock.restart();
+                        spawned->spawned_by = id;
                     }
                 }
 

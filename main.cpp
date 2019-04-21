@@ -338,6 +338,7 @@ void server_thread(std::atomic_bool& should_term)
     missile_core.add(component_info::CREW, 0.01, 50);
     missile_core.add(component_info::CREW, -0.01); ///passive death on no o2
     missile_core.add(component_info::POWER, -1);
+    missile_core.add(tag_info::TAG_MISSILE_BEHAVIOUR);
     missile_core.add_composition(material_info::IRON, 2);
     missile_core.add_composition(material_info::COPPER, 2);
     missile_core.set_heat(1);
@@ -619,7 +620,7 @@ void server_thread(std::atomic_bool& should_term)
         entities.tick(used_frametime_dt);
 
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
-        std::cout << "tclock " << tclock_time << std::endl;
+        //std::cout << "tclock " << tclock_time << std::endl;
 
         for(auto& i : data_manage.backup)
         {
@@ -967,7 +968,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 double partial_time = total_encode.getElapsedTime().asMicroseconds() / 1000.;
 
-                std::cout << "partial time " << partial_time << std::endl;
+                //std::cout << "partial time " << partial_time << std::endl;
 
                 std::vector<uint8_t> cb = nlohmann::json::to_cbor(ret);
 
@@ -977,7 +978,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 conn.write_to(dat);
 
-                std::cout << "partial data " << cb.size() << std::endl;
+                //std::cout << "partial data " << cb.size() << std::endl;
 
                 //std::cout << ret.dump() << std::endl;
 
@@ -1218,7 +1219,6 @@ int main()
             //renderables = conn.reads_from<client_entities>().data;
             conn.pop_read(rdata_id);
 
-            //std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
             if(model.sample.fresh)
             {
@@ -1230,17 +1230,20 @@ int main()
                 sample.frequencies = model.sample.frequencies;
             }
 
+            //std::cout << "crtime " << rtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
             //std::cout << (*(model.ships[0].data_track))[component_info::SHIELDS].vsat.size() << std::endl;
 
             //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
 
-            design.research = model.networked_model.research;
+
+            sf::Clock copy_time;
+            design.research = std::move(model.networked_model.research);
+            //std::cout << "copytime " << copy_time.getElapsedTime().asMicroseconds() / 1000. << std::endl;
             design.server_blueprint_manage = model.networked_model.blueprint_manage;
 
             //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 
             renderables.entities = model.renderables;
-
         }
 
         for(client_renderable& r : model.renderables)
@@ -1321,6 +1324,8 @@ int main()
 
         conn.writes_to(cinput, -1);
 
+        //sf::Clock showtime;
+
         for(ship& s : model.ships)
         {
             /*ImGui::Begin(std::to_string(s.network_owner).c_str());
@@ -1338,6 +1343,8 @@ int main()
 
             s.show_power();
         }
+
+        //std::cout << "showtime " << showtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         if(model.ships.size() > 0)
         {
@@ -1367,6 +1374,8 @@ int main()
         window.clear();
 
         sf::sleep(sf::milliseconds(4));
+
+        std::cout << "frametime " << frametime_dt << std::endl;
     }
 
     return 0;

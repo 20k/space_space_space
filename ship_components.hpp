@@ -76,6 +76,7 @@ namespace tag_info
     {
         TAG_NONE,
         TAG_EJECTOR,
+        TAG_MISSILE_BEHAVIOUR,
     };
 }
 
@@ -542,6 +543,10 @@ struct ship : heatable_entity, owned
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void new_network_copy();
+
+    sf::Clock spawn_clock;
+    void tick_missile_behaviour(double dt_s);
+    uint64_t spawned_by = -1;
 
 private:
     double thrusters_active = 0;

@@ -28,6 +28,13 @@ struct player_research : serialisable, owned
     {
         DO_SERIALISE(components);
     }
+
+    void operator=(player_research&& other)
+    {
+        components = std::move(other.components);
+    }
+
+    player_research& operator=(const player_research& other) = default;
 };
 
 struct blueprint;
