@@ -528,6 +528,9 @@ struct ship : heatable_entity, owned
     void add_pipe(const storage_pipe& p);
 
     double get_radar_strength();
+    float get_max_angular_thrust();
+    float get_max_velocity_thrust();
+    float get_mass();
 
     SERIALISE_SIGNATURE()
     {

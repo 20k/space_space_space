@@ -10,6 +10,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.reflectivity = 0.5;
         fixed.melting_point = 1;
         fixed.specific_explosiveness = 1;
+        fixed.density = 0.01;
     }
 
     if(type == material_info::IRON)
@@ -17,6 +18,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 0.4;
         fixed.reflectivity = 0.5;
         fixed.melting_point = 1811;
+        fixed.density = 2;
     }
 
     if(type == material_info::COPPER)
@@ -24,6 +26,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 0.385;
         fixed.reflectivity = 0.6;
         fixed.melting_point = 1358;
+        fixed.density = 2.1;
     }
 
     if(type == material_info::H2O)
@@ -31,6 +34,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 4;
         fixed.reflectivity = 0.8;
         fixed.melting_point = 273.15;
+        fixed.density = 1;
     }
 
     if(type == material_info::HTX)
@@ -39,6 +43,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.reflectivity = 0.1;
         fixed.melting_point = 1523;
         fixed.specific_explosiveness = 50;
+        fixed.density = 0.5;
     }
 
     if(type == material_info::LITHIUM)
@@ -46,6 +51,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
         fixed.specific_heat = 3.58;
         fixed.reflectivity = 0.8;
         fixed.melting_point = 453;
+        fixed.density = 2;
     }
 
     return fixed;
@@ -70,6 +76,7 @@ std::pair<material_dynamic_properties, material_fixed_properties> get_material_c
         fixed.reflectivity += m.dynamic_desc.volume * them_fixed.reflectivity;
         fixed.specific_heat += m.dynamic_desc.volume * them_fixed.specific_heat;
         fixed.specific_explosiveness += m.dynamic_desc.volume * them_fixed.specific_explosiveness;
+        fixed.density += m.dynamic_desc.volume * them_fixed.density;
     }
 
     if(in.size() == 0)
@@ -81,6 +88,7 @@ std::pair<material_dynamic_properties, material_fixed_properties> get_material_c
     fixed.reflectivity = fixed.reflectivity / dyn.volume;
     fixed.specific_heat = fixed.specific_heat / dyn.volume;
     fixed.specific_explosiveness = fixed.specific_explosiveness / dyn.volume;
+    fixed.density = fixed.density / dyn.volume;
 
     return {dyn, fixed};
 }

@@ -42,6 +42,7 @@ struct material_fixed_properties : serialisable
     float reflectivity = 0;
     float melting_point = 0;
     float specific_explosiveness = 0; ///damage per volume
+    float density = 0;
 
     SERIALISE_SIGNATURE()
     {
@@ -49,6 +50,7 @@ struct material_fixed_properties : serialisable
         DO_SERIALISE(reflectivity);
         DO_SERIALISE(melting_point);
         DO_SERIALISE(specific_explosiveness);
+        DO_SERIALISE(density);
     }
 };
 

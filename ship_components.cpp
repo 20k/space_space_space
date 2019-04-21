@@ -1373,15 +1373,16 @@ void ship::tick_missile_behaviour(double dt_s)
             reject = reject.norm() * horizontal_speed_ps;
         }
 
-        velocity += project * dt_s;
-        velocity += reject * dt_s * accuracy;
+        vec2f accel = project + reject * accuracy;
 
+        float max_thrust = get_max_velocity_thrust();
 
-        alt_frequency_packet em;
-        em.frequency = 1500;
-        em.intensity = 1000;
+        if(accel.length() > max_thrust)
+        {
+            accel = accel.norm() * max_thrust;
+        }
 
-        radar.emit(em, r.position, *this);
+        velocity += accel * dt_s;
 
         phys_ignore.clear();
     }
@@ -3120,16 +3121,48 @@ void ship::apply_rotation_force(float force)
     control_angular_force += force;
 }
 
+float ship::get_max_angular_thrust()
+{
+    float mass = get_mass();
+
+    return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 / mass;
+}
+
+float ship::get_max_velocity_thrust()
+{
+    float mass = get_mass();
+
+    return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 * 20 / mass;
+}
+
+float ship::get_mass()
+{
+    float my_mass = 0;
+
+    for(component& c : components)
+    {
+        auto [dyn, fixed] = get_material_composite(c.composition);
+
+        my_mass += dyn.volume * fixed.density;
+    }
+
+    for(component& c : components)
+    {
+        for(ship& s : c.stored)
+        {
+            my_mass += s.get_mass();
+        }
+    }
+
+    return my_mass;
+}
+
 void ship::tick_pre_phys(double dt_s)
 {
-    double thrust = get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2;
+    double angular_thrust = get_max_angular_thrust();
+    double velocity_thrust = get_max_velocity_thrust();
 
-    //std::cout << "thrust " << thrust << std::endl;
-
-    ///so to convert from angular to velocity multiply by this
-    double velocity_thrust_ratio = 20;
-
-    apply_inputs(dt_s, thrust * velocity_thrust_ratio, thrust);
+    apply_inputs(dt_s, velocity_thrust, angular_thrust);
     //e.tick_phys(dt_s);
 }
 

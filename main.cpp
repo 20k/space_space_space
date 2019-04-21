@@ -163,9 +163,9 @@ void server_thread(std::atomic_bool& should_term)
     ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot, heat_block;
 
     thruster.add(component_info::POWER, -1);
-    thruster.add(component_info::THRUST, 1);
+    thruster.add(component_info::THRUST, 100);
     thruster.add(component_info::HP, 0, 1);
-    thruster.add_composition(material_info::COPPER, 10);
+    thruster.add_composition(material_info::COPPER, 100);
     thruster.set_heat(20);
     thruster.long_name = "Thruster";
     thruster.short_name = "THRST";
@@ -451,6 +451,14 @@ void server_thread(std::atomic_bool& should_term)
 
     {
         ship mship = default_missile.to_ship();
+
+        for(component& c : mship.components)
+        {
+            if(!c.has(component_info::THRUST))
+                continue;
+
+            std::cout << "THR " << c.get(component_info::THRUST).recharge << std::endl;
+        }
 
         float to_store_volume = mship.get_my_volume();
 
