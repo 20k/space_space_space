@@ -425,7 +425,7 @@ void server_thread(std::atomic_bool& should_term)
     heat_block.normalise_volume();
 
     blueprint default_missile;
-    default_missile.overall_size = 0.01;
+    default_missile.overall_size = 1;
     default_missile.add_component_at(thruster, {50, 50}, 2);
     default_missile.add_component_at(sensor, {100, 100}, 1);
     default_missile.add_component_at(power_generator, {150, 150}, 3);

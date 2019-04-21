@@ -382,6 +382,7 @@ void component::use(std::vector<double>& res)
     }
 
     try_use = false;
+    force_use = false;
 }
 
 float component::get_my_volume() const
@@ -1392,6 +1393,8 @@ void ship::tick_missile_behaviour(double dt_s)
 
 void ship::tick(double dt_s)
 {
+    mass = get_mass();
+
     std::vector<double> resource_status = sum<double>([](component& c)
     {
         return c.get_held();
@@ -1498,9 +1501,9 @@ void ship::tick(double dt_s)
     ///item uses
     for(component& c : components)
     {
-        if(c.try_use)
+        if(c.try_use || c.force_use)
         {
-            if(c.can_use(next_resource_status))
+            if(c.can_use(next_resource_status) || c.force_use)
             {
                 c.use(next_resource_status);
 
@@ -1613,6 +1616,8 @@ void ship::tick(double dt_s)
 
                             double power = dynamic.volume * fixed.specific_explosiveness;
 
+                            std::cout << "POWER " << power << std::endl;
+
                             if(power < resource_status[component_info::HP])
                             {
                                 take_damage(power, true);
@@ -1642,6 +1647,7 @@ void ship::tick(double dt_s)
             }
 
             c.try_use = false;
+            c.force_use = false;
         }
 
         for(does& d : c.activate_requirements)
@@ -3262,6 +3268,28 @@ double ship::get_radar_strength()
     return clamp(net[component_info::SENSORS], 0, 1);
 }
 
+void ship::pre_collide(entity& other)
+{
+    bool is_missile = false;
+
+    for(component& c : components)
+    {
+        if(c.has_tag(tag_info::TAG_MISSILE_BEHAVIOUR))
+            is_missile = true;
+    }
+
+    if(is_missile)
+    {
+        for(component& c : components)
+        {
+            if(c.has(component_info::SELF_DESTRUCT) && c.get_hp_frac() > 0.2)
+            {
+                c.force_use = true;
+            }
+        }
+    }
+}
+
 void ship::on_collide(entity_manager& em, entity& other)
 {
     if(dynamic_cast<asteroid*>(&other) != nullptr || dynamic_cast<ship*>(&other))
@@ -3297,9 +3325,11 @@ void ship::on_collide(entity_manager& em, entity& other)
 
         take_damage(my_change.length()/2);
 
-        if(dynamic_cast<ship*>(&other))
+        ship* oship = dynamic_cast<ship*>(&other);
+
+        if(oship)
         {
-            dynamic_cast<ship*>(&other)->take_damage(their_change.length()/2);
+            oship->take_damage(their_change.length()/2);
         }
     }
 }

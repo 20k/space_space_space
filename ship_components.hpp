@@ -295,6 +295,7 @@ struct component : virtual serialisable, owned
     bool can_use(const std::vector<double>& res);
     void use(std::vector<double>& res);
 
+    bool force_use = false;
     bool try_use = false;
     double use_angle = 0;
     double max_use_angle = 0;
@@ -543,6 +544,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(my_size);
     }
 
+    virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void new_network_copy();
