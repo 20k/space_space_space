@@ -30,6 +30,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::MISSILE_CORE] = make_default("Missile Core", "MCRE");
     ret[component_type::DESTRUCT] = make_default("Self Destruct", "SDST");
     ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
+    ret[component_type::STORAGE_TANK_HS] = make_default("Storage Tank HS", "STNKH");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
     ret[component_type::FLUID] = make_default("Fluid", "FLD", true);
     ret[component_type::MATERIAL] = make_default("Material", "MAT");
@@ -218,10 +219,19 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     }
 
     {
+        component_fixed_properties& p = ret[component_type::STORAGE_TANK_HS];
+
+        p.add(component_info::HP, 0, 1);
+        p.internal_volume = 0.8;
+        p.heat_sink = true;
+    }
+
+    {
         component_fixed_properties& p = ret[component_type::HEAT_BLOCK];
 
         p.activation_type = component_info::NO_ACTIVATION;
         p.add(component_info::HP, 0, 1);
+        p.heat_sink = true;
     }
 
     {

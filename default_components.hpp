@@ -22,6 +22,7 @@ namespace component_type
         MISSILE_CORE,
         DESTRUCT,
         STORAGE_TANK,
+        STORAGE_TANK_HS,
         HEAT_BLOCK,
         FLUID,
         MATERIAL,
