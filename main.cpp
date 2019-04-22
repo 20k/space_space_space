@@ -166,6 +166,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::THRUSTER, 1));
     test_ship->add(get_component_default(component_type::WARP, 1));
     test_ship->add(get_component_default(component_type::SHIELDS, 1));
+    test_ship->add(get_component_default(component_type::COMPONENT_LAUNCHER, 1));
     test_ship->add(get_component_default(component_type::LASER, 1));
     test_ship->add(get_component_default(component_type::SENSOR, 1));
     test_ship->add(get_component_default(component_type::COMMS, 1));
@@ -174,10 +175,40 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::RADIATOR, 1));
     test_ship->add(get_component_default(component_type::POWER_GENERATOR, 1));
     test_ship->add(get_component_default(component_type::CREW, 1));
-    test_ship->add(get_component_default(component_type::DESTRUCT, 1));
-    test_ship->add(get_component_default(component_type::STORAGE_TANK, 1));
-    test_ship->add(get_component_default(component_type::STORAGE_TANK_HS, 1));
-    test_ship->add(get_component_default(component_type::COMPONENT_LAUNCHER, 1));
+
+    const component_fixed_properties& cold_fixed = get_component_fixed_props(component_type::STORAGE_TANK, 1);
+    const component_fixed_properties& hot_fixed = get_component_fixed_props(component_type::STORAGE_TANK_HS, 1);
+
+    component destruct = get_component_default(component_type::DESTRUCT, 1);
+    component cold_tank = get_component_default(component_type::STORAGE_TANK, 1);
+    component hot_tank = get_component_default(component_type::STORAGE_TANK_HS, 1);
+
+    component coolant_material = get_component_default(component_type::FLUID, 1);
+    coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.internal_volume);
+
+    component coolant_material2 = get_component_default(component_type::FLUID, 1);
+    coolant_material2.add_composition(material_info::HYDROGEN, hot_fixed.internal_volume);
+
+    cold_tank.store(coolant_material);
+    hot_tank.store(coolant_material2);
+
+    test_ship->add(destruct);
+    test_ship->add(cold_tank);
+    test_ship->add(hot_tank);
+
+    storage_pipe rpipe;
+    rpipe.id_1 = cold_tank._pid;
+    rpipe.id_2 = hot_tank._pid;
+    rpipe.max_flow_rate = 1;
+
+    test_ship->add_pipe(rpipe);
+
+    storage_pipe space_pipe;
+    space_pipe.id_1 = hot_tank._pid;
+    space_pipe.goes_to_space = true;
+    space_pipe.max_flow_rate = 0.5;
+
+    test_ship->add_pipe(space_pipe);
 
     #if 0
     component thruster, warp, shields, missile, laser, sensor, comms, armour,
