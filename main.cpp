@@ -159,14 +159,12 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
-    blueprint default_missile;
-    default_missile.overall_size = 1;
-    default_missile.name = "Default Missile";
+    component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);
 
     test_ship->add(get_component_default(component_type::THRUSTER, 1));
     test_ship->add(get_component_default(component_type::WARP, 1));
     test_ship->add(get_component_default(component_type::SHIELDS, 1));
-    test_ship->add(get_component_default(component_type::COMPONENT_LAUNCHER, 1));
+    test_ship->add(component_launch);
     test_ship->add(get_component_default(component_type::LASER, 1));
     test_ship->add(get_component_default(component_type::SENSOR, 1));
     test_ship->add(get_component_default(component_type::COMMS, 1));
@@ -175,6 +173,18 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::RADIATOR, 1));
     test_ship->add(get_component_default(component_type::POWER_GENERATOR, 1));
     test_ship->add(get_component_default(component_type::CREW, 1));
+
+    blueprint default_missile;
+
+    default_missile.overall_size = 1/15.;
+    default_missile.add_component_at(get_component_default(component_type::THRUSTER, 1), {50, 50}, 2);
+    default_missile.add_component_at(get_component_default(component_type::SENSOR, 1), {100, 100}, 1);
+    default_missile.add_component_at(get_component_default(component_type::POWER_GENERATOR, 1), {150, 150}, 3);
+    default_missile.add_component_at(get_component_default(component_type::DESTRUCT, 1), {200, 200}, 4);
+    default_missile.add_component_at(get_component_default(component_type::MISSILE_CORE, 1), {250, 250}, 1);
+    default_missile.add_component_at(get_component_default(component_type::HEAT_BLOCK, 1), {300, 300}, 2);
+    default_missile.add_component_at(get_component_default(component_type::RADIATOR, 1), {350, 350}, 2);
+    default_missile.name = "Default Missile";
 
     const component_fixed_properties& cold_fixed = get_component_fixed_props(component_type::STORAGE_TANK, 1);
     const component_fixed_properties& hot_fixed = get_component_fixed_props(component_type::STORAGE_TANK_HS, 1);
@@ -222,6 +232,53 @@ void server_thread(std::atomic_bool& should_term)
     for(component& c : test_ship->components)
     {
         c.scale(test_ship->my_size);
+    }
+
+    for(component& c : test_ship->components)
+    {
+        if(c.has_tag(tag_info::TAG_EJECTOR))
+        {
+            ship mship = default_missile.to_ship();
+
+            for(component& c : mship.components)
+            {
+                if(!c.has(component_info::THRUST))
+                    continue;
+
+                std::cout << "THR " << c.get_fixed(component_info::THRUST).recharge << std::endl;
+            }
+
+            for(component& lc : mship.components)
+            {
+                if(!lc.has(component_info::SELF_DESTRUCT))
+                    continue;
+
+                const component_fixed_properties& fixed = lc.get_fixed_props();
+
+                component expl = get_component_default(component_type::MATERIAL, 1);
+                expl.add_composition(material_info::HTX, fixed.get_internal_volume(lc.current_scale));
+
+                lc.store(expl);
+            }
+
+            float to_store_volume = mship.get_my_volume();
+
+            std::cout << "MSIZE " << to_store_volume << std::endl;
+            std::cout << "INTERNAL VOL " << c.get_internal_volume() << std::endl;
+
+            for(int i=0; i < (c.get_internal_volume() / mship.get_my_volume()) - 1; i++)
+            {
+                ///need to be able to store ships
+                ///a single component on its own should really be a ship... right?
+                ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
+                ///which isn't totally insane but it is a bit odd
+                ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
+
+                printf("HI THERE\n");
+
+                c.store(mship);
+            }
+        }
     }
 
     #if 0

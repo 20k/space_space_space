@@ -468,6 +468,8 @@ struct component : virtual serialisable, owned
     float get_my_heat_x_volume();
     float get_stored_heat_x_volume();
 
+    float get_internal_volume();
+
     void add_heat_to_me(float heat);
     void remove_heat_from_me(float heat);
     void add_heat_to_stored(float heat);
@@ -669,6 +671,7 @@ struct ship : heatable_entity, owned
     float get_max_angular_thrust();
     float get_max_velocity_thrust();
     float get_mass();
+    float get_max_temperature();
 
     SERIALISE_SIGNATURE()
     {
@@ -679,6 +682,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(latent_heat);
         DO_SERIALISE(pipes);
         DO_SERIALISE(my_size);
+        DO_SERIALISE(is_ship);
     }
 
     virtual void pre_collide(entity& other) override;
@@ -689,6 +693,8 @@ struct ship : heatable_entity, owned
     sf::Clock spawn_clock;
     void tick_missile_behaviour(double dt_s);
     uint64_t spawned_by = -1;
+
+    bool is_ship = false;
 
 private:
     double thrusters_active = 0;

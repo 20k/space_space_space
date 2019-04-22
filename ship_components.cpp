@@ -553,6 +553,13 @@ float component::get_stored_heat_x_volume()
     return temp;
 }
 
+float component::get_internal_volume()
+{
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    return fixed.get_internal_volume(current_scale);
+}
+
 void component::add_heat_to_me(float heat)
 {
     float total_heat = 0;
@@ -741,7 +748,13 @@ void component::scale(float size)
         m.dynamic_desc.volume *= size;
     }
 
-    for_each_stored([&](component& c){c.scale(size);});
+    for_each_stored([&](component& c)
+                    {
+                        //if(!c.flows)
+                        //    return;
+
+                        c.scale(size);
+                    });
 }
 
 std::optional<ship> component::remove_first_stored_item()
@@ -2491,30 +2504,56 @@ void component::render_inline_ui()
 
     for(ship& s : stored)
     {
-        for(component& store : s.components)
+        if(!s.is_ship)
         {
-            const component_fixed_properties& fixed = store.get_fixed_props();
+            for(component& store : s.components)
+            {
+                std::string name = store.long_name;
 
-            std::string name = store.long_name;
+                float val = store.get_my_volume();
+                float temperature = store.get_my_temperature();
 
-            float val = store.get_my_volume();
-            float temperature = store.get_my_temperature();
+                //ImGui::Text("Fluid:");
 
-            //ImGui::Text("Fluid:");
+                std::string ext = "(s)";
 
-            std::string ext = "(s)";
+                if(store.flows)
+                    ext = "(g)";
 
-            if(store.flows)
-                ext = "(g)";
+                std::string ext_str = std::to_string(_pid) + "." + std::to_string(store._pid);
 
-            std::string ext_str = std::to_string(_pid) + "." + std::to_string(store._pid);
+                {
+                    ImGui::PushItemWidth(80);
+
+                    ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, get_internal_volume(), "%.1f");
+
+                    ImGui::PopItemWidth();
+                }
+
+                ImGui::SameLine();
+
+                {
+                    ImGui::PushItemWidth(80);
+
+                    ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.0fK " + ext);
+
+                    ImGui::PopItemWidth();
+                }
+            }
+        }
+        else
+        {
+            std::string name = "Ship";
+
+            float val = s.get_my_volume();
+            float temperature = s.get_max_temperature();
+
+            std::string ext_str = std::to_string(_pid) + "." + std::to_string(s._pid);
 
             {
                 ImGui::PushItemWidth(80);
 
-                float internal = fixed.get_internal_volume(fixed.get_internal_volume(store.current_scale));
-
-                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, internal, "%.1f");
+                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, get_internal_volume(), "%.1f");
 
                 ImGui::PopItemWidth();
             }
@@ -2524,7 +2563,7 @@ void component::render_inline_ui()
             {
                 ImGui::PushItemWidth(80);
 
-                ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.0fK " + ext);
+                ImGuiX::SliderFloat("##riug" + ext_str, &temperature, 0, 6000, "%.0fK");
 
                 ImGui::PopItemWidth();
             }
@@ -3291,6 +3330,18 @@ float ship::get_mass()
     }
 
     return my_mass;
+}
+
+float ship::get_max_temperature()
+{
+    float mtemp = 0;
+
+    for(component& c : components)
+    {
+        mtemp = std::max(mtemp, c.get_my_temperature());
+    }
+
+    return mtemp;
 }
 
 void ship::tick_pre_phys(double dt_s)

@@ -193,6 +193,7 @@ ship blueprint::to_ship()
     }
 
     nship.my_size = overall_size;
+    nship.is_ship = true;
 
     return nship;
 }
