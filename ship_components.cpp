@@ -755,6 +755,29 @@ void component::add_composition(material_info::material_type type, double volume
     composition.push_back(new_mat);
 }
 
+void component::add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume)
+{
+    if(type.size() != volume.size())
+        throw std::runtime_error("Bad Composition, hard error?");
+
+    double total_volume_in = 0;
+
+    for(auto& i : volume)
+    {
+        total_volume_in += i;
+    }
+
+    if(total_volume_in <= 0.00001)
+        throw std::runtime_error("Bad volume in, composition");
+
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(int i=0; i < (int)type.size(); i++)
+    {
+        add_composition(type[i], fixed.base_volume * volume[i] / total_volume_in);
+    }
+}
+
 std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
 {
     std::vector<double> produced_resources;
