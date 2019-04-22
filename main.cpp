@@ -178,10 +178,17 @@ void server_thread(std::atomic_bool& should_term)
 
     const component_fixed_properties& cold_fixed = get_component_fixed_props(component_type::STORAGE_TANK, 1);
     const component_fixed_properties& hot_fixed = get_component_fixed_props(component_type::STORAGE_TANK_HS, 1);
+    const component_fixed_properties& destruct_fixed = get_component_fixed_props(component_type::DESTRUCT, 1);
+
 
     component destruct = get_component_default(component_type::DESTRUCT, 1);
     component cold_tank = get_component_default(component_type::STORAGE_TANK, 1);
     component hot_tank = get_component_default(component_type::STORAGE_TANK_HS, 1);
+
+    component explosives = get_component_default(component_type::MATERIAL, 1);
+    explosives.add_composition(material_info::HTX, destruct_fixed.internal_volume);
+
+    destruct.store(explosives);
 
     component coolant_material = get_component_default(component_type::FLUID, 1);
     coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.internal_volume);
