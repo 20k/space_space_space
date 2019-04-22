@@ -41,13 +41,13 @@ std::array<component, component_type::COUNT> get_default_component_map()
         const component_fixed_properties& fixed = get_component_fixed_props((component_type::type)i, 1.f);
 
         ret[i].base_id = (component_type::type)i;
-        ret[i].dyn_info.resize(fixed.info.size());
-        ret[i].dyn_activate_requirements.resize(fixed.activate_requirements.size());
+        ret[i].dyn_info.resize(fixed.d_info.size());
+        ret[i].dyn_activate_requirements.resize(fixed.d_activate_requirements.size());
 
         for(int kk=0; kk < (int)ret[i].dyn_info.size(); kk++)
         {
-            ret[i].dyn_info[kk].held = fixed.info[kk].capacity;
-            ret[i].dyn_info[kk].type = fixed.info[kk].type;
+            ret[i].dyn_info[kk].held = fixed.d_info[kk].capacity;
+            ret[i].dyn_info[kk].type = fixed.d_info[kk].type;
         }
 
         //ret[i].add_composition(material_info::IRON, fixed.base_volume);
@@ -233,7 +233,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::HP, 0, 1);
         p.add(component_info::SELF_DESTRUCT, 1);
-        p.internal_volume = 1;
+        p.set_internal_volume(1);
         p.activation_type = component_info::NO_ACTIVATION;
         p.base_volume = 1;
     }
@@ -249,7 +249,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         component_fixed_properties& p = ret[component_type::STORAGE_TANK];
 
         p.add(component_info::HP, 0, 1);
-        p.internal_volume = 1;
+        p.set_internal_volume(1);
         p.base_volume = 1;
     }
 
@@ -257,7 +257,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         component_fixed_properties& p = ret[component_type::STORAGE_TANK_HS];
 
         p.add(component_info::HP, 0, 1);
-        p.internal_volume = 0.8;
+        p.set_internal_volume(0.8);
         p.heat_sink = true;
         p.base_volume = 1;
     }
@@ -281,7 +281,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
-        p.internal_volume = 1;
+        p.set_internal_volume(1);
         p.base_volume = 1;
     }
 

@@ -186,15 +186,15 @@ void server_thread(std::atomic_bool& should_term)
     component hot_tank = get_component_default(component_type::STORAGE_TANK_HS, 1);
 
     component explosives = get_component_default(component_type::MATERIAL, 1);
-    explosives.add_composition(material_info::HTX, destruct_fixed.internal_volume);
+    explosives.add_composition(material_info::HTX, destruct_fixed.get_internal_volume(destruct.current_scale));
 
     destruct.store(explosives);
 
     component coolant_material = get_component_default(component_type::FLUID, 1);
-    coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.internal_volume);
+    coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.get_internal_volume(cold_tank.current_scale));
 
     component coolant_material2 = get_component_default(component_type::FLUID, 1);
-    coolant_material2.add_composition(material_info::HYDROGEN, hot_fixed.internal_volume);
+    coolant_material2.add_composition(material_info::HYDROGEN, hot_fixed.get_internal_volume(hot_tank.current_scale));
 
     cold_tank.store(coolant_material);
     hot_tank.store(coolant_material2);
@@ -216,6 +216,13 @@ void server_thread(std::atomic_bool& should_term)
     space_pipe.max_flow_rate = 0.5;
 
     test_ship->add_pipe(space_pipe);
+
+    test_ship->my_size = 10;
+
+    for(component& c : test_ship->components)
+    {
+        c.scale(test_ship->my_size);
+    }
 
     #if 0
     component thruster, warp, shields, missile, laser, sensor, comms, armour,

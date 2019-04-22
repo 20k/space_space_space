@@ -46,7 +46,7 @@ void component_fixed_properties::add(component_info::does_type type, double amou
     d.type = type;
     d.recharge = amount;
 
-    info.push_back(d);
+    d_info.push_back(d);
 }
 
 void component_fixed_properties::add(component_info::does_type type, double amount, double capacity)
@@ -56,7 +56,7 @@ void component_fixed_properties::add(component_info::does_type type, double amou
     d.recharge = amount;
     d.capacity = capacity;
 
-    info.push_back(d);
+    d_info.push_back(d);
 }
 
 void component_fixed_properties::add(tag_info::tag_type type)
@@ -74,7 +74,7 @@ void component_fixed_properties::add_on_use(component_info::does_type type, doub
     d.capacity = amount;
     d.time_between_use_s = time_between_use_s;
 
-    activate_requirements.push_back(d);
+    d_activate_requirements.push_back(d);
 }
 
 void component_fixed_properties::set_heat(double heat)
@@ -182,8 +182,10 @@ std::vector<double> component::get_theoretical_produced()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         double mod = last_sat;
 
         if(d.recharge < 0)
@@ -212,8 +214,10 @@ std::vector<double> component::get_theoretical_consumed()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         if(d.recharge > 0)
             continue;
 
@@ -235,8 +239,10 @@ std::vector<double> component::get_produced()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         double mod = last_sat;
 
         if(d.recharge < 0)
@@ -260,8 +266,10 @@ std::vector<double> component::get_needed()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         double mod = 1;
 
         if(d.recharge > 0)
@@ -282,8 +290,10 @@ std::vector<double> component::get_capacity()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         needed[d.type] += d.capacity;
     }
 
@@ -310,7 +320,7 @@ void component::deplete_me(const std::vector<double>& diff, const std::vector<do
     for(int i=0; i < (int)dyn_info.size(); i++)
     {
         does_dynamic& does_dyn = dyn_info[i];
-        const does_fixed& does_fix = fixed.info[i];
+        const does_fixed& does_fix = fixed.d_info[i].scale(current_scale);
 
         double my_held = does_dyn.held;
         double my_cap = does_fix.capacity;
@@ -367,7 +377,7 @@ bool component::can_use(const std::vector<double>& res)
     for(int i=0; i < (int)dyn_activate_requirements.size(); i++)
     {
         does_dynamic& does_dyn = dyn_activate_requirements[i];
-        const does_fixed& does_fix = fixed.activate_requirements[i];
+        const does_fixed& does_fix = fixed.d_activate_requirements[i].scale(current_scale);
 
         if(does_fix.capacity >= 0)
             continue;
@@ -397,8 +407,10 @@ void component::use(std::vector<double>& res)
 {
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.activate_requirements)
+    for(const does_fixed& unscaled : fixed.d_activate_requirements)
     {
+        does_fixed d = unscaled.scale(current_scale);
+
         res[d.type] += d.capacity;
     }
 
@@ -598,10 +610,10 @@ bool component::can_store(const component& c)
 {
     const component_fixed_properties& fixed = get_fixed_props();
 
-    if(fixed.internal_volume <= 0)
+    if(fixed.get_internal_volume(current_scale) <= 0)
         return false;
 
-    float storeable = fixed.internal_volume - get_stored_volume();
+    float storeable = fixed.get_internal_volume(current_scale) - get_stored_volume();
 
     return (storeable - c.get_my_volume()) >= 0;
 }
@@ -610,10 +622,10 @@ bool component::can_store(const ship& s)
 {
     const component_fixed_properties& fixed = get_fixed_props();
 
-    if(fixed.internal_volume <= 0)
+    if(fixed.get_internal_volume(current_scale) <= 0)
         return false;
 
-    float storeable = fixed.internal_volume - get_stored_volume();
+    float storeable = fixed.get_internal_volume(current_scale) - get_stored_volume();
 
     float to_store_volume = 0;
 
@@ -651,7 +663,7 @@ bool component::is_storage()
 {
     const component_fixed_properties& fixed = get_fixed_props();
 
-    return fixed.internal_volume > 0;
+    return fixed.get_internal_volume(current_scale) > 0;
 }
 
 bool component::should_flow()
@@ -794,8 +806,10 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
 
         const component_fixed_properties& fixed = c.get_fixed_props();
 
-        for(const does_fixed& d : fixed.info)
+        for(const does_fixed& unscaled : fixed.d_info)
         {
+            does_fixed d = c.scale(unscaled);
+
             if(d.recharge > 0)
                 produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level;
             else
@@ -814,8 +828,10 @@ double component::get_sat(const std::vector<double>& sat)
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = scale(unscaled);
+
         if(d.recharge > 0)
             continue;
 
@@ -903,7 +919,7 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
     const component_fixed_properties& c2_fixed = c2_in.get_fixed_props();
 
-    float internal_storage = c2_fixed.internal_volume;
+    float internal_storage = c2_fixed.get_internal_volume(c2_in.current_scale);
 
     float free_volume = internal_storage - c2_in.get_stored_volume();
 
@@ -1035,8 +1051,10 @@ std::vector<double> ship::get_sat_percentage()
 
         const component_fixed_properties& fixed = c.get_fixed_props();
 
-        for(const does_fixed& d : fixed.info)
+        for(const does_fixed& unscaled : fixed.d_info)
         {
+            does_fixed d = c.scale(unscaled);
+
             if(d.recharge < 0)
                 all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level;
 
@@ -1510,8 +1528,10 @@ void ship::tick(double dt_s)
 
         const component_fixed_properties& fixed = c.get_fixed_props();
 
-        for(const does_fixed& d : fixed.info)
+        for(const does_fixed& unscaled : fixed.d_info)
         {
+            does_fixed d = c.scale(unscaled);
+
             if(d.recharge <= 0)
                 continue;
 
@@ -2094,7 +2114,7 @@ void ship::handle_heat(double dt_s)
 
         //double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac * c.activation_level);
 
-        double heat = fixed.heat_produced_at_full_usage * c.get_operating_efficiency();
+        double heat = fixed.get_heat_produced_at_full_usage(c.current_scale) * c.get_operating_efficiency();
 
         /*if(c.long_name == "Power Generator")
         {
@@ -2415,8 +2435,10 @@ void component::render_inline_stats()
 
     const component_fixed_properties& fixed = get_fixed_props();
 
-    for(const does_fixed& d : fixed.info)
+    for(const does_fixed& unscaled : fixed.d_info)
     {
+        does_fixed d = scale(unscaled);
+
         net[d.type] += d.recharge;
         stored[d.type] += d.capacity;
     }
@@ -2490,7 +2512,9 @@ void component::render_inline_ui()
             {
                 ImGui::PushItemWidth(80);
 
-                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, fixed.internal_volume, "%.1f");
+                float internal = fixed.get_internal_volume(fixed.get_internal_volume(store.current_scale));
+
+                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, internal, "%.1f");
 
                 ImGui::PopItemWidth();
             }
@@ -2605,7 +2629,7 @@ void ship::show_resources(bool window)
 
         const component_fixed_properties& fixed = c.get_fixed_props();
 
-        float max_stored = fixed.internal_volume;
+        float max_stored = fixed.get_internal_volume(c.current_scale);
         float cur_stored = c.get_stored_volume();
 
         //ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";

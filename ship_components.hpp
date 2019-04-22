@@ -103,6 +103,17 @@ struct does_fixed : serialisable
         //DO_SERIALISE(last_use_s);
         DO_SERIALISE(type);
     }
+
+    does_fixed scale(float scale) const
+    {
+        does_fixed ret = *this;
+
+        ret.capacity *= scale;
+        ret.recharge *= scale;
+        ret.time_between_use_s *= scale;
+
+        return ret;
+    }
 };
 
 struct does_dynamic : serialisable
@@ -182,8 +193,6 @@ void for_each_ship_hackery(C& c, T t);
 
 struct component_fixed_properties : serialisable
 {
-    std::vector<does_fixed> info;
-    std::vector<does_fixed> activate_requirements;
     std::vector<tag> tags;
 
     bool no_drain_on_full_production = false;
@@ -192,14 +201,11 @@ struct component_fixed_properties : serialisable
     std::string subtype;
 
     component_info::activation_type activation_type = component_info::NO_ACTIVATION;
-    float internal_volume = 0;
 
     bool heat_sink = false;
 
     bool production_heat_scales = false;
     double max_use_angle = 0;
-
-    double heat_produced_at_full_usage = 0;
 
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
@@ -219,8 +225,8 @@ struct component_fixed_properties : serialisable
 
     SERIALISE_SIGNATURE()
     {
-        DO_SERIALISE(info);
-        DO_SERIALISE(activate_requirements);
+        DO_SERIALISE(d_info);
+        DO_SERIALISE(d_activate_requirements);
         DO_SERIALISE(tags);
         DO_SERIALISE(no_drain_on_full_production);
         DO_SERIALISE(complex_no_drain_on_full_production);
@@ -234,6 +240,44 @@ struct component_fixed_properties : serialisable
         DO_SERIALISE(primary_type);
         DO_SERIALISE(base_volume);
     }
+
+    const does_fixed& get_info(component_info::does_type type) const
+    {
+        for(const does_fixed& fix : d_info)
+        {
+            if(fix.type == type)
+                return fix;
+        }
+
+        throw std::runtime_error("No type in get_info");
+    }
+
+    /*const does_fixed& get_activate_requirement(component_type::does_type type)
+    {
+
+    }*/
+
+    std::vector<does_fixed> d_info;
+    std::vector<does_fixed> d_activate_requirements;
+
+    void set_internal_volume(float ivol)
+    {
+        internal_volume = ivol;
+    }
+
+    float get_internal_volume(float scale) const
+    {
+        return internal_volume * scale;
+    }
+
+    float get_heat_produced_at_full_usage(float scale) const
+    {
+        return heat_produced_at_full_usage * scale;
+    }
+
+private:
+    float internal_volume = 0;
+    double heat_produced_at_full_usage = 0;
 };
 
 struct component : virtual serialisable, owned
@@ -319,9 +363,7 @@ struct component : virtual serialisable, owned
 
     bool has(component_info::does_type type)
     {
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
-
-        for(auto& i : fixed.info)
+        for(auto& i : dyn_info)
         {
             if(i.type == type)
                 return true;
@@ -350,29 +392,28 @@ struct component : virtual serialisable, owned
 
         const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
-        for(int i=0; i < (int)fixed.info.size(); i++)
+        for(int i=0; i < (int)dyn_info.size(); i++)
         {
-            if(fixed.info[i].type == type)
+            if(dyn_info[i].type == type)
                 return dyn_info[i];
         }
 
         throw std::runtime_error("rg2");
     }
 
-    const does_fixed& get_fixed(component_info::does_type type)
+    does_fixed scale(const does_fixed& fix) const
+    {
+        return fix.scale(current_scale);
+    }
+
+    does_fixed get_fixed(component_info::does_type type)
     {
         if(!has(type))
             throw std::runtime_error("rip get");
 
         const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
-        for(auto& d : fixed.info)
-        {
-            if(d.type == type)
-                return d;
-        }
-
-        throw std::runtime_error("rg2");
+        return fixed.get_info(type).scale(current_scale);
     }
 
     ///ignores anything < 0
