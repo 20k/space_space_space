@@ -80,25 +80,39 @@ namespace tag_info
     };
 }
 
-struct does : serialisable
+///migrate held outside as its a dynamic property
+///migrate last_use_s outside as its a dynamic property
+struct does_fixed : serialisable
 {
     double capacity = 0;
-    double held = 0;
+    //double held = 0;
     double recharge = 0;
 
     double time_between_use_s = 0;
-    double last_use_s = 0;
+    //double last_use_s = 0;
 
     component_info::does_type type = component_info::COUNT;
 
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(capacity);
-        DO_SERIALISE(held);
+        //DO_SERIALISE(held);
         DO_SERIALISE(recharge);
         DO_SERIALISE(time_between_use_s);
-        DO_SERIALISE(last_use_s);
+        //DO_SERIALISE(last_use_s);
         DO_SERIALISE(type);
+    }
+};
+
+struct does_dynamic : serialisable
+{
+    double held = 0;
+    double last_use_s = 0;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(held);
+        DO_SERIALISE(last_use_s);
     }
 };
 
@@ -162,7 +176,7 @@ void for_each_ship_hackery(const C& c, T t);
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t);
 
-struct component : virtual serialisable, owned
+struct component_fixed_properties : serialisable
 {
     std::vector<does> info;
     std::vector<does> activate_requirements;
@@ -170,6 +184,46 @@ struct component : virtual serialisable, owned
 
     bool no_drain_on_full_production = false;
     bool complex_no_drain_on_full_production = false;
+
+    std::string subtype;
+
+    component_info::activation_type activation_type = component_info::NO_ACTIVATION;
+    float internal_volume = 0;
+
+    bool heat_sink = false;
+
+    bool production_heat_scales = false;
+    double max_use_angle = 0;
+
+    double heat_produced_at_full_usage = 0;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(info);
+        DO_SERIALISE(activate_requirements);
+        DO_SERIALISE(tags);
+        DO_SERIALISE(no_drain_on_full_production);
+        DO_SERIALISE(complex_no_drain_on_full_production);
+        DO_SERIALISE(subtype);
+        DO_SERIALISE(activation_type);
+        DO_SERIALISE(internal_volume);
+        DO_SERIALISE(heat_sink);
+        DO_SERIALISE(production_heat_scales);
+        DO_SERIALISE(max_use_angle);
+        DO_SERIALISE(heat_produced_at_full_usage);
+    }
+};
+
+struct component : virtual serialisable, owned
+{
+    int base_id = -1;
+
+    //std::vector<does> info;
+    //std::vector<does> activate_requirements;
+    //std::vector<tag> tags;
+
+    //bool no_drain_on_full_production = false;
+    //bool complex_no_drain_on_full_production = false;
 
     //static inline uint32_t gid = 0;
     //uint32_t id = gid++;
@@ -179,11 +233,11 @@ struct component : virtual serialisable, owned
 
     ///?????????????????
     ///this will go to the house
-    std::string subtype;
+    //std::string subtype;
 
     double last_sat = 1;
     bool flows = false;
-    bool heat_sink = false;
+    //bool heat_sink = false;
 
     ///how active i need to be
     ///only applies to no_drain_on_full_production
@@ -191,31 +245,32 @@ struct component : virtual serialisable, owned
     double last_production_frac = 1;
     ///user requested activation level
     float activation_level = 1;
-    component_info::activation_type activation_type = component_info::NO_ACTIVATION;
+    //component_info::activation_type activation_type = component_info::NO_ACTIVATION;
 
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
-    bool production_heat_scales = false;
+    //bool production_heat_scales = false;
     component_info::does_type primary_type = component_info::COUNT;
 
     SERIALISE_SIGNATURE()
     {
-        DO_SERIALISE(info);
-        DO_SERIALISE(activate_requirements);
-        DO_SERIALISE(tags);
+        //DO_SERIALISE(info);
+        //DO_SERIALISE(activate_requirements);
+        //DO_SERIALISE(tags);
+        DO_SERIALISE(base_id);
         DO_SERIALISE(long_name);
         DO_SERIALISE(short_name);
         DO_SERIALISE(last_sat);
         DO_SERIALISE(flows);
-        DO_SERIALISE(heat_sink);
-        DO_SERIALISE(no_drain_on_full_production);
-        DO_SERIALISE(complex_no_drain_on_full_production);
+        //DO_SERIALISE(heat_sink);
+        //DO_SERIALISE(no_drain_on_full_production);
+        //DO_SERIALISE(complex_no_drain_on_full_production);
         DO_SERIALISE(last_production_frac);
-        DO_SERIALISE(max_use_angle);
-        DO_SERIALISE(subtype);
-        DO_SERIALISE(production_heat_scales);
+        //DO_SERIALISE(max_use_angle);
+        //DO_SERIALISE(subtype);
+        //DO_SERIALISE(production_heat_scales);
         //DO_SERIALISE(my_volume);
-        DO_SERIALISE(internal_volume);
+        //DO_SERIALISE(internal_volume);
         DO_SERIALISE(current_scale);
         DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
         DO_SERIALISE(primary_type);
@@ -223,7 +278,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
         DO_SERIALISE(activation_level);
-        DO_SERIALISE(activation_type);
+        //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
     }
@@ -298,9 +353,6 @@ struct component : virtual serialisable, owned
     bool force_use = false;
     bool try_use = false;
     double use_angle = 0;
-    double max_use_angle = 0;
-
-    double heat_produced_at_full_usage = 0;
 
     ///my volume is how large we are as a thing
     ///internal volume is how much can be stored within me
@@ -308,7 +360,7 @@ struct component : virtual serialisable, owned
     //float my_volume = 0;
 
     ///no longer have a concept of my_volume, purely based off composition
-    float internal_volume = 0;
+    //float internal_volume = 0;
     float current_scale = 1;
 
 

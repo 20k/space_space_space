@@ -78,6 +78,8 @@
 		<Unit filename="camera.cpp" />
 		<Unit filename="camera.hpp" />
 		<Unit filename="common_renderable.hpp" />
+		<Unit filename="default_components.cpp" />
+		<Unit filename="default_components.hpp" />
 		<Unit filename="deps/imgui-sfml/imgui-SFML.cpp" />
 		<Unit filename="deps/imgui/imgui.cpp" />
 		<Unit filename="deps/imgui/imgui_demo.cpp" />
