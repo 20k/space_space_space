@@ -163,6 +163,21 @@ void server_thread(std::atomic_bool& should_term)
     default_missile.overall_size = 1;
     default_missile.name = "Default Missile";
 
+    test_ship->add(get_component_default(component_type::THRUSTER, 1));
+    test_ship->add(get_component_default(component_type::WARP, 1));
+    test_ship->add(get_component_default(component_type::SHIELDS, 1));
+    test_ship->add(get_component_default(component_type::LASER, 1));
+    test_ship->add(get_component_default(component_type::SENSOR, 1));
+    test_ship->add(get_component_default(component_type::COMMS, 1));
+    test_ship->add(get_component_default(component_type::ARMOUR, 1));
+    test_ship->add(get_component_default(component_type::LIFE_SUPPORT, 1));
+    test_ship->add(get_component_default(component_type::RADIATOR, 1));
+    test_ship->add(get_component_default(component_type::POWER_GENERATOR, 1));
+    test_ship->add(get_component_default(component_type::CREW, 1));
+    test_ship->add(get_component_default(component_type::DESTRUCT, 1));
+    test_ship->add(get_component_default(component_type::STORAGE_TANK, 1));
+    test_ship->add(get_component_default(component_type::STORAGE_TANK_HS, 1));
+
     #if 0
     component thruster, warp, shields, missile, laser, sensor, comms, armour,
     ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot, heat_block;

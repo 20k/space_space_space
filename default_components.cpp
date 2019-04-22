@@ -49,6 +49,8 @@ std::array<component, component_type::COUNT> get_default_component_map()
             ret[i].dyn_info[kk].held = fixed.info[kk].capacity;
             ret[i].dyn_info[kk].type = fixed.info[kk].type;
         }
+
+        ret[i].add_composition(material_info::IRON, 1);
     }
 
     return ret;
