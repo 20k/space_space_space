@@ -24,6 +24,8 @@ namespace component_type
         STORAGE_TANK,
         HEAT_BLOCK,
         FLUID,
+        MATERIAL,
+        COMPONENT_LAUNCHER,
         COUNT,
     };
 }
