@@ -110,10 +110,13 @@ struct does_dynamic : serialisable
     double held = 0;
     double last_use_s = 0;
 
+    component_info::does_type type = component_info::COUNT;
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(held);
         DO_SERIALISE(last_use_s);
+        DO_SERIALISE(type);
     }
 };
 
@@ -198,6 +201,21 @@ struct component_fixed_properties : serialisable
 
     double heat_produced_at_full_usage = 0;
 
+    void add(component_info::does_type, double amount);
+    void add(component_info::does_type, double amount, double cap);
+    void add(tag_info::tag_type);
+
+    void add_on_use(component_info::does_type, double amount, double time_between_use_s);
+
+    void set_heat(double heat);
+    void set_heat_scales_by_production(bool status, component_info::does_type primary);
+
+    void set_no_drain_on_full_production();
+    void set_complex_no_drain_on_full_production();
+
+    component_info::does_type primary_type = component_info::COUNT;
+
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(info);
@@ -212,6 +230,7 @@ struct component_fixed_properties : serialisable
         DO_SERIALISE(production_heat_scales);
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(heat_produced_at_full_usage);
+        DO_SERIALISE(primary_type);
     }
 };
 
@@ -230,6 +249,7 @@ struct component : virtual serialisable, owned
     //uint32_t id = gid++;
 
     std::vector<does_dynamic> dyn_info;
+    std::vector<does_dynamic> dyn_activate_requirements;
 
     std::string long_name;
     std::string short_name;
@@ -253,7 +273,6 @@ struct component : virtual serialisable, owned
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
     //bool production_heat_scales = false;
-    component_info::does_type primary_type = component_info::COUNT;
 
     SERIALISE_SIGNATURE()
     {
@@ -261,6 +280,7 @@ struct component : virtual serialisable, owned
         //DO_SERIALISE(activate_requirements);
         //DO_SERIALISE(tags);
         DO_SERIALISE(dyn_info);
+        DO_SERIALISE(dyn_activate_requirements);
         DO_SERIALISE(base_id);
         DO_SERIALISE(long_name);
         DO_SERIALISE(short_name);
@@ -277,7 +297,7 @@ struct component : virtual serialisable, owned
         //DO_SERIALISE(internal_volume);
         DO_SERIALISE(current_scale);
         DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
-        DO_SERIALISE(primary_type);
+        //DO_SERIALISE(primary_type);
         //DO_SERIALISE(id);
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
@@ -287,24 +307,17 @@ struct component : virtual serialisable, owned
         DO_RPC(set_use);
     }
 
+    const component_fixed_properties& get_fixed_props()
+    {
+        return get_component_fixed_props(base_id, current_scale);
+    }
+
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
     void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);
 
-    void add(component_info::does_type, double amount);
-    void add(component_info::does_type, double amount, double cap);
-    void add(tag_info::tag_type);
-
-    void add_on_use(component_info::does_type, double amount, double time_between_use_s);
-
-    void set_heat(double heat);
-    void set_heat_scales_by_production(bool status, component_info::does_type primary);
-
-    void set_no_drain_on_full_production();
-    void set_complex_no_drain_on_full_production();
-
     bool has(component_info::does_type type)
     {
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         for(auto& i : fixed.info)
         {
@@ -317,7 +330,7 @@ struct component : virtual serialisable, owned
 
     bool has_tag(tag_info::tag_type tag)
     {
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         for(auto& i : fixed.tags)
         {
@@ -333,7 +346,7 @@ struct component : virtual serialisable, owned
         if(!has(type))
             throw std::runtime_error("rip get");
 
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         for(int i=0; i < (int)fixed.info.size(); i++)
         {
@@ -349,7 +362,7 @@ struct component : virtual serialisable, owned
         if(!has(type))
             throw std::runtime_error("rip get");
 
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         for(auto& d : fixed.info)
         {
@@ -446,13 +459,15 @@ struct component : virtual serialisable, owned
         if(isinf(level) || isnan(level))
             return;
 
-        if(activation_type == component_info::NO_ACTIVATION)
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
+
+        if(fixed.activation_type == component_info::NO_ACTIVATION)
         {
             activation_level = 1;
             return;
         }
 
-        if(activation_type == component_info::TOGGLE_ACTIVATION)
+        if(fixed.activation_type == component_info::TOGGLE_ACTIVATION)
         {
             if(level < 0.5)
                 level = 0;

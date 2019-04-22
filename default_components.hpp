@@ -23,11 +23,12 @@ namespace component_type
         DESTRUCT,
         STORAGE_TANK,
         HEAT_BLOCK,
+        FLUID,
         COUNT,
     };
 }
 
-const component& get_component_default(component_type::type id);
-const component_fixed_properties& get_component_fixed_props(component_type::type id);
+const component& get_component_default(component_type::type id, float scale);
+const component_fixed_properties& get_component_fixed_props(component_type::type id, float scale);
 
 #endif // DEFAULT_COMPONENTS_HPP_INCLUDED

@@ -13,7 +13,7 @@
 #include "aoe_damage.hpp"
 #include "player.hpp"
 
-double apply_to_does(double amount, does& d);
+double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
 ship::ship()
 {
@@ -40,27 +40,26 @@ ship::ship()
     data_track.resize(component_info::COUNT);
 }
 
-void component::add(component_info::does_type type, double amount)
+void component_fixed_properties::add(component_info::does_type type, double amount)
 {
-    does d;
+    does_fixed d;
     d.type = type;
     d.recharge = amount;
 
     info.push_back(d);
 }
 
-void component::add(component_info::does_type type, double amount, double capacity)
+void component_fixed_properties::add(component_info::does_type type, double amount, double capacity)
 {
-    does d;
+    does_fixed d;
     d.type = type;
     d.recharge = amount;
     d.capacity = capacity;
-    d.held = d.capacity;
 
     info.push_back(d);
 }
 
-void component::add(tag_info::tag_type type)
+void component_fixed_properties::add(tag_info::tag_type type)
 {
     tag t;
     t.type = type;
@@ -68,34 +67,33 @@ void component::add(tag_info::tag_type type)
     tags.push_back(t);
 }
 
-void component::add_on_use(component_info::does_type type, double amount, double time_between_use_s)
+void component_fixed_properties::add_on_use(component_info::does_type type, double amount, double time_between_use_s)
 {
-    does d;
+    does_fixed d;
     d.type = type;
     d.capacity = amount;
-    d.held = 0;
     d.time_between_use_s = time_between_use_s;
 
     activate_requirements.push_back(d);
 }
 
-void component::set_heat(double heat)
+void component_fixed_properties::set_heat(double heat)
 {
     heat_produced_at_full_usage = heat;
 }
 
-void component::set_heat_scales_by_production(bool status, component_info::does_type primary)
+void component_fixed_properties::set_heat_scales_by_production(bool status, component_info::does_type primary)
 {
     production_heat_scales = status;
     primary_type = primary;
 }
 
-void component::set_no_drain_on_full_production()
+void component_fixed_properties::set_no_drain_on_full_production()
 {
     no_drain_on_full_production = true;
 }
 
-void component::set_complex_no_drain_on_full_production()
+void component_fixed_properties::set_complex_no_drain_on_full_production()
 {
     complex_no_drain_on_full_production = true;
 }
@@ -182,7 +180,9 @@ std::vector<double> component::get_theoretical_produced()
 
     assert(max_hp > 0);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         double mod = last_sat;
 
@@ -191,7 +191,7 @@ std::vector<double> component::get_theoretical_produced()
 
         float hacky_lpf = last_production_frac;
 
-        if(complex_no_drain_on_full_production)
+        if(fixed.complex_no_drain_on_full_production)
             hacky_lpf = 1;
 
         needed[d.type] += d.recharge * (hp / max_hp) * mod * activation_level * hacky_lpf;
@@ -210,7 +210,9 @@ std::vector<double> component::get_theoretical_consumed()
 
     assert(max_hp > 0);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         if(d.recharge > 0)
             continue;
@@ -231,7 +233,9 @@ std::vector<double> component::get_produced()
 
     assert(max_hp > 0);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         double mod = last_sat;
 
@@ -254,7 +258,9 @@ std::vector<double> component::get_needed()
 
     assert(max_hp > 0);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         double mod = 1;
 
@@ -274,7 +280,9 @@ std::vector<double> component::get_capacity()
     std::vector<double> needed;
     needed.resize(component_info::COUNT);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         needed[d.type] += d.capacity;
     }
@@ -287,7 +295,7 @@ std::vector<double> component::get_held()
     std::vector<double> needed;
     needed.resize(component_info::COUNT);
 
-    for(does& d : info)
+    for(const does_dynamic& d : dyn_info)
     {
         needed[d.type] += d.held;
     }
@@ -297,75 +305,88 @@ std::vector<double> component::get_held()
 
 void component::deplete_me(const std::vector<double>& diff, const std::vector<double>& free_storage, const std::vector<double>& used_storage)
 {
-    for(does& d : info)
-    {
-        double my_held = d.held;
-        double my_cap = d.capacity;
+    const component_fixed_properties& fixed = get_fixed_props();
 
-        if(diff[d.type] > 0)
+    for(int i=0; i < (int)dyn_info.size(); i++)
+    {
+        does_dynamic& does_dyn = dyn_info[i];
+        const does_fixed& does_fix = fixed.info[i];
+
+        double my_held = does_dyn.held;
+        double my_cap = does_fix.capacity;
+
+        if(diff[does_fix.type] > 0)
         {
             double my_free = my_cap - my_held;
 
             if(my_free <= 0)
                 continue;
 
-            double free_of_type = free_storage[d.type];
+            double free_of_type = free_storage[does_fix.type];
 
             if(fabs(free_of_type) <= 0.00001)
                 continue;
 
             double deplete_frac = my_free / free_of_type;
 
-            double to_change = deplete_frac * diff[d.type];
+            double to_change = deplete_frac * diff[does_fix.type];
 
             double next = clamp(my_held + to_change, 0, my_cap);
 
-            d.held = next;
+            does_dyn.held = next;
         }
         else
         {
-            double my_used = d.held;
+            double my_used = does_dyn.held;
 
             if(my_used <= 0)
                 continue;
 
-            double used_of_type = used_storage[d.type];
+            double used_of_type = used_storage[does_fix.type];
 
             if(fabs(used_of_type) <= 0.00001)
                 continue;
 
             double deplete_frac = my_used / used_of_type;
 
-            double to_change = deplete_frac * diff[d.type];
+            double to_change = deplete_frac * diff[does_fix.type];
 
             double next = clamp(my_held + to_change, 0, my_cap);
 
-            d.held = next;
+            does_dyn.held = next;
         }
     }
 }
 
 bool component::can_use(const std::vector<double>& res)
 {
-    for(does& d : activate_requirements)
+    //for(does& d : activate_requirements)
+
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(int i=0; i < (int)dyn_activate_requirements.size(); i++)
     {
-        if(d.capacity >= 0)
+        does_dynamic& does_dyn = dyn_activate_requirements[i];
+        const does_fixed& does_fix = fixed.activate_requirements[i];
+
+        if(does_fix.capacity >= 0)
             continue;
 
-        if(fabs(d.capacity) > res[d.type])
+        if(fabs(does_fix.capacity) > res[does_fix.type])
             return false;
 
-        if(d.last_use_s < d.time_between_use_s)
+        if(does_dyn.last_use_s < does_fix.time_between_use_s)
             return false;
     }
 
     if(has(component_info::HP))
     {
-        does& d = get(component_info::HP);
+        does_dynamic& d = get_dynamic(component_info::HP);
+        const does_fixed& dfix = get_fixed(component_info::HP);
 
-        assert(d.capacity > 0);
+        assert(dfix.capacity > 0);
 
-        if((d.held / d.capacity) < 0.2)
+        if((d.held / dfix.capacity) < 0.2)
             return false;
     }
 
@@ -374,10 +395,15 @@ bool component::can_use(const std::vector<double>& res)
 
 void component::use(std::vector<double>& res)
 {
-    for(does& d : activate_requirements)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.activate_requirements)
     {
         res[d.type] += d.capacity;
+    }
 
+    for(does_dynamic& d : dyn_activate_requirements)
+    {
         d.last_use_s = 0;
     }
 
@@ -397,7 +423,7 @@ float component::get_my_volume() const
     return amount;
 }
 
-void component::normalise_volume()
+/*void component::normalise_volume()
 {
     float real = get_my_volume();
 
@@ -420,7 +446,7 @@ void component::normalise_volume()
     });
 
     internal_volume /= real;
-}
+}*/
 
 float component::get_stored_volume() const
 {
@@ -570,20 +596,24 @@ void component::remove_heat_from_stored(float heat)
 
 bool component::can_store(const component& c)
 {
-    if(internal_volume <= 0)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    if(fixed.internal_volume <= 0)
         return false;
 
-    float storeable = internal_volume - get_stored_volume();
+    float storeable = fixed.internal_volume - get_stored_volume();
 
     return (storeable - c.get_my_volume()) >= 0;
 }
 
 bool component::can_store(const ship& s)
 {
-    if(internal_volume <= 0)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    if(fixed.internal_volume <= 0)
         return false;
 
-    float storeable = internal_volume - get_stored_volume();
+    float storeable = fixed.internal_volume - get_stored_volume();
 
     float to_store_volume = 0;
 
@@ -619,7 +649,9 @@ void component::store(const ship& s)
 
 bool component::is_storage()
 {
-    return internal_volume > 0;
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    return fixed.internal_volume > 0;
 }
 
 bool component::should_flow()
@@ -631,9 +663,9 @@ float component::get_hp_frac()
 {
     double hp_frac = 1;
 
-    if(has(component_info::HP) && get(component_info::HP).capacity > 0.00001)
+    if(has(component_info::HP) && get_fixed(component_info::HP).capacity > 0.00001)
     {
-        hp_frac = get(component_info::HP).held / get(component_info::HP).capacity;
+        hp_frac = get_dynamic(component_info::HP).held / get_fixed(component_info::HP).capacity;
     }
 
     return hp_frac;
@@ -644,7 +676,7 @@ float component::get_operating_efficiency()
      return std::min(last_sat, last_production_frac) * activation_level * get_hp_frac();
 }
 
-void component::scale(float size)
+/*void component::scale(float size)
 {
     current_scale = size;
 
@@ -676,6 +708,28 @@ void component::scale(float size)
     {
         c.scale(size);
     });
+}*/
+
+void component::scale(float size)
+{
+    current_scale = size;
+
+    for(does_dynamic& d : dyn_info)
+    {
+        d.held *= size;
+    }
+
+    for(does_dynamic& d : dyn_activate_requirements)
+    {
+        d.held *= size;
+    }
+
+    for(material& m : composition)
+    {
+        m.dynamic_desc.volume *= size;
+    }
+
+    for_each_stored([&](component& c){c.scale(size);});
 }
 
 std::optional<ship> component::remove_first_stored_item()
@@ -715,7 +769,9 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
 
         double min_sat = c.get_sat(all_sat);
 
-        for(does& d : c.info)
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        for(const does_fixed& d : fixed.info)
         {
             if(d.recharge > 0)
                 produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level;
@@ -733,7 +789,9 @@ double component::get_sat(const std::vector<double>& sat)
 {
     double min_sat = 1;
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         if(d.recharge > 0)
             continue;
@@ -820,7 +878,9 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
     if(amount > total_drainable)
         amount = total_drainable;
 
-    float internal_storage = c2_in.internal_volume;
+    const component_fixed_properties& c2_fixed = c2_in.get_fixed_props();
+
+    float internal_storage = c2_fixed.internal_volume;
 
     float free_volume = internal_storage - c2_in.get_stored_volume();
 
@@ -859,10 +919,12 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
         if(found == nullptr)
         {
-            component next;
+            /*component next;
             next.add(component_info::HP, 0, 1);
             next.long_name = "Fluid";
-            next.flows = true;
+            next.flows = true;*/
+
+            component next = get_component_default(component_type::FLUID, 1);
 
             ship nnext;
             nnext.add(next);
@@ -948,7 +1010,9 @@ std::vector<double> ship::get_sat_percentage()
 
         assert(max_hp > 0);
 
-        for(does& d : c.info)
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        for(const does_fixed& d : fixed.info)
         {
             if(d.recharge < 0)
                 all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level;
@@ -1421,7 +1485,9 @@ void ship::tick(double dt_s)
 
         double max_theoretical_activation_fraction = 0;
 
-        for(does& d : c.info)
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        for(const does_fixed& d : fixed.info)
         {
             if(d.recharge <= 0)
                 continue;
@@ -1444,7 +1510,7 @@ void ship::tick(double dt_s)
             max_theoretical_activation_fraction = std::max(max_theoretical_activation_fraction, global_production_fraction);
         }
 
-        if(!any_under && c.no_drain_on_full_production)
+        if(!any_under && fixed.no_drain_on_full_production)
         {
             c.last_production_frac = 0.1;
         }
@@ -1453,7 +1519,7 @@ void ship::tick(double dt_s)
             c.last_production_frac = 1;
         }
 
-        if(c.complex_no_drain_on_full_production)
+        if(fixed.complex_no_drain_on_full_production)
         {
             if(!any_under)
             {
@@ -1498,9 +1564,12 @@ void ship::tick(double dt_s)
         }
     }
 
+
     ///item uses
     for(component& c : components)
     {
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
         if(c.try_use || c.force_use)
         {
             if(c.can_use(next_resource_status) || c.force_use)
@@ -1517,14 +1586,14 @@ void ship::tick(double dt_s)
 
                     alt_radar_field& radar = get_radar_field();
 
-                    if(fabs(angle_between_vectors(ship_vector, evector)) > c.max_use_angle)
+                    if(fabs(angle_between_vectors(ship_vector, evector)) > fixed.max_use_angle)
                     {
                         float angle_signed = signed_angle_between_vectors(ship_vector, evector);
 
-                        evector = ship_vector.rot(signum(angle_signed) * c.max_use_angle);
+                        evector = ship_vector.rot(signum(angle_signed) * fixed.max_use_angle);
                     }
 
-                    if(c.subtype == "missile")
+                    if(fixed.subtype == "missile")
                     {
                         torpedo* l = parent->make_new<torpedo>();
                         l->r.position = r.position;
@@ -1537,7 +1606,7 @@ void ship::tick(double dt_s)
                         l->fired_by = id;
                     }
 
-                    if(c.subtype == "laser")
+                    if(fixed.subtype == "laser")
                     {
                         laser* l = parent->make_new<laser>();
                         l->r.position = r.position;
@@ -1650,7 +1719,7 @@ void ship::tick(double dt_s)
             c.force_use = false;
         }
 
-        for(does& d : c.activate_requirements)
+        for(does_dynamic& d : c.dyn_activate_requirements)
         {
             d.last_use_s += dt_s;
         }
@@ -1828,7 +1897,11 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
     //if(hs.get_stored_volume() < 0.1)
     //    continue;
 
-    assert(hs.heat_sink);
+    //const component_fixed_properties& c_fixed = c.get_fixed_props();
+    const component_fixed_properties& hs_fixed = hs.get_fixed_props();
+
+
+    assert(hs_fixed.heat_sink);
 
     //float hs_stored = hs.get_stored_temperature();
 
@@ -1993,22 +2066,25 @@ void ship::handle_heat(double dt_s)
 
     for(component& c : components)
     {
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+
         //double heat = c.heat_produced_at_full_usage * std::min(c.last_sat, c.last_production_frac * c.activation_level);
 
-        double heat = c.heat_produced_at_full_usage * c.get_operating_efficiency();
+        double heat = fixed.heat_produced_at_full_usage * c.get_operating_efficiency();
 
         /*if(c.long_name == "Power Generator")
         {
             std::cout << "HEAT " << heat << std::endl;
         }*/
 
-        if(c.production_heat_scales)
+        if(fixed.production_heat_scales)
         {
-            if(c.primary_type == component_info::COUNT)
+            if(fixed.primary_type == component_info::COUNT)
                 throw std::runtime_error("Bad primary type");
 
-            double produced_comp = all_produced[c.primary_type];
-            double excess_comp = all_needed[c.primary_type];
+            double produced_comp = all_produced[fixed.primary_type];
+            double excess_comp = all_needed[fixed.primary_type];
 
             if(produced_comp > 0.001)
             {
@@ -2060,19 +2136,6 @@ void ship::handle_heat(double dt_s)
     latent_heat -= emitted;
     #endif // 0
 
-    int num_hs = 0;
-
-    for(component& c : components)
-    {
-        if(!c.heat_sink)
-            continue;
-
-        num_hs++;
-    }
-
-    //if(num_hs == 0)
-    //    return;
-
     /*float produced_heat_ps = produced_heat * dt_s + latent_heat;
 
     for(component& c : components)
@@ -2087,7 +2150,9 @@ void ship::handle_heat(double dt_s)
 
     for(component& c : components)
     {
-        if(!c.heat_sink)
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        if(!fixed.heat_sink)
             continue;
 
         heat_sinks.push_back(&c);
@@ -2098,9 +2163,11 @@ void ship::handle_heat(double dt_s)
     ///long term use blueprint
     for(component& c : components)
     {
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
         float latent_fraction = (my_vol * latent_heat / components.size()) * 1/10.f;
 
-        if(!c.heat_sink || c.get_stored_volume() < 0.1)
+        if(!fixed.heat_sink || c.get_stored_volume() < 0.1)
             c.add_heat_to_me(latent_fraction);
         else
             c.add_heat_to_stored(latent_fraction);
@@ -2139,7 +2206,9 @@ void ship::handle_heat(double dt_s)
     ///takes heat from a component and puts it into the heat sink
     for(component& c : components)
     {
-        if(c.heat_sink)
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        if(fixed.heat_sink)
             continue;
 
         float my_temperature = c.get_my_temperature();
@@ -2161,7 +2230,7 @@ void ship::handle_heat(double dt_s)
         if(!c.has(component_info::RADIATOR))
             continue;
 
-        does& d = c.get(component_info::RADIATOR);
+        const does_fixed& d = c.get_fixed(component_info::RADIATOR);
 
         float my_temperature = c.get_my_temperature();
 
@@ -2232,9 +2301,10 @@ void ship::handle_heat(double dt_s)
 
             if(c.has(component_info::HP))
             {
-                does& d = c.get(component_info::HP);
+                does_dynamic& d = c.get_dynamic(component_info::HP);
+                const does_fixed& fix = c.get_fixed(component_info::HP);
 
-                apply_to_does(-real_damage, d);
+                apply_to_does(-real_damage, d, fix);
             }
         }
     }
@@ -2320,7 +2390,9 @@ void component::render_inline_stats()
     net.resize(component_info::COUNT);
     stored.resize(component_info::COUNT);
 
-    for(does& d : info)
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& d : fixed.info)
     {
         net[d.type] += d.recharge;
         stored[d.type] += d.capacity;
@@ -2376,6 +2448,8 @@ void component::render_inline_ui()
     {
         for(component& store : s.components)
         {
+            const component_fixed_properties& fixed = store.get_fixed_props();
+
             std::string name = store.long_name;
 
             float val = store.get_my_volume();
@@ -2393,7 +2467,7 @@ void component::render_inline_ui()
             {
                 ImGui::PushItemWidth(80);
 
-                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, internal_volume, "%.1f");
+                ImGuiX::SliderFloat("##riup" + ext_str, &val, 0, fixed.internal_volume, "%.1f");
 
                 ImGui::PopItemWidth();
             }
@@ -2506,7 +2580,9 @@ void ship::show_resources(bool window)
         if(!c.is_storage())
             continue;
 
-        float max_stored = c.internal_volume;
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        float max_stored = fixed.internal_volume;
         float cur_stored = c.get_stored_volume();
 
         //ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";
@@ -2615,7 +2691,10 @@ void ship::show_power()
 
     std::sort(ui_sorted.begin(), ui_sorted.end(), [](component* c1, component* c2)
     {
-        return c1->activation_type > c2->activation_type;
+        const component_fixed_properties& fixed1 = c1->get_fixed_props();
+        const component_fixed_properties& fixed2 = c2->get_fixed_props();
+
+        return fixed1.activation_type > fixed2.activation_type;
     });
 
     for(component* pc : ui_sorted)
@@ -2703,7 +2782,9 @@ void ship::show_power()
 
         ImGui::SameLine();
 
-        if(c.activation_type == component_info::SLIDER_ACTIVATION)
+        const component_fixed_properties& fixed_properties = c.get_fixed_props();
+
+        if(fixed_properties.activation_type == component_info::SLIDER_ACTIVATION)
         {
             ImGui::PushItemWidth(80);
 
@@ -2712,7 +2793,7 @@ void ship::show_power()
             ImGui::PopItemWidth();
         }
 
-        if(c.activation_type == component_info::TOGGLE_ACTIVATION)
+        if(fixed_properties.activation_type == component_info::TOGGLE_ACTIVATION)
         {
             bool enabled = as_percentage == 100;
 
@@ -2722,7 +2803,7 @@ void ship::show_power()
         }
 
         ///well
-        if(c.activation_type == component_info::NO_ACTIVATION)
+        if(fixed_properties.activation_type == component_info::NO_ACTIVATION)
         {
 
         }
@@ -3174,7 +3255,7 @@ void ship::tick_pre_phys(double dt_s)
     //e.tick_phys(dt_s);
 }
 
-double apply_to_does(double amount, does& d)
+double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)
 {
     double prev = d.held;
 
@@ -3183,8 +3264,8 @@ double apply_to_does(double amount, does& d)
     if(next < 0)
         next = 0;
 
-    if(next > d.capacity)
-        next = d.capacity;
+    if(next > fix.capacity)
+        next = fix.capacity;
 
     d.held = next;
 
@@ -3201,9 +3282,10 @@ void ship::take_damage(double amount, bool internal_damage)
         {
             if(c.has(component_info::SHIELDS))
             {
-                does& d = c.get(component_info::SHIELDS);
+                does_dynamic& d = c.get_dynamic(component_info::SHIELDS);
+                const does_fixed& fix = c.get_fixed(component_info::SHIELDS);
 
-                double diff = apply_to_does(remaining, d);
+                double diff = apply_to_does(remaining, d, fix);
 
                 remaining -= diff;
             }
@@ -3213,9 +3295,10 @@ void ship::take_damage(double amount, bool internal_damage)
         {
             if(c.has(component_info::ARMOUR))
             {
-                does& d = c.get(component_info::ARMOUR);
+                does_dynamic& d = c.get_dynamic(component_info::ARMOUR);
+                const does_fixed& fix = c.get_fixed(component_info::ARMOUR);
 
-                double diff = apply_to_does(remaining, d);
+                double diff = apply_to_does(remaining, d, fix);
 
                 remaining -= diff;
             }
@@ -3243,9 +3326,10 @@ void ship::take_damage(double amount, bool internal_damage)
 
         if(c.has(component_info::HP))
         {
-            does& d = c.get(component_info::HP);
+            does_dynamic& d = c.get_dynamic(component_info::HP);
+            const does_fixed& fix = c.get_fixed(component_info::HP);
 
-            double diff = apply_to_does(remaining, d);
+            double diff = apply_to_does(remaining, d, fix);
 
             remaining -= diff;
         }

@@ -159,6 +159,11 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
+    blueprint default_missile;
+    default_missile.overall_size = 1;
+    default_missile.name = "Default Missile";
+
+    #if 0
     component thruster, warp, shields, missile, laser, sensor, comms, armour,
     ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot, heat_block;
 
@@ -520,6 +525,7 @@ void server_thread(std::atomic_bool& should_term)
     space_pipe.max_flow_rate = 0.5;
 
     test_ship->add_pipe(space_pipe);
+    #endif // 0
 
     test_ship->r.position = {400, 400};
 
@@ -550,7 +556,7 @@ void server_thread(std::atomic_bool& should_term)
     data_model_manager<ship*> data_manage;
 
     player_research default_research;
-    default_research.components.push_back(thruster);
+    /*default_research.components.push_back(thruster);
     default_research.components.push_back(warp);
     default_research.components.push_back(shields);
     default_research.components.push_back(missile);
@@ -562,7 +568,7 @@ void server_thread(std::atomic_bool& should_term)
     default_research.components.push_back(radiator);
     default_research.components.push_back(power_generator);
     default_research.components.push_back(crew);
-    default_research.components.push_back(destruct);
+    default_research.components.push_back(destruct);*/
 
     //player_model_manager player_manage;
 

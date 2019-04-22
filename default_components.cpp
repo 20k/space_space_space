@@ -31,33 +31,43 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::DESTRUCT] = make_default("Self Destruct", "SDST");
     ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
+    ret[component_type::FLUID] = make_default("Fluid", "FLD", true);
 
     for(int i=0; i < component_type::COUNT; i++)
     {
-        ret[i].id = i;
-        ret[i].dyn_info.resize(get_component_fixed_props(id).info.size());
+        const component_fixed_properties& fixed = get_component_fixed_props((component_type::type)i, 1.f);
+
+        ret[i].base_id = (component_type::type)i;
+        ret[i].dyn_info.resize(fixed.info.size());
+        ret[i].dyn_activate_requirements.resize(fixed.activate_requirements.size());
+
+        for(int kk=0; kk < (int)ret[i].dyn_info.size(); kk++)
+        {
+            ret[i].dyn_info[kk].held = fixed.info[kk].capacity;
+            ret[i].dyn_info[kk].type = fixed.info[kk].type;
+        }
     }
 
     return ret;
 }
 
-std::array<component_fixed_properties, component_type::COUNT>> get_default_fixed_component_map()
+std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_component_map()
 {
     std::array<component_fixed_properties, component_type::COUNT> ret;
 
     return ret;
 }
 
-const component& get_component_default(component_type::type id)
+const component& get_component_default(component_type::type id, float scale)
 {
     static std::array<component, component_type::COUNT> built = get_default_component_map();
 
     return built[id];
 }
 
-const component_fixed_properties& get_component_fixed_props(component_type::type id)
+const component_fixed_properties& get_component_fixed_props(component_type::type id, float scale)
 {
-    static std::array<component, component_type::COUNT> built = get_default_fixed_component_map();
+    static std::array<component_fixed_properties, component_type::COUNT> built = get_default_fixed_component_map();
 
     return built[id];
 }
