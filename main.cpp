@@ -177,6 +177,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::DESTRUCT, 1));
     test_ship->add(get_component_default(component_type::STORAGE_TANK, 1));
     test_ship->add(get_component_default(component_type::STORAGE_TANK_HS, 1));
+    test_ship->add(get_component_default(component_type::COMPONENT_LAUNCHER, 1));
 
     #if 0
     component thruster, warp, shields, missile, laser, sensor, comms, armour,

@@ -215,6 +215,7 @@ struct component_fixed_properties : serialisable
 
     component_info::does_type primary_type = component_info::COUNT;
 
+    float base_volume = 1;
 
     SERIALISE_SIGNATURE()
     {
@@ -231,6 +232,7 @@ struct component_fixed_properties : serialisable
         DO_SERIALISE(max_use_angle);
         DO_SERIALISE(heat_produced_at_full_usage);
         DO_SERIALISE(primary_type);
+        DO_SERIALISE(base_volume);
     }
 };
 

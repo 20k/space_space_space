@@ -50,7 +50,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
             ret[i].dyn_info[kk].type = fixed.info[kk].type;
         }
 
-        ret[i].add_composition(material_info::IRON, 1);
+        ret[i].add_composition(material_info::IRON, fixed.base_volume);
     }
 
     return ret;
@@ -67,6 +67,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::THRUST, 15);
         p.set_heat(1);
         p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.base_volume = 1;
     }
 
     {
@@ -80,6 +81,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_no_drain_on_full_production();
         p.set_heat(5); ///heat of 5 modules
         p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 1.5;
     }
 
     {
@@ -91,6 +93,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_no_drain_on_full_production();
         p.set_heat(3); ///heat of 3 modules
         p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.base_volume = 1.1;
     }
 
     {
@@ -108,6 +111,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.subtype = "laser";
 
         p.max_use_angle = M_PI/8;
+        p.base_volume = 0.8;
     }
 
     {
@@ -120,6 +124,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 0.5;
     }
 
     {
@@ -130,6 +135,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 0.5;
     }
 
     {
@@ -141,6 +147,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_no_drain_on_full_production();
         p.set_heat(0.2); ///5 armour modules emit as much heat as 1 regular
         p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 5;
     }
 
     {
@@ -152,6 +159,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         //p.set_no_drain_on_full_production();
         p.set_heat(2);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 1;
     }
 
     {
@@ -160,6 +168,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::RADIATOR, 0.1);
         p.add(component_info::HP, 0, 1);
         p.activation_type = component_info::NO_ACTIVATION;
+        p.base_volume = 1;
     }
 
     {
@@ -171,6 +180,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.set_complex_no_drain_on_full_production();
         p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.base_volume = 1.5;
     }
 
     {
@@ -183,6 +193,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::CREW, -0.01); ///passive death on no o2, doesn't work yet
         p.set_heat(1);
         p.activation_type = component_info::NO_ACTIVATION;
+        p.base_volume = 1;
     }
 
     {
@@ -196,6 +207,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(tag_info::TAG_MISSILE_BEHAVIOUR);
         p.set_heat(1);
         p.activation_type = component_info::NO_ACTIVATION;
+        p.base_volume = 0.5;
     }
 
     {
@@ -205,12 +217,14 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::SELF_DESTRUCT, 1);
         p.internal_volume = 1;
         p.activation_type = component_info::NO_ACTIVATION;
+        p.base_volume = 1;
     }
 
     {
         component_fixed_properties& p = ret[component_type::MATERIAL];
 
         p.add(component_info::HP, 1);
+        p.base_volume = 1;
     }
 
     {
@@ -218,6 +232,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::HP, 0, 1);
         p.internal_volume = 1;
+        p.base_volume = 1;
     }
 
     {
@@ -226,6 +241,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.internal_volume = 0.8;
         p.heat_sink = true;
+        p.base_volume = 1;
     }
 
     {
@@ -234,6 +250,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::NO_ACTIVATION;
         p.add(component_info::HP, 0, 1);
         p.heat_sink = true;
+        p.base_volume = 1;
     }
 
     {
@@ -247,6 +264,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
         p.internal_volume = 1;
+        p.base_volume = 1;
     }
 
     return ret;
