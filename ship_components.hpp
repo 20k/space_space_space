@@ -11,6 +11,7 @@
 #include "networking/networking.hpp"
 #include "radar_field.hpp"
 #include "material_info.hpp"
+#include "default_components.hpp"
 
 namespace sf
 {
@@ -178,8 +179,8 @@ void for_each_ship_hackery(C& c, T t);
 
 struct component_fixed_properties : serialisable
 {
-    std::vector<does> info;
-    std::vector<does> activate_requirements;
+    std::vector<does_fixed> info;
+    std::vector<does_fixed> activate_requirements;
     std::vector<tag> tags;
 
     bool no_drain_on_full_production = false;
@@ -216,7 +217,7 @@ struct component_fixed_properties : serialisable
 
 struct component : virtual serialisable, owned
 {
-    int base_id = -1;
+    component_type::type base_id = component_type::COUNT;
 
     //std::vector<does> info;
     //std::vector<does> activate_requirements;
@@ -227,6 +228,8 @@ struct component : virtual serialisable, owned
 
     //static inline uint32_t gid = 0;
     //uint32_t id = gid++;
+
+    std::vector<does_dynamic> dyn_info;
 
     std::string long_name;
     std::string short_name;
@@ -257,6 +260,7 @@ struct component : virtual serialisable, owned
         //DO_SERIALISE(info);
         //DO_SERIALISE(activate_requirements);
         //DO_SERIALISE(tags);
+        DO_SERIALISE(dyn_info);
         DO_SERIALISE(base_id);
         DO_SERIALISE(long_name);
         DO_SERIALISE(short_name);
@@ -300,7 +304,9 @@ struct component : virtual serialisable, owned
 
     bool has(component_info::does_type type)
     {
-        for(auto& i : info)
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+
+        for(auto& i : fixed.info)
         {
             if(i.type == type)
                 return true;
@@ -311,7 +317,9 @@ struct component : virtual serialisable, owned
 
     bool has_tag(tag_info::tag_type tag)
     {
-        for(auto& i : tags)
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+
+        for(auto& i : fixed.tags)
         {
             if(i.type == tag)
                 return true;
@@ -320,12 +328,30 @@ struct component : virtual serialisable, owned
         return false;
     }
 
-    does& get(component_info::does_type type)
+    does_dynamic& get_dynamic(component_info::does_type type)
     {
         if(!has(type))
             throw std::runtime_error("rip get");
 
-        for(auto& d : info)
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+
+        for(int i=0; i < (int)fixed.info.size(); i++)
+        {
+            if(fixed.info[i].type == type)
+                return dyn_info[i];
+        }
+
+        throw std::runtime_error("rg2");
+    }
+
+    const does_fixed& get_fixed(component_info::does_type type)
+    {
+        if(!has(type))
+            throw std::runtime_error("rip get");
+
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id);
+
+        for(auto& d : fixed.info)
         {
             if(d.type == type)
                 return d;

@@ -32,6 +32,12 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
 
+    for(int i=0; i < component_type::COUNT; i++)
+    {
+        ret[i].id = i;
+        ret[i].dyn_info.resize(get_component_fixed_props(id).info.size());
+    }
+
     return ret;
 }
 
