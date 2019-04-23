@@ -176,7 +176,7 @@ void server_thread(std::atomic_bool& should_term)
 
     blueprint default_missile;
 
-    default_missile.overall_size = 1/15.;
+    default_missile.overall_size = (1/15.);
     default_missile.add_component_at(get_component_default(component_type::THRUSTER, 1), {50, 50}, 2);
     default_missile.add_component_at(get_component_default(component_type::SENSOR, 1), {100, 100}, 1);
     default_missile.add_component_at(get_component_default(component_type::POWER_GENERATOR, 1), {150, 150}, 3);
@@ -273,8 +273,6 @@ void server_thread(std::atomic_bool& should_term)
                 ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
                 ///which isn't totally insane but it is a bit odd
                 ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
-
-                printf("HI THERE\n");
 
                 c.store(mship);
             }
