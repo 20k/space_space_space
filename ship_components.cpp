@@ -3370,8 +3370,20 @@ double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)
     return next - prev;
 }
 
-void ship::take_damage(double amount, bool internal_damage)
+void ship::take_damage(double amount, bool internal_damage, bool base)
 {
+    int max_breakup = 5;
+    int cur_breakup = 0;
+
+    while(amount >= 10 && cur_breakup < max_breakup && base)
+    {
+        take_damage(amount/2, internal_damage, false);
+
+        amount -= amount/2;
+
+        cur_breakup++;
+    }
+
     double remaining = -amount;
 
     if(!internal_damage)

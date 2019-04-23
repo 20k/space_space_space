@@ -194,7 +194,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::POWER, 10, 50); ///powers 10 standard modules
         p.add(component_info::HP, 0, 1);
-        p.set_heat(10 * 1.5); ///produces the heat of 10 standard modules, with a 50% inefficiency
+        p.set_heat(POWER_TO_HEAT * 10 * 1.5); ///produces the heat of 10 standard modules, with a 50% inefficiency
 
         p.set_complex_no_drain_on_full_production();
         p.activation_type = component_info::SLIDER_ACTIVATION;

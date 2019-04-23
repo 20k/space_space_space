@@ -4,6 +4,8 @@
 struct component;
 struct component_fixed_properties;
 
+#define POWER_TO_HEAT 1
+
 namespace component_type
 {
     enum type
