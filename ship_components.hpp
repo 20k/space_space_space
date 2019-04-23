@@ -431,6 +431,7 @@ struct component : virtual serialisable, owned
 
     bool can_use(const std::vector<double>& res);
     void use(std::vector<double>& res);
+    float get_use_heat();
 
     bool force_use = false;
     bool try_use = false;

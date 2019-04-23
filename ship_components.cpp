@@ -423,6 +423,25 @@ void component::use(std::vector<double>& res)
     force_use = false;
 }
 
+float component::get_use_heat()
+{
+    float heat = 0;
+
+    const component_fixed_properties& fixed = get_fixed_props();
+
+    for(const does_fixed& unscaled : fixed.d_activate_requirements)
+    {
+        does_fixed d = scale(unscaled);
+
+        if(d.type != component_info::POWER && d.type != component_info::CAPACITOR)
+            continue;
+
+        heat += fabs(d.capacity) * POWER_TO_HEAT * 100;
+    }
+
+    return heat;
+}
+
 float component::get_my_volume() const
 {
     float amount = 0;
@@ -1631,6 +1650,8 @@ void ship::tick(double dt_s)
             if(c.can_use(next_resource_status) || c.force_use)
             {
                 c.use(next_resource_status);
+
+                c.add_heat_to_me(c.get_use_heat());
 
                 if(c.has(component_info::WEAPONS))
                 {
