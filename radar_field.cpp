@@ -1120,7 +1120,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     for(alt_frequency_packet packet : packets)
     {
-        float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
+        float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
 
         if(intensity <= 0.01)
             continue;
