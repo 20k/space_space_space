@@ -110,7 +110,7 @@ struct does_fixed : serialisable
 
         ret.capacity *= scale;
         ret.recharge *= scale;
-        ret.time_between_use_s *= scale;
+        //ret.time_between_use_s *= scale;
 
         return ret;
     }
