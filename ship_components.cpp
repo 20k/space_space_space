@@ -436,7 +436,11 @@ float component::get_use_heat()
         if(d.type != component_info::POWER && d.type != component_info::CAPACITOR)
             continue;
 
-        heat += fabs(d.capacity) * POWER_TO_HEAT * 100;
+        if(d.type == component_info::POWER)
+            heat += fabs(d.capacity) * POWER_TO_HEAT * 10;
+
+        if(d.type == component_info::CAPACITOR)
+            heat += fabs(d.capacity) * POWER_TO_HEAT * 100;
     }
 
     return heat;
