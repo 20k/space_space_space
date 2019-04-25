@@ -1660,8 +1660,12 @@ void ship::tick(double dt_s)
 
         if(c.try_use || c.force_use)
         {
+            printf("Hello there, trying to use\n");
+
             if(c.can_use(next_resource_status) || c.force_use)
             {
+                printf("hi in here 1\n");
+
                 c.use(next_resource_status);
 
                 c.add_heat_to_me(c.get_use_heat());
@@ -3635,18 +3639,7 @@ void ship::fire(const std::vector<client_fire>& fired)
 
         for(component& c : components)
         {
-            if(c.has(component_info::WEAPONS))
-            {
-                if(weapon_offset == (int)fire.weapon_offset)
-                {
-                    c.try_use = true;
-                    c.use_angle = fire.fire_angle;
-                }
-
-                weapon_offset++;
-            }
-
-            if(c.has_tag(tag_info::TAG_EJECTOR))
+            if(c.has_tag(tag_info::TAG_WEAPON))
             {
                 if(weapon_offset == (int)fire.weapon_offset)
                 {

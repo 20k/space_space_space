@@ -123,6 +123,8 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::WEAPONS, 1);
         p.add(component_info::HP, 0, 1);
         p.add(component_info::CAPACITOR, 0.1, 1); ///10s
+        p.add(tag_info::TAG_WEAPON);
+
         p.set_no_drain_on_full_production();
         p.set_heat(5);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
@@ -279,6 +281,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::POWER, -1);
         p.add(component_info::HP, 0, 1);
         p.add(tag_info::TAG_EJECTOR);
+        p.add(tag_info::TAG_WEAPON);
         p.set_no_drain_on_full_production();
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
@@ -292,10 +295,11 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::POWER, -1);
         p.add(component_info::HP, 0, 1);
+        p.add(tag_info::TAG_WEAPON);
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
-        p.add_on_use(component_info::POWER, -10, 0);
+        p.add_on_use(component_info::POWER, -1, 0);
         p.add_on_use(component_info::MINING, 1, 0);
 
         p.set_internal_volume(1);

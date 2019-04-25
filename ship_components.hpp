@@ -80,6 +80,7 @@ namespace tag_info
         TAG_NONE,
         TAG_EJECTOR,
         TAG_MISSILE_BEHAVIOUR,
+        TAG_WEAPON,
     };
 }
 
