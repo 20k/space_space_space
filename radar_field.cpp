@@ -1570,3 +1570,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     return s;
 }
+
+uint64_t alt_radar_field::get_sun_id()
+{
+    return sun_id;
+}

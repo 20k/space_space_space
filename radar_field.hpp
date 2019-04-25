@@ -303,6 +303,10 @@ struct alt_radar_field
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
     alt_radar_sample sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, std::optional<player_model*> player = std::nullopt, double radar_mult = 1);
+
+    uint64_t get_sun_id();
+
+    uint64_t sun_id = -1;
 };
 
 inline

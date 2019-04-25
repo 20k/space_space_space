@@ -132,6 +132,8 @@ struct solar_system
         sun->r.position = {400, 400};
         sun->permanent_heat = intensity;
         sun->reflectivity = 0;
+
+        field.sun_id = sun->id;
     }
 };
 

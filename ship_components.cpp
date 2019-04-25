@@ -1402,6 +1402,9 @@ void ship::tick_missile_behaviour(double dt_s)
         if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
             continue;
 
+        if(i.id_e == radar.get_sun_id() && i.id_r == -1)
+            continue;
+
         if(i.property.length() > best_intensity)
         {
             best_dir = i.property;
@@ -1417,6 +1420,9 @@ void ship::tick_missile_behaviour(double dt_s)
         if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
             continue;
 
+        if(i.id_e == radar.get_sun_id() && i.id_r == -1)
+            continue;
+
         if(i.property.length() > best_intensity)
         {
             best_dir = i.property;
@@ -1430,6 +1436,9 @@ void ship::tick_missile_behaviour(double dt_s)
             continue;
 
         if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+            continue;
+
+        if(i.id_e == radar.get_sun_id() && i.id_r == -1)
             continue;
 
         best_dir = i.property - r.position;
