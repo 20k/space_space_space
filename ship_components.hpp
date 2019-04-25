@@ -39,6 +39,7 @@ namespace component_info
         ORE,
         MATERIAL,
         SELF_DESTRUCT,
+        MINING,
         COUNT
     };
 
@@ -61,6 +62,7 @@ namespace component_info
         "Ore",
         "Material",
         "Self Destruct",
+        "Mining",
     };
 
     enum activation_type

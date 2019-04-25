@@ -29,6 +29,7 @@ namespace component_type
         FLUID,
         MATERIAL,
         COMPONENT_LAUNCHER,
+        MINING_LASER,
         COUNT,
     };
 }

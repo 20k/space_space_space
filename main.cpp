@@ -16,51 +16,51 @@
 #include "design_editor.hpp"
 #include <fstream>
 
-template<sf::Keyboard::Key k, int n, int c>
-bool once()
+template<int c>
+bool once(sf::Keyboard::Key k)
 {
-    static bool last;
+    static std::map<sf::Keyboard::Key, bool> last;
 
     sf::Keyboard key;
 
-    if(key.isKeyPressed(k) && !last)
+    if(key.isKeyPressed(k) && !last[k])
     {
-        last = true;
+        last[k] = true;
 
         return true;
     }
 
     if(!key.isKeyPressed(k))
     {
-        last = false;
+        last[k] = false;
     }
 
     return false;
 }
 
-template<sf::Mouse::Button b, int n, int c>
-bool once()
+template<int c>
+bool once(sf::Mouse::Button b)
 {
-    static bool last;
+    static std::map<sf::Mouse::Button, bool> last;
 
     sf::Mouse mouse;
 
-    if(mouse.isButtonPressed(b) && !last)
+    if(mouse.isButtonPressed(b) && !last[b])
     {
-        last = true;
+        last[b] = true;
 
         return true;
     }
 
     if(!mouse.isButtonPressed(b))
     {
-        last = false;
+        last[b] = false;
     }
 
     return false;
 }
 
-#define ONCE_MACRO(x) once<x, __LINE__, __COUNTER__>()
+#define ONCE_MACRO(x) once<__COUNTER__>(x)
 
 struct solar_system
 {
@@ -175,6 +175,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::RADIATOR, 1));
     test_ship->add(get_component_default(component_type::POWER_GENERATOR, 1));
     test_ship->add(get_component_default(component_type::CREW, 1));
+    test_ship->add(get_component_default(component_type::MINING_LASER, 1));
 
     blueprint default_missile;
 
@@ -1432,16 +1433,29 @@ int main()
             cinput.ping = true;
         }
 
+        vec2f mouse_relative_pos = cam.screen_to_world(mpos) - ship_proxy->r.position;
+
         if(ONCE_MACRO(sf::Keyboard::E))
         {
             client_fire fire;
             fire.weapon_offset = 1;
 
-            vec2f relative_pos = cam.screen_to_world(mpos) - ship_proxy->r.position;
-
-            fire.fire_angle = relative_pos.angle();
+            fire.fire_angle = mouse_relative_pos.angle();
 
             cinput.fired.push_back(fire);
+        }
+
+        for(int num = sf::Keyboard::Num1; num <= sf::Keyboard::Num9; num++)
+        {
+            if(ONCE_MACRO((sf::Keyboard::Key)num))
+            {
+                client_fire fire;
+                fire.weapon_offset = (int)num - (int)sf::Keyboard::Num1;
+
+                fire.fire_angle = mouse_relative_pos.angle();
+
+                cinput.fired.push_back(fire);
+            }
         }
 
         if(ONCE_MACRO(sf::Keyboard::F1))
