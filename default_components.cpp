@@ -312,11 +312,15 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     return ret;
 }
 
-const component& get_component_default(component_type::type id, float scale)
+component get_component_default(component_type::type id, float scale)
 {
     static std::array<component, component_type::COUNT> built = get_default_component_map();
 
-    return built[id];
+    component to_fetch = built[id];
+
+    to_fetch._pid = get_next_persistent_id();
+
+    return to_fetch;
 }
 
 const component_fixed_properties& get_component_fixed_props(component_type::type id, float scale)
