@@ -1714,6 +1714,10 @@ void ship::tick(double dt_s)
                     ///look for asteroids within that range that we hit
                     ///get closest hit, and then deposit ore into the storage
                     ///also need to do some rendering
+                    ///could uuh
+                    ///just make it a laser projectile
+                    ///after all, speed of light and that
+                    ///actually I really like that - sol to target, sol transport back as packets
                     if(fixed.subtype == "mining")
                     {
 
