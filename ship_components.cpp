@@ -400,6 +400,9 @@ bool component::can_use(const std::vector<double>& res)
             return false;
     }
 
+    if(activation_level < 0.2)
+        return false;
+
     return true;
 }
 

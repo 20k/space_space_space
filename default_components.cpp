@@ -282,6 +282,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.add(tag_info::TAG_EJECTOR);
         p.add(tag_info::TAG_WEAPON);
+        p.add_on_use(component_info::POWER, -0.1, 1);
         p.set_no_drain_on_full_production();
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;

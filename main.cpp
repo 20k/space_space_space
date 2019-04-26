@@ -1447,7 +1447,9 @@ int main()
 
         for(int num = sf::Keyboard::Num1; num <= sf::Keyboard::Num9; num++)
         {
-            if(ONCE_MACRO((sf::Keyboard::Key)num))
+            //if(ONCE_MACRO((sf::Keyboard::Key)num))
+
+            if(key.isKeyPressed((sf::Keyboard::Key)num))
             {
                 client_fire fire;
                 fire.weapon_offset = (int)num - (int)sf::Keyboard::Num1;
