@@ -1378,6 +1378,40 @@ struct laser : projectile
     }
 };
 
+struct mining_laser : projectile
+{
+    sf::Clock clk;
+
+    virtual void tick(double dt_s) override
+    {
+        ///lasers won't reflect
+        //projectile::tick(dt_s);
+
+        if(clk.getElapsedTime().asMicroseconds() / 1000. > 200)
+        {
+            phys_ignore.clear();
+        }
+
+        if((clk.getElapsedTime().asMicroseconds() / 1000. / 1000.) > 20)
+        {
+            cleanup = true;
+        }
+
+        alt_radar_field& radar = get_radar_field();
+
+        alt_frequency_packet em;
+        em.frequency = 3000;
+        em.intensity = 10000;
+
+        radar.emit(em, r.position, *this);
+    }
+
+    virtual void on_collide(entity_manager& em, entity& other) override
+    {
+        cleanup = true;
+    }
+};
+
 void ship::tick_missile_behaviour(double dt_s)
 {
     float homing_frequency = HEAT_FREQ;
@@ -1663,20 +1697,19 @@ void ship::tick(double dt_s)
 
         if(c.try_use || c.force_use)
         {
-            if(c.can_use(next_resource_stsatus) || c.force_use)
+            if(c.can_use(next_resource_status) || c.force_use)
             {
                 c.use(next_resource_status);
 
                 c.add_heat_to_me(c.get_use_heat());
 
-                if(c.has(component_info::WEAPONS))
+                if(c.has_tag(tag_info::TAG_WEAPON))
                 {
                     double eangle = c.use_angle;
                     double ship_rotation = r.rotation;
 
                     vec2f evector = (vec2f){1, 0}.rot(eangle);
                     vec2f ship_vector = (vec2f){1, 0}.rot(ship_rotation);
-
                     alt_radar_field& radar = get_radar_field();
 
                     if(fabs(angle_between_vectors(ship_vector, evector)) > fixed.max_use_angle)
@@ -1709,6 +1742,7 @@ void ship::tick(double dt_s)
                         l->phys_ignore.push_back(id);
                     }
 
+
                     ///ok so:
                     ///for the moment have a fixed range just as a hack
                     ///look for asteroids within that range that we hit
@@ -1720,7 +1754,12 @@ void ship::tick(double dt_s)
                     ///actually I really like that - sol to target, sol transport back as packets
                     if(fixed.subtype == "mining")
                     {
-
+                        mining_laser* l = parent->make_new<mining_laser>();
+                        l->r.position = r.position;
+                        l->r.rotation = evector.angle();
+                        ///speed of light is notionally a constant
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
+                        l->phys_ignore.push_back(id);
                     }
 
                     alt_frequency_packet em;
