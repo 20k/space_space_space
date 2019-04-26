@@ -681,6 +681,7 @@ void component::store(const component& c)
         if(existing.components.size() != 1)
             continue;
 
+        ///TODO: DOES NOT CORRECTLY HANDLE TEMPERATURE
         for(component& existing_component : existing.components)
         {
             if(is_equivalent_material(existing_component, c))
@@ -823,6 +824,70 @@ void component::add_composition(material_info::material_type type, double volume
     //my_volume += volume;
 
     composition.push_back(new_mat);
+}
+
+bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2)
+{
+    if(m_1.size() != m_2.size())
+        return false;
+
+    auto sorter =
+    [](const material& one, const material& two)
+    {
+        return one.type < two.type;
+    };
+
+    std::sort(m_1.begin(), m_1.end(), sorter);
+    std::sort(m_2.begin(), m_2.end(), sorter);
+
+    float one_vol = 0;
+    float two_vol = 0;
+
+    for(material& i : m_1)
+    {
+        one_vol += i.dynamic_desc.volume;
+    }
+
+    for(material& i : m_2)
+    {
+        two_vol += i.dynamic_desc.volume;
+    }
+
+    if(one_vol <= 0.00001 || two_vol <= 0.00001)
+        return true;
+
+    for(int i=0; i < (int)m_1.size(); i++)
+    {
+        if(m_1[i].type != m_2[i].type)
+            return false;
+
+        float frac_1 = m_1[i].dynamic_desc.volume / one_vol;
+        float frac_2 = m_2[i].dynamic_desc.volume / two_vol;
+
+        if(!approx_equal(frac_1, frac_2, 0.001))
+            return false;
+    }
+
+    return true;
+}
+
+void component::add_composition(const material& m)
+{
+    for(material& m_old : composition)
+    {
+        if(m_old.type == m.type)
+        {
+            m_old.dynamic_desc.volume += m.dynamic_desc.volume;
+        }
+    }
+}
+
+bool is_equivalent_material(const component& c1, const component& c2)
+{
+    if(c1.flows != c2.flows)
+        return false;
+
+    return is_equivalent_material(c1.composition, c2.composition);
 }
 
 void component::add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume)
@@ -1479,6 +1544,7 @@ struct mining_laser : projectile
                 my_junk.add_composition(material_info::H2O, silicate_ratio * quantity); ///TODO: NOT THIS
                 my_copper.add_composition(material_info::COPPER, copper_ratio * quantity);
 
+                ///does not correctly handle temperature
                 c.store(my_iron);
                 c.store(my_junk);
                 c.store(my_copper);
