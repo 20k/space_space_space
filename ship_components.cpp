@@ -1663,12 +1663,8 @@ void ship::tick(double dt_s)
 
         if(c.try_use || c.force_use)
         {
-            printf("Hello there, trying to use\n");
-
-            if(c.can_use(next_resource_status) || c.force_use)
+            if(c.can_use(next_resource_stsatus) || c.force_use)
             {
-                printf("hi in here 1\n");
-
                 c.use(next_resource_status);
 
                 c.add_heat_to_me(c.get_use_heat());
@@ -1711,6 +1707,16 @@ void ship::tick(double dt_s)
                         ///speed of light is notionally a constant
                         l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
                         l->phys_ignore.push_back(id);
+                    }
+
+                    ///ok so:
+                    ///for the moment have a fixed range just as a hack
+                    ///look for asteroids within that range that we hit
+                    ///get closest hit, and then deposit ore into the storage
+                    ///also need to do some rendering
+                    if(fixed.subtype == "mining")
+                    {
+
                     }
 
                     alt_frequency_packet em;

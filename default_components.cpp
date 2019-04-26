@@ -305,6 +305,8 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.set_internal_volume(1);
         p.base_volume = 1;
+
+        p.subtype = "mining";
     }
 
     return ret;
