@@ -675,6 +675,25 @@ void component::store(const component& c)
     if(!can_store(c))
         throw std::runtime_error("Cannot store component");
 
+    for(ship& existing : stored)
+    {
+        ///TODO: BIT HACKY THIS
+        if(existing.components.size() != 1)
+            continue;
+
+        for(component& existing_component : existing.components)
+        {
+            if(is_equivalent_material(existing_component, c))
+            {
+                for(const material& m : c.composition)
+                {
+                    existing_component.add_composition(m);
+                    return;
+                }
+            }
+        }
+    }
+
     ship nship;
     nship.add(c);
 

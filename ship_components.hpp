@@ -513,6 +513,7 @@ struct component : virtual serialisable, owned
 
     ///update this to handle fractions, heat, and compounding existing components
     void add_composition(material_info::material_type type, double volume);
+    void add_composition(const material& m);
     void add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume);
 
     void render_inline_stats();
@@ -563,6 +564,8 @@ struct component : virtual serialisable, owned
         return for_each_ship_hackery(*this, t);
     }
 };
+
+bool is_equivalent_material(const component& c1, const component& c2);
 
 struct data_tracker : serialisable, owned
 {
