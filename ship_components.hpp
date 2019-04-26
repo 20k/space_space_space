@@ -255,6 +255,17 @@ struct component_fixed_properties : serialisable
         throw std::runtime_error("No type in get_info");
     }
 
+    const does_fixed& get_activate_info(component_info::does_type type) const
+    {
+        for(const does_fixed& fix : d_activate_requirements)
+        {
+            if(fix.type == type)
+                return fix;
+        }
+
+        throw std::runtime_error("No type in get_activate_info");
+    }
+
     /*const does_fixed& get_activate_requirement(component_type::does_type type)
     {
 
@@ -417,6 +428,13 @@ struct component : virtual serialisable, owned
         const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         return fixed.get_info(type).scale(current_scale);
+    }
+
+    does_fixed get_activate_fixed(component_info::does_type type)
+    {
+        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
+
+        return fixed.get_activate_info(type).scale(current_scale);
     }
 
     ///ignores anything < 0

@@ -301,7 +301,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
         p.add_on_use(component_info::POWER, -1, 0);
-        p.add_on_use(component_info::MINING, 1, 0);
+        p.add_on_use(component_info::MINING, 0.01, 0);
 
         p.set_internal_volume(1);
         p.base_volume = 1;

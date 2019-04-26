@@ -1382,12 +1382,31 @@ struct mining_laser : projectile
 {
     sf::Clock clk;
 
+    ship* parent_ship = nullptr;
+    uint64_t parent_component = -1;
+
+    float power = 0;
+
+    mining_laser()
+    {
+        alt_radar_field& radar = get_radar_field();
+
+        float SoL = radar.speed_of_light_per_tick;
+
+        r.init_rectangular({SoL/1.8, 0.2});
+
+        is_collided_with = false;
+    }
+
     virtual void tick(double dt_s) override
     {
         ///lasers won't reflect
         //projectile::tick(dt_s);
 
-        if(clk.getElapsedTime().asMicroseconds() / 1000. > 200)
+        if(parent_ship && parent_ship->cleanup)
+            parent_ship = nullptr;
+
+        if(clk.getElapsedTime().asMicroseconds() / 1000. > 1000)
         {
             phys_ignore.clear();
         }
@@ -1409,6 +1428,51 @@ struct mining_laser : projectile
     virtual void on_collide(entity_manager& em, entity& other) override
     {
         cleanup = true;
+
+        if(parent_ship == nullptr)
+            return;
+
+        for(component& c : parent_ship->components)
+        {
+            if(c._pid == parent_component)
+            {
+                float free = c.get_internal_volume() - c.get_stored_volume();
+
+                float to_store = power;
+
+                if(to_store > free)
+                    to_store = free;
+
+                float iron_ratio = 0.1;
+                float silicate_ratio = 0.85;
+                float copper_ratio = 0.05;
+
+                float quantity = to_store;
+
+                if(to_store <= 0.00001)
+                    break;
+
+                component my_iron = get_component_default(component_type::MATERIAL, 1);
+                component my_junk = get_component_default(component_type::MATERIAL, 1);
+                component my_copper = get_component_default(component_type::MATERIAL, 1);
+
+                my_iron.add_composition(material_info::IRON, iron_ratio * quantity);
+                my_junk.add_composition(material_info::H2O, silicate_ratio * quantity); ///TODO: NOT THIS
+                my_copper.add_composition(material_info::COPPER, copper_ratio * quantity);
+
+                c.store(my_iron);
+                c.store(my_junk);
+                c.store(my_copper);
+
+                break;
+            }
+        }
+
+        ///ok so
+        ///if we collide with an asteroid, instantly transfer back to the ship but fire a counter laser back (?)
+        ///or maybe we fire a counter laser back but it has to hit the ship to work (but kind of dodgy but does open up degrees of resource stealing)
+
+        //assert(dynamic_cast<mining_laser*>(&other) == nullptr);
     }
 };
 
@@ -1742,7 +1806,6 @@ void ship::tick(double dt_s)
                         l->phys_ignore.push_back(id);
                     }
 
-
                     ///ok so:
                     ///for the moment have a fixed range just as a hack
                     ///look for asteroids within that range that we hit
@@ -1760,6 +1823,11 @@ void ship::tick(double dt_s)
                         ///speed of light is notionally a constant
                         l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
                         l->phys_ignore.push_back(id);
+
+                        l->parent_ship = this;
+                        l->parent_component = c._pid;
+
+                        l->power = c.get_activate_fixed(component_info::MINING).capacity;
                     }
 
                     alt_frequency_packet em;
