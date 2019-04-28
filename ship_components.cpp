@@ -1073,7 +1073,10 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
         ///asserts that there is only ever one flowable component
         c2_in.for_each_stored([&](component& other)
         {
-            if(!other.should_flow())
+            /*if(!other.should_flow())
+                return;*/
+
+            if(!is_equivalent_material(c, other))
                 return;
 
             found = &other;
@@ -1086,7 +1089,7 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
             next.long_name = "Fluid";
             next.flows = true;*/
 
-            component next = get_component_default(component_type::FLUID, 1);
+            component next = get_component_default(component_type::MATERIAL, 1);
 
             ship nnext;
             nnext.add(next);
@@ -1949,6 +1952,7 @@ void ship::tick(double dt_s)
                         spawned->network_owner = network_owner;
                         spawned->spawn_clock.restart();
                         spawned->spawned_by = id;
+                        spawned->drag = false;
                     }
                 }
 
@@ -2726,6 +2730,16 @@ void component::render_inline_stats()
     }
 }
 
+std::string component::phase_string()
+{
+    auto [dyn, fixed] = get_material_composite(composition);
+
+    if(my_temperature > fixed.melting_point)
+        return "(l)";
+    else
+        return "(s)";
+}
+
 void component::render_inline_ui()
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
@@ -2758,10 +2772,7 @@ void component::render_inline_ui()
 
                 //ImGui::Text("Fluid:");
 
-                std::string ext = "(s)";
-
-                if(store.flows)
-                    ext = "(g)";
+                std::string ext = store.phase_string();
 
                 std::string ext_str = std::to_string(_pid) + "." + std::to_string(store._pid);
 

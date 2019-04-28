@@ -32,8 +32,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
     ret[component_type::STORAGE_TANK_HS] = make_default("Storage Tank HS", "STNKH");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
-    ret[component_type::FLUID] = make_default("Fluid", "FLD", true);
-    ret[component_type::MATERIAL] = make_default("Material", "MAT");
+    ret[component_type::MATERIAL] = make_default("Material", "MAT", true);
     ret[component_type::COMPONENT_LAUNCHER] = make_default("Component Launcher", "CLNCH");
     ret[component_type::MINING_LASER] = make_default("Mining Laser", "MLAS");
 

@@ -517,6 +517,7 @@ struct component : virtual serialisable, owned
     void add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume);
 
     void render_inline_stats();
+    std::string phase_string();
     void render_inline_ui();
 
     ///do not network
@@ -551,6 +552,7 @@ struct component : virtual serialisable, owned
     {
         try_use = true;
     }
+
 
     template<typename T>
     void for_each_stored(T t)

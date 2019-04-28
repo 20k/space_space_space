@@ -26,7 +26,6 @@ namespace component_type
         STORAGE_TANK,
         STORAGE_TANK_HS,
         HEAT_BLOCK,
-        FLUID,
         MATERIAL,
         COMPONENT_LAUNCHER,
         MINING_LASER,

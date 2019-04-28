@@ -203,10 +203,10 @@ void server_thread(std::atomic_bool& should_term)
 
     destruct.store(explosives);
 
-    component coolant_material = get_component_default(component_type::FLUID, 1);
+    component coolant_material = get_component_default(component_type::MATERIAL, 1);
     coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.get_internal_volume(cold_tank.current_scale));
 
-    component coolant_material2 = get_component_default(component_type::FLUID, 1);
+    component coolant_material2 = get_component_default(component_type::MATERIAL, 1);
     coolant_material2.add_composition(material_info::HYDROGEN, hot_fixed.get_internal_volume(hot_tank.current_scale));
 
     cold_tank.store(coolant_material);
