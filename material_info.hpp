@@ -16,6 +16,7 @@ namespace material_info
         HTX,
         COMPOSITE,
         LITHIUM,
+        SILICON,
         COUNT,
     };
 
@@ -28,6 +29,7 @@ namespace material_info
         "HTX",
         "Composite",
         "Lithium",
+        "Silicon",
     };
 
     material_fixed_properties fetch(material_type type);
