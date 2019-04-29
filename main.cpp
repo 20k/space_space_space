@@ -178,6 +178,18 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::MINING_LASER, 1));
     test_ship->add(get_component_default(component_type::REFINERY, 1));
 
+    {
+        storage_pipe rpipe;
+
+        int cnum = test_ship->components.size();
+
+        rpipe.id_1 = test_ship->components[cnum-2]._pid;
+        rpipe.id_2 = test_ship->components[cnum-1]._pid;
+        rpipe.max_flow_rate = 1;
+
+        test_ship->add_pipe(rpipe);
+    }
+
     blueprint default_missile;
 
     default_missile.overall_size = (1/15.);
