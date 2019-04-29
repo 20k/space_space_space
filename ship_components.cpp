@@ -1556,6 +1556,9 @@ struct mining_laser : projectile
 
                 component my_comp = get_component_default(component_type::MATERIAL, 1);
 
+                my_comp.long_name = "Ore";
+                my_comp.short_name = "ORE";
+
                 my_comp.add_composition(material_info::IRON, iron_ratio * quantity);
                 my_comp.add_composition(material_info::H2O, silicate_ratio * quantity); ///TODO: NOT THIS
                 my_comp.add_composition(material_info::COPPER, copper_ratio * quantity);
