@@ -1521,6 +1521,11 @@ struct mining_laser : projectile
         if(parent_ship == nullptr)
             return;
 
+        asteroid* hit_asteroid = dynamic_cast<asteroid*>(&other);
+
+        if(hit_asteroid == nullptr)
+            return;
+
         for(component& c : parent_ship->components)
         {
             if(c._pid == parent_component)
