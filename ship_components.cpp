@@ -689,8 +689,9 @@ void component::store(const component& c)
                 for(const material& m : c.composition)
                 {
                     existing_component.add_composition(m);
-                    return;
                 }
+
+                return;
             }
         }
     }
@@ -878,6 +879,7 @@ void component::add_composition(const material& m)
         if(m_old.type == m.type)
         {
             m_old.dynamic_desc.volume += m.dynamic_desc.volume;
+            return;
         }
     }
 }
@@ -1539,7 +1541,7 @@ struct mining_laser : projectile
                 if(to_store <= 0.00001)
                     break;
 
-                component my_iron = get_component_default(component_type::MATERIAL, 1);
+                /*component my_iron = get_component_default(component_type::MATERIAL, 1);
                 component my_junk = get_component_default(component_type::MATERIAL, 1);
                 component my_copper = get_component_default(component_type::MATERIAL, 1);
 
@@ -1550,7 +1552,15 @@ struct mining_laser : projectile
                 ///does not correctly handle temperature
                 c.store(my_iron);
                 c.store(my_junk);
-                c.store(my_copper);
+                c.store(my_copper);*/
+
+                component my_comp = get_component_default(component_type::MATERIAL, 1);
+
+                my_comp.add_composition(material_info::IRON, iron_ratio * quantity);
+                my_comp.add_composition(material_info::H2O, silicate_ratio * quantity); ///TODO: NOT THIS
+                my_comp.add_composition(material_info::COPPER, copper_ratio * quantity);
+
+                c.store(my_comp);
 
                 break;
             }
