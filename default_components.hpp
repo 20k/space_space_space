@@ -29,6 +29,7 @@ namespace component_type
         MATERIAL,
         COMPONENT_LAUNCHER,
         MINING_LASER,
+        REFINERY,
         COUNT,
     };
 }
