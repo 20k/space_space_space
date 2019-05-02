@@ -2572,6 +2572,12 @@ void ship::handle_heat(double dt_s)
 
         float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
 
+        if(c.base_id == component_type::REFINERY)
+        {
+            std::cout << "my temp " << my_temperature << " their " << stored_temperature << std::endl;
+        }
+
+
         ///my_temperature > stored_temperature
         if(temperature_difference > 0)
         {
@@ -2594,8 +2600,6 @@ void ship::handle_heat(double dt_s)
         if(fixed.heat_sink)
             continue;
 
-        float my_temperature = c.get_my_temperature();
-
         for(component* hsp : heat_sinks)
         {
             component& hs = *hsp;
@@ -2614,8 +2618,6 @@ void ship::handle_heat(double dt_s)
             continue;
 
         const does_fixed& d = c.get_fixed(component_info::RADIATOR);
-
-        float my_temperature = c.get_my_temperature();
 
         for(component* hsp : heat_sinks)
         {
@@ -2762,7 +2764,7 @@ std::vector<component> ship::handle_degredation(double dt_s)
             ///I hate floating point numbers
             for(material& m : next.composition)
             {
-                m.dynamic_desc.volume *= 0.999;
+                m.dynamic_desc.volume *= 0.99;
                 total_to_add += m.dynamic_desc.volume;
             }
 
@@ -2795,7 +2797,7 @@ std::vector<component> ship::handle_degredation(double dt_s)
             ///I hate floating point numbers
             for(material& m : next.composition)
             {
-                m.dynamic_desc.volume *= 0.999;
+                m.dynamic_desc.volume *= 0.99;
                 total_to_add += m.dynamic_desc.volume;
             }
 

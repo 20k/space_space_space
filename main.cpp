@@ -301,7 +301,7 @@ void server_thread(std::atomic_bool& should_term)
             mat_1.add_composition(material_info::IRON, 1);
             mat_2.add_composition(material_info::IRON, 1);
 
-            mat_2.my_temperature = 4000;
+            mat_2.my_temperature = 8000;
             mat_2.phase = 1;
 
             c.store(mat_1);
