@@ -818,6 +818,14 @@ std::optional<ship> component::remove_first_stored_item()
 
 void component::add_composition(material_info::material_type type, double volume)
 {
+    for(material& m : composition)
+    {
+        if(m.type == type)
+        {
+            assert(false);
+        }
+    }
+
     material new_mat;
     new_mat.type = type;
     new_mat.dynamic_desc.volume = volume;
@@ -882,6 +890,8 @@ void component::add_composition(const material& m)
             return;
         }
     }
+
+    assert(false);
 }
 
 bool is_equivalent_material(const component& c1, const component& c2)
