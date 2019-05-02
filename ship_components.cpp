@@ -1141,6 +1141,8 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
             next.flows = true;*/
 
             component next = get_component_default(component_type::MATERIAL, 1);
+            next.my_temperature = c.my_temperature;
+            next.phase = c.phase;
 
             ship nnext;
             nnext.add(next);
@@ -2713,6 +2715,8 @@ std::vector<component> ship::handle_degredation(double dt_s)
 {
     std::vector<component> to_ret;
 
+    float phase_coeff = 1;
+
     for(component& c : components)
     {
         ///???????
@@ -2723,40 +2727,73 @@ std::vector<component> ship::handle_degredation(double dt_s)
 
         float max_temp = fixed.melting_point;
 
-        if(c.my_temperature <= max_temp || c.phase != 0)
-            continue;
-
-        float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
-
-        c.my_temperature = max_temp;
-
-        ///using specific heat here as a proxy to energy of.. make phase change
-        float liquify_volume = heat / fixed.specific_heat;
-
-        ///at a temperature difference of 1, it'll take 1 seconds to liquify one unit volume?
-        liquify_volume = clamp(liquify_volume, 0, dyn.volume) * 1 * dt_s;
-
-        auto removed = c.remove_composition(liquify_volume);
-
-        component next = get_component_default(component_type::MATERIAL, 1);
-
-        next.composition = removed;
-        next.my_temperature = c.my_temperature + 1;
-        next.phase = 1;
-
-        float total_to_add = 0;
-
-        ///I hate floating point numbers
-        for(material& m : next.composition)
+        if(c.my_temperature > max_temp && c.phase == 0)
         {
-            m.dynamic_desc.volume *= 0.999;
-            total_to_add += m.dynamic_desc.volume;
+            float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
+
+            c.my_temperature = max_temp;
+
+            ///using specific heat here as a proxy to energy of.. make phase change
+            float liquify_volume = heat / fixed.specific_heat;
+
+            ///at a temperature difference of 1, it'll take 1 seconds to liquify one unit volume?
+            liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
+
+            auto removed = c.remove_composition(liquify_volume);
+
+            component next = get_component_default(component_type::MATERIAL, 1);
+
+            next.composition = removed;
+            next.my_temperature = c.my_temperature + 1;
+            next.phase = 1;
+
+            float total_to_add = 0;
+
+            ///I hate floating point numbers
+            for(material& m : next.composition)
+            {
+                m.dynamic_desc.volume *= 0.999;
+                total_to_add += m.dynamic_desc.volume;
+            }
+
+            if(total_to_add <= 0.0001)
+                continue;
+
+            to_ret.push_back(next);
         }
 
-        if(total_to_add <= 0.0001)
-            continue;
+        if(c.my_temperature < max_temp && c.phase == 1)
+        {
+            float heat = fixed.specific_heat * (max_temp - c.my_temperature) * dyn.volume;
 
-        to_ret.push_back(next);
+            c.my_temperature = max_temp;
+
+            float liquify_volume = heat / fixed.specific_heat;
+
+            liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
+
+            auto removed = c.remove_composition(liquify_volume);
+
+            component next = get_component_default(component_type::MATERIAL, 1);
+
+            next.composition = removed;
+            next.my_temperature = c.my_temperature - 1;
+            next.phase = 0;
+
+            float total_to_add = 0;
+
+            ///I hate floating point numbers
+            for(material& m : next.composition)
+            {
+                m.dynamic_desc.volume *= 0.999;
+                total_to_add += m.dynamic_desc.volume;
+            }
+
+            if(total_to_add <= 0.0001)
+                continue;
+
+            to_ret.push_back(next);
+        }
     }
 
     for(component& c : components)
