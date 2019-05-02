@@ -293,6 +293,20 @@ void server_thread(std::atomic_bool& should_term)
                 c.store(mship);
             }
         }
+
+        if(c.base_id == component_type::REFINERY)
+        {
+            component mat_1 = get_component_default(component_type::MATERIAL, 1);
+            component mat_2 = get_component_default(component_type::MATERIAL, 1);
+            mat_1.add_composition(material_info::IRON, 1);
+            mat_2.add_composition(material_info::IRON, 1);
+
+            mat_2.my_temperature = 4000;
+            mat_2.phase = 1;
+
+            c.store(mat_1);
+            c.store(mat_2);
+        }
     }
 
     #if 0

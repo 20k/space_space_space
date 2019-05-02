@@ -2920,12 +2920,19 @@ void component::render_inline_stats()
 
 std::string component::phase_string()
 {
-    auto [dyn, fixed] = get_material_composite(composition);
+    //auto [dyn, fixed] = get_material_composite(composition);
 
-    if(my_temperature > fixed.melting_point)
+    /*if(my_temperature > fixed.melting_point)
         return "(l)";
     else
+        return "(s)";*/
+
+    if(phase == 1)
+        return "(l)";
+    if(phase == 0)
         return "(s)";
+
+    return "(Err)";
 }
 
 void component::render_inline_ui()
