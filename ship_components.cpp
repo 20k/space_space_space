@@ -889,6 +889,9 @@ bool is_equivalent_material(const component& c1, const component& c2)
     if(c1.flows != c2.flows)
         return false;
 
+    if(c1.phase != c2.phase)
+        return false;
+
     return is_equivalent_material(c1.composition, c2.composition);
 }
 
@@ -913,6 +916,52 @@ void component::add_composition_ratio(const std::vector<material_info::material_
     {
         add_composition(type[i], fixed.base_volume * volume[i] / total_volume_in);
     }
+}
+
+std::vector<material> component::remove_composition(float amount)
+{
+    float total = 0;
+
+    for(material& m : composition)
+    {
+        total += m.dynamic_desc.volume;
+    }
+
+    amount = clamp(amount, 0, total);
+
+    std::vector<material> ret;
+
+    if(total < 0.0001)
+        return ret;
+
+    if(amount == 0)
+        return ret;
+
+    for(material& m : composition)
+    {
+        if(m.dynamic_desc.volume < 0.0001)
+        {
+            m.dynamic_desc.volume = 0;
+            continue;
+        }
+
+        float removed = amount * m.dynamic_desc.volume / total;
+
+        material nm = m;
+        nm.dynamic_desc.volume = removed;
+
+        m.dynamic_desc.volume -= removed;
+
+        if(m.dynamic_desc.volume < 0)
+        {
+            m.dynamic_desc.volume = 0;
+            throw std::runtime_error("Bad Volume in remove_composition");
+        }
+
+        ret.push_back(nm);
+    }
+
+    return ret;
 }
 
 std::vector<double> ship::get_net_resources(double dt_s, const std::vector<double>& all_sat)
@@ -1565,7 +1614,7 @@ struct mining_laser : projectile
                 my_comp.short_name = "ORE";
 
                 my_comp.add_composition(material_info::IRON, iron_ratio * quantity);
-                my_comp.add_composition(material_info::H2O, silicate_ratio * quantity); ///TODO: NOT THIS
+                my_comp.add_composition(material_info::SILICON, silicate_ratio * quantity); ///TODO: NOT THIS
                 my_comp.add_composition(material_info::COPPER, copper_ratio * quantity);
 
                 c.store(my_comp);
@@ -2133,6 +2182,7 @@ void ship::tick(double dt_s)
 
 
     handle_heat(dt_s);
+    handle_degredation(dt_s);
 
     data_track_elapsed_s += dt_s;
 
@@ -2657,6 +2707,79 @@ void ship::handle_heat(double dt_s)
     radar.emit(heat, r.position, *this);
 
     latent_heat -= emitted;*/
+}
+
+std::vector<component> ship::handle_degredation(double dt_s)
+{
+    std::vector<component> to_ret;
+
+    for(component& c : components)
+    {
+        ///???????
+        if(c.base_id != component_type::MATERIAL)
+            continue;
+
+        auto [dyn, fixed] = get_material_composite(c.composition);
+
+        float max_temp = fixed.melting_point;
+
+        if(c.my_temperature <= max_temp || c.phase != 0)
+            continue;
+
+        float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
+
+        c.my_temperature = max_temp;
+
+        ///using specific heat here as a proxy to energy of.. make phase change
+        float liquify_volume = heat / fixed.specific_heat;
+
+        ///at a temperature difference of 1, it'll take 1 seconds to liquify one unit volume?
+        liquify_volume = clamp(liquify_volume, 0, dyn.volume) * 1 * dt_s;
+
+        auto removed = c.remove_composition(liquify_volume);
+
+        component next = get_component_default(component_type::MATERIAL, 1);
+
+        next.composition = removed;
+        next.my_temperature = c.my_temperature + 1;
+        next.phase = 1;
+
+        float total_to_add = 0;
+
+        ///I hate floating point numbers
+        for(material& m : next.composition)
+        {
+            m.dynamic_desc.volume *= 0.999;
+            total_to_add += m.dynamic_desc.volume;
+        }
+
+        if(total_to_add <= 0.0001)
+            continue;
+
+        to_ret.push_back(next);
+    }
+
+    for(component& c : components)
+    {
+        std::vector<component> extra;
+
+        for(ship& s : c.stored)
+        {
+            auto temp = s.handle_degredation(dt_s);
+
+            for(auto& i : temp)
+            {
+                extra.push_back(i);
+            }
+        }
+
+        for(auto& i : extra)
+        {
+            c.store(i);
+        }
+    }
+
+    return to_ret;
 }
 
 void ship::add(const component& c)

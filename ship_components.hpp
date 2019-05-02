@@ -322,6 +322,9 @@ struct component : virtual serialisable, owned
     bool flows = false;
     //bool heat_sink = false;
 
+    ///0 = solid, 1 = liquid
+    int phase = 0;
+
     ///how active i need to be
     ///only applies to no_drain_on_full_production
     ///has a minimum value to prevent accidental feedback loops
@@ -346,6 +349,7 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(short_name);
         DO_SERIALISE(last_sat);
         DO_SERIALISE(flows);
+        DO_SERIALISE(phase);
         //DO_SERIALISE(heat_sink);
         //DO_SERIALISE(no_drain_on_full_production);
         //DO_SERIALISE(complex_no_drain_on_full_production);
@@ -515,6 +519,7 @@ struct component : virtual serialisable, owned
     void add_composition(material_info::material_type type, double volume);
     void add_composition(const material& m);
     void add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume);
+    std::vector<material> remove_composition(float amount);
 
     void render_inline_stats();
     std::string phase_string();
@@ -634,6 +639,7 @@ struct ship : heatable_entity, owned
     std::optional<component*> get_component_from_id(uint64_t id);
 
     void handle_heat(double dt_s);
+    std::vector<component> handle_degredation(double dt_s);
     void tick(double dt_s) override;
     void tick_pre_phys(double dt_s) override;
     //void render(sf::RenderWindow& win);
