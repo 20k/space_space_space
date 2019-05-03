@@ -2229,7 +2229,7 @@ std::optional<component*> ship::get_component_from_id(uint64_t id)
 
 float uniform_get_stored_temperature(component& c)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         return c.get_my_temperature();
     else
         return c.get_stored_temperature();
@@ -2237,7 +2237,7 @@ float uniform_get_stored_temperature(component& c)
 
 float uniform_get_stored_heat(component& c)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         return c.get_my_contained_heat();
     else
         return c.get_stored_heat_capacity();
@@ -2245,7 +2245,7 @@ float uniform_get_stored_heat(component& c)
 
 void uniform_add_stored_heat(component& c, float amount)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         c.add_heat_to_me(amount);
     else
         c.add_heat_to_stored(amount);
@@ -2253,7 +2253,7 @@ void uniform_add_stored_heat(component& c, float amount)
 
 void uniform_remove_stored_heat(component& c, float amount)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         c.remove_heat_from_me(amount);
     else
         c.remove_heat_from_stored(amount);
@@ -2261,7 +2261,7 @@ void uniform_remove_stored_heat(component& c, float amount)
 
 float uniform_get_stored_volume(component& c)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         return c.get_my_volume();
     else
         return c.get_stored_volume();
@@ -2269,7 +2269,7 @@ float uniform_get_stored_volume(component& c)
 
 float uniform_get_heat_x_volume(component& c)
 {
-    if(c.get_stored_volume() < 0.1)
+    if(c.get_stored_volume() < 0.1 || !c.get_fixed_props().heat_sink)
         return c.get_my_heat_x_volume();
     else
         return c.get_stored_heat_x_volume();
@@ -2280,11 +2280,14 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
     //if(hs.get_stored_volume() < 0.1)
     //    continue;
 
+    if(c.get_my_volume() < 0.001 || hs.get_my_volume() < 0.001)
+        return;
+
     //const component_fixed_properties& c_fixed = c.get_fixed_props();
     const component_fixed_properties& hs_fixed = hs.get_fixed_props();
 
 
-    assert(hs_fixed.heat_sink);
+    //assert(hs_fixed.heat_sink);
 
     //float hs_stored = hs.get_stored_temperature();
 
@@ -2293,7 +2296,7 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
 
     float temperature_difference = (my_temperature - hs_stored);
 
-    if(temperature_difference * mult <= 0)
+    if(temperature_difference * mult <= 0 && mult != 0)
         return;
 
     //if(temperature_difference <= 0)
@@ -2336,6 +2339,7 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
     //htr_1 = temperature_difference * heat_coeff * dt_s;
     //htr_2 = temperature_difference * heat_coeff * dt_s;
 
+    ///so the problem here is that if the volume is low, we're extracting a lot of heat
     float heat_transfer_rate = temperature_difference * heat_coeff * dt_s;
 
     if(temperature_difference > 0)
@@ -2564,7 +2568,7 @@ void ship::handle_heat(double dt_s)
         if(c.stored.size() == 0 || c.get_stored_volume() < 0.1)
             continue;
 
-        float my_temperature = c.get_my_temperature();
+        /*float my_temperature = c.get_my_temperature();
 
         float stored_temperature = c.get_stored_temperature();
 
@@ -2589,7 +2593,19 @@ void ship::handle_heat(double dt_s)
         {
             c.remove_heat_from_stored(-heat_transfer_rate);
             c.add_heat_to_me(-heat_transfer_rate);
-        }
+        }*/
+
+        int store_num = 0;
+
+        c.for_each_stored([&](component&)
+                          {
+                              store_num++;
+                          });
+
+        c.for_each_stored([&](component& store)
+        {
+            heat_transfer(heat_coeff / store_num, dt_s, c, store, 0);
+        });
     }
 
     ///takes heat from a component and puts it into the heat sink
