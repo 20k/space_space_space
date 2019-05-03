@@ -304,8 +304,8 @@ void server_thread(std::atomic_bool& should_term)
             mat_2.my_temperature = 8000;
             mat_2.phase = 1;
 
-            c.store(mat_1);
-            c.store(mat_2);
+            //c.store(mat_1);
+            //c.store(mat_2);
         }
     }
 
