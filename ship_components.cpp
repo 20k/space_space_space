@@ -2755,6 +2755,9 @@ std::vector<component> ship::handle_degredation(double dt_s)
 
         float max_temp = fixed.melting_point;
 
+        ///when things are solid and above melting point, break into individual components of material
+        ///and store
+        ///storage function should automatically handle concatinating liquids together
         if(c.my_temperature > max_temp && c.phase == 0)
         {
             float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
@@ -2769,7 +2772,7 @@ std::vector<component> ship::handle_degredation(double dt_s)
 
             auto removed = c.remove_composition(liquify_volume);
 
-            component next = get_component_default(component_type::MATERIAL, 1);
+            /*component next = get_component_default(component_type::MATERIAL, 1);
 
             next.composition = removed;
             next.my_temperature = c.my_temperature + 1;
@@ -2787,9 +2790,27 @@ std::vector<component> ship::handle_degredation(double dt_s)
             if(total_to_add <= 0.0001)
                 continue;
 
-            to_ret.push_back(next);
+            to_ret.push_back(next);*/
+
+            for(const material& m : removed)
+            {
+                component next = get_component_default(component_type::MATERIAL, 1);
+
+                next.composition = {m};
+                next.my_temperature = c.my_temperature + 1;
+                next.phase = 1;
+
+                next.composition.back().dynamic_desc.volume *= 0.99;
+
+                if(next.get_my_volume() < 0.0001)
+                    continue;
+
+                to_ret.push_back(next);
+            }
         }
 
+        ///ok so every liquid should be a separate component? Or do I just not use a
+        ///temperature system and manually create alloys or something? Not a huge fan of that idea
         if(c.my_temperature < max_temp && c.phase == 1)
         {
             float heat = fixed.specific_heat * (max_temp - c.my_temperature) * dyn.volume;
