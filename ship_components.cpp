@@ -901,16 +901,31 @@ bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2
         two_vol += i.dynamic_desc.volume;
     }
 
-    if(one_vol <= 0.00001 || two_vol <= 0.00001)
-        return true;
-
     for(int i=0; i < (int)m_1.size(); i++)
     {
         if(m_1[i].type != m_2[i].type)
             return false;
 
-        float frac_1 = m_1[i].dynamic_desc.volume / one_vol;
-        float frac_2 = m_2[i].dynamic_desc.volume / two_vol;
+        float frac_1 = 0;
+        float frac_2 = 0;
+
+        if(one_vol < 0.0001)
+        {
+            frac_1 = -1;
+        }
+        else
+        {
+            frac_1 = m_1[i].dynamic_desc.volume / one_vol;
+        }
+
+        if(two_vol < 0.0001)
+        {
+            frac_2 = -1;
+        }
+        else
+        {
+            frac_2 = m_2[i].dynamic_desc.volume / two_vol;;
+        }
 
         if(!approx_equal(frac_1, frac_2, 0.001))
             return false;
@@ -2854,9 +2869,6 @@ std::vector<component> ship::handle_degredation(double dt_s)
                 next.composition = {m};
                 next.my_temperature = c.my_temperature + 1;
                 next.phase = 1;
-
-                if(next.get_my_volume() < 0.0001)
-                    continue;
 
                 to_ret.push_back(next);
             }
