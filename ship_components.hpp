@@ -503,7 +503,7 @@ struct component : virtual serialisable, owned
 
     bool can_store(const component& c);
     bool can_store(const ship& s);
-    void store(const component& c);
+    void store(const component& c, bool force_and_fixup = false);
     void store(const ship& s);
     bool is_storage();
     bool should_flow();

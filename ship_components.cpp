@@ -670,10 +670,49 @@ bool component::can_store(const ship& s)
     return (storeable - to_store_volume) >= 0;
 }
 
-void component::store(const component& c)
+struct fp_fixer
 {
-    if(!can_store(c))
+    component* to_fix = nullptr;
+
+    void fix(component& c)
+    {
+        to_fix = &c;
+    }
+
+    ~fp_fixer()
+    {
+        if(!to_fix)
+            return;
+
+        double max_internal_store = to_fix->get_internal_volume();
+
+        double cur_internal = to_fix->get_internal_volume();
+
+        if(cur_internal <= max_internal_store)
+            return;
+
+        double to_remove = cur_internal - max_internal_store;
+
+        to_fix->for_each_stored
+        ([&](component& c)
+        {
+            if(c.base_id != component_type::MATERIAL)
+                return;
+
+            c.remove_composition(to_remove);
+        });
+    }
+};
+
+void component::store(const component& c, bool force_and_fixup)
+{
+    if(!force_and_fixup && !can_store(c))
         throw std::runtime_error("Cannot store component");
+
+    fp_fixer fix;
+
+    if(force_and_fixup)
+        fix.fix(*this);
 
     for(ship& existing : stored)
     {
@@ -1629,7 +1668,7 @@ struct mining_laser : projectile
                 my_comp.add_composition(material_info::SILICON, silicate_ratio * quantity); ///TODO: NOT THIS
                 my_comp.add_composition(material_info::COPPER, copper_ratio * quantity);
 
-                c.store(my_comp);
+                c.store(my_comp, true);
 
                 break;
             }
@@ -2196,6 +2235,22 @@ void ship::tick(double dt_s)
     handle_heat(dt_s);
     handle_degredation(dt_s);
 
+    for(component& c : components)
+    {
+        for(ship& s : c.stored)
+        {
+            for(int kk=0; kk < s.components.size(); kk++)
+            {
+                if(s.components[kk].get_my_volume() < 0.001 && s.components[kk].base_id == component_type::MATERIAL)
+                {
+                    s.components.erase(s.components.begin() + kk);
+                    kk--;
+                    continue;
+                }
+            }
+        }
+    }
+
     data_track_elapsed_s += dt_s;
 
     double time_between_datapoints_s = 0.1;
@@ -2280,7 +2335,7 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
     //if(hs.get_stored_volume() < 0.1)
     //    continue;
 
-    if(c.get_my_volume() < 0.001 || hs.get_my_volume() < 0.001)
+    if(c.get_my_volume() < 0.0001 || hs.get_my_volume() < 0.0001)
         return;
 
     //const component_fixed_properties& c_fixed = c.get_fixed_props();
@@ -2800,8 +2855,6 @@ std::vector<component> ship::handle_degredation(double dt_s)
                 next.my_temperature = c.my_temperature + 1;
                 next.phase = 1;
 
-                next.composition.back().dynamic_desc.volume *= 0.99;
-
                 if(next.get_my_volume() < 0.0001)
                     continue;
 
@@ -2834,7 +2887,6 @@ std::vector<component> ship::handle_degredation(double dt_s)
             ///I hate floating point numbers
             for(material& m : next.composition)
             {
-                m.dynamic_desc.volume *= 0.99;
                 total_to_add += m.dynamic_desc.volume;
             }
 
@@ -2861,7 +2913,7 @@ std::vector<component> ship::handle_degredation(double dt_s)
 
         for(auto& i : extra)
         {
-            c.store(i);
+            c.store(i, true);
         }
     }
 
