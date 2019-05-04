@@ -90,6 +90,7 @@ bool is_equivalent_material(const component& c1, const component& c2);
 void material_deduplicate(std::vector<std::vector<material>>& in);
 void material_merge(std::vector<material>& into, std::vector<material> old);
 bool material_satisfies(const std::vector<std::vector<material>>& requirements, const std::vector<std::vector<material>>& available); ///must be deduplicated
+void material_partial_deplete(std::vector<material>& store, std::vector<std::vector<material>>& deplete);
 
 float material_volume(const std::vector<material>& m);
 

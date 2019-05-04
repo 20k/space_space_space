@@ -80,10 +80,10 @@ struct blueprint : serialisable, owned
 
     blueprint_render_state render(design_editor& edit, vec2f upper_size);
 
-    ship to_ship();
+    ship to_ship() const;
     float get_build_time_s(float build_power);
 
-    std::vector<std::vector<material>> get_cost();
+    std::vector<std::vector<material>> get_cost() const;
 
     SERIALISE_SIGNATURE()
     {
@@ -92,6 +92,9 @@ struct blueprint : serialisable, owned
         DO_SERIALISE(overall_size);
     }
 };
+
+float get_build_time_s(const ship& s, float build_power);
+float get_build_work(const ship& s);
 
 struct blueprint_manager : serialisable, owned
 {
@@ -102,6 +105,17 @@ struct blueprint_manager : serialisable, owned
         DO_SERIALISE(blueprints);
         DO_RPC(create_blueprint);
         DO_RPC(upload_blueprint);
+    }
+
+    std::optional<blueprint*> fetch(size_t id)
+    {
+        for(auto& i : blueprints)
+        {
+            if(i._pid == id)
+                return &i;
+        }
+
+        return std::nullopt;
     }
 
     void create_blueprint()

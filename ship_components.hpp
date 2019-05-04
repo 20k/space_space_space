@@ -12,6 +12,9 @@
 #include "material_info.hpp"
 #include "default_components.hpp"
 
+///1 size at a power of 1 takes 100s
+#define SIZE_TO_TIME 100
+
 namespace sf
 {
     struct RenderWindow;
@@ -297,6 +300,7 @@ private:
 };
 
 struct blueprint_manager;
+struct blueprint;
 
 struct component : virtual serialisable, owned
 {
@@ -340,6 +344,12 @@ struct component : virtual serialisable, owned
     ///time this component has been nearly empty enough to remove
     std::optional<fixed_clock> bad_time;
 
+    bool building = false;
+    std::vector<ship> build_queue;
+    float build_work_elapsed = 0;
+
+    std::vector<size_t> unchecked_blueprints;
+
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
     //bool production_heat_scales = false;
@@ -373,15 +383,24 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(composition);
         DO_SERIALISE(my_temperature);
         DO_SERIALISE(activation_level);
+        DO_SERIALISE(building);
+        DO_SERIALISE(build_queue);
+        DO_SERIALISE(build_work_elapsed);
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
+        DO_RPC(manufacture_blueprint_id);
     }
+
+    FRIENDLY_RPC_NAME(manufacture_blueprint_id);
 
     const component_fixed_properties& get_fixed_props()
     {
         return get_component_fixed_props(base_id, current_scale);
     }
+
+    void manufacture_blueprint_id(size_t print_id);
+    void manufacture_blueprint(const blueprint& print);
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
     void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);

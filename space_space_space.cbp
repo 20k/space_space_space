@@ -77,6 +77,7 @@
 		<Unit filename="aoe_damage.hpp" />
 		<Unit filename="camera.cpp" />
 		<Unit filename="camera.hpp" />
+		<Unit filename="colours.hpp" />
 		<Unit filename="common_renderable.hpp" />
 		<Unit filename="default_components.cpp" />
 		<Unit filename="default_components.hpp" />

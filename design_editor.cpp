@@ -182,11 +182,11 @@ blueprint_render_state blueprint::render(design_editor& edit, vec2f upper_size)
     return {{win_pos.x, win_pos.y},  hovered};
 }
 
-ship blueprint::to_ship()
+ship blueprint::to_ship() const
 {
     ship nship;
 
-    for(blueprint_node& c : nodes)
+    for(blueprint_node c : nodes)
     {
         c.my_comp = c.original;
         c.my_comp.scale(c.size * overall_size);
@@ -202,20 +202,7 @@ ship blueprint::to_ship()
 
 float blueprint::get_build_time_s(float build_power)
 {
-    if(build_power <= 0.000001)
-        return 999999999;
-
-    auto cost = get_cost();
-
-    float total_volume = 0;
-
-    for(auto& m : cost)
-    {
-        total_volume += material_volume(m);
-    }
-
-    ///100s for a level 1 factory to build a level 1 ship?
-    return 100 * total_volume / build_power;
+    return ::get_build_time_s(to_ship(), build_power);
 }
 
 void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)
@@ -248,7 +235,33 @@ void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)
     }
 }
 
-std::vector<std::vector<material>> blueprint::get_cost()
+float get_build_time_s(const ship& s, float build_power)
+{
+    if(build_power <= 0.000001)
+        return 999999999;
+
+    float total_volume = get_build_work(s);
+
+    ///100s for a level 1 factory to build a level 1 ship?
+    return SIZE_TO_TIME * total_volume / build_power;
+}
+
+float get_build_work(const ship& s)
+{
+    std::vector<std::vector<material>> cost;
+    get_ship_cost(s, cost);
+
+    float total_volume = 0;
+
+    for(auto& m : cost)
+    {
+        total_volume += material_volume(m);
+    }
+
+    return total_volume;
+}
+
+std::vector<std::vector<material>> blueprint::get_cost() const
 {
     std::vector<std::vector<material>> ret;
 

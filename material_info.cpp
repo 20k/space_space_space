@@ -236,6 +236,40 @@ bool material_satisfies(const std::vector<std::vector<material>>& requirements, 
     return true;
 }
 
+void material_deplete(std::vector<material>& ms, float amount)
+{
+    float vol = material_volume(ms);
+
+    if(vol <= 0.000001)
+        return;
+
+    amount = clamp(amount, 0, vol);
+
+    for(material& m : ms)
+    {
+        float frac = m.dynamic_desc.volume / vol;
+
+        m.dynamic_desc.volume -= frac * amount;
+    }
+}
+
+void material_partial_deplete(std::vector<material>& store, std::vector<std::vector<material>>& deplete)
+{
+    for(auto& i : deplete)
+    {
+        if(is_equivalent_material(store, i))
+        {
+            float vol_store = material_volume(store);
+            float vol_deplete = material_volume(i);
+
+            vol_deplete = clamp(vol_deplete, 0, vol_store);
+
+            material_deplete(store, vol_deplete);
+            material_deplete(i, vol_deplete);
+        }
+    }
+}
+
 float material_volume(const std::vector<material>& m)
 {
     float vol = 0;

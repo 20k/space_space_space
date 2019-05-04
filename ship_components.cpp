@@ -1881,6 +1881,60 @@ void ship::tick(double dt_s)
         {
             c.last_production_frac = thrusters_active;
         }
+
+        if(c.has(component_info::MANUFACTURING))
+        {
+            for(auto id : c.unchecked_blueprints)
+            {
+                if(model)
+                {
+                    auto found = model->blueprint_manage.fetch(id);
+
+                    if(found)
+                    {
+                        c.manufacture_blueprint(*found.value());
+                    }
+                }
+            }
+
+            c.unchecked_blueprints.clear();
+
+            if(c.building)
+            {
+                if(c.build_queue.size() > 0)
+                {
+                    c.build_work_elapsed += c.get_fixed(component_info::MANUFACTURING).recharge * dt_s / SIZE_TO_TIME;
+                }
+
+                if(c.build_queue.size() > 0)
+                {
+                    float front_cost = get_build_work(c.build_queue.front());
+
+                    while(c.build_work_elapsed >= front_cost)
+                    {
+                        ship spawn = c.build_queue.front();
+
+                        if(c.can_store(spawn))
+                        {
+                            c.store(spawn);
+
+                            c.build_queue.erase(c.build_queue.begin());
+
+                            c.build_work_elapsed -= front_cost;
+                        }
+                        else
+                        {
+                            c.building = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    c.build_work_elapsed = 0;
+                }
+            }
+        }
     }
 
     std::vector<double> all_sat = get_sat_percentage();
@@ -3099,6 +3153,39 @@ void component::render_inline_ui()
     }
 }
 
+void component::manufacture_blueprint_id(size_t blue_id)
+{
+    unchecked_blueprints.push_back(blue_id);
+
+    if(unchecked_blueprints.size() > 100)
+        unchecked_blueprints.resize(100);
+}
+
+void component::manufacture_blueprint(const blueprint& blue)
+{
+    std::vector<std::vector<material>> in_storage;
+
+    for_each_stored([&](component& c)
+    {
+        if(c.base_id == component_type::MATERIAL)
+            in_storage.push_back(c.composition);
+    });
+
+    std::vector<std::vector<material>> cost = blue.get_cost();
+
+    if(!material_satisfies(cost, in_storage))
+        return;
+
+    for_each_stored([&](component& c)
+                    {
+                        if(c.base_id == component_type::MATERIAL)
+                            material_partial_deplete(c.composition, cost);
+                    });
+
+    building = true;
+    build_queue.push_back(blue.to_ship());
+}
+
 void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 {
     if(!factory_view_open)
@@ -3134,14 +3221,33 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 
             std::vector<std::vector<material>> cost = blue.get_cost();
 
+            std::string time_to_build = to_string_with_variable_prec(blue.get_build_time_s(get_fixed(component_info::MANUFACTURING).recharge));
+
             if(material_satisfies(cost, in_storage))
             {
-                ImGui::Button("Build");
+                if(ImGui::Button("Build"))
+                {
+                    ///OOPS THIS NEEDS TO BE DONE ON THE SERVER
+                    /*building = true;
+                    build_queue.push_back(blue.to_ship());*/
+
+                    manufacture_blueprint_id_rpc(blue._pid);
+
+                    /*for_each_stored([&](component& c)
+                    {
+                        if(c.base_id == component_type::MATERIAL)
+                            material_partial_deplete(c.composition, cost);
+                    });*/
+                }
             }
             else
             {
                 ImGui::Button("Insufficient Resources");
             }
+
+            ImGui::SameLine();
+
+            ImGui::Text((time_to_build + " (s)").c_str());
 
             ///future james
             ///some sort of resources_satisfied
