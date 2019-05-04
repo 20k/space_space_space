@@ -453,6 +453,8 @@ void design_editor::render(sf::RenderWindow& win)
 
     s.show_resources(false);
 
+    ImGui::NewLine();
+
     render_ship_cost(s);
 
     ImGui::EndChild();
