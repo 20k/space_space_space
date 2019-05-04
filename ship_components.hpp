@@ -8,7 +8,6 @@
 #include <optional>
 
 #include "entity.hpp"
-#include "networking/networking.hpp"
 #include "radar_field.hpp"
 #include "material_info.hpp"
 #include "default_components.hpp"
