@@ -36,6 +36,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::COMPONENT_LAUNCHER] = make_default("Component Launcher", "CLNCH");
     ret[component_type::MINING_LASER] = make_default("Mining Laser", "MLAS");
     ret[component_type::REFINERY] = make_default("Refinery", "REF");
+    ret[component_type::FACTORY] = make_default("Factory", "FAC");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -73,9 +74,11 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::COMPONENT_LAUNCHER].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::MINING_LASER].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::REFINERY].add_composition_ratio({material_info::IRON}, {1});
+    ret[component_type::FACTORY].add_composition_ratio({material_info::IRON}, {1});
 
 
     ret[component_type::REFINERY].activation_level = 0;
+    ret[component_type::FACTORY].activation_level = 0;
 
     return ret;
 }
@@ -320,6 +323,20 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::POWER, -20); ///2 power plants to run on full tilt
         //p.set_no_drain_on_full_production();
         p.set_heat(600);
+        p.activation_type = component_info::SLIDER_ACTIVATION;
+
+        p.base_volume = 1;
+        p.set_internal_volume(1);
+    }
+
+    {
+        component_fixed_properties& p  = ret[component_type::FACTORY];
+
+        p.add(component_info::HP, 0, 1);
+        p.add(component_info::POWER, -10); ///1 power plant to run on full tilt
+        p.add(tag_info::TAG_FACTORY);
+        p.set_heat(50);
+
         p.activation_type = component_info::SLIDER_ACTIVATION;
 
         p.base_volume = 1;

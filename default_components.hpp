@@ -30,6 +30,7 @@ namespace component_type
         COMPONENT_LAUNCHER,
         MINING_LASER,
         REFINERY,
+        FACTORY,
         COUNT,
     };
 }
