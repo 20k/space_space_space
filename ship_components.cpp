@@ -2258,7 +2258,38 @@ void ship::tick(double dt_s)
         {
             for(int kk=0; kk < s.components.size(); kk++)
             {
-                if(s.components[kk].get_my_volume() < 0.001 && s.components[kk].base_id == component_type::MATERIAL)
+                /*if(s.components[kk].get_my_volume() < 0.001 && s.components[kk].base_id == component_type::MATERIAL)
+                {
+                    s.components.erase(s.components.begin() + kk);
+                    kk--;
+                    continue;
+                }*/
+
+                component& to_remove = s.components[kk];
+
+                bool remove = false;
+
+                if(to_remove.base_id == component_type::MATERIAL)
+                {
+                    ///in the shitter, schedule to be removed
+                    if(to_remove.get_my_volume() < 0.001)
+                    {
+                        if(!to_remove.bad_time)
+                            to_remove.bad_time = fixed_clock();
+
+                        ///1s
+                        if(to_remove.bad_time->getElapsedTime().asMicroseconds() >= 1000 * 1000)
+                        {
+                            remove = true;
+                        }
+                    }
+                    else
+                    {
+                        to_remove.bad_time = std::nullopt;
+                    }
+                }
+
+                if(remove)
                 {
                     s.components.erase(s.components.begin() + kk);
                     kk--;

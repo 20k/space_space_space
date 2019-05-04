@@ -2,14 +2,8 @@
 #define MATERIAL_INFO_HPP_INCLUDED
 
 #include <networking/serialisable.hpp>
-#include <SFML/System/Clock.hpp>
 
 struct material_fixed_properties;
-
-namespace sf
-{
-    struct Clock;
-}
 
 namespace material_info
 {
@@ -78,8 +72,6 @@ struct material : serialisable
 {
     material_dynamic_properties dynamic_desc;
     material_info::material_type type = material_info::COUNT;
-
-    std::optional<sf::Clock> bad_time;
 
     SERIALISE_SIGNATURE()
     {

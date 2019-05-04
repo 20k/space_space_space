@@ -332,6 +332,9 @@ struct component : virtual serialisable, owned
     float activation_level = 1;
     //component_info::activation_type activation_type = component_info::NO_ACTIVATION;
 
+    ///time this component has been nearly empty enough to remove
+    std::optional<fixed_clock> bad_time;
+
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
     //bool production_heat_scales = false;
