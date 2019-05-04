@@ -334,6 +334,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::HP, 0, 1);
         p.add(component_info::POWER, -10); ///1 power plant to run on full tilt
+        p.add(component_info::MANUFACTURING, 1);
         p.add(tag_info::TAG_FACTORY);
         p.set_heat(50);
 

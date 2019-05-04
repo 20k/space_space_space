@@ -39,6 +39,7 @@ namespace component_info
         MATERIAL,
         SELF_DESTRUCT,
         MINING,
+        MANUFACTURING,
         COUNT
     };
 
@@ -62,6 +63,7 @@ namespace component_info
         "Material",
         "Self Destruct",
         "Mining",
+        "Manufacturing",
     };
 
     enum activation_type

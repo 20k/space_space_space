@@ -323,11 +323,14 @@ void server_thread(std::atomic_bool& should_term)
         {
             component mat_1 = get_component_default(component_type::MATERIAL, 1);
             component mat_2 = get_component_default(component_type::MATERIAL, 1);
+            component mat_3 = get_component_default(component_type::MATERIAL, 1);
             mat_1.add_composition(material_info::IRON, 1);
-            mat_2.add_composition(material_info::IRON, 1);
+            mat_2.add_composition(material_info::COPPER, 1);
+            mat_3.add_composition(material_info::LITHIUM, 1);
 
             c.store(mat_1);
             c.store(mat_2);
+            c.store(mat_3);
         }
     }
 
