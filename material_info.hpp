@@ -82,4 +82,11 @@ struct material : serialisable
 
 std::pair<material_dynamic_properties, material_fixed_properties> get_material_composite(const std::vector<material>& in);
 
+struct component;
+
+bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2);
+bool is_equivalent_material(const component& c1, const component& c2);
+
+void material_merge(std::vector<material>& into, std::vector<material> old);
+
 #endif // MATERIAL_INFO_HPP_INCLUDED

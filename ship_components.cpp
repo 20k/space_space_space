@@ -874,54 +874,6 @@ void component::add_composition(material_info::material_type type, double volume
     composition.push_back(new_mat);
 }
 
-bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2)
-{
-    if(m_1.size() != m_2.size())
-        return false;
-
-    auto sorter =
-    [](const material& one, const material& two)
-    {
-        return one.type < two.type;
-    };
-
-    std::sort(m_1.begin(), m_1.end(), sorter);
-    std::sort(m_2.begin(), m_2.end(), sorter);
-
-    float one_vol = 0;
-    float two_vol = 0;
-
-    for(material& i : m_1)
-    {
-        one_vol += i.dynamic_desc.volume;
-    }
-
-    for(material& i : m_2)
-    {
-        two_vol += i.dynamic_desc.volume;
-    }
-
-    for(int i=0; i < (int)m_1.size(); i++)
-    {
-        if(m_1[i].type != m_2[i].type)
-            return false;
-    }
-
-    if(one_vol < 0.0001 || two_vol < 0.0001)
-        return true;
-
-    for(int i=0; i < (int)m_1.size(); i++)
-    {
-        float frac_1 = m_1[i].dynamic_desc.volume / one_vol;
-        float frac_2 = m_2[i].dynamic_desc.volume / two_vol;
-
-        if(!approx_equal(frac_1, frac_2, 0.001))
-            return false;
-    }
-
-    return true;
-}
-
 void component::add_composition(const material& m)
 {
     for(material& m_old : composition)
@@ -934,17 +886,6 @@ void component::add_composition(const material& m)
     }
 
     assert(false);
-}
-
-bool is_equivalent_material(const component& c1, const component& c2)
-{
-    if(c1.flows != c2.flows)
-        return false;
-
-    if(c1.phase != c2.phase)
-        return false;
-
-    return is_equivalent_material(c1.composition, c2.composition);
 }
 
 void component::add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume)

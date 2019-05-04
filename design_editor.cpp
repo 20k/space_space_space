@@ -198,6 +198,47 @@ ship blueprint::to_ship()
     return nship;
 }
 
+void get_ship_cost(ship& s, std::vector<std::vector<material>>& out)
+{
+    for(component& c : s.components)
+    {
+        bool found = false;
+
+        for(auto& mats : out)
+        {
+            if(is_equivalent_material(mats, c.composition))
+            {
+                assert(mats.size() == c.composition.size());
+
+                material_merge(mats, c.composition);
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            out.push_back(c.composition);
+        }
+
+        for(ship& cs : c.stored)
+        {
+            get_ship_cost(cs, out);
+        }
+    }
+}
+
+std::vector<std::vector<material>> blueprint::get_cost()
+{
+    std::vector<std::vector<material>> ret;
+
+    ship mship = to_ship();
+
+    get_ship_cost(mship, ret);
+
+    return ret;
+}
+
 void design_editor::tick(double dt_s)
 {
 

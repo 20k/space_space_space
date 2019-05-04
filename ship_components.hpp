@@ -575,8 +575,6 @@ struct component : virtual serialisable, owned
     }
 };
 
-bool is_equivalent_material(const component& c1, const component& c2);
-
 struct data_tracker : serialisable, owned
 {
     std::vector<float> vsat;

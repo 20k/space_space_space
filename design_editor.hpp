@@ -81,6 +81,8 @@ struct blueprint : serialisable, owned
 
     ship to_ship();
 
+    std::vector<std::vector<material>> get_cost();
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(nodes);
