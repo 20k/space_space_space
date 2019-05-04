@@ -198,9 +198,9 @@ ship blueprint::to_ship()
     return nship;
 }
 
-void get_ship_cost(ship& s, std::vector<std::vector<material>>& out)
+void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)
 {
-    for(component& c : s.components)
+    for(const component& c : s.components)
     {
         bool found = false;
 
@@ -221,7 +221,7 @@ void get_ship_cost(ship& s, std::vector<std::vector<material>>& out)
             out.push_back(c.composition);
         }
 
-        for(ship& cs : c.stored)
+        for(const ship& cs : c.stored)
         {
             get_ship_cost(cs, out);
         }
