@@ -87,6 +87,10 @@ struct component;
 bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2);
 bool is_equivalent_material(const component& c1, const component& c2);
 
+void material_deduplicate(std::vector<std::vector<material>>& in);
 void material_merge(std::vector<material>& into, std::vector<material> old);
+bool material_satisfies(const std::vector<std::vector<material>>& requirements, const std::vector<std::vector<material>>& available); ///must be deduplicated
+
+float material_volume(const std::vector<material>& m);
 
 #endif // MATERIAL_INFO_HPP_INCLUDED

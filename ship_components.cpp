@@ -3114,13 +3114,34 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 
     ImGui::Text("Blueprints");
 
+    std::vector<std::vector<material>> in_storage;
+
+    for_each_stored([&](component& c)
+    {
+        if(c.base_id == component_type::MATERIAL)
+            in_storage.push_back(c.composition);
+    });
+
+    material_deduplicate(in_storage);
+
     for(blueprint& blue : blueprint_manage.blueprints)
     {
         if(ImGui::TreeNode(blue.name.c_str()))
         {
             ship s = blue.to_ship();
 
-            render_ship_cost(s);
+            render_ship_cost(s, in_storage);
+
+            std::vector<std::vector<material>> cost = blue.get_cost();
+
+            if(material_satisfies(cost, in_storage))
+            {
+                ImGui::Button("Build");
+            }
+            else
+            {
+                ImGui::Button("Insufficient Resources");
+            }
 
             ///future james
             ///some sort of resources_satisfied

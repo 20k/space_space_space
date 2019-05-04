@@ -161,6 +161,24 @@ bool is_equivalent_material(const component& c1, const component& c2)
     return is_equivalent_material(c1.composition, c2.composition);
 }
 
+void material_deduplicate(std::vector<std::vector<material>>& in)
+{
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        for(int j=i + 1; j < (int)in.size(); j++)
+        {
+            if(is_equivalent_material(in[i], in[j]))
+            {
+                material_merge(in[i], in[j]);
+
+                in.erase(in.begin() + j);
+                j--;
+                continue;
+            }
+        }
+    }
+}
+
 void material_merge(std::vector<material>& m_1, std::vector<material> m_2)
 {
     auto sorter =
@@ -180,4 +198,52 @@ void material_merge(std::vector<material>& m_1, std::vector<material> m_2)
 
         m_1[i].dynamic_desc.volume += m_2[i].dynamic_desc.volume;
     }
+}
+
+bool material_satisfies(const std::vector<std::vector<material>>& requirements, const std::vector<std::vector<material>>& available)
+{
+    std::vector<int> satisfied;
+    satisfied.resize(requirements.size());
+
+    for(auto& available_type : available)
+    {
+        for(int i=0; i < (int)requirements.size(); i++)
+        {
+            if(satisfied[i])
+                continue;
+
+            auto& required_type = requirements[i];
+
+            if(is_equivalent_material(available_type, required_type))
+            {
+                float vol_available = material_volume(available_type);
+                float vol_required = material_volume(required_type);
+
+                if(vol_available < vol_required)
+                    return false;
+
+                satisfied[i] = 1;
+            }
+        }
+    }
+
+    for(auto& i : satisfied)
+    {
+        if(!i)
+            return false;
+    }
+
+    return true;
+}
+
+float material_volume(const std::vector<material>& m)
+{
+    float vol = 0;
+
+    for(const material& ms : m)
+    {
+        vol += ms.dynamic_desc.volume;
+    }
+
+    return vol;
 }

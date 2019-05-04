@@ -16,6 +16,7 @@ void render_component_simple(const component& c);
 void render_component_compact(const component& c, int id, float size_mult, float real_size);
 
 struct design_editor;
+struct material;
 
 ///?
 struct player_research : serialisable, owned
@@ -183,6 +184,6 @@ struct design_editor
     float dragging_size = 1;
 };
 
-void render_ship_cost(const ship& s);
+void render_ship_cost(const ship& s, const std::vector<std::vector<material>>& mats);
 
 #endif // DESIGN_EDITOR_HPP_INCLUDED

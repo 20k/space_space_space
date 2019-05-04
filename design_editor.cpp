@@ -4,6 +4,7 @@
 #include <iostream>
 #include "imgui/imgui_internal.h"
 #include "format.hpp"
+#include "colours.hpp"
 
 void render_component_simple(const component& c)
 {
@@ -266,7 +267,7 @@ std::optional<component*> design_editor::fetch(uint32_t id)
     return std::nullopt;
 }
 
-void render_ship_cost(const ship& s)
+void render_ship_cost(const ship& s, const std::vector<std::vector<material>>& mats)
 {
     std::vector<std::vector<material>> cost;
     get_ship_cost(s, cost);
@@ -275,6 +276,8 @@ void render_ship_cost(const ship& s)
 
     for(std::vector<material>& mat : cost)
     {
+        bool is_sat = material_satisfies({mat}, mats);
+
         for(int i=0; i < (int)mat.size(); i++)
         {
             material& m = mat[i];
@@ -285,7 +288,14 @@ void render_ship_cost(const ship& s)
 
             std::string amount = to_string_with_variable_prec(m.dynamic_desc.volume);
 
-            ImGui::Text(amount.c_str());
+            ImVec4 col;
+
+            if(is_sat)
+                col = colours::pastel_green;
+            else
+                col = colours::pastel_red;
+
+            ImGui::TextColored(col, amount.c_str());
 
             if(i != (int)mat.size() - 1)
             {
@@ -455,7 +465,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::NewLine();
 
-    render_ship_cost(s);
+    render_ship_cost(s, std::vector<std::vector<material>>());
 
     ImGui::EndChild();
 
