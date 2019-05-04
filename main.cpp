@@ -177,6 +177,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::CREW, 1));
     test_ship->add(get_component_default(component_type::MINING_LASER, 1));
     test_ship->add(get_component_default(component_type::REFINERY, 1));
+    test_ship->add(get_component_default(component_type::FACTORY, 1));
 
     {
         storage_pipe rpipe;
