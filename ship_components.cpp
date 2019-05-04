@@ -905,27 +905,15 @@ bool is_equivalent_material(std::vector<material> m_1, std::vector<material> m_2
     {
         if(m_1[i].type != m_2[i].type)
             return false;
+    }
 
-        float frac_1 = 0;
-        float frac_2 = 0;
+    if(one_vol < 0.0001 || two_vol < 0.0001)
+        return true;
 
-        if(one_vol < 0.0001)
-        {
-            frac_1 = -1;
-        }
-        else
-        {
-            frac_1 = m_1[i].dynamic_desc.volume / one_vol;
-        }
-
-        if(two_vol < 0.0001)
-        {
-            frac_2 = -1;
-        }
-        else
-        {
-            frac_2 = m_2[i].dynamic_desc.volume / two_vol;;
-        }
+    for(int i=0; i < (int)m_1.size(); i++)
+    {
+        float frac_1 = m_1[i].dynamic_desc.volume / one_vol;
+        float frac_2 = m_2[i].dynamic_desc.volume / two_vol;
 
         if(!approx_equal(frac_1, frac_2, 0.001))
             return false;
