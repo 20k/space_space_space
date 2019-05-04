@@ -3173,6 +3173,21 @@ void component::manufacture_blueprint(const blueprint& blue)
 
     std::vector<std::vector<material>> cost = blue.get_cost();
 
+    /*float total_volume = 0;
+
+    for(auto& i : cost)
+    {
+        total_volume += material_volume(cost);
+    }
+
+    float free_volume = (get_internal_volume() - get_stored_volume()) + total_volume - blue.to_ship.get_my_volume();
+
+    if(free_volume < 0)
+        return;*/
+
+    if(blue.to_ship().get_my_volume() > get_internal_volume())
+        return;
+
     if(!material_satisfies(cost, in_storage))
         return;
 
