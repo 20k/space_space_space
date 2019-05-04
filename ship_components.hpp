@@ -294,6 +294,8 @@ private:
     double heat_produced_at_full_usage = 0;
 };
 
+struct blueprint_manager;
+
 struct component : virtual serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
@@ -528,10 +530,12 @@ struct component : virtual serialisable, owned
     std::string phase_string();
     std::string get_render_long_name();
     void render_inline_ui();
+    void render_manufacturing_window(blueprint_manager& blueprint_manage);
 
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff
     bool detailed_view_open = false;
+    bool factory_view_open = false;
 
     void set_activation_level(double level)
     {
@@ -660,6 +664,7 @@ struct ship : heatable_entity, owned
     //std::string show_components();
     void show_resources(bool window = true);
     void show_power();
+    void show_manufacturing_windows(blueprint_manager& blueprint_manage);
 
     float get_my_volume();
 

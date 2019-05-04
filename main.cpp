@@ -1539,6 +1539,8 @@ int main()
             s.advanced_ship_display();
 
             s.show_power();
+
+            s.show_manufacturing_windows(design.server_blueprint_manage);
         }
 
         //std::cout << "showtime " << showtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;

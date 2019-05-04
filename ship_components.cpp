@@ -3099,6 +3099,40 @@ void component::render_inline_ui()
     }
 }
 
+void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
+{
+    if(!factory_view_open)
+        return;
+
+    std::string name = long_name + "##" + std::to_string(_pid);
+
+    ImGui::Begin(name.c_str(), &factory_view_open);
+
+    render_inline_ui();
+
+    ImGui::NewLine();
+
+    ImGui::Text("Blueprints");
+
+    for(blueprint& blue : blueprint_manage.blueprints)
+    {
+        if(ImGui::TreeNode(blue.name.c_str()))
+        {
+            ship s = blue.to_ship();
+
+            render_ship_cost(s);
+
+            ///future james
+            ///some sort of resources_satisfied
+            ///if true colour button and make clickable
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::End();
+}
+
 void ship::show_resources(bool window)
 {
     std::vector<std::string> strings;
@@ -3398,33 +3432,49 @@ void ship::show_power()
 
         const component_fixed_properties& fixed_properties = c.get_fixed_props();
 
-        if(fixed_properties.activation_type == component_info::SLIDER_ACTIVATION)
+        ///render sliders
         {
-            ImGui::PushItemWidth(80);
+            if(fixed_properties.activation_type == component_info::SLIDER_ACTIVATION)
+            {
+                ImGui::PushItemWidth(80);
 
-            changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
+                changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
 
-            ImGui::PopItemWidth();
-        }
+                ImGui::PopItemWidth();
+            }
 
-        if(fixed_properties.activation_type == component_info::TOGGLE_ACTIVATION)
-        {
-            bool enabled = as_percentage == 100;
+            if(fixed_properties.activation_type == component_info::TOGGLE_ACTIVATION)
+            {
+                bool enabled = as_percentage == 100;
 
-            changed = ImGui::Checkbox(("##" + std::to_string(c._pid)).c_str(), &enabled);
+                changed = ImGui::Checkbox(("##" + std::to_string(c._pid)).c_str(), &enabled);
 
-            as_percentage = ((int)enabled) * 100;
-        }
+                as_percentage = ((int)enabled) * 100;
+            }
 
-        ///well
-        if(fixed_properties.activation_type == component_info::NO_ACTIVATION)
-        {
+            ///well
+            if(fixed_properties.activation_type == component_info::NO_ACTIVATION)
+            {
 
+            }
         }
 
         ImGui::SameLine();
 
-        ImGui::Text(name.c_str());
+        ///render name
+        {
+            if(c.has_tag(tag_info::TAG_FACTORY))
+            {
+                if(ImGui::Button(name.c_str()))
+                {
+                    c.factory_view_open = !c.factory_view_open;
+                }
+            }
+            else
+            {
+                ImGui::Text(name.c_str());
+            }
+        }
         #endif // HORIZONTAL
 
         //#define VERTICAL
@@ -3812,6 +3862,17 @@ void ship::advanced_ship_display()
     }
 
     ImGui::End();
+}
+
+void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage)
+{
+    for(component& c : components)
+    {
+        if(c.has_tag(tag_info::TAG_FACTORY))
+        {
+            c.render_manufacturing_window(blueprint_manage);
+        }
+    }
 }
 
 void ship::apply_force(vec2f dir)

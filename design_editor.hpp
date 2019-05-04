@@ -183,4 +183,6 @@ struct design_editor
     float dragging_size = 1;
 };
 
+void render_ship_cost(const ship& s);
+
 #endif // DESIGN_EDITOR_HPP_INCLUDED
