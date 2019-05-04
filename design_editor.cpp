@@ -5,6 +5,7 @@
 #include "imgui/imgui_internal.h"
 #include "format.hpp"
 #include "colours.hpp"
+#include "material_info.hpp"
 
 void render_component_simple(const component& c)
 {
@@ -197,6 +198,24 @@ ship blueprint::to_ship()
     nship.is_ship = true;
 
     return nship;
+}
+
+float blueprint::get_build_time_s(float build_power)
+{
+    if(build_power <= 0.000001)
+        return 999999999;
+
+    auto cost = get_cost();
+
+    float total_volume = 0;
+
+    for(auto& m : cost)
+    {
+        total_volume += material_volume(m);
+    }
+
+    ///100s for a level 1 factory to build a level 1 ship?
+    return 100 * total_volume / build_power;
 }
 
 void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)

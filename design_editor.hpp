@@ -81,6 +81,7 @@ struct blueprint : serialisable, owned
     blueprint_render_state render(design_editor& edit, vec2f upper_size);
 
     ship to_ship();
+    float get_build_time_s(float build_power);
 
     std::vector<std::vector<material>> get_cost();
 
