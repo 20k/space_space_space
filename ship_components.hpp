@@ -523,6 +523,7 @@ struct component : virtual serialisable, owned
 
     void render_inline_stats();
     std::string phase_string();
+    std::string get_render_long_name();
     void render_inline_ui();
 
     ///do not network

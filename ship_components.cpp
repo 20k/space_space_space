@@ -3023,19 +3023,26 @@ void component::render_inline_stats()
 
 std::string component::phase_string()
 {
-    //auto [dyn, fixed] = get_material_composite(composition);
-
-    /*if(my_temperature > fixed.melting_point)
-        return "(l)";
-    else
-        return "(s)";*/
-
     if(phase == 1)
         return "(l)";
     if(phase == 0)
         return "(s)";
 
     return "(Err)";
+}
+
+std::string component::get_render_long_name()
+{
+    if(base_id == component_type::MATERIAL)
+    {
+        if(composition.size() == 0)
+            return "Empty";
+
+        if(composition.size() == 1)
+            return material_info::long_names[composition[0].type];
+    }
+
+    return long_name;
 }
 
 void component::render_inline_ui()
@@ -3091,6 +3098,10 @@ void component::render_inline_ui()
 
                     ImGui::PopItemWidth();
                 }
+
+                ImGui::SameLine();
+
+                ImGui::Text(store.get_render_long_name().c_str());
             }
         }
         else
