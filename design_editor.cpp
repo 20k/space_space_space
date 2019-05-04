@@ -266,6 +266,39 @@ std::optional<component*> design_editor::fetch(uint32_t id)
     return std::nullopt;
 }
 
+void render_ship_cost(const ship& s)
+{
+    std::vector<std::vector<material>> cost;
+    get_ship_cost(s, cost);
+
+    ImGui::Text("Ship Cost:");
+
+    for(std::vector<material>& mat : cost)
+    {
+        for(int i=0; i < (int)mat.size(); i++)
+        {
+            material& m = mat[i];
+
+            ImGui::Text(material_info::long_names[m.type].c_str());
+
+            ImGui::SameLine();
+
+            std::string amount = to_string_with_variable_prec(m.dynamic_desc.volume);
+
+            ImGui::Text(amount.c_str());
+
+            if(i != (int)mat.size() - 1)
+            {
+                ImGui::SameLine();
+
+                ImGui::Text("/");
+
+                ImGui::SameLine();
+            }
+        }
+    }
+}
+
 void design_editor::render(sf::RenderWindow& win)
 {
     if(!open)
@@ -419,6 +452,8 @@ void design_editor::render(sf::RenderWindow& win)
     ship s = cur.to_ship();
 
     s.show_resources(false);
+
+    render_ship_cost(s);
 
     ImGui::EndChild();
 
