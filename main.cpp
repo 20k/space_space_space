@@ -184,11 +184,35 @@ void server_thread(std::atomic_bool& should_term)
 
         int cnum = test_ship->components.size();
 
-        rpipe.id_1 = test_ship->components[cnum-2]._pid;
-        rpipe.id_2 = test_ship->components[cnum-1]._pid;
+        size_t id_1 = -1;
+        size_t id_2 = -1;
+        size_t id_3 = -1;
+
+        for(component& c : test_ship->components)
+        {
+            if(c.base_id == component_type::MINING_LASER)
+                id_1 = c._pid;
+
+            if(c.base_id == component_type::REFINERY)
+                id_2 = c._pid;
+
+            if(c.base_id == component_type::FACTORY)
+                id_3 = c._pid;
+        }
+
+        rpipe.id_1 = id_1;
+        rpipe.id_2 = id_2;
         rpipe.max_flow_rate = 1;
 
         test_ship->add_pipe(rpipe);
+
+
+        storage_pipe rpipe2;
+        rpipe2.id_1 = id_2;
+        rpipe2.id_2 = id_3;
+        rpipe2.max_flow_rate = 1;
+
+        test_ship->add_pipe(rpipe2);
     }
 
     blueprint default_missile;
