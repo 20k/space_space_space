@@ -55,21 +55,21 @@ std::array<component, component_type::COUNT> get_default_component_map()
     }
 
     ret[component_type::THRUSTER].add_composition_ratio({material_info::COPPER}, {1});
-    ret[component_type::WARP].add_composition_ratio({material_info::COPPER, material_info::IRON}, {1, 1});
-    ret[component_type::SHIELDS].add_composition_ratio({material_info::IRON, material_info::COPPER}, {1, 0.5});
+    ret[component_type::WARP].add_composition_ratio({material_info::COPPER}, {1});
+    ret[component_type::SHIELDS].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::LASER].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::SENSOR].add_composition_ratio({material_info::COPPER}, {1});
-    ret[component_type::COMMS].add_composition_ratio({material_info::COPPER, material_info::IRON}, {1, 1});
+    ret[component_type::COMMS].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::ARMOUR].add_composition_ratio({material_info::IRON}, {1});
-    ret[component_type::LIFE_SUPPORT].add_composition_ratio({material_info::COPPER, material_info::IRON}, {1, 1});
+    ret[component_type::LIFE_SUPPORT].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::RADIATOR].add_composition_ratio({material_info::IRON}, {1});
-    ret[component_type::POWER_GENERATOR].add_composition_ratio({material_info::IRON, material_info::COPPER}, {3, 2});
+    ret[component_type::POWER_GENERATOR].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::CREW].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::MISSILE_CORE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::DESTRUCT].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::STORAGE_TANK].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::STORAGE_TANK_HS].add_composition_ratio({material_info::IRON}, {1});
-    ret[component_type::HEAT_BLOCK].add_composition_ratio({material_info::IRON, material_info::LITHIUM}, {0.1, 0.9});
+    ret[component_type::HEAT_BLOCK].add_composition_ratio({material_info::LITHIUM}, {1});
     ret[component_type::COMPONENT_LAUNCHER].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::MINING_LASER].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::REFINERY].add_composition_ratio({material_info::IRON}, {1});
