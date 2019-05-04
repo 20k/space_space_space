@@ -1207,6 +1207,8 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
             component next = get_component_default(component_type::MATERIAL, 1);
             next.my_temperature = c.my_temperature;
             next.phase = c.phase;
+            next.long_name = c.long_name;
+            next.short_name = c.short_name;
 
             ship nnext;
             nnext.add(next);
@@ -2893,6 +2895,9 @@ std::vector<component> ship::handle_degredation(double dt_s)
             next.composition = removed;
             next.my_temperature = c.my_temperature - 1;
             next.phase = 0;
+
+            next.long_name = c.long_name;
+            next.short_name = c.short_name;
 
             float total_to_add = 0;
 
