@@ -1884,6 +1884,28 @@ void ship::tick(double dt_s)
 
         if(c.has(component_info::MANUFACTURING))
         {
+            if(c.building)
+            {
+                c.last_production_frac = 1;
+            }
+            else
+            {
+                c.last_production_frac = 0;
+            }
+        }
+    }
+
+    std::vector<double> all_sat = get_sat_percentage();
+
+    //std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
+
+    std::vector<double> produced_resources = get_net_resources(dt_s, all_sat);
+
+    ///manufacturing
+    for(component& c : components)
+    {
+        if(c.has(component_info::MANUFACTURING))
+        {
             for(auto id : c.unchecked_blueprints)
             {
                 if(model)
@@ -1899,49 +1921,40 @@ void ship::tick(double dt_s)
 
             c.unchecked_blueprints.clear();
 
-            if(c.building)
+            if(c.build_queue.size() > 0)
             {
-                if(c.build_queue.size() > 0)
-                {
-                    c.build_work_elapsed += c.get_fixed(component_info::MANUFACTURING).recharge * dt_s / SIZE_TO_TIME;
-                }
+                c.build_work_elapsed += produced_resources[component_info::MANUFACTURING] / SIZE_TO_TIME;
+            }
 
-                if(c.build_queue.size() > 0)
-                {
-                    float front_cost = get_build_work(c.build_queue.front());
+            if(c.build_queue.size() > 0)
+            {
+                float front_cost = get_build_work(c.build_queue.front());
 
-                    while(c.build_work_elapsed >= front_cost)
+                while(c.build_work_elapsed >= front_cost)
+                {
+                    ship spawn = c.build_queue.front();
+
+                    if(c.can_store(spawn))
                     {
-                        ship spawn = c.build_queue.front();
+                        c.store(spawn);
 
-                        if(c.can_store(spawn))
-                        {
-                            c.store(spawn);
+                        c.build_queue.erase(c.build_queue.begin());
 
-                            c.build_queue.erase(c.build_queue.begin());
-
-                            c.build_work_elapsed -= front_cost;
-                        }
-                        else
-                        {
-                            c.building = false;
-                            break;
-                        }
+                        c.build_work_elapsed -= front_cost;
+                    }
+                    else
+                    {
+                        c.building = false;
+                        break;
                     }
                 }
-                else
-                {
-                    c.build_work_elapsed = 0;
-                }
+            }
+            else
+            {
+                c.build_work_elapsed = 0;
             }
         }
     }
-
-    std::vector<double> all_sat = get_sat_percentage();
-
-    //std::cout << "SAT " << all_sat[component_info::LIFE_SUPPORT] << std::endl;
-
-    std::vector<double> produced_resources = get_net_resources(dt_s, all_sat);
 
     std::vector<double> next_resource_status;
     next_resource_status.resize(component_info::COUNT);

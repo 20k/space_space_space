@@ -78,7 +78,6 @@ std::array<component, component_type::COUNT> get_default_component_map()
 
 
     ret[component_type::REFINERY].activation_level = 0;
-    ret[component_type::FACTORY].activation_level = 0;
 
     return ret;
 }
