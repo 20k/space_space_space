@@ -1923,7 +1923,7 @@ void ship::tick(double dt_s)
 
             if(c.build_queue.size() > 0)
             {
-                c.build_work_elapsed += produced_resources[component_info::MANUFACTURING] / SIZE_TO_TIME;
+                c.build_work_elapsed += c.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
             }
 
             if(c.build_queue.size() > 0)
