@@ -1924,10 +1924,7 @@ void ship::tick(double dt_s)
             if(c.build_queue.size() > 0)
             {
                 c.build_work_elapsed += c.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
-            }
 
-            if(c.build_queue.size() > 0)
-            {
                 float front_cost = get_build_work(c.build_queue.front());
 
                 while(c.build_work_elapsed >= front_cost)
