@@ -3164,6 +3164,10 @@ void component::render_inline_ui()
 
                 ImGui::PopItemWidth();
             }
+
+            ImGui::SameLine();
+
+            ImGui::Text(s.blueprint_name.c_str());
         }
     }
 }
