@@ -639,6 +639,8 @@ struct ship : heatable_entity, owned
     size_t network_owner = 0;
     float my_size = 0;
 
+    std::string blueprint_name;
+
     std::vector<component> components;
     std::vector<storage_pipe> pipes;
 
@@ -744,6 +746,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(pipes);
         DO_SERIALISE(my_size);
         DO_SERIALISE(is_ship);
+        DO_SERIALISE(blueprint_name);
     }
 
     virtual void pre_collide(entity& other) override;

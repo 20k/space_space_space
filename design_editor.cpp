@@ -196,6 +196,7 @@ ship blueprint::to_ship() const
 
     nship.my_size = overall_size;
     nship.is_ship = true;
+    nship.blueprint_name = name;
 
     return nship;
 }

@@ -3222,6 +3222,32 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 
     render_inline_ui();
 
+    ///construction queue
+    //if(ImGui::TreeNodeEx("In Progress", ImGuiTreeNodeFlags_Leaf))
+
+    ImGui::Text("In progress");
+
+    ImGui::Indent();
+    {
+        for(int i=0; i < (int)build_queue.size(); i++)
+        {
+            float work = get_build_work(build_queue[i]);
+
+            std::string str;
+
+            if(i == 0)
+                str = build_queue[i].blueprint_name + " " + to_string_with(100 * build_work_elapsed / work) + "%%";
+            else
+                str = build_queue[i].blueprint_name;
+
+            ImGui::Text(str.c_str());
+        }
+
+        //ImGui::TreePop();
+    }
+
+    ImGui::Unindent();
+
     ImGui::NewLine();
 
     ImGui::Text("Blueprints");
@@ -3235,6 +3261,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
     });
 
     material_deduplicate(in_storage);
+
 
     for(blueprint& blue : blueprint_manage.blueprints)
     {
