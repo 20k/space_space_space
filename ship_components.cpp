@@ -1949,6 +1949,7 @@ void ship::tick(double dt_s)
             else
             {
                 c.build_work_elapsed = 0;
+                c.building = false;
             }
         }
     }
