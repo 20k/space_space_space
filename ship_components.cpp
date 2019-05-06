@@ -1923,11 +1923,11 @@ void ship::tick(double dt_s)
 
             if(c.build_queue.size() > 0)
             {
-                c.build_work_elapsed += c.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+                c.build_queue[0].construction_amount += c.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
                 float front_cost = get_build_work(c.build_queue.front());
 
-                while(c.build_work_elapsed >= front_cost)
+                while(c.build_queue.size() > 0 && c.build_queue[0].construction_amount >= front_cost)
                 {
                     ship spawn = c.build_queue.front();
 
@@ -1935,9 +1935,14 @@ void ship::tick(double dt_s)
                     {
                         c.store(spawn);
 
+                        float extra = c.build_queue[0].construction_amount - front_cost;
+
                         c.build_queue.erase(c.build_queue.begin());
 
-                        c.build_work_elapsed -= front_cost;
+                        if(c.build_queue.size() > 0)
+                        {
+                            c.build_queue[0].construction_amount += extra;
+                        }
                     }
                     else
                     {
@@ -1948,7 +1953,6 @@ void ship::tick(double dt_s)
             }
             else
             {
-                c.build_work_elapsed = 0;
                 c.building = false;
             }
         }
@@ -3224,22 +3228,23 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
     render_inline_ui();
 
     ///construction queue
-    //if(ImGui::TreeNodeEx("In Progress", ImGuiTreeNodeFlags_Leaf))
 
     ImGui::Text("In progress");
 
     ImGui::Indent();
+
+    //if(ImGui::TreeNodeEx("In Progress", ImGuiTreeNodeFlags_Leaf))
     {
         for(int i=0; i < (int)build_queue.size(); i++)
         {
             float work = get_build_work(build_queue[i]);
 
-            std::string str;
+            std::string str = build_queue[i].blueprint_name;
 
-            if(i == 0)
-                str = build_queue[i].blueprint_name + " " + to_string_with(100 * build_work_elapsed / work) + "%%";
-            else
-                str = build_queue[i].blueprint_name;
+            if(build_queue[i].construction_amount > 0)
+            {
+                str += " " + to_string_with(100 * build_queue[i].construction_amount / work) + "%%";
+            }
 
             ImGui::Text(str.c_str());
         }

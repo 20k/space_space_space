@@ -161,6 +161,9 @@ struct storage_pipe : serialisable, owned
 
     bool goes_to_space = false;
 
+    ///used for transferring non liquids, how much work has been done transferring stuff so far
+    float transfer_work = 0;
+
     ///ui
     bool is_open = false;
 
@@ -175,6 +178,8 @@ struct storage_pipe : serialisable, owned
         DO_SERIALISE(flow_rate);
         DO_SERIALISE(max_flow_rate);
         DO_SERIALISE(goes_to_space);
+
+        DO_SERIALISE(transfer_work);
 
         DO_RPC(set_flow_rate);
     }
@@ -346,7 +351,6 @@ struct component : virtual serialisable, owned
 
     bool building = false;
     std::vector<ship> build_queue;
-    float build_work_elapsed = 0;
 
     std::vector<size_t> unchecked_blueprints;
 
@@ -385,7 +389,6 @@ struct component : virtual serialisable, owned
         DO_SERIALISE(activation_level);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
-        DO_SERIALISE(build_work_elapsed);
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
@@ -663,6 +666,8 @@ struct ship : heatable_entity, owned
 
     std::vector<data_tracker> data_track;
 
+    float construction_amount = 0;
+
     ship();
 
     std::optional<component*> get_component_from_id(uint64_t id);
@@ -738,6 +743,7 @@ struct ship : heatable_entity, owned
 
     SERIALISE_SIGNATURE()
     {
+        DO_SERIALISE(construction_amount);
         DO_SERIALISE(data_track);
         DO_SERIALISE(network_owner);
         DO_SERIALISE(components);
