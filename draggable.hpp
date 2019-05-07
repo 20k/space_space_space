@@ -19,6 +19,18 @@ struct draggable_manager
 {
     std::optional<draggable> current;
     //entity* found = nullptr;
+    ///well this is really just terrible
+    void* drag_source = nullptr;
+
+    uint64_t hash_code = 0;
+
+    template<typename T>
+    void set_drag_source(std::vector<T>* in)
+    {
+        drag_source = (void*)in;
+
+        hash_code = typeid(T).hash_code();
+    }
 
     void tick();
     void drop();
@@ -27,10 +39,18 @@ struct draggable_manager
     //entity* claim();
 
     template<typename T>
-    entity* claim(std::vector<T>& check)
+    entity* claim()
     {
         if(!current)
             throw std::runtime_error("Bad Claim entity");
+
+        if(!drag_source)
+            throw std::runtime_error("No drag source");
+
+        if(hash_code != typeid(T).hash_code())
+            throw std::runtime_error("Bad type in claim");
+
+        std::vector<T>& check = *(std::vector<T>*)drag_source;
 
         entity* found = nullptr;
 

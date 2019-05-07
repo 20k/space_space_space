@@ -1334,6 +1334,8 @@ int main()
     data_model<ship> model;
     client_entities renderables;
 
+    get_global_draggable_manager().set_drag_source(&model.ships);
+
     sf::Clock imgui_delta;
     sf::Clock frametime_delta;
 
