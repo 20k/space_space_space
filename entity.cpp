@@ -127,7 +127,7 @@ void entity::tick_phys(double dt_s)
     r.position += velocity * dt_s;
     r.rotation += angular_velocity * dt_s;
 
-    if(drag)
+    if(phys_drag)
     {
         float sign = signum(angular_velocity);
 

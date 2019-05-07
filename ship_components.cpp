@@ -35,7 +35,7 @@ ship::ship()
 
     r.vert_cols[2] = {1, 0.2, 0.2, 1};
 
-    drag = true;
+    phys_drag = true;
 
     data_track.resize(component_info::COUNT);
 }
@@ -2085,7 +2085,7 @@ void ship::tick(double dt_s)
                         spawned->network_owner = network_owner;
                         spawned->spawn_clock.restart();
                         spawned->spawned_by = id;
-                        spawned->drag = false;
+                        spawned->phys_drag = false;
                     }
                 }
 

@@ -82,7 +82,7 @@ struct entity : virtual serialisable
     float control_angular_force = 0;
     float angular_force = 0;
 
-    bool drag = false;
+    bool phys_drag = false;
 
     ///this is a performance compromise
     ///TODO: store typeid
