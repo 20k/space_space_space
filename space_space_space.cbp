@@ -94,8 +94,6 @@
 		<Unit filename="deps/networking/serialisable.hpp" />
 		<Unit filename="design_editor.cpp" />
 		<Unit filename="design_editor.hpp" />
-		<Unit filename="draggable.cpp" />
-		<Unit filename="draggable.hpp" />
 		<Unit filename="entity.cpp" />
 		<Unit filename="entity.hpp" />
 		<Unit filename="fixed_clock.hpp" />

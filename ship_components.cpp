@@ -12,7 +12,6 @@
 #include <set>
 #include "aoe_damage.hpp"
 #include "player.hpp"
-#include "draggable.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -3172,15 +3171,9 @@ void component::render_inline_ui()
 
             ImGui::Button(s.blueprint_name.c_str());
 
-            /*if(ImGui::IsItemClicked(0))
-            {
-                draggable drag(s._pid);
-                drag.start();
-            }*/
-
             if(ImGui::BeginDragDropSource())
             {
-                ImGui::SetDragDropPayload("ship", &s._pid, sizeof(s._pid));
+                ImGui::SetDragDropPayload("SHIPPY", &s._pid, sizeof(s._pid));
 
                 ImGui::EndDragDropSource();
             }
@@ -3189,25 +3182,20 @@ void component::render_inline_ui()
 
     ImGui::EndGroup();
 
-    /*draggable_manager& drag = get_global_draggable_manager();
-
-    if(drag.just_dropped())
-    {
-        size_t found = drag.claim();
-
-        transfer_stored_from_to_rpc(found, _pid);
-
-        printf("Dropped on %llui\n", _pid);
-    }*/
-
     if(ImGui::BeginDragDropTarget())
     {
-        const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ship");
+        if(const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SHIPPY"))
+        {
+            if(!payload->Data)
+            {
+                throw std::runtime_error("Bad Payload");
+            }
 
-        size_t data;
-        memcpy(&data, payload->Data, sizeof(data));
+            size_t data;
+            memcpy(&data, payload->Data, sizeof(data));
 
-        transfer_stored_from_to_rpc(data, _pid);
+            transfer_stored_from_to_rpc(data, _pid);
+        }
 
         ImGui::EndDragDropTarget();
     }
