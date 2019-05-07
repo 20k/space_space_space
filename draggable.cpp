@@ -15,6 +15,8 @@ void draggable::start()
 
 void draggable_manager::tick()
 {
+    found = nullptr;
+
     if(dropped_c > 0)
         dropped_c--;
 
