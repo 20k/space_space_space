@@ -3172,8 +3172,6 @@ void component::render_inline_ui()
 
             if(ImGui::IsItemClicked(0))
             {
-                printf("Looking for %li\n", s._pid);
-
                 draggable drag(s._pid);
                 drag.start();
             }
@@ -4349,25 +4347,6 @@ void ship::new_network_copy()
 
         c._pid = next_id;
     }
-}
-
-entity* ship::get_entity_with_id(size_t eid)
-{
-    if(_pid == eid)
-        return this;
-
-    for(component& c : components)
-    {
-        for(ship& store : c.stored)
-        {
-            auto en = store.get_entity_with_id(eid);
-
-            if(en)
-                return en;
-        }
-    }
-
-    return nullptr;
 }
 
 #if 0
