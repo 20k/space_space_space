@@ -1056,7 +1056,7 @@ void server_thread(std::atomic_bool& should_term)
 
                     for(auto& i : all_transfers)
                     {
-                        std::cout << "ipid " << i.pid_ship << " icomp " << i.pid_component << std::endl;
+                        //std::cout << "ipid " << i.pid_ship << " icomp " << i.pid_component << std::endl;
 
                         removed_ships.push_back(s->remove_ship_by_id(i.pid_ship));
                     }

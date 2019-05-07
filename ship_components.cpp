@@ -3170,27 +3170,46 @@ void component::render_inline_ui()
 
             ImGui::SameLine();
 
-            ImGui::Text(s.blueprint_name.c_str());
+            ImGui::Button(s.blueprint_name.c_str());
 
-            if(ImGui::IsItemClicked(0))
+            /*if(ImGui::IsItemClicked(0))
             {
-                std::cout << "sdrag " << s._pid << std::endl;
-
                 draggable drag(s._pid);
                 drag.start();
+            }*/
+
+            if(ImGui::BeginDragDropSource())
+            {
+                ImGui::SetDragDropPayload("ship", &s._pid, sizeof(s._pid));
+
+                ImGui::EndDragDropSource();
             }
         }
     }
 
     ImGui::EndGroup();
 
-    draggable_manager& drag = get_global_draggable_manager();
+    /*draggable_manager& drag = get_global_draggable_manager();
 
     if(drag.just_dropped())
     {
         size_t found = drag.claim();
 
         transfer_stored_from_to_rpc(found, _pid);
+
+        printf("Dropped on %llui\n", _pid);
+    }*/
+
+    if(ImGui::BeginDragDropTarget())
+    {
+        const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ship");
+
+        size_t data;
+        memcpy(&data, payload->Data, sizeof(data));
+
+        transfer_stored_from_to_rpc(data, _pid);
+
+        ImGui::EndDragDropTarget();
     }
 }
 
