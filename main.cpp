@@ -1465,11 +1465,11 @@ int main()
 
                 draggable_manager& drag = get_global_draggable_manager();
 
-                auto found = s.get_entity_with_id(drag.current->drag_id);
+                auto found = find_by_id(s, drag.current->drag_id);
 
                 if(found)
                 {
-                    drag.found = found;
+                    drag.found = (entity*)found;
                     break;
                 }
             }
