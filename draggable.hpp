@@ -24,6 +24,9 @@ struct draggable_manager
     bool just_dropped();
     entity* claim();
 
+    bool dragging();
+    entity* peek();
+
 private:
     int dropped_c = 0;
 };
