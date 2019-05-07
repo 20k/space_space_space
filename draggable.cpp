@@ -22,8 +22,8 @@ void draggable_manager::tick()
     {
         draggable& d = current.value();
 
-        if(d.drag->cleanup)
-            current = std::nullopt;
+        /*if(d.drag->cleanup)
+            current = std::nullopt;*/
     }
 
     if(!current)
@@ -34,7 +34,7 @@ void draggable_manager::tick()
 
 void draggable_manager::drop()
 {
-    if(!current || dropped_c > 0)
+    if(!current || dropped_c > 0 || !found)
         return;
 
     dropped_c = 2;
@@ -42,7 +42,7 @@ void draggable_manager::drop()
 
 bool draggable_manager::just_dropped()
 {
-    return current && (dropped_c > 0);
+    return current && (dropped_c > 0) && found;
 }
 
 entity* draggable_manager::claim()
@@ -50,7 +50,7 @@ entity* draggable_manager::claim()
     if(!current)
         throw std::runtime_error("Bad Claim entity");
 
-    entity* en = current.value().drag;
+    entity* en = found;
 
     current = std::nullopt;
     dropped_c = 0;
@@ -60,7 +60,7 @@ entity* draggable_manager::claim()
 
 bool draggable_manager::dragging()
 {
-    return current && dropped_c > 0;
+    return current && dropped_c == 0 && found;
 }
 
 entity* draggable_manager::peek()
@@ -68,5 +68,5 @@ entity* draggable_manager::peek()
     if(!current || dropped_c == 0)
         throw std::runtime_error("Nothing to peek");
 
-    return current.value().drag;
+    return found;
 }

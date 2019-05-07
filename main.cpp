@@ -1454,6 +1454,27 @@ int main()
         if(ImGui::IsMouseReleased(0))
             get_global_draggable_manager().drop();
 
+        if(get_global_draggable_manager().dragging())
+        {
+            for(entity* en : entities.entities)
+            {
+                if(dynamic_cast<ship*>(en) == nullptr)
+                    continue;
+
+                ship& s = *dynamic_cast<ship*>(en);
+
+                draggable_manager& drag = get_global_draggable_manager();
+
+                auto found = s.get_entity_with_id(drag.current->drag_id);
+
+                if(found)
+                {
+                    drag.found = found;
+                    break;
+                }
+            }
+        }
+
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         //vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
 

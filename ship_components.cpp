@@ -12,6 +12,7 @@
 #include <set>
 #include "aoe_damage.hpp"
 #include "player.hpp"
+#include "draggable.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -3168,6 +3169,12 @@ void component::render_inline_ui()
             ImGui::SameLine();
 
             ImGui::Text(s.blueprint_name.c_str());
+
+            if(ImGui::IsItemClicked(0))
+            {
+                //draggable drag(&s);
+
+            }
         }
     }
 }
@@ -4340,6 +4347,25 @@ void ship::new_network_copy()
 
         c._pid = next_id;
     }
+}
+
+entity* ship::get_entity_with_id(size_t eid)
+{
+    if(_pid == eid)
+        return this;
+
+    for(component& c : components)
+    {
+        for(ship& store : c.stored)
+        {
+            auto en = store.get_entity_with_id(eid);
+
+            if(en)
+                return en;
+        }
+    }
+
+    return nullptr;
 }
 
 #if 0

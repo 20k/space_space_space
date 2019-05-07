@@ -759,6 +759,7 @@ struct ship : heatable_entity, owned
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void new_network_copy();
+    entity* get_entity_with_id(size_t eid);
 
     sf::Clock spawn_clock;
     void tick_missile_behaviour(double dt_s);

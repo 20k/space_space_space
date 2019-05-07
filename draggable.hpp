@@ -7,9 +7,9 @@ struct entity;
 
 struct draggable
 {
-    entity* drag = nullptr;
+    size_t drag_id = -1;
 
-    draggable(entity* _drag) : drag(_drag){}
+    draggable(size_t _drag) : drag_id(_drag){}
 
     void start();
 };
@@ -17,6 +17,7 @@ struct draggable
 struct draggable_manager
 {
     std::optional<draggable> current;
+    entity* found = nullptr;
 
     void tick();
     void drop();
