@@ -3172,8 +3172,8 @@ void component::render_inline_ui()
 
             if(ImGui::IsItemClicked(0))
             {
-                //draggable drag(&s);
-
+                draggable drag(s._pid);
+                drag.start();
             }
         }
     }

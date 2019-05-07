@@ -1454,8 +1454,14 @@ int main()
         if(ImGui::IsMouseReleased(0))
             get_global_draggable_manager().drop();
 
-        if(get_global_draggable_manager().dragging())
+        if(get_global_draggable_manager().trying_dragging())
         {
+            printf("Dragging\n");
+
+            draggable_manager& drag = get_global_draggable_manager();
+
+            drag.found = nullptr;
+
             for(entity* en : entities.entities)
             {
                 if(dynamic_cast<ship*>(en) == nullptr)
@@ -1463,16 +1469,18 @@ int main()
 
                 ship& s = *dynamic_cast<ship*>(en);
 
-                draggable_manager& drag = get_global_draggable_manager();
-
                 auto found = find_by_id(s, drag.current->drag_id);
 
                 if(found)
                 {
                     drag.found = (entity*)found;
+                    printf("Found\n");
                     break;
                 }
             }
+
+            if(drag.found == nullptr)
+                drag.reset();
         }
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
