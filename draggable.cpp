@@ -34,15 +34,23 @@ void draggable_manager::tick()
 
 void draggable_manager::drop()
 {
+    if(!current)
+        return;
+
     dropped_c = 2;
 }
 
 bool draggable_manager::just_dropped()
 {
-    return dropped_c > 0;
+    return current && (dropped_c > 0);
 }
 
 entity* draggable_manager::claim()
 {
-    return current.value().drag;
+    entity* en = current.value().drag;
+
+    current = std::nullopt;
+    dropped_c = 0;
+
+    return en;
 }

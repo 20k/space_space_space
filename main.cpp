@@ -15,6 +15,7 @@
 #include "aoe_damage.hpp"
 #include "design_editor.hpp"
 #include <fstream>
+#include "draggable.hpp"
 
 template<int c>
 bool once(sf::Keyboard::Key k)
@@ -1447,6 +1448,11 @@ int main()
         entities.tick(frametime_dt);
         transients.tick(frametime_dt);
         design.tick(frametime_dt);
+
+        get_global_draggable_manager().tick();
+
+        if(ImGui::IsMouseReleased(0))
+            get_global_draggable_manager().drop();
 
         vec2f mpos = {mouse.getPosition(window).x, mouse.getPosition(window).y};
         //vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
