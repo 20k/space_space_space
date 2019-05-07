@@ -3172,6 +3172,8 @@ void component::render_inline_ui()
 
             if(ImGui::IsItemClicked(0))
             {
+                printf("Looking for %li\n", s._pid);
+
                 draggable drag(s._pid);
                 drag.start();
             }

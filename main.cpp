@@ -1456,25 +1456,18 @@ int main()
 
         if(get_global_draggable_manager().trying_dragging())
         {
-            printf("Dragging\n");
-
             draggable_manager& drag = get_global_draggable_manager();
 
             drag.found = nullptr;
 
-            for(entity* en : entities.entities)
+            //for(entity* en : entities.entities)
+            for(ship& s : model.ships)
             {
-                if(dynamic_cast<ship*>(en) == nullptr)
-                    continue;
-
-                ship& s = *dynamic_cast<ship*>(en);
-
                 auto found = find_by_id(s, drag.current->drag_id);
 
                 if(found)
                 {
                     drag.found = (entity*)found;
-                    printf("Found\n");
                     break;
                 }
             }
