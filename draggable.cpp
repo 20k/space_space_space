@@ -22,20 +22,18 @@ void draggable_manager::tick()
         if(dropped_c == 0)
         {
             current = std::nullopt;
-            found = nullptr;
         }
     }
 
     if(!current)
     {
         dropped_c = 0;
-        found = nullptr;
     }
 }
 
 void draggable_manager::drop()
 {
-    if(!current || dropped_c > 0 || !found)
+    if(!current || dropped_c > 0)
         return;
 
     dropped_c = 2;
@@ -43,10 +41,10 @@ void draggable_manager::drop()
 
 bool draggable_manager::just_dropped()
 {
-    return current && (dropped_c > 0) && found;
+    return current && (dropped_c > 0);
 }
 
-entity* draggable_manager::claim()
+/*entity* draggable_manager::claim()
 {
     if(!current)
         throw std::runtime_error("Bad Claim entity");
@@ -57,29 +55,28 @@ entity* draggable_manager::claim()
     dropped_c = 0;
 
     return en;
-}
+}*/
 
-bool draggable_manager::trying_dragging()
+/*bool draggable_manager::trying_dragging()
+{
+    return current && dropped_c == 0;
+}*/
+
+bool draggable_manager::dragging()
 {
     return current && dropped_c == 0;
 }
 
-bool draggable_manager::dragging()
-{
-    return current && dropped_c == 0 && found;
-}
-
-entity* draggable_manager::peek()
+/*entity* draggable_manager::peek()
 {
     if(!current || dropped_c == 0)
         throw std::runtime_error("Nothing to peek");
 
     return found;
-}
+}*/
 
 void draggable_manager::reset()
 {
     current = std::nullopt;
-    found = nullptr;
     dropped_c = 0;
 }

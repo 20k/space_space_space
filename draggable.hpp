@@ -2,6 +2,7 @@
 #define DRAGGABLE_HPP_INCLUDED
 
 #include <optional>
+#include <networking/serialisable.hpp>
 
 struct entity;
 
@@ -17,17 +18,36 @@ struct draggable
 struct draggable_manager
 {
     std::optional<draggable> current;
-    entity* found = nullptr;
+    //entity* found = nullptr;
 
     void tick();
     void drop();
 
     bool just_dropped();
-    entity* claim();
+    //entity* claim();
 
-    bool trying_dragging();
+    template<typename T>
+    entity* claim(std::vector<T>& check)
+    {
+        if(!current)
+            throw std::runtime_error("Bad Claim entity");
+
+        entity* found = nullptr;
+
+        for(T& val : check)
+        {
+            found = find_by_id(val, current.value().drag_id);
+
+            if(found)
+                break;
+        }
+
+        return found;
+    }
+
+    //bool trying_dragging();
     bool dragging();
-    entity* peek();
+    //entity* peek();
 
     void reset();
 
