@@ -307,6 +307,12 @@ private:
 struct blueprint_manager;
 struct blueprint;
 
+struct pending_transfer
+{
+    size_t pid_ship = -1;
+    size_t pid_component = -1;
+};
+
 struct component : virtual serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
@@ -323,6 +329,8 @@ struct component : virtual serialisable, owned
 
     std::vector<does_dynamic> dyn_info;
     std::vector<does_dynamic> dyn_activate_requirements;
+
+    std::vector<pending_transfer> transfers;
 
     std::string long_name;
     std::string short_name;
@@ -761,6 +769,10 @@ struct ship : heatable_entity, owned
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
+
+    void consume_all_transfers(std::vector<pending_transfer>& xfers);
+    std::optional<ship> remove_ship_by_id(size_t pid);
+    void add_ship_to_component(ship& s, size_t pid);
 
     void new_network_copy();
 

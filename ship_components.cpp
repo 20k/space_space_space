@@ -3174,6 +3174,8 @@ void component::render_inline_ui()
 
             if(ImGui::IsItemClicked(0))
             {
+                std::cout << "sdrag " << s._pid << std::endl;
+
                 draggable drag(s._pid);
                 drag.start();
             }
@@ -3186,17 +3188,9 @@ void component::render_inline_ui()
 
     if(drag.just_dropped())
     {
-        owned* found = drag.claim<ship>();
+        size_t found = drag.claim();
 
-        if(found)
-        {
-            ship* found_ship = static_cast<ship*>(found);
-
-            transfer_stored_from_to_rpc(found_ship->_pid, _pid);
-
-            ///pipes?
-            //stored.push_back(*found_ship);
-        }
+        transfer_stored_from_to_rpc(found, _pid);
     }
 }
 
@@ -3352,7 +3346,10 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 
 void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to)
 {
+    transfers.push_back({pid_ship_from, pid_component_to});
 
+    while(transfers.size() > 100)
+        transfers.erase(transfers.begin());
 }
 
 void ship::show_resources(bool window)
@@ -4335,6 +4332,73 @@ void ship::on_collide(entity_manager& em, entity& other)
         if(oship)
         {
             oship->take_damage(their_change.length()/2);
+        }
+    }
+}
+
+void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
+{
+    for(component& c : components)
+    {
+        for(auto& i : c.transfers)
+        {
+            xfers.push_back(i);
+        }
+
+        c.transfers.clear();
+
+        for(ship& s : c.stored)
+        {
+            s.consume_all_transfers(xfers);
+        }
+    }
+}
+
+std::optional<ship> ship::remove_ship_by_id(size_t pid)
+{
+    for(component& c : components)
+    {
+        for(int i=0; i < (int)c.stored.size(); i++)
+        {
+            ship& s = c.stored[i];
+
+            ///not our ship, recurse
+            if(s._pid != pid)
+            {
+                auto it = s.remove_ship_by_id(pid);
+
+                if(it)
+                    return it;
+            }
+            ///found our ship, keep going
+            else
+            {
+                ship cpy = s;
+
+                c.stored.erase(c.stored.begin() + i);
+                return cpy;
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+void ship::add_ship_to_component(ship& s, size_t pid)
+{
+    for(component& c : components)
+    {
+        if(c._pid != pid)
+        {
+            for(ship& ns : c.stored)
+            {
+                ns.add_ship_to_component(s, pid);
+            }
+        }
+        else
+        {
+            c.stored.push_back(s);
+            return;
         }
     }
 }

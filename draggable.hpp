@@ -37,7 +37,7 @@ struct draggable_manager
     bool just_dropped();
     //entity* claim();
 
-    template<typename T>
+    /*template<typename T>
     owned* claim()
     {
         if(!current)
@@ -64,6 +64,18 @@ struct draggable_manager
         reset();
 
         return found;
+    }*/
+
+    size_t claim()
+    {
+        if(!current)
+            throw std::runtime_error("Bad Claim entity");
+
+        size_t id = current.value().drag_id;
+
+        reset();
+
+        return id;
     }
 
     //bool trying_dragging();

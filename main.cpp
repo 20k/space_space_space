@@ -1049,6 +1049,26 @@ void server_thread(std::atomic_bool& should_term)
                     if(s->network_owner != i)
                         continue;
 
+                    std::vector<pending_transfer> all_transfers;
+                    s->consume_all_transfers(all_transfers);
+
+                    std::vector<std::optional<ship>> removed_ships;
+
+                    for(auto& i : all_transfers)
+                    {
+                        std::cout << "ipid " << i.pid_ship << " icomp " << i.pid_component << std::endl;
+
+                        removed_ships.push_back(s->remove_ship_by_id(i.pid_ship));
+                    }
+
+                    for(int i=0; i < (int)removed_ships.size(); i++)
+                    {
+                        if(!removed_ships[i])
+                            continue;
+
+                        s->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
+                    }
+
                     #ifdef MOUSE_TRACK
                     vec2f mpos = last_mouse_pos[i];
 
@@ -1585,7 +1605,7 @@ int main()
 
         sf::sleep(sf::milliseconds(4));
 
-        std::cout << "frametime " << frametime_dt << std::endl;
+        //std::cout << "frametime " << frametime_dt << std::endl;
     }
 
     return 0;
