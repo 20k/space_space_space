@@ -4,7 +4,6 @@
 #include <optional>
 #include <networking/serialisable.hpp>
 
-struct entity;
 
 struct draggable
 {
@@ -39,7 +38,7 @@ struct draggable_manager
     //entity* claim();
 
     template<typename T>
-    entity* claim()
+    owned* claim()
     {
         if(!current)
             throw std::runtime_error("Bad Claim entity");
@@ -52,15 +51,17 @@ struct draggable_manager
 
         std::vector<T>& check = *(std::vector<T>*)drag_source;
 
-        entity* found = nullptr;
+        owned* found = nullptr;
 
         for(T& val : check)
         {
-            found = find_by_id(val, current.value().drag_id);
+            found = (owned*)find_by_id(val, current.value().drag_id);
 
             if(found)
                 break;
         }
+
+        reset();
 
         return found;
     }

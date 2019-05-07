@@ -393,6 +393,7 @@ struct component : virtual serialisable, owned
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
         DO_RPC(manufacture_blueprint_id);
+        DO_RPC(transfer_stored_from_to);
     }
 
     FRIENDLY_RPC_NAME(manufacture_blueprint_id);
@@ -560,6 +561,9 @@ struct component : virtual serialisable, owned
     ///needs some adjustments to the network, need to fix ownership n stuff
     bool detailed_view_open = false;
     bool factory_view_open = false;
+
+    void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
+    FRIENDLY_RPC_NAME(transfer_stored_from_to);
 
     void set_activation_level(double level)
     {

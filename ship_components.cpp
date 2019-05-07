@@ -3097,6 +3097,8 @@ void component::render_inline_ui()
 
     //ImGui::Text(("Container " + std::to_string(_pid)).c_str());
 
+    ImGui::BeginGroup();
+
     ImGui::Text((long_name).c_str());
 
     for(ship& s : stored)
@@ -3175,6 +3177,25 @@ void component::render_inline_ui()
                 draggable drag(s._pid);
                 drag.start();
             }
+        }
+    }
+
+    ImGui::EndGroup();
+
+    draggable_manager& drag = get_global_draggable_manager();
+
+    if(drag.just_dropped())
+    {
+        owned* found = drag.claim<ship>();
+
+        if(found)
+        {
+            ship* found_ship = static_cast<ship*>(found);
+
+            transfer_stored_from_to_rpc(found_ship->_pid, _pid);
+
+            ///pipes?
+            //stored.push_back(*found_ship);
         }
     }
 }
@@ -3327,6 +3348,11 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
     }
 
     ImGui::End();
+}
+
+void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to)
+{
+
 }
 
 void ship::show_resources(bool window)
