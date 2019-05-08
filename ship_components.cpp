@@ -3169,9 +3169,9 @@ void component::render_inline_ui()
 
             ImGui::SameLine();
 
-            ImGui::Button(s.blueprint_name.c_str());
+            ImGui::Button((s.blueprint_name + "##" + std::to_string(s._pid)).c_str());
 
-            if(ImGui::BeginDragDropSource())
+            if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
             {
                 ImGui::SetDragDropPayload("SHIPPY", &s._pid, sizeof(s._pid));
 
