@@ -331,6 +331,8 @@ void server_thread(std::atomic_bool& should_term)
             c.store(mat_1);
             c.store(mat_2);
             c.store(mat_3);
+
+            c.store(default_missile.to_ship());
         }
     }
 
