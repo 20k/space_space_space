@@ -1061,10 +1061,16 @@ float component::drain(float amount)
     return amount;
 }
 
-void component::drain_from_to(component& c1_in, component& c2_in, float amount)
+///ok need to do transferring solids
+///take 1 second to transfer a ship of size 1
+float component::drain_material_from_to(component& c1_in, component& c2_in, float amount)
 {
+    ///this is for peformance, not correctness
+    if(amount == 0)
+        return 0;
+
     if(amount < 0)
-        return drain_from_to(c2_in, c1_in, -amount);
+        return drain_material_from_to(c2_in, c1_in, -amount);
 
     float total_drainable = 0;
 
@@ -1079,7 +1085,7 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
     });
 
     if(total_drainable <= 0.00001f)
-        return;
+        return 0;
 
     if(amount > total_drainable)
         amount = total_drainable;
@@ -1094,6 +1100,8 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
     {
         amount = free_volume;
     }
+
+    float xferred = 0;
 
     c1_in.for_each_stored([&](component& c)
     {
@@ -1164,6 +1172,8 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
             m.dynamic_desc.volume -= material_drain_volume;
 
+            xferred += material_drain_volume;
+
             float heat_increase = donator_temp * material_drain_volume * material_info::fetch(m.type).specific_heat;
 
             old_stored_heat_capacity += heat_increase;
@@ -1206,6 +1216,42 @@ void component::drain_from_to(component& c1_in, component& c2_in, float amount)
 
         found->my_temperature = ntemp;
     });
+
+    return xferred;
+}
+
+float component::drain_ship_from_to(component& c1_in, component& c2_in, float amount)
+{
+    if(amount == 0)
+        return 0;
+
+    if(amount < 0)
+        return drain_ship_from_to(c2_in, c1_in, -amount);
+
+    float xferred = 0;
+
+    for(int sid=0; sid < (int)c1_in.stored.size(); sid++)
+    {
+        ship& s1 = c1_in.stored[sid];
+
+        if(!c2_in.can_store(s1))
+            continue;
+
+        float my_vol = s1.get_my_volume();
+
+        ///transfer from front
+        if(my_vol >= amount)
+            return xferred;
+
+        c2_in.store(s1);
+
+        c1_in.stored.erase(c1_in.stored.begin() + sid);
+        sid--;
+
+        xferred += my_vol;
+    }
+
+    return xferred;
 }
 
 std::vector<double> ship::get_sat_percentage()
@@ -2173,7 +2219,7 @@ void ship::tick(double dt_s)
             component& c1 = *c1_o.value();
             component& c2 = *c2_o.value();
 
-            component::drain_from_to(c1, c2, p.flow_rate * dt_s);
+            component::drain_material_from_to(c1, c2, p.flow_rate * dt_s);
         }
 
         if(c1_o && p.goes_to_space)

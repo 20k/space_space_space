@@ -161,6 +161,9 @@ struct storage_pipe : serialisable, owned
 
     bool goes_to_space = false;
 
+    bool solids = true;
+    bool fluids = true;
+
     ///used for transferring non liquids, how much work has been done transferring stuff so far
     float transfer_work = 0;
 
@@ -518,7 +521,9 @@ struct component : virtual serialisable, owned
     //std::vector<component> drain_amount_from_storage(float amount);
 
     float drain(float amount);
-    static void drain_from_to(component& c1, component& c2, float amount);
+    ///returns amount transferred (absolute value)
+    static float drain_material_from_to(component& c1, component& c2, float amount);
+    static float drain_ship_from_to(component& c1, component& c2, float amount);
 
     void normalise_volume();
     float get_my_volume() const;
