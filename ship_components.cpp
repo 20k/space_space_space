@@ -1242,10 +1242,6 @@ float component::drain_ship_from_to(component& c1_in, component& c2_in, float am
 
         float my_vol = s1.get_my_volume();
 
-        ///transfer from front
-        if(my_vol >= amount)
-            return xferred;
-
         c2_in.store(s1);
 
         c1_in.stored.erase(c1_in.stored.begin() + sid);
