@@ -1234,6 +1234,9 @@ float component::drain_ship_from_to(component& c1_in, component& c2_in, float am
     {
         ship& s1 = c1_in.stored[sid];
 
+        if(!s1.is_ship)
+            continue;
+
         if(!c2_in.can_store(s1))
             continue;
 
@@ -2219,7 +2222,33 @@ void ship::tick(double dt_s)
             component& c1 = *c1_o.value();
             component& c2 = *c2_o.value();
 
-            component::drain_material_from_to(c1, c2, p.flow_rate * dt_s);
+            if(p.fluids)
+                component::drain_material_from_to(c1, c2, p.flow_rate * dt_s);
+
+            if(p.solids)
+            {
+                ///changed direction of pipe
+                if(signum(p.flow_rate) != signum(p.transfer_work))
+                    p.transfer_work = 0;
+
+                ///get amount of work spent
+                float extra = component::drain_ship_from_to(c1, c2, p.transfer_work);
+
+                ///unspent work saved
+                float diff = fabs(p.flow_rate * dt_s) - fabs(extra);
+
+                p.transfer_work += diff * signum(p.flow_rate);
+
+                if(p.flow_rate > 0)
+                {
+                    p.transfer_work = clamp(p.transfer_work, 0, c2.get_internal_volume());
+                }
+
+                if(p.flow_rate < 0)
+                {
+                    p.transfer_work = clamp(p.transfer_work, -c1.get_internal_volume(), 0);
+                }
+            }
         }
 
         if(c1_o && p.goes_to_space)
