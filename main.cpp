@@ -15,6 +15,9 @@
 #include "aoe_damage.hpp"
 #include "design_editor.hpp"
 #include <fstream>
+#include <nauth/auth.hpp>
+#include <nauth/steam_auth.hpp>
+#include <nauth/steam_api.hpp>
 
 template<int c>
 bool once(sf::Keyboard::Key k)
@@ -798,6 +801,16 @@ void server_thread(std::atomic_bool& should_term)
 
     int stagger_id = 0;
 
+    auth_manager<user_auth_data> auth_manage;
+
+    set_db_location("./db");
+    set_num_dbs(1);
+
+    std::string secret_key = "secret/akey.ect";
+    uint64_t net_code_appid = 814820;
+
+    set_app_description({secret_key, net_code_appid});
+
     while(1)
     {
         sf::Clock tickclock;
@@ -953,8 +966,41 @@ void server_thread(std::atomic_bool& should_term)
 
         while(conn.has_read())
         {
-            client_input read_data;
-            uint64_t read_id = conn.reads_from<client_input>(read_data);
+            nlohmann::json network_json;
+            uint64_t read_id = -1;
+
+            {
+                network_protocol proto;
+
+                read_id = conn.reads_from(proto);
+
+                if(proto.type == network_mode::STEAM_AUTH)
+                {
+                    std::string hex = proto.data;
+
+                    auth_manage.handle_steam_auth(read_id, hex, get_db());
+                }
+
+                if(!auth_manage.authenticated(read_id))
+                {
+                    printf("DENIED\n");
+
+                    conn.pop_read(read_id);
+                    continue;
+                }
+
+                if(proto.type == network_mode::DATA)
+                {
+                    network_json = std::move(proto.data);
+                }
+
+                conn.pop_read(read_id);
+            }
+
+            /*client_input read_data;
+            uint64_t read_id = conn.reads_from<client_input>(read_data);*/
+
+            client_input read_data = deserialise<client_input>(network_json);
 
             last_mouse_pos[read_id] = read_data.mouse_world_pos;
 
@@ -1009,8 +1055,6 @@ void server_thread(std::atomic_bool& should_term)
                     do_recurse(ctx, mod);
                 }
             }
-
-            conn.pop_read(read_id);
         }
 
         if(key.isKeyPressed(sf::Keyboard::P))
@@ -1377,6 +1421,27 @@ int main()
     design_editor design;
     design.open = true;
 
+    steamapi api;
+
+    {
+        api.request_auth_token("");
+
+        while(!api.auth_success())
+        {
+            api.pump_callbacks();
+        }
+
+        std::vector<uint8_t> vec = api.get_encrypted_token();
+
+        std::string str(vec.begin(), vec.end());
+
+        network_protocol proto;
+        proto.type = network_mode::STEAM_AUTH;
+        proto.data = binary_to_hex(str, false);
+
+        conn.writes_to(proto, -1);
+    }
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -1477,6 +1542,9 @@ int main()
 
         renderables.render(cam, window);
 
+        network_protocol nproto;
+        nproto.type = network_mode::DATA;
+
         client_input cinput;
 
         float forward_vel = 0;
@@ -1544,7 +1612,9 @@ int main()
 
         get_global_serialise_info().all_rpcs.clear();
 
-        conn.writes_to(cinput, -1);
+        nproto.data = serialise(cinput);
+
+        conn.writes_to(nproto, -1);
 
         //sf::Clock showtime;
 

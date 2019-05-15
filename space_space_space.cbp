@@ -73,6 +73,7 @@
 			<Add option="-llmdb" />
 			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
 			<Add library="deps/steamworks_sdk_142/sdk/redistributable_bin/win64/libsteam_api64.a" />
+			<Add directory="deps/liblmdb" />
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
@@ -92,6 +93,7 @@
 		<Unit filename="deps/imgui/imgui_widgets.cpp" />
 		<Unit filename="deps/imgui/misc/freetype/imgui_freetype.cpp" />
 		<Unit filename="deps/nauth/auth.cpp" />
+		<Unit filename="deps/nauth/auth.hpp" />
 		<Unit filename="deps/nauth/steam_api.cpp" />
 		<Unit filename="deps/nauth/steam_auth.cpp" />
 		<Unit filename="deps/ndb/db_storage.cpp" />

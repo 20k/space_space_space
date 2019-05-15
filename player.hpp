@@ -146,4 +146,12 @@ struct client_input : serialisable
     }
 };
 
+struct user_auth_data : serialisable
+{
+    SERIALISE_SIGNATURE()
+    {
+
+    }
+};
+
 #endif // PLAYER_HPP_INCLUDED
