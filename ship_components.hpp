@@ -653,6 +653,7 @@ struct data_tracker : serialisable, owned
 struct alt_radar_field;
 struct client_fire;
 struct player_model;
+struct persistent_user_data;
 
 struct ship : heatable_entity, owned
 {
@@ -680,6 +681,7 @@ struct ship : heatable_entity, owned
     //std::vector<data_tracker> data_track;
 
     player_model* model = nullptr;
+    persistent_user_data* persistent_data = nullptr;
 
     std::vector<data_tracker> data_track;
 

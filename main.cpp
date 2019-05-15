@@ -801,7 +801,7 @@ void server_thread(std::atomic_bool& should_term)
 
     int stagger_id = 0;
 
-    auth_manager<user_auth_data> auth_manage;
+    auth_manager<persistent_user_data> auth_manage;
 
     set_db_location("./db");
     set_num_dbs(1);
@@ -913,8 +913,8 @@ void server_thread(std::atomic_bool& should_term)
 
         while(conn.has_new_client())
         {
+            /*
             uint32_t pid = conn.has_new_client().value();
-
             data_model<ship*>& data = data_manage.fetch_by_id(pid);
 
             player_model& fmodel = data.networked_model;
@@ -929,37 +929,7 @@ void server_thread(std::atomic_bool& should_term)
 
                     fmodel.controlled_ship = s;
                 }
-            }
-
-            fmodel.research = default_research;
-            fmodel.research._pid = get_next_persistent_id();
-
-            get_next_persistent_id();
-
-            if(std::ifstream("temp.blueprint").good())
-                fmodel.blueprint_manage.load("temp.blueprint");
-
-            bool has_missile = false;
-
-            for(blueprint& p : fmodel.blueprint_manage.blueprints)
-            {
-                if(p.name == default_missile.name)
-                    has_missile = true;
-            }
-
-            /*for(blueprint& p : fmodel.blueprint_manage.blueprints)
-            {
-                for(blueprint_node& node : p.nodes)
-                {
-                    std::cout << "node pid " << node.original._pid << std::endl;
-                }
             }*/
-
-            if(!has_missile)
-                fmodel.blueprint_manage.blueprints.push_back(default_missile);
-
-            if(fmodel.blueprint_manage.blueprints.size() == 0)
-                fmodel.blueprint_manage.create_blueprint();
 
             conn.pop_new_client();
         }
@@ -968,6 +938,8 @@ void server_thread(std::atomic_bool& should_term)
         {
             nlohmann::json network_json;
             uint64_t read_id = -1;
+
+            std::optional<auth<persistent_user_data>*> found_auth;
 
             {
                 network_protocol proto;
@@ -987,6 +959,57 @@ void server_thread(std::atomic_bool& should_term)
 
                     conn.pop_read(read_id);
                     continue;
+                }
+
+                found_auth = auth_manage.fetch(read_id);
+
+                if(found_auth.has_value() && !found_auth.value()->data.default_init)
+                {
+                    uint32_t pid = read_id;
+                    data_model<ship*>& data = data_manage.fetch_by_id(pid);
+
+                    player_model& fmodel = data.networked_model;
+                    persistent_user_data* user_data = &found_auth.value()->data;
+                    data.persistent_data = user_data;
+
+                    std::vector<ship*> ships = entities.fetch<ship>();
+
+                    for(ship* s : ships)
+                    {
+                        if(s->network_owner == pid)
+                        {
+                            s->model = &fmodel;
+                            s->persistent_data = user_data;
+
+                            fmodel.controlled_ship = s;
+                        }
+                    }
+
+                    user_data->research = default_research;
+                    user_data->research._pid = get_next_persistent_id();
+
+                    if(std::ifstream("temp.blueprint").good())
+                        user_data->blueprint_manage.load("temp.blueprint");
+
+                    bool has_missile = false;
+
+                    for(blueprint& p : user_data->blueprint_manage.blueprints)
+                    {
+                        if(p.name == default_missile.name)
+                            has_missile = true;
+                    }
+
+                    if(!has_missile)
+                        user_data->blueprint_manage.blueprints.push_back(default_missile);
+
+                    if(user_data->blueprint_manage.blueprints.size() == 0)
+                        user_data->blueprint_manage.create_blueprint();
+
+                    found_auth.value()->data.default_init = true;
+
+                    db_read_write tx(get_db(), AUTH_DB_ID);
+
+                    found_auth.value()->save(tx);
                 }
 
                 if(proto.type == network_mode::DATA)
@@ -1509,9 +1532,9 @@ int main()
 
 
             sf::Clock copy_time;
-            design.research = std::move(model.networked_model.research);
+            design.research = std::move(model.persistent_data->research);
             //std::cout << "copytime " << copy_time.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-            design.server_blueprint_manage = model.networked_model.blueprint_manage;
+            design.server_blueprint_manage = model.persistent_data->blueprint_manage;
 
             //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 

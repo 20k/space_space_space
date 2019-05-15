@@ -1953,9 +1953,9 @@ void ship::tick(double dt_s)
         {
             for(auto id : c.unchecked_blueprints)
             {
-                if(model)
+                if(persistent_data)
                 {
-                    auto found = model->blueprint_manage.fetch(id);
+                    auto found = persistent_data->blueprint_manage.fetch(id);
 
                     if(found)
                     {

@@ -21,8 +21,8 @@ struct player_model : serialisable, owned
     std::map<uint32_t, common_renderable> renderables;
 
     entity* controlled_ship = nullptr;
-    player_research research;
-    blueprint_manager blueprint_manage;
+    //player_research research;
+    //blueprint_manager blueprint_manage;
 
     void cleanup(vec2f my_pos);
 
@@ -30,8 +30,8 @@ struct player_model : serialisable, owned
 
     SERIALISE_SIGNATURE()
     {
-        DO_SERIALISE(research);
-        DO_SERIALISE(blueprint_manage);
+        //DO_SERIALISE(research);
+        //DO_SERIALISE(blueprint_manage);
     }
 };
 
@@ -77,6 +77,7 @@ struct data_model : serialisable
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
     player_model networked_model;
+    persistent_user_data* persistent_data = nullptr;
 
     SERIALISE_SIGNATURE()
     {
@@ -85,6 +86,7 @@ struct data_model : serialisable
         DO_SERIALISE(sample);
         DO_SERIALISE(client_network_id);
         DO_SERIALISE(networked_model);
+        DO_SERIALISE(persistent_data);
     }
 };
 
@@ -146,11 +148,17 @@ struct client_input : serialisable
     }
 };
 
-struct user_auth_data : serialisable
+struct persistent_user_data : serialisable
 {
+    player_research research;
+    blueprint_manager blueprint_manage;
+    bool default_init = false;
+
     SERIALISE_SIGNATURE()
     {
-
+        DO_SERIALISE(research);
+        DO_SERIALISE(blueprint_manage);
+        DO_SERIALISE(default_init);
     }
 };
 
