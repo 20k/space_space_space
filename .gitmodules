@@ -13,3 +13,9 @@
 [submodule "deps/vec"]
 	path = deps/vec
 	url = https://github.com/20k/funvectormaths
+[submodule "deps/nauth"]
+	path = deps/nauth
+	url = https://github.com/20k/nauth
+[submodule "deps/ndb"]
+	path = deps/ndb
+	url = https://github.com/20k/ndb

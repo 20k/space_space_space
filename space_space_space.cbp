@@ -58,6 +58,7 @@
 			<Add directory="deps/imgui" />
 			<Add directory="deps/freetype2/include/freetype" />
 			<Add directory="deps/freetype2/include" />
+			<Add directory="deps/liblmdb" />
 		</Compiler>
 		<Linker>
 			<Add option="-lsfml-graphics-s" />
@@ -69,6 +70,7 @@
 			<Add option="-lgdi32" />
 			<Add option="-lws2_32" />
 			<Add option="-lmswsock" />
+			<Add option="-llmdb" />
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
@@ -87,6 +89,10 @@
 		<Unit filename="deps/imgui/imgui_draw.cpp" />
 		<Unit filename="deps/imgui/imgui_widgets.cpp" />
 		<Unit filename="deps/imgui/misc/freetype/imgui_freetype.cpp" />
+		<Unit filename="deps/nauth/auth.cpp" />
+		<Unit filename="deps/nauth/steam_api.cpp" />
+		<Unit filename="deps/nauth/steam_auth.cpp" />
+		<Unit filename="deps/ndb/db_storage.cpp" />
 		<Unit filename="deps/networking/netinterpolate.hpp" />
 		<Unit filename="deps/networking/networking.cpp" />
 		<Unit filename="deps/networking/networking.hpp" />
