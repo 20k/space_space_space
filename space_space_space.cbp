@@ -71,6 +71,8 @@
 			<Add option="-lws2_32" />
 			<Add option="-lmswsock" />
 			<Add option="-llmdb" />
+			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
+			<Add library="deps/steamworks_sdk_142/sdk/redistributable_bin/win64/libsteam_api64.a" />
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
