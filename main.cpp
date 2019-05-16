@@ -1020,9 +1020,17 @@ void server_thread(std::atomic_bool& should_term)
 
                     found_auth.value()->data.default_init = true;
 
-                    db_read_write tx(get_db(), AUTH_DB_ID);
+                    {
+                        db_read_write tx(get_db(), AUTH_DB_ID);
 
-                    found_auth.value()->save(tx);
+                        found_auth.value()->save(tx);
+                    }
+
+                    {
+                        db_read_write tx(get_db(), DB_USER_ID);
+
+                        data.persistent_data.save(tx);
+                    }
                 }
 
                 if(proto.type == network_mode::DATA)
