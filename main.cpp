@@ -996,27 +996,27 @@ void server_thread(std::atomic_bool& should_term)
                         }
                     }
 
-                    persistent_user_data* user_data = &data.persistent_data;
+                    persistent_user_data& user_data = data.persistent_data;
 
-                    user_data->research = default_research;
-                    user_data->research._pid = get_next_persistent_id();
+                    user_data.research = default_research;
+                    user_data.research._pid = get_next_persistent_id();
 
                     if(std::ifstream("temp.blueprint").good())
-                        user_data->blueprint_manage.load("temp.blueprint");
+                        user_data.blueprint_manage.load("temp.blueprint");
 
                     bool has_missile = false;
 
-                    for(blueprint& p : user_data->blueprint_manage.blueprints)
+                    for(blueprint& p : user_data.blueprint_manage.blueprints)
                     {
                         if(p.name == default_missile.name)
                             has_missile = true;
                     }
 
                     if(!has_missile)
-                        user_data->blueprint_manage.blueprints.push_back(default_missile);
+                        user_data.blueprint_manage.blueprints.push_back(default_missile);
 
-                    if(user_data->blueprint_manage.blueprints.size() == 0)
-                        user_data->blueprint_manage.create_blueprint();
+                    if(user_data.blueprint_manage.blueprints.size() == 0)
+                        user_data.blueprint_manage.create_blueprint();
 
                     found_auth.value()->data.default_init = true;
 
@@ -1098,6 +1098,23 @@ void server_thread(std::atomic_bool& should_term)
 
                     do_recurse(ctx, mod);
                 }
+            }
+
+            {
+                serialise_context ctx;
+                ctx.inf = read_data.rpcs;
+                ctx.exec_rpcs = true;
+
+                do_recurse(ctx, data.persistent_data);
+            }
+
+            if(data.persistent_data.blueprint_manage.dirty)
+            {
+                db_read_write tx(get_db(), DB_USER_ID);
+
+                data.persistent_data.save(tx);
+
+                data.persistent_data.blueprint_manage.dirty = false;
             }
         }
 

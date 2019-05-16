@@ -99,6 +99,7 @@ float get_build_work(const ship& s);
 struct blueprint_manager : serialisable, owned
 {
     std::vector<blueprint> blueprints;
+    bool dirty = false;
 
     SERIALISE_SIGNATURE()
     {
@@ -120,6 +121,8 @@ struct blueprint_manager : serialisable, owned
 
     void create_blueprint()
     {
+        dirty = true;
+
         printf("Create\n");
 
         blueprints.push_back(blueprint());
@@ -127,6 +130,8 @@ struct blueprint_manager : serialisable, owned
 
     void upload_blueprint(blueprint print)
     {
+        dirty = true;
+
         printf("UBlueprint\n");
 
         print.overall_size = clamp(print.overall_size, 0.01, 100);

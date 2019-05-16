@@ -75,13 +75,11 @@ struct persistent_user_data : serialisable, db_storable<persistent_user_data>
 {
     player_research research;
     blueprint_manager blueprint_manage;
-    bool default_init = false;
 
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(research);
         DO_SERIALISE(blueprint_manage);
-        DO_SERIALISE(default_init);
     }
 };
 
