@@ -801,10 +801,10 @@ void server_thread(std::atomic_bool& should_term)
 
     int stagger_id = 0;
 
-    auth_manager<persistent_user_data> auth_manage;
+    auth_manager<auth_data> auth_manage;
 
     set_db_location("./db");
-    set_num_dbs(1);
+    set_num_dbs(2);
 
     std::string secret_key = "secret/akey.ect";
     uint64_t net_code_appid = 814820;
@@ -939,7 +939,7 @@ void server_thread(std::atomic_bool& should_term)
             nlohmann::json network_json;
             uint64_t read_id = -1;
 
-            std::optional<auth<persistent_user_data>*> found_auth;
+            std::optional<auth<auth_data>*> found_auth;
 
             {
                 network_protocol proto;
@@ -963,14 +963,25 @@ void server_thread(std::atomic_bool& should_term)
 
                 found_auth = auth_manage.fetch(read_id);
 
+                if(found_auth.has_value())
+                {
+                    data_model<ship*>& data = data_manage.fetch_by_id(read_id);
+
+                    player_model& fmodel = data.networked_model;
+
+                    {
+                        db_read tx(get_db(), DB_USER_ID);
+
+                        data.persistent_data.load(found_auth.value()->user_id, tx);
+                    }
+                }
+
                 if(found_auth.has_value() && !found_auth.value()->data.default_init)
                 {
                     uint32_t pid = read_id;
                     data_model<ship*>& data = data_manage.fetch_by_id(pid);
 
                     player_model& fmodel = data.networked_model;
-                    persistent_user_data* user_data = &found_auth.value()->data;
-                    data.persistent_data = user_data;
 
                     std::vector<ship*> ships = entities.fetch<ship>();
 
@@ -979,11 +990,13 @@ void server_thread(std::atomic_bool& should_term)
                         if(s->network_owner == pid)
                         {
                             s->model = &fmodel;
-                            s->persistent_data = user_data;
+                            s->persistent_data = &data.persistent_data;
 
                             fmodel.controlled_ship = s;
                         }
                     }
+
+                    persistent_user_data* user_data = &data.persistent_data;
 
                     user_data->research = default_research;
                     user_data->research._pid = get_next_persistent_id();
@@ -1532,9 +1545,9 @@ int main()
 
 
             sf::Clock copy_time;
-            design.research = std::move(model.persistent_data->research);
+            design.research = std::move(model.persistent_data.research);
             //std::cout << "copytime " << copy_time.getElapsedTime().asMicroseconds() / 1000. << std::endl;
-            design.server_blueprint_manage = model.persistent_data->blueprint_manage;
+            design.server_blueprint_manage = model.persistent_data.blueprint_manage;
 
             //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 

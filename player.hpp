@@ -69,6 +69,32 @@ struct player_model : serialisable, owned
     }
 };*/
 
+#define DB_USER_ID 1
+
+struct persistent_user_data : serialisable, db_storable<persistent_user_data>
+{
+    player_research research;
+    blueprint_manager blueprint_manage;
+    bool default_init = false;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(research);
+        DO_SERIALISE(blueprint_manage);
+        DO_SERIALISE(default_init);
+    }
+};
+
+struct auth_data : serialisable
+{
+    bool default_init = false;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(default_init);
+    }
+};
+
 template<typename T>
 struct data_model : serialisable
 {
@@ -77,7 +103,7 @@ struct data_model : serialisable
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
     player_model networked_model;
-    persistent_user_data* persistent_data = nullptr;
+    persistent_user_data persistent_data;
 
     SERIALISE_SIGNATURE()
     {
@@ -145,20 +171,6 @@ struct client_input : serialisable
         DO_SERIALISE(ping);
         DO_SERIALISE(mouse_world_pos);
         DO_SERIALISE(rpcs);
-    }
-};
-
-struct persistent_user_data : serialisable
-{
-    player_research research;
-    blueprint_manager blueprint_manage;
-    bool default_init = false;
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(research);
-        DO_SERIALISE(blueprint_manage);
-        DO_SERIALISE(default_init);
     }
 };
 
