@@ -974,6 +974,19 @@ void server_thread(std::atomic_bool& should_term)
 
                         data.persistent_data.load(found_auth.value()->user_id, tx);
                     }
+
+                    std::vector<ship*> ships = entities.fetch<ship>();
+
+                    for(ship* s : ships)
+                    {
+                        if(s->network_owner == read_id)
+                        {
+                            s->model = &fmodel;
+                            s->persistent_data = &data.persistent_data;
+
+                            fmodel.controlled_ship = s;
+                        }
+                    }
                 }
 
                 if(found_auth.has_value() && !found_auth.value()->data.default_init)
@@ -982,19 +995,6 @@ void server_thread(std::atomic_bool& should_term)
                     data_model<ship*>& data = data_manage.fetch_by_id(pid);
 
                     player_model& fmodel = data.networked_model;
-
-                    std::vector<ship*> ships = entities.fetch<ship>();
-
-                    for(ship* s : ships)
-                    {
-                        if(s->network_owner == pid)
-                        {
-                            s->model = &fmodel;
-                            s->persistent_data = &data.persistent_data;
-
-                            fmodel.controlled_ship = s;
-                        }
-                    }
 
                     persistent_user_data& user_data = data.persistent_data;
 
