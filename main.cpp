@@ -20,9 +20,17 @@
 #include <nauth/steam_api.hpp>
 
 template<int c>
-bool once(sf::Keyboard::Key k)
+bool once(sf::Keyboard::Key k, bool has_focus)
 {
     static std::map<sf::Keyboard::Key, bool> last;
+
+    if(!has_focus)
+    {
+        for(auto& i : last)
+            i.second = false;
+
+        return false;
+    }
 
     sf::Keyboard key;
 
@@ -42,9 +50,17 @@ bool once(sf::Keyboard::Key k)
 }
 
 template<int c>
-bool once(sf::Mouse::Button b)
+bool once(sf::Mouse::Button b, bool has_focus)
 {
     static std::map<sf::Mouse::Button, bool> last;
+
+    if(!has_focus)
+    {
+        for(auto& i : last)
+            i.second = false;
+
+        return false;
+    }
 
     sf::Mouse mouse;
 
@@ -63,7 +79,7 @@ bool once(sf::Mouse::Button b)
     return false;
 }
 
-#define ONCE_MACRO(x) once<__COUNTER__>(x)
+#define ONCE_MACRO(x, y) once<__COUNTER__>(x, y)
 
 struct solar_system
 {
@@ -879,7 +895,7 @@ void server_thread(std::atomic_bool& should_term)
         }
         #endif // SERVER_VIEW
 
-        if(ONCE_MACRO(sf::Keyboard::L))
+        if(ONCE_MACRO(sf::Keyboard::L, true))
         {
             for(int i=0; i < 100; i++)
             {
@@ -887,7 +903,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        if(ONCE_MACRO(sf::Keyboard::M))
+        if(ONCE_MACRO(sf::Keyboard::M, true))
         {
             render = !render;
         }
@@ -963,7 +979,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 found_auth = auth_manage.fetch(read_id);
 
-                if(found_auth.has_value())
+                if(found_auth.has_value() && proto.type == network_mode::STEAM_AUTH)
                 {
                     data_model<ship*>& data = data_manage.fetch_by_id(read_id);
 
@@ -1503,6 +1519,8 @@ int main()
         conn.writes_to(proto, -1);
     }
 
+    bool focus = true;
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -1531,6 +1549,16 @@ int main()
             if(event.type == sf::Event::MouseWheelScrolled)
             {
                 mouse_delta += event.mouseWheelScroll.delta;
+            }
+
+            if(event.type == sf::Event::LostFocus)
+            {
+                focus = false;
+            }
+
+            if(event.type == sf::Event::GainedFocus)
+            {
+                focus = true;
             }
         }
 
@@ -1621,7 +1649,7 @@ int main()
         cinput.direction = (vec2f){forward_vel, 0};
         cinput.rotation = angular_vel;
 
-        if(ONCE_MACRO(sf::Keyboard::Space))
+        if(ONCE_MACRO(sf::Keyboard::Space, focus))
         {
             client_fire fire;
             fire.weapon_offset = 0;
@@ -1631,14 +1659,14 @@ int main()
             //cinput.fired = true;
         }
 
-        if(ONCE_MACRO(sf::Keyboard::Q))
+        if(ONCE_MACRO(sf::Keyboard::Q, focus))
         {
             cinput.ping = true;
         }
 
         vec2f mouse_relative_pos = cam.screen_to_world(mpos) - ship_proxy->r.position;
 
-        if(ONCE_MACRO(sf::Keyboard::E))
+        if(ONCE_MACRO(sf::Keyboard::E, focus))
         {
             client_fire fire;
             fire.weapon_offset = 1;
@@ -1652,7 +1680,7 @@ int main()
         {
             //if(ONCE_MACRO((sf::Keyboard::Key)num))
 
-            if(key.isKeyPressed((sf::Keyboard::Key)num))
+            if(key.isKeyPressed((sf::Keyboard::Key)num) && focus)
             {
                 client_fire fire;
                 fire.weapon_offset = (int)num - (int)sf::Keyboard::Num1;
@@ -1663,7 +1691,7 @@ int main()
             }
         }
 
-        if(ONCE_MACRO(sf::Keyboard::F1))
+        if(ONCE_MACRO(sf::Keyboard::F1, focus))
         {
             design.open = !design.open;
         }
