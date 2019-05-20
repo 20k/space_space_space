@@ -7,6 +7,7 @@
 #include "entity.hpp"
 #include <windows.h>
 #include <networking/networking.hpp>
+#include <networking/netinterpolate.hpp>
 #include "radar_field.hpp"
 #include "camera.hpp"
 #include "stardust.hpp"
@@ -1605,6 +1606,8 @@ int main()
             //std::cout << "RSBM " << design.server_blueprint_manage._pid << " serv " << model.networked_model.blueprint_manage._pid << std::endl;
 
             renderables.entities = model.renderables;
+
+            update_interpolated_variables(model);
         }
 
         for(client_renderable& r : model.renderables)
