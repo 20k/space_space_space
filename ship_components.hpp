@@ -396,7 +396,7 @@ struct component : virtual serialisable, owned
         //DO_SERIALISE(primary_type);
         //DO_SERIALISE(id);
         DO_SERIALISE(composition);
-        DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::ONLY_IF_STAGGERED);
+        DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
         DO_SERIALISE(activation_level);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
