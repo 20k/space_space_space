@@ -821,12 +821,38 @@ void server_thread(std::atomic_bool& should_term)
     auth_manager<auth_data> auth_manage;
 
     set_db_location("./db");
-    set_num_dbs(2);
+    set_num_dbs(3);
 
     std::string secret_key = "secret/akey.ect";
     uint64_t net_code_appid = 814820;
 
     set_app_description({secret_key, net_code_appid});
+
+    size_t persist_id_saved = 0;
+
+    {
+        db_read_write tx(get_db(), DB_PERSIST_ID);
+
+        std::optional<db_data> opt = tx.read("pid");
+
+        if(opt)
+        {
+            db_data& dat = opt.value();
+
+            if(dat.data.size() > 0)
+            {
+                assert(dat.data.size() == sizeof(size_t));
+
+                memcpy(&persist_id_saved, &dat.data[0], sizeof(size_t));
+
+                set_next_persistent_id(persist_id_saved);
+
+                std::cout << "loaded pid " << persist_id_saved << std::endl;
+            }
+        }
+    }
+
+    size_t last_id_wrote = 0;
 
     while(1)
     {
@@ -1133,6 +1159,22 @@ void server_thread(std::atomic_bool& should_term)
 
                 data.persistent_data.blueprint_manage.dirty = false;
             }
+        }
+
+        if(last_id_wrote == 0 || get_raw_id_impl() >= last_id_wrote - 2000)
+        {
+            db_read_write tx(get_db(), DB_PERSIST_ID);
+
+            std::string data;
+            data.resize(sizeof(size_t));
+
+            size_t to_write = get_raw_id_impl() + 10000;
+
+            memcpy(&data[0], &to_write, sizeof(size_t));
+
+            tx.write("pid", data);
+
+            last_id_wrote = to_write;
         }
 
         if(key.isKeyPressed(sf::Keyboard::P))
