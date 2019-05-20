@@ -93,6 +93,8 @@ struct blueprint : serialisable, owned
     }
 };
 
+bool shares_blueprint(const ship& s1, const ship& s2);
+
 float get_build_time_s(const ship& s, float build_power);
 float get_build_work(const ship& s);
 

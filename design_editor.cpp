@@ -236,6 +236,11 @@ void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)
     }
 }
 
+bool shares_blueprint(const ship& s1, const ship& s2)
+{
+    return s1.blueprint_name == s2.blueprint_name;
+}
+
 float get_build_time_s(const ship& s, float build_power)
 {
     if(build_power <= 0.000001)

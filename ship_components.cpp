@@ -3150,6 +3150,14 @@ std::string component::get_render_long_name()
     return long_name;
 }
 
+struct aggregate_ship_info
+{
+    double total_vol = 0;
+    double total_temp = 0;
+    int num = 0;
+    bool processed = false;
+};
+
 void component::render_inline_ui()
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
@@ -3170,6 +3178,23 @@ void component::render_inline_ui()
     ImGui::BeginGroup();
 
     ImGui::Text((long_name).c_str());
+
+    std::map<std::string, aggregate_ship_info> aggregates;
+
+    for(ship& s : stored)
+    {
+        if(!s.is_ship)
+            continue;
+
+        if(s.blueprint_name == "")
+            continue;
+
+        aggregate_ship_info& inf = aggregates[s.blueprint_name];
+
+        inf.num++;
+        inf.total_vol += s.get_my_volume();
+        inf.total_temp += s.get_max_temperature();
+    }
 
     for(ship& s : stored)
     {
@@ -3213,10 +3238,27 @@ void component::render_inline_ui()
         }
         else
         {
+            auto agg_it = aggregates.find(s.blueprint_name);
+
             std::string name = "Ship";
 
             float val = s.get_my_volume();
             float temperature = s.get_max_temperature();
+
+            int num = 1;
+
+            if(agg_it != aggregates.end())
+            {
+                if(agg_it->second.processed)
+                    continue;
+
+                num = agg_it->second.num;
+                assert(num > 0);
+
+                val = agg_it->second.total_vol;
+                temperature = agg_it->second.total_temp / num;
+                agg_it->second.processed = true;
+            }
 
             std::string ext_str = std::to_string(_pid) + "." + std::to_string(s._pid);
 
@@ -3241,6 +3283,13 @@ void component::render_inline_ui()
             ImGui::SameLine();
 
             ImGui::Button((s.blueprint_name + "##" + std::to_string(s._pid)).c_str());
+
+            if(num > 1)
+            {
+                ImGui::SameLine();
+
+                ImGui::Text(("x" + std::to_string(num)).c_str());
+            }
 
             if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
             {
