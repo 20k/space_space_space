@@ -174,10 +174,17 @@ void server_thread(std::atomic_bool& should_term)
 
     //alt_radar_field radar({800, 800});
 
+
+    playspace_manager playspace_manage;
+
+    playspace* test_playspace = playspace_manage.make_new();
+    test_playspace->init_default();
+
+
     entity_manager entities;
     alt_radar_field& radar = get_radar_field();
 
-    ship* test_ship = entities.make_new<ship>();
+    ship* test_ship = test_playspace->entity_manage->make_new<ship>();
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
@@ -356,370 +363,6 @@ void server_thread(std::atomic_bool& should_term)
         }
     }
 
-    #if 0
-    component thruster, warp, shields, missile, laser, sensor, comms, armour,
-    ls, radiator, power_generator, crew, missile_core, destruct, coolant_cold, coolant_hot, heat_block;
-
-    thruster.add(component_info::POWER, -1);
-    thruster.add(component_info::THRUST, 100);
-    thruster.add(component_info::HP, 0, 1);
-    thruster.add_composition(material_info::COPPER, 100);
-    thruster.set_heat(20);
-    thruster.long_name = "Thruster";
-    thruster.short_name = "THRST";
-    thruster.activation_type = component_info::SLIDER_ACTIVATION;
-    thruster.normalise_volume();
-
-    warp.add(component_info::POWER, -1);
-    warp.add(component_info::WARP, 0.5, 10);
-    warp.add(component_info::WARP, -0.1);
-    warp.add(component_info::WARP, 0.1);
-    warp.add(component_info::HP, 0, 5);
-    warp.add_composition(material_info::COPPER, 10);
-    warp.add_composition(material_info::IRON, 10);
-    warp.set_no_drain_on_full_production();
-    warp.set_heat(100);
-    warp.long_name = "Warp Drive";
-    warp.short_name = "WARP";
-    warp.activation_type = component_info::TOGGLE_ACTIVATION;
-    warp.normalise_volume();
-
-    shields.add(component_info::SHIELDS, 0.5, 50);
-    shields.add(component_info::POWER, -3);
-    shields.add(component_info::HP, 0, 5);
-    shields.add_composition(material_info::IRON, 10);
-    shields.add_composition(material_info::COPPER, 5);
-    shields.set_no_drain_on_full_production();
-    shields.set_heat(200);
-    shields.long_name = "Shields";
-    shields.short_name = "SHLD";
-    shields.activation_type = component_info::SLIDER_ACTIVATION;
-    shields.normalise_volume();
-
-    /*missile.add(component_info::POWER, -1);
-    missile.add(component_info::WEAPONS, 1);
-    missile.add(component_info::HP, 0, 2);
-    missile.add(component_info::MISSILE_STORE, 0.01, 10);
-    missile.add(tag_info::TAG_EJECTOR);
-    missile.add_composition(material_info::IRON, 1);
-    missile.set_no_drain_on_full_production();
-    missile.set_heat(5);
-    missile.activation_type = component_info::TOGGLE_ACTIVATION;
-
-    missile.add_on_use(component_info::MISSILE_STORE, -1, 1);
-    missile.subtype = "missile";
-    missile.long_name = "Missile Launcher";
-    missile.short_name = "MISL";*/
-
-
-    laser.add(component_info::POWER, -1);
-    laser.add(component_info::WEAPONS, 1);
-    laser.add(component_info::HP, 0, 2);
-    laser.add(component_info::CAPACITOR, 1.5, 20);
-    laser.add_composition(material_info::COPPER, 5);
-    laser.set_no_drain_on_full_production();
-    laser.set_heat(5);
-    laser.long_name = "Laser";
-    laser.short_name = "LAS";
-    laser.activation_type = component_info::TOGGLE_ACTIVATION;
-
-    laser.add_on_use(component_info::CAPACITOR, -10, 1);
-    laser.subtype = "laser";
-
-    laser.max_use_angle = M_PI/8;
-    laser.normalise_volume();
-
-    //laser.info[3].held = 0;
-
-    sensor.add(component_info::POWER, -1);
-    sensor.add(component_info::SENSORS, 1);
-    sensor.add(component_info::HP, 0, 1);
-    sensor.add_composition(material_info::COPPER, 2);
-
-    sensor.add_on_use(component_info::POWER, -35, 1);
-
-    sensor.set_heat(2);
-    sensor.long_name = "Sensors";
-    sensor.short_name = "SENS";
-    sensor.activation_type = component_info::TOGGLE_ACTIVATION;
-    sensor.normalise_volume();
-
-    comms.add(component_info::POWER, -0.5);
-    comms.add(component_info::COMMS, 1);
-    comms.add(component_info::HP, 0, 1);
-    comms.add_composition(material_info::COPPER, 1);
-    comms.add_composition(material_info::IRON, 1);
-    comms.set_heat(1);
-    comms.long_name = "Communications";
-    comms.short_name = "COMM";
-    comms.activation_type = component_info::TOGGLE_ACTIVATION;
-    comms.normalise_volume();
-
-    /*sysrepair.add(component_info::POWER, -1);
-    sysrepair.add(component_info::SYSTEM, 1);
-    sysrepair.add(component_info::HP, 0.1, 1);*/
-
-    armour.add(component_info::ARMOUR, 0.01, 30);
-    armour.add(component_info::POWER, -0.5);
-    armour.add(component_info::HP, 0, 10);
-    armour.add_composition(material_info::IRON, 30);
-    armour.set_no_drain_on_full_production();
-    armour.set_heat(5);
-    armour.long_name = "Armour";
-    armour.short_name = "ARMR";
-    armour.activation_type = component_info::TOGGLE_ACTIVATION;
-    armour.normalise_volume();
-
-    ls.add(component_info::POWER, -1);
-    ls.add(component_info::LIFE_SUPPORT, 1, 20);
-    ls.add(component_info::HP, 0.01, 5);
-    ls.add_composition(material_info::IRON, 2);
-    ls.add_composition(material_info::COPPER, 2);
-    //ls.set_no_drain_on_full_production();
-    ls.set_heat(10);
-    ls.long_name = "Life Support";
-    ls.short_name = "LS";
-    ls.activation_type = component_info::TOGGLE_ACTIVATION;
-    ls.normalise_volume();
-
-    /*coolant.add(component_info::COOLANT, 10, 200);
-    coolant.add(component_info::HP, 0, 1);
-    coolant.add(component_info::POWER, -1);
-    coolant.add_composition(material_info::IRON, 5);
-    coolant.set_heat(5);
-    coolant.long_name = "I smell like poop";
-    coolant.activation_type = component_info::SLIDER_ACTIVATION;*/
-
-    radiator.add(component_info::RADIATOR, 0.1);
-    radiator.add(component_info::HP, 0, 1);
-    radiator.add_composition(material_info::IRON, 5);
-    radiator.long_name = "Radiator";
-    radiator.short_name = "RAD";
-    radiator.activation_type = component_info::NO_ACTIVATION;
-    radiator.normalise_volume();
-
-    power_generator.add(component_info::POWER, 8, 50);
-    power_generator.add(component_info::HP, 0, 10);
-    power_generator.add_composition(material_info::IRON, 30);
-    power_generator.add_composition(material_info::COPPER, 20);
-    power_generator.set_heat(8 * 20);
-    //power_generator.set_heat_scales_by_production(true, component_info::POWER);
-
-    power_generator.set_complex_no_drain_on_full_production();
-    power_generator.long_name = "Power Generator";
-    power_generator.short_name = "PWR";
-    power_generator.activation_type = component_info::SLIDER_ACTIVATION;
-    power_generator.normalise_volume();
-
-    //power_generator.info[1].held = 0;
-    //power_generator.info[0].held = 0;
-
-    ///need to add the ability for systems to start depleting if they have insufficient
-    ///consumption
-    ///or... maybe we just cheat and add a crew death component that's offset by crew replenishment?
-    //crew.add(component_info::POWER, 1, 5);
-    crew.add(component_info::HP, 0.1, 10);
-    crew.add(component_info::LIFE_SUPPORT, -0.5, 1);
-    crew.add(component_info::COMMS, 0.1);
-    crew.add(component_info::CREW, 0.01, 100);
-    crew.add(component_info::CREW, -0.01); ///passive death on no o2
-    crew.add_composition(material_info::IRON, 5);
-    crew.set_heat(1);
-    crew.long_name = "Crew";
-    crew.short_name = "CRW";
-    crew.activation_type = component_info::NO_ACTIVATION;
-    crew.normalise_volume();
-
-
-    missile_core.add(component_info::HP, 0.0, 5);
-    ///hacky until we have the concept of control instead
-    missile_core.add(component_info::CREW, 0.01, 50);
-    missile_core.add(component_info::CREW, -0.01); ///passive death on no o2
-    missile_core.add(component_info::POWER, -1);
-    missile_core.add(tag_info::TAG_MISSILE_BEHAVIOUR);
-    missile_core.add_composition(material_info::IRON, 2);
-    missile_core.add_composition(material_info::COPPER, 2);
-    missile_core.set_heat(1);
-    missile_core.long_name = "Missile Core";
-    missile_core.short_name = "MCRE";
-    missile_core.activation_type = component_info::NO_ACTIVATION;
-    missile_core.normalise_volume();
-
-
-    destruct.add(component_info::HP, 0, 1);
-    destruct.add(component_info::SELF_DESTRUCT, 1);
-    destruct.add_composition(material_info::IRON, 6);
-    destruct.internal_volume = 5;
-    destruct.long_name = "Self Destruct";
-    destruct.short_name = "DEST";
-    destruct.activation_type = component_info::NO_ACTIVATION;
-
-    {
-        component explosives;
-        explosives.add(component_info::HP, 1);
-        explosives.add_composition(material_info::HTX, 5);
-        explosives.long_name = "HTX";
-
-        destruct.store(explosives);
-    }
-
-    destruct.normalise_volume();
-
-    coolant_cold.long_name = "Cold Storage";
-    coolant_hot.long_name = "Heat Sink";
-
-    coolant_cold.short_name = "COOL";
-    coolant_hot.short_name = "HSNK";
-
-    coolant_cold.activation_type = component_info::NO_ACTIVATION;
-    coolant_hot.activation_type = component_info::NO_ACTIVATION;
-
-    coolant_cold.add(component_info::HP, 0, 10);
-    coolant_hot.add(component_info::HP, 0, 10);
-
-    coolant_cold.internal_volume = 50;
-    coolant_hot.internal_volume = 5;
-
-    coolant_cold.add_composition(material_info::IRON, 10);
-    coolant_hot.add_composition(material_info::IRON, 2);
-
-    coolant_hot.heat_sink = true;
-
-    component coolant_material;
-    ///????
-    coolant_material.add(component_info::HP, 0, 1);
-    coolant_material.add_composition(material_info::HYDROGEN, 50);
-    coolant_material.long_name = "Fluid";
-    coolant_material.short_name = "FLUI";
-    coolant_material.flows = true;
-
-    component coolant_material2;
-    ///????
-    coolant_material2.add(component_info::HP, 0, 1);
-    coolant_material2.add_composition(material_info::HYDROGEN, 5);
-    coolant_material2.long_name = "Fluid";
-    coolant_material2.short_name = "FLUI";
-    coolant_material2.flows = true;
-
-    assert(coolant_cold.can_store(coolant_material));
-    coolant_cold.store(coolant_material);
-    coolant_cold.add_heat_to_stored(500);
-
-    coolant_hot.store(coolant_material2);
-    coolant_hot.add_heat_to_stored(500);
-
-    coolant_hot.normalise_volume();
-    coolant_cold.normalise_volume();
-
-    heat_block.long_name = "Heat Block";
-    heat_block.short_name = "HBLK";
-
-    heat_block.activation_type = component_info::NO_ACTIVATION;
-    heat_block.add(component_info::HP, 0, 1);
-    heat_block.add_composition(material_info::IRON, 0.1);
-    heat_block.add_composition(material_info::LITHIUM, 0.9);
-
-    heat_block.heat_sink = true;
-    heat_block.normalise_volume();
-
-    blueprint default_missile;
-    default_missile.overall_size = 1;
-    default_missile.add_component_at(thruster, {50, 50}, 2);
-    default_missile.add_component_at(sensor, {100, 100}, 1);
-    default_missile.add_component_at(power_generator, {150, 150}, 3);
-    default_missile.add_component_at(destruct, {200, 200}, 4);
-    default_missile.add_component_at(missile_core, {250, 250}, 1);
-    default_missile.add_component_at(heat_block, {300, 300}, 2);
-    default_missile.add_component_at(radiator, {350, 350}, 2);
-    default_missile.name = "Default Missile";
-
-
-    missile.add(component_info::POWER, -1);
-    missile.add(component_info::HP, 0, 2);
-    missile.add(tag_info::TAG_EJECTOR);
-    missile.add_composition(material_info::IRON, 1);
-    missile.set_no_drain_on_full_production();
-    missile.set_heat(5);
-    missile.activation_type = component_info::TOGGLE_ACTIVATION;
-
-    missile.internal_volume = 10;
-
-    missile.long_name = "Component Launcher";
-    missile.short_name = "CLNCH";
-
-    {
-        ship mship = default_missile.to_ship();
-
-        for(component& c : mship.components)
-        {
-            if(!c.has(component_info::THRUST))
-                continue;
-
-            std::cout << "THR " << c.get(component_info::THRUST).recharge << std::endl;
-        }
-
-        float to_store_volume = mship.get_my_volume();
-
-        //std::cout << "MSIZE " << to_store_volume << std::endl;
-
-        for(int i=0; i < (missile.internal_volume / default_missile.overall_size) - 1; i++)
-        {
-            ///need to be able to store ships
-            ///a single component on its own should really be a ship... right?
-            ///but that's pretty weird because an asteroid will then secretly be a ship when its molten
-            ///which isn't totally insane but it is a bit odd
-            ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
-
-            missile.store(mship);
-        }
-    }
-
-    std::cout << "num missiles " << missile.stored.size() << std::endl;
-
-    //coolant_cold.scale(50);
-    //coolant_hot.scale(10);
-
-    test_ship->add(thruster);
-    test_ship->add(warp);
-    test_ship->add(shields);
-    test_ship->add(missile);
-    test_ship->add(laser);
-    test_ship->add(sensor);
-    test_ship->add(comms);
-    //test_ship.add(sysrepair);
-    test_ship->add(armour);
-    test_ship->add(ls);
-    test_ship->add(radiator);
-    test_ship->add(power_generator);
-    test_ship->add(crew);
-    test_ship->add(coolant_cold);
-    test_ship->add(coolant_hot);
-    test_ship->add(destruct);
-
-    ///HACKY SCALE UNTIL FIX STUFF
-    for(component& c : test_ship->components)
-    {
-        for(material& m : c.composition)
-        {
-            m.dynamic_desc.volume *= 10;
-        }
-    }
-
-    storage_pipe rpipe;
-    rpipe.id_1 = coolant_cold._pid;
-    rpipe.id_2 = coolant_hot._pid;
-    rpipe.max_flow_rate = 1;
-
-    test_ship->add_pipe(rpipe);
-
-    storage_pipe space_pipe;
-    space_pipe.id_1 = coolant_hot._pid;
-    space_pipe.goes_to_space = true;
-    space_pipe.max_flow_rate = 0.5;
-
-    test_ship->add_pipe(space_pipe);
-    #endif // 0
-
     test_ship->r.position = {400, 400};
 
     test_ship->r.position = {498.336609, 529.024292};
@@ -728,7 +371,7 @@ void server_thread(std::atomic_bool& should_term)
 
     //test_ship->r.position = {585, 400};
 
-    ship* test_ship2 = entities.make_new<ship>(*test_ship);
+    /*ship* test_ship2 = entities.make_new<ship>(*test_ship);
     //test_ship2->data_track.pid = get_next_persistent_id();
     test_ship2->new_network_copy();
 
@@ -736,7 +379,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship2->network_owner = 1;
     test_ship2->r.network_owner = 1;
 
-    test_ship2->r.position = {600, 400};
+    test_ship2->r.position = {600, 400};*/
 
     std::minstd_rand rng;
     rng.seed(0);
@@ -782,11 +425,6 @@ void server_thread(std::atomic_bool& should_term)
     }*/
 
     //solar_system sys(entities, radar);
-
-    playspace_manager playspace_manage;
-
-    playspace* test_playspace = playspace_manage.make_new();
-    test_playspace->init_default();
 
     double frametime_dt = 1;
 
@@ -866,6 +504,8 @@ void server_thread(std::atomic_bool& should_term)
         double used_frametime_dt = clamp(frametime_dt, 14 / 1000., 18 / 1000.);
 
         entities.tick(used_frametime_dt);
+
+        playspace_manage.tick(used_frametime_dt);
 
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
         //std::cout << "tclock " << tclock_time << std::endl;
@@ -1023,9 +663,25 @@ void server_thread(std::atomic_bool& should_term)
                         data.persistent_data.load(found_auth.value()->user_id, tx);
                     }
 
-                    std::vector<ship*> ships = entities.fetch<ship>();
+                    std::vector<ship*> s1;
 
-                    for(ship* s : ships)
+                    for(playspace* space : playspace_manage.spaces)
+                    {
+                        auto s2 = space->entity_manage->fetch<ship>();
+
+                        for(auto& i : s2)
+                            s1.push_back(i);
+
+                        for(room& r : space->rooms)
+                        {
+                            auto s3 = r.entity_manage->fetch<ship>();
+
+                            for(auto& i : s3)
+                                s1.push_back(i);
+                        }
+                    }
+
+                    for(ship* s : s1)
                     {
                         if(s->network_owner == read_id)
                         {
@@ -1321,7 +977,9 @@ void server_thread(std::atomic_bool& should_term)
 
             if(s)
             {
-                data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
+                data.sample = s->last_sample;
+
+                //data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
             }
 
 

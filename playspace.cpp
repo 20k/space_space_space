@@ -180,3 +180,35 @@ void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, 
 {
     DO_SERIALISE(spaces);
 }
+
+void room::tick(double dt_s)
+{
+    entity_manage->tick(dt_s);
+    entity_manage->cleanup();
+}
+
+void playspace::tick(double dt_s)
+{
+    for(room& r : rooms)
+    {
+        r.tick(dt_s);
+    }
+
+    entity_manage->tick(dt_s);
+    entity_manage->cleanup();
+
+    std::vector<ship*> ships = entity_manage->fetch<ship>();
+
+    for(ship* s : ships)
+    {
+        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
+    }
+}
+
+void playspace_manager::tick(double dt_s)
+{
+    for(playspace* play : spaces)
+    {
+        play->tick(dt_s);
+    }
+}
