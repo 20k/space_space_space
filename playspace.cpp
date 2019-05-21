@@ -282,66 +282,53 @@ void playspace_manager::tick(double dt_s)
     }
 }
 
-ship_network_data playspace_manager::get_network_data_for(size_t id)
+void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id)
 {
     #define SEE_ONLY_REAL
 
+    for(entity* e : entities)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+        room_entity* rem = dynamic_cast<room_entity*>(e);
+
+        if(s)
+        {
+            #ifdef SEE_ONLY_REAL
+            if(s->network_owner != id)
+                continue;
+            #endif // SEE_ONLY_REAL
+
+            ret.ships.push_back(s);
+            ret.renderables.push_back(s->r);
+        }
+        else
+        {
+            #ifndef SEE_ONLY_REAL
+            ret.renderables.push_back(e->r);
+            #endif // SEE_ONLY_REAL
+
+        }
+
+        if(rem)
+        {
+            ret.renderables.push_back(rem->r);
+        }
+    }
+}
+
+ship_network_data playspace_manager::get_network_data_for(size_t id)
+{
     ship_network_data ret;
 
     for(playspace* play : spaces)
     {
-        for(entity* e : play->entity_manage->entities)
-        {
-            ship* s = dynamic_cast<ship*>(e);
-            room_entity* rem = dynamic_cast<room_entity*>(e);
-
-            if(s)
-            {
-                #ifdef SEE_ONLY_REAL
-                if(s->network_owner != id)
-                    continue;
-                #endif // SEE_ONLY_REAL
-
-                ret.ships.push_back(s);
-                ret.renderables.push_back(s->r);
-            }
-            else
-            {
-                #ifndef SEE_ONLY_REAL
-                ret.renderables.push_back(e->r);
-                #endif // SEE_ONLY_REAL
-
-            }
-
-            if(rem)
-            {
-                ret.renderables.push_back(rem->r);
-            }
-        }
+        accumulate_entities(play->entity_manage->entities, ret, id);
+        accumulate_entities(play->entity_manage->to_spawn, ret, id);
 
         for(room* r : play->rooms)
         {
-            for(entity* e : r->entity_manage->entities)
-            {
-                ship* s = dynamic_cast<ship*>(e);
-
-                if(s)
-                {
-                    #ifdef SEE_ONLY_REAL
-                    if(s->network_owner != id)
-                        continue;
-                    #endif // SEE_ONLY_REAL
-
-                    ret.ships.push_back(s);
-                    ret.renderables.push_back(s->r);
-                }
-                else
-                {
-                    #ifndef SEE_ONLY_REAL
-                    ret.renderables.push_back(e->r);
-                    #endif // SEE_ONLY_REAL
-                }
-            }
+            accumulate_entities(r->entity_manage->entities, ret, id);
+            accumulate_entities(r->entity_manage->to_spawn, ret, id);
         }
     }
 

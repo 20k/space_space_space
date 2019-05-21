@@ -18,7 +18,7 @@ namespace room_type
     };
 }
 
-#define ROOM_POI_SCALE 0.1
+#define ROOM_POI_SCALE 0.1f
 
 ///aka poi
 struct room : serialisable, owned
