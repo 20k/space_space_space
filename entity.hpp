@@ -172,40 +172,8 @@ struct entity_manager : serialisable
         return e;
     }
 
-    void forget(entity* in)
-    {
-        for(int i=0; i < (int)entities.size(); i++)
-        {
-            if(entities[i] == in)
-            {
-                entities.erase(entities.begin() + i);
-                i--;
-                continue;
-            }
-        }
-
-        for(int i=0; i < (int)to_spawn.size(); i++)
-        {
-            if(to_spawn[i] == in)
-            {
-                to_spawn.erase(to_spawn.begin() + i);
-                i--;
-                continue;
-            }
-        }
-    }
-
-    void steal(entity* in)
-    {
-        assert(in->parent);
-
-        if(in->parent == this)
-            return;
-
-        in->parent->forget(in);
-        to_spawn.push_back(in);
-        in->parent = this;
-    }
+    void forget(entity* in);
+    void steal(entity* in);
 
     template<typename T>
     std::vector<T*> fetch()

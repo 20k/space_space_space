@@ -532,6 +532,46 @@ float entity::get_cross_section(float angle)
     return r.approx_dim.max_elem();
 }
 
+void entity_manager::forget(entity* in)
+{
+    aggregates_dirty = true;
+
+    for(int i=0; i < (int)entities.size(); i++)
+    {
+        if(entities[i] == in)
+        {
+            entities.erase(entities.begin() + i);
+            i--;
+            continue;
+        }
+    }
+
+    for(int i=0; i < (int)to_spawn.size(); i++)
+    {
+        if(to_spawn[i] == in)
+        {
+            to_spawn.erase(to_spawn.begin() + i);
+            i--;
+            continue;
+        }
+    }
+}
+
+void entity_manager::steal(entity* in)
+{
+    assert(in->parent);
+
+    if(in->parent == this)
+        return;
+
+    in->parent->aggregates_dirty = true;
+    this->aggregates_dirty = true;
+
+    in->parent->forget(in);
+    to_spawn.push_back(in);
+    in->parent = this;
+}
+
 bool entity_manager::contains(entity* e)
 {
     for(auto& i : entities)
