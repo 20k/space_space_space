@@ -176,7 +176,6 @@ void server_thread(std::atomic_bool& should_term)
 
     entity_manager entities;
     alt_radar_field& radar = get_radar_field();
-    radar.em = &entities;
 
     ship* test_ship = entities.make_new<ship>();
     test_ship->network_owner = 0;
@@ -936,7 +935,7 @@ void server_thread(std::atomic_bool& should_term)
             render = !render;
         }
 
-        radar.tick(used_frametime_dt);
+        radar.tick(entities, used_frametime_dt);
         //player_manage.tick(frametime_dt);
 
         for(auto& i : data_manage.data)

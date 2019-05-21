@@ -251,9 +251,6 @@ struct alt_radar_field
 
     vec2f target_dim;
 
-    ///this is a really bad idea but ergh
-    entity_manager* em = nullptr;
-
     double time_between_ticks_s = 16/1000.;
 
     std::vector<alt_frequency_packet> packets;
@@ -287,7 +284,7 @@ struct alt_radar_field
     bool packet_expired(const alt_frequency_packet& packet);
     void ignore(uint32_t packet_id, heatable_entity& en);
 
-    void tick(double dt_s);
+    void tick(entity_manager& em, double dt_s);
     void render(camera& cam, sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);

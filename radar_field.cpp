@@ -421,7 +421,7 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
     return ret;
 }
 
-void alt_radar_field::tick(double dt_s)
+void alt_radar_field::tick(entity_manager& em, double dt_s)
 {
     profile_dumper pdump("newtick");
 
@@ -545,7 +545,7 @@ void alt_radar_field::tick(double dt_s)
             }
         }*/
 
-        for(auto& coarse : em->collision.data)
+        for(auto& coarse : em.collision.data)
         {
             if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
             {
