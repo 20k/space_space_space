@@ -4,6 +4,16 @@
 #include "radar_field.hpp"
 #include "ship_components.hpp"
 
+struct room_entity : entity
+{
+    room_entity()
+    {
+        r.init_rectangular({5, 5});
+
+        collides = false;
+    }
+};
+
 room::room()
 {
     entity_manage = new entity_manager;
@@ -59,6 +69,9 @@ room* playspace::make_room(vec2f where)
     r->position = where;
 
     rooms.push_back(r);
+
+    r->my_entity = entity_manage->make_new<room_entity>();
+    r->my_entity->r.position = where;
 
     return rooms.back();
 }
@@ -219,6 +232,7 @@ ship_network_data playspace_manager::get_network_data_for(size_t id)
         for(entity* e : play->entity_manage->entities)
         {
             ship* s = dynamic_cast<ship*>(e);
+            room_entity* rem = dynamic_cast<room_entity*>(e);
 
             if(s)
             {
@@ -235,6 +249,12 @@ ship_network_data playspace_manager::get_network_data_for(size_t id)
                 #ifndef SEE_ONLY_REAL
                 ret.renderables.push_back(e->r);
                 #endif // SEE_ONLY_REAL
+
+            }
+
+            if(rem)
+            {
+                ret.renderables.push_back(rem->r);
             }
         }
 

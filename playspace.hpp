@@ -27,6 +27,8 @@ struct room : serialisable, owned
     std::string name;
     vec2f position;
 
+    entity* my_entity = nullptr;
+
     room();
     ~room();
 
