@@ -50,18 +50,18 @@ playspace::playspace()
 
 playspace::~playspace()
 {
-    delete field;
     delete entity_manage;
+    delete field;
 }
 
 room* playspace::make_room(vec2f where)
 {
-    room r;
-    r.position = where;
+    room* r = new room;
+    r->position = where;
 
     rooms.push_back(r);
 
-    return &rooms.back();
+    return rooms.back();
 }
 
 void playspace::init_default()
@@ -104,10 +104,11 @@ void playspace::init_default()
             a->init(1, 1);
             a->r.position = found_pos;
             a->ticks_between_collisions = 2;
+            entity_manage->cleanup();
+
+            printf("Num! %i\n", i);
 
             test->add(a);
-
-            entity_manage->cleanup();
         }
     }
 
@@ -189,9 +190,9 @@ void room::tick(double dt_s)
 
 void playspace::tick(double dt_s)
 {
-    for(room& r : rooms)
+    for(room* r : rooms)
     {
-        r.tick(dt_s);
+        r->tick(dt_s);
     }
 
     entity_manage->tick(dt_s);

@@ -672,9 +672,9 @@ void server_thread(std::atomic_bool& should_term)
                         for(auto& i : s2)
                             s1.push_back(i);
 
-                        for(room& r : space->rooms)
+                        for(room* r : space->rooms)
                         {
-                            auto s3 = r.entity_manage->fetch<ship>();
+                            auto s3 = r->entity_manage->fetch<ship>();
 
                             for(auto& i : s3)
                                 s1.push_back(i);

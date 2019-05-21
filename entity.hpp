@@ -183,6 +183,16 @@ struct entity_manager : serialisable
                 continue;
             }
         }
+
+        for(int i=0; i < (int)to_spawn.size(); i++)
+        {
+            if(to_spawn[i] == in)
+            {
+                to_spawn.erase(to_spawn.begin() + i);
+                i--;
+                continue;
+            }
+        }
     }
 
     void steal(entity* in)
@@ -191,6 +201,7 @@ struct entity_manager : serialisable
 
         in->parent->forget(in);
         to_spawn.push_back(in);
+        in->parent = this;
     }
 
     template<typename T>

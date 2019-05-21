@@ -55,7 +55,7 @@ struct playspace : serialisable, owned
     std::string name;
     vec2f position;
 
-    std::vector<room> rooms;
+    std::vector<room*> rooms;
 
     alt_radar_field* field = nullptr;
     entity_manager* entity_manage = nullptr;
