@@ -81,11 +81,11 @@ void playspace::init_default()
         {
             float ffrac = rand_det_s(rng, 0, 1);
 
-            vec2f found_pos = rand_det(rng, pos - dim, pos + dim);
+            vec2f found_pos = rand_det(rng, (vec2f){-dim, -dim}, (vec2f){dim, dim});
 
             bool cont = false;
 
-            for(entity* e : entity_manage->entities)
+            for(entity* e : test->entity_manage->entities)
             {
                 if((e->r.position - found_pos).length() < 10)
                 {
@@ -100,81 +100,24 @@ void playspace::init_default()
                 continue;
             }
 
-            asteroid* a = entity_manage->make_new<asteroid>();
+            asteroid* a = test->entity_manage->make_new<asteroid>();
             a->init(1, 1);
             a->r.position = found_pos;
             a->ticks_between_collisions = 2;
             entity_manage->cleanup();
-
-            printf("Num! %i\n", i);
-
-            test->add(a);
         }
     }
 
-    #if 0
-    int num_asteroids = 1000;
-
-    for(int i=0; i < num_asteroids; i++)
-    {
-        //float ffrac = (float)i / num_asteroids;
-
-        float ffrac = rand_det_s(rng, 0, 1);
-
-        float fangle = ffrac * 2 * M_PI;
-
-        //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
-
-        float rdist = rand_det_s(rng, 30, 6000);
-
-        vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
-
-        bool cont = false;
-
-        for(entity* e : entities.entities)
-        {
-            if((e->r.position - found_pos).length() < 100)
-            {
-                cont = true;
-                break;
-            }
-        }
-
-        if(cont)
-        {
-            i--;
-            continue;
-        }
-
-        asteroid* a = entities.make_new<asteroid>();
-        a->init(2, 4);
-        a->r.position = found_pos;
-        a->ticks_between_collisions = 2;
-        //a->permanent_heat = 100;
-
-        asteroids.push_back(a);
-
-        entities.cleanup();
-    }
-
-    /*float solar_size = STANDARD_SUN_EMISSIONS_RADIUS;
-
-    ///intensity / ((it * sol) * (it * sol)) = 0.1
-
-    ///intensity / (dist * dist) = 0.1
-
-    float intensity = 0.1 * (solar_size * solar_size);*/
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
-    sun = entities.make_new<asteroid>();
+    asteroid* sun = entity_manage->make_new<asteroid>();
     sun->init(3, 4);
     sun->r.position = {400, 400};
     sun->permanent_heat = intensity;
     sun->reflectivity = 0;
 
-    field.sun_id = sun->id;
-    #endif // 0
+    field->sun_id = sun->id;
 }
 
 void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
