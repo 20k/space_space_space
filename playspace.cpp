@@ -191,6 +191,28 @@ ship_network_data playspace_manager::get_network_data_for(size_t id)
 
     for(playspace* play : spaces)
     {
+        for(entity* e : play->entity_manage->entities)
+        {
+            ship* s = dynamic_cast<ship*>(e);
+
+            if(s)
+            {
+                #ifdef SEE_ONLY_REAL
+                if(s->network_owner != id)
+                    continue;
+                #endif // SEE_ONLY_REAL
+
+                ret.ships.push_back(s);
+                ret.renderables.push_back(s->r);
+            }
+            else
+            {
+                #ifndef SEE_ONLY_REAL
+                ret.renderables.push_back(e->r);
+                #endif // SEE_ONLY_REAL
+            }
+        }
+
         for(room* r : play->rooms)
         {
             for(entity* e : r->entity_manage->entities)
