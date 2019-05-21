@@ -109,11 +109,17 @@ void server_thread(std::atomic_bool& should_term)
     //entity_manager entities;
     //alt_radar_field& radar = get_radar_field();
 
-    ship* test_ship = test_playspace->entity_manage->make_new<ship>();
-    test_ship->network_owner = 0;
-    test_ship->r.network_owner = 0;
+    ship* test_ship;
 
-    test_playspace->add(test_ship);
+    {
+        entity_manager entities;
+
+        test_ship = entities.make_new<ship>();
+        test_ship->network_owner = 0;
+        test_ship->r.network_owner = 0;
+
+        test_playspace->add(test_ship);
+    }
 
     component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);
 
@@ -294,7 +300,9 @@ void server_thread(std::atomic_bool& should_term)
 
     test_ship->r.position = {498.336609, 529.024292};
 
-    test_ship->r.position = {323.986694, 242.469727};
+    //test_ship->r.position = {323.986694, 242.469727};
+
+    test_ship->r.position = {100, 100};
 
     //test_ship->r.position = {585, 400};
 

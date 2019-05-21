@@ -38,11 +38,23 @@ void room::add(entity* e)
         a->current_radar_field = field;
     }
 
+    if(!entity_manage->contains(e))
+    {
+        vec2f relative_position = e->r.position - this->position;
+        e->r.position = relative_position;
+    }
+
     entity_manage->steal(e);
 }
 
 void room::rem(entity* e)
 {
+    if(entity_manage->contains(e))
+    {
+        vec2f absolute_position = e->r.position + this->position;
+        e->r.position = absolute_position;
+    }
+
     entity_manage->forget(e);
 }
 
@@ -94,10 +106,10 @@ void playspace::init_default()
     rng.seed(0);
 
     {
-        vec2f pos = 200;
+        vec2f pos = 0;
         float dim = 50;
 
-        room* test = make_room({pos.x(), pos.y()});
+        room* test_poi = make_room({pos.x(), pos.y()});
 
         int num_asteroids = 100;
 
@@ -109,7 +121,7 @@ void playspace::init_default()
 
             bool cont = false;
 
-            for(entity* e : test->entity_manage->entities)
+            for(entity* e : test_poi->entity_manage->entities)
             {
                 if((e->r.position - found_pos).length() < 10)
                 {
@@ -124,9 +136,9 @@ void playspace::init_default()
                 continue;
             }
 
-            asteroid* a = test->entity_manage->make_new<asteroid>(field);
+            asteroid* a = test_poi->entity_manage->make_new<asteroid>(field);
             a->init(1, 1);
-            a->r.position = found_pos;
+            a->r.position = found_pos; ///poispace
             a->ticks_between_collisions = 2;
             entity_manage->cleanup();
         }
@@ -137,7 +149,7 @@ void playspace::init_default()
 
     asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
-    sun->r.position = {400, 400};
+    sun->r.position = {400, 400}; ///realspace
     sun->permanent_heat = intensity;
     sun->reflectivity = 0;
 
