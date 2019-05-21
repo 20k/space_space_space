@@ -113,6 +113,8 @@
 		<Unit filename="material_info.hpp" />
 		<Unit filename="player.cpp" />
 		<Unit filename="player.hpp" />
+		<Unit filename="playspace.cpp" />
+		<Unit filename="playspace.hpp" />
 		<Unit filename="radar_field.cpp" />
 		<Unit filename="radar_field.hpp" />
 		<Unit filename="random.cpp" />
