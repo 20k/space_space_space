@@ -532,6 +532,23 @@ float entity::get_cross_section(float angle)
     return r.approx_dim.max_elem();
 }
 
+bool entity_manager::contains(entity* e)
+{
+    for(auto& i : entities)
+    {
+        if(i == e)
+            return true;
+    }
+
+    for(auto& i : to_spawn)
+    {
+        if(i == e)
+            return true;
+    }
+
+    return false;
+}
+
 void entity_manager::tick(double dt_s)
 {
     force_spawn();

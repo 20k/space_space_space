@@ -318,3 +318,74 @@ ship_network_data playspace_manager::get_network_data_for(size_t id)
 
     return ret;
 }
+
+std::optional<room*> playspace_manager::get_nearby_room(entity* e)
+{
+    for(playspace* play : spaces)
+    {
+        if(play->entity_manage->contains(e))
+        {
+            if(play->rooms.size() == 0)
+                return std::nullopt;
+
+            room* nearest = nullptr;
+            float near_dist = FLT_MAX;
+
+            for(room* r : play->rooms)
+            {
+                float dist = (e->r.position - r->position).length();
+
+                if(dist < near_dist)
+                {
+                    near_dist = dist;
+                    nearest = r;
+                }
+            }
+
+            if(near_dist >= 100)
+                return std::nullopt;
+
+            assert(nearest);
+
+            return nearest;
+        }
+    }
+
+    return std::nullopt;
+}
+
+void playspace_manager::exit_room(entity* e)
+{
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            if(r->entity_manage->contains(e))
+            {
+                r->rem(e);
+                play->add(e);
+
+                return;
+            }
+        }
+    }
+}
+
+void playspace_manager::enter_room(entity* e, room* r)
+{
+    bool found = false;
+
+    for(playspace* play : spaces)
+    {
+        if(play->entity_manage->contains(e))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if(!found)
+        return;
+
+    r->add(e);
+}

@@ -106,6 +106,10 @@ struct playspace_manager : serialisable
     void tick(double dt_s);
 
     ship_network_data get_network_data_for(size_t id);
+
+    std::optional<room*> get_nearby_room(entity* e);
+    void exit_room(entity* e);
+    void enter_room(entity* e, room* r);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

@@ -728,6 +728,16 @@ void server_thread(std::atomic_bool& should_term)
 
                     do_recurse(ctx, mod);
                 }
+
+                if(read_data.to_fsd_space)
+                {
+                    playspace_manage.exit_room(s);
+                }
+
+                if(read_data.to_poi_space)
+                {
+
+                }
             }
 
             {

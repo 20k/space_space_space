@@ -234,6 +234,8 @@ struct entity_manager : serialisable
         return std::nullopt;
     }
 
+    bool contains(entity* e);
+
     void tick(double dt_s);
 
     void render(camera& cam, sf::RenderWindow& window);
