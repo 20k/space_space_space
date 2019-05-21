@@ -113,6 +113,8 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->network_owner = 0;
     test_ship->r.network_owner = 0;
 
+    test_playspace->add(test_ship);
+
     component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);
 
     test_ship->add(get_component_default(component_type::THRUSTER, 1));
@@ -1175,6 +1177,16 @@ int main()
         if(ONCE_MACRO(sf::Keyboard::Q, focus))
         {
             cinput.ping = true;
+        }
+
+        if(ONCE_MACRO(sf::Keyboard::J, focus))
+        {
+            cinput.to_poi_space = true;
+        }
+
+        if(ONCE_MACRO(sf::Keyboard::H, focus))
+        {
+            cinput.to_fsd_space = true;
         }
 
         vec2f mouse_relative_pos = cam.screen_to_world(mpos) - ship_proxy->r.position;

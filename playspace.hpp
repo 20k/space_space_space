@@ -28,6 +28,7 @@ struct room : serialisable, owned
     vec2f position;
 
     entity* my_entity = nullptr;
+    std::shared_ptr<alt_radar_field> field;
 
     room();
     ~room();
@@ -72,6 +73,9 @@ struct playspace : serialisable, owned
 
     void tick(double dt_s);
     void init_default();
+
+    void add(entity* e);
+    void rem(entity* e);
 };
 
 struct ship;

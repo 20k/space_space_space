@@ -199,6 +199,9 @@ struct entity_manager : serialisable
     {
         assert(in->parent);
 
+        if(in->parent == this)
+            return;
+
         in->parent->forget(in);
         to_spawn.push_back(in);
         in->parent = this;

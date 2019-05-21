@@ -16,6 +16,8 @@ struct room_entity : entity
 
 room::room()
 {
+    field = std::make_shared<alt_radar_field>((vec2f){800, 800});
+
     entity_manage = new entity_manager;
 }
 
@@ -26,6 +28,16 @@ room::~room()
 
 void room::add(entity* e)
 {
+    if(auto s = dynamic_cast<ship*>(e); s != nullptr)
+    {
+        s->current_radar_field = field;
+    }
+
+    if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
+    {
+        a->current_radar_field = field;
+    }
+
     entity_manage->steal(e);
 }
 
@@ -132,6 +144,26 @@ void playspace::init_default()
     field->sun_id = sun->id;
 }
 
+void playspace::add(entity* e)
+{
+    if(auto s = dynamic_cast<ship*>(e); s != nullptr)
+    {
+        s->current_radar_field = field;
+    }
+
+    if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
+    {
+        a->current_radar_field = field;
+    }
+
+    entity_manage->steal(e);
+}
+
+void playspace::rem(entity* e)
+{
+    entity_manage->forget(e);
+}
+
 void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
     DO_SERIALISE(spaces);
@@ -171,7 +203,7 @@ void room::tick(double dt_s)
 
 void playspace::tick(double dt_s)
 {
-    std::vector<ship*> preships = entity_manage->fetch<ship>();
+    /*std::vector<ship*> preships = entity_manage->fetch<ship>();
 
     for(auto& s : preships)
     {
@@ -193,7 +225,7 @@ void playspace::tick(double dt_s)
     for(auto& a : roids)
     {
         a->current_radar_field = field;
-    }
+    }*/
 
     for(room* r : rooms)
     {

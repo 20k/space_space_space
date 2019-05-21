@@ -160,6 +160,8 @@ struct client_input : serialisable
     bool ping = false;
     vec2f mouse_world_pos = {0,0};
     global_serialise_info rpcs;
+    bool to_poi_space = false;
+    bool to_fsd_space = false;
 
     SERIALISE_SIGNATURE()
     {
@@ -169,6 +171,8 @@ struct client_input : serialisable
         DO_SERIALISE(ping);
         DO_SERIALISE(mouse_world_pos);
         DO_SERIALISE(rpcs);
+        DO_SERIALISE(to_poi_space);
+        DO_SERIALISE(to_fsd_space);
     }
 };
 
