@@ -26,13 +26,16 @@ struct room : serialisable, owned
     std::string name;
     vec2f position;
 
-    std::vector<entity*> entities;
+    room();
+    ~room();
+
+    entity_manager* entity_manage = nullptr;
 
     SERIALISE_SIGNATURE();
 
     void tick(double dt_s);
     void add(entity* e);
-    bool rem(entity* e);
+    void rem(entity* e);
 };
 
 namespace playspace_type
@@ -53,9 +56,9 @@ struct playspace : serialisable, owned
     vec2f position;
 
     std::vector<room> rooms;
-    std::vector<entity*> entities; ///misc
 
     alt_radar_field* field = nullptr;
+    entity_manager* entity_manage = nullptr;
 
     playspace();
     ~playspace();
@@ -65,7 +68,7 @@ struct playspace : serialisable, owned
     SERIALISE_SIGNATURE();
 
     void tick(double dt_s);
-    void init_default(entity_manager& entities);
+    void init_default();
 };
 
 struct playspace_manager : serialisable

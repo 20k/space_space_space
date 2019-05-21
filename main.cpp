@@ -781,7 +781,12 @@ void server_thread(std::atomic_bool& should_term)
         a->r.position = rpos;
     }*/
 
-    solar_system sys(entities, radar);
+    //solar_system sys(entities, radar);
+
+    playspace_manager playspace_manage;
+
+    playspace* test_playspace = playspace_manage.make_new();
+    test_playspace->init_default();
 
     double frametime_dt = 1;
 

@@ -4,29 +4,24 @@
 #include "radar_field.hpp"
 #include "ship_components.hpp"
 
-void room::add(entity* e)
+room::room()
 {
-    for(auto& i : entities)
-    {
-        if(i == e)
-            return;
-    }
-
-    entities.push_back(e);
+    entity_manage = new entity_manager;
 }
 
-bool room::rem(entity* e)
+room::~room()
 {
-    for(int i=0; i < (int)entities.size(); i++)
-    {
-        if(entities[i] == e)
-        {
-            entities.erase(entities.begin() + i);
-            return true;
-        }
-    }
+    delete entity_manage;
+}
 
-    return false;
+void room::add(entity* e)
+{
+    entity_manage->steal(e);
+}
+
+void room::rem(entity* e)
+{
+    entity_manage->forget(e);
 }
 
 void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -35,7 +30,7 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other
     DO_SERIALISE(type);
     DO_SERIALISE(name);
     DO_SERIALISE(position);
-    DO_SERIALISE(entities);
+    DO_SERIALISE(entity_manage);
 }
 
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -44,17 +39,19 @@ void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(type);
     DO_SERIALISE(name);
     DO_SERIALISE(position);
-    DO_SERIALISE(entities);
+    DO_SERIALISE(entity_manage);
 }
 
 playspace::playspace()
 {
     field = new alt_radar_field({800, 800});
+    entity_manage = new entity_manager;
 }
 
 playspace::~playspace()
 {
     delete field;
+    delete entity_manage;
 }
 
 room* playspace::make_room(vec2f where)
@@ -67,7 +64,7 @@ room* playspace::make_room(vec2f where)
     return &rooms.back();
 }
 
-void playspace::init_default(entity_manager& entities)
+void playspace::init_default()
 {
     std::minstd_rand rng;
     rng.seed(0);
@@ -82,23 +79,13 @@ void playspace::init_default(entity_manager& entities)
 
         for(int i=0; i < num_asteroids; i++)
         {
-            //float ffrac = (float)i / num_asteroids;
-
             float ffrac = rand_det_s(rng, 0, 1);
-
-            //float fangle = ffrac * 2 * M_PI;
-
-            //vec2f rpos = rand_det(rng, (vec2f){100, 100}, (vec2f){800, 600});
-
-            //float rdist = rand_det_s(rng, 1, dim);
-
-            //vec2f found_pos = (vec2f){rdist, 0}.rot(fangle) + (vec2f){400, 400};
 
             vec2f found_pos = rand_det(rng, pos - dim, pos + dim);
 
             bool cont = false;
 
-            for(entity* e : entities.entities)
+            for(entity* e : entity_manage->entities)
             {
                 if((e->r.position - found_pos).length() < 10)
                 {
@@ -113,14 +100,14 @@ void playspace::init_default(entity_manager& entities)
                 continue;
             }
 
-            asteroid* a = entities.make_new<asteroid>();
+            asteroid* a = entity_manage->make_new<asteroid>();
             a->init(1, 1);
             a->r.position = found_pos;
             a->ticks_between_collisions = 2;
 
             test->add(a);
 
-            entities.cleanup();
+            entity_manage->cleanup();
         }
     }
 
@@ -187,9 +174,6 @@ void playspace::init_default(entity_manager& entities)
 
     field.sun_id = sun->id;
     #endif // 0
-
-
-
 }
 
 void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
