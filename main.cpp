@@ -852,126 +852,17 @@ void server_thread(std::atomic_bool& should_term)
 
         auto clients = conn.clients();
 
+        ///migrate radar ticking into playspace
+        ///come up with solution to radar locality (aka globalness)
         for(auto& i : clients)
         {
-            std::vector<ship*> ships;
-            std::vector<client_renderable> renderables;
-
-            for(entity* e : entities.entities)
-            {
-                ship* s = dynamic_cast<ship*>(e);
-
-                if(s)
-                {
-                    #ifdef SEE_ONLY_REAL
-                    if(s->network_owner != i)
-                        continue;
-                    #endif // SEE_ONLY_REAL
-
-                    ships.push_back(s);
-                    renderables.push_back(s->r);
-
-                    if(s->network_owner != i)
-                        continue;
-
-                    std::vector<pending_transfer> all_transfers;
-                    s->consume_all_transfers(all_transfers);
-
-                    std::vector<std::optional<ship>> removed_ships;
-
-                    for(auto& i : all_transfers)
-                    {
-                        //std::cout << "ipid " << i.pid_ship << " icomp " << i.pid_component << std::endl;
-
-                        removed_ships.push_back(s->remove_ship_by_id(i.pid_ship));
-                    }
-
-                    for(int i=0; i < (int)removed_ships.size(); i++)
-                    {
-                        if(!removed_ships[i])
-                            continue;
-
-                        s->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
-                    }
-
-                    #ifdef MOUSE_TRACK
-                    vec2f mpos = last_mouse_pos[i];
-
-                    vec2f to_mouse = mpos - s->r.position;
-                    vec2f front_dir = (vec2f){1, 0}.rot(s->r.rotation);
-
-                    for(component& c : s->components)
-                    {
-                        if(c.max_use_angle == 0)
-                            continue;
-
-                        vec2f clamped = clamp_angle(to_mouse, front_dir, c.max_use_angle);
-                        //vec2f clamped = to_mouse;
-
-                        float flen = clamped.length()/4;
-
-                        //flen = clamp(flen, 0, 10);
-
-                        flen = 10;
-
-                        client_renderable init;
-                        init.init_rectangular({flen, 0.0});
-
-                        for(auto& i : init.vert_cols)
-                        {
-                            i.w() = 0.1;
-                        }
-
-                        init.rotation = clamped.angle();
-                        init.position = s->r.position + clamped.norm() * flen * 2;
-
-                        renderables.push_back(init);
-                    }
-                    #endif // MOUSE_TRACK
-
-                    #ifdef FIXED_HORN
-                    float angle_dist = 10;
-
-                    for(component& c : s->components)
-                    {
-                        if(c.max_use_angle == 0)
-                            continue;
-
-                        client_renderable init;
-                        init.init_rectangular({angle_dist, 0.5});
-                        init.rotation = s->r.rotation - c.max_use_angle;
-
-                        for(auto& i : init.vert_cols)
-                        {
-                            i.w() = 0.1;
-                        }
-
-                        vec2f svector = (vec2f){1, 0}.rot(s->r.rotation - c.max_use_angle);
-                        init.position = s->r.position + svector * angle_dist * 2;
-
-                        renderables.push_back(init);
-
-                        init.rotation = s->r.rotation + c.max_use_angle;
-                        svector = (vec2f){1, 0}.rot(s->r.rotation + c.max_use_angle);
-                        init.position = s->r.position + svector * angle_dist * 2;
-
-                        renderables.push_back(init);
-                    }
-                    #endif // FIXED_HORN
-                }
-                else
-                {
-                    #ifndef SEE_ONLY_REAL
-                    renderables.push_back(e->r);
-                    #endif // SEE_ONLY_REAL
-                }
-            }
+            ship_network_data network_ships = playspace_manage.get_network_data_for(i);
 
             data_model<ship*>& data = data_manage.fetch_by_id(i);
 
             data.client_network_id = i;
-            data.ships = ships;
-            data.renderables = renderables;
+            data.ships = network_ships.ships;
+            data.renderables = network_ships.renderables;
 
             ship* s = dynamic_cast<ship*>(data.networked_model.controlled_ship);
 

@@ -71,6 +71,15 @@ struct playspace : serialisable, owned
     void init_default();
 };
 
+struct ship;
+struct client_renderable;
+
+struct ship_network_data
+{
+    std::vector<ship*> ships;
+    std::vector<client_renderable> renderables;
+};
+
 struct playspace_manager : serialisable
 {
     std::vector<playspace*> spaces;
@@ -88,6 +97,8 @@ struct playspace_manager : serialisable
     SERIALISE_SIGNATURE();
 
     void tick(double dt_s);
+
+    ship_network_data get_network_data_for(size_t id);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

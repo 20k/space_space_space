@@ -129,6 +129,32 @@ void room::tick(double dt_s)
 {
     entity_manage->tick(dt_s);
     entity_manage->cleanup();
+
+    for(entity* e : entity_manage->entities)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+
+        if(s)
+        {
+            std::vector<pending_transfer> all_transfers;
+            s->consume_all_transfers(all_transfers);
+
+            std::vector<std::optional<ship>> removed_ships;
+
+            for(auto& i : all_transfers)
+            {
+                removed_ships.push_back(s->remove_ship_by_id(i.pid_ship));
+            }
+
+            for(int i=0; i < (int)removed_ships.size(); i++)
+            {
+                if(!removed_ships[i])
+                    continue;
+
+                s->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
+            }
+        }
+    }
 }
 
 void playspace::tick(double dt_s)
@@ -155,4 +181,41 @@ void playspace_manager::tick(double dt_s)
     {
         play->tick(dt_s);
     }
+}
+
+ship_network_data playspace_manager::get_network_data_for(size_t id)
+{
+    #define SEE_ONLY_REAL
+
+    ship_network_data ret;
+
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            for(entity* e : r->entity_manage->entities)
+            {
+                ship* s = dynamic_cast<ship*>(e);
+
+                if(s)
+                {
+                    #ifdef SEE_ONLY_REAL
+                    if(s->network_owner != id)
+                        continue;
+                    #endif // SEE_ONLY_REAL
+
+                    ret.ships.push_back(s);
+                    ret.renderables.push_back(s->r);
+                }
+                else
+                {
+                    #ifndef SEE_ONLY_REAL
+                    ret.renderables.push_back(e->r);
+                    #endif // SEE_ONLY_REAL
+                }
+            }
+        }
+    }
+
+    return ret;
 }
