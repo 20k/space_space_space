@@ -88,6 +88,8 @@ playspace::playspace()
 {
     field = std::make_shared<alt_radar_field>((vec2f){800, 800});
     entity_manage = new entity_manager;
+
+    field->speed_of_light_per_tick *= ROOM_POI_SCALE;
 }
 
 playspace::~playspace()

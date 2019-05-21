@@ -4,6 +4,7 @@
 #include <networking/serialisable_fwd.hpp>
 #include <vec/vec.hpp>
 #include <memory>
+#include <map>
 
 struct entity;
 struct entity_manager;
@@ -32,6 +33,8 @@ struct room : serialisable, owned
     entity* my_entity = nullptr;
     std::shared_ptr<alt_radar_field> field;
 
+    std::map<uint32_t, bool> imported_waves;
+
     room();
     ~room();
 
@@ -45,6 +48,8 @@ struct room : serialisable, owned
 
     vec2f get_in_local(vec2f absolute);
     vec2f get_in_absolute(vec2f local);
+
+    void import_radio_waves_from(alt_radar_field& theirs);
 };
 
 namespace playspace_type
