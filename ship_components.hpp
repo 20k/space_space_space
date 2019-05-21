@@ -680,7 +680,6 @@ struct ship : heatable_entity, owned
     ///so we want a diff wrapper type
     //std::vector<data_tracker> data_track;
 
-    player_model* model = nullptr;
     persistent_user_data* persistent_data = nullptr;
 
     std::vector<data_tracker> data_track;

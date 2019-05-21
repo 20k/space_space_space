@@ -5,6 +5,8 @@
 #include <vec/vec.hpp>
 
 struct entity;
+struct entity_manager;
+struct alt_radar_field;
 
 namespace room_type
 {
@@ -51,13 +53,19 @@ struct playspace : serialisable, owned
     vec2f position;
 
     std::vector<room> rooms;
-    std::vector<entity*> renderables; ///misc
+    std::vector<entity*> entities; ///misc
 
-    void make_room(vec2f where);
+    alt_radar_field* field = nullptr;
+
+    playspace();
+    ~playspace();
+
+    room* make_room(vec2f where);
 
     SERIALISE_SIGNATURE();
 
     void tick(double dt_s);
+    void init_default(entity_manager& entities);
 };
 
 struct playspace_manager : serialisable

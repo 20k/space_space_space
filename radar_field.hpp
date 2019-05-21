@@ -270,10 +270,6 @@ struct alt_radar_field
     std::map<uint32_t, fixed_clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
-    std::vector<alt_frequency_packet> imaginary_packets;
-    std::map<uint32_t, player_model*> imaginary_collideable_list;
-    std::map<uint32_t, std::vector<alt_frequency_packet>> imaginary_subtractive_packets;
-
     float speed_of_light_per_tick = 10.5;
 
     alt_radar_field(vec2f in);
@@ -286,7 +282,6 @@ struct alt_radar_field
     //void add_simple_collideable(heatable_entity* en);
 
     void emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en);
-    void emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model);
     void emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren);
 
     bool packet_expired(const alt_frequency_packet& packet);
@@ -296,13 +291,12 @@ struct alt_radar_field
     void render(camera& cam, sf::RenderWindow& win);
 
     float get_intensity_at(vec2f pos);
-    float get_imaginary_intensity_at(vec2f pos);
     float get_refl_intensity_at(vec2f pos);
     float get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 
-    alt_radar_sample sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, std::optional<player_model*> player = std::nullopt, double radar_mult = 1);
+    alt_radar_sample sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, bool harvest_renderables = false, double radar_mult = 1);
 
     uint64_t get_sun_id();
 

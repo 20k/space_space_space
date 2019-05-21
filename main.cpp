@@ -19,6 +19,7 @@
 #include <nauth/auth.hpp>
 #include <nauth/steam_auth.hpp>
 #include <nauth/steam_api.hpp>
+#include "playspace.hpp"
 
 template<int c>
 bool once(sf::Keyboard::Key k, bool has_focus)
@@ -1024,7 +1025,6 @@ void server_thread(std::atomic_bool& should_term)
                     {
                         if(s->network_owner == read_id)
                         {
-                            s->model = &fmodel;
                             s->persistent_data = &data.persistent_data;
 
                             fmodel.controlled_ship = s;
@@ -1313,23 +1313,13 @@ void server_thread(std::atomic_bool& should_term)
             data.ships = ships;
             data.renderables = renderables;
 
-            player_model* player_model = &data.networked_model;
+            ship* s = dynamic_cast<ship*>(data.networked_model.controlled_ship);
 
-            //std::cout << "sending blupe " << player_model->blueprint_manage._pid << std::endl;
-
-            if(player_model)
+            if(s)
             {
-                ship* s = dynamic_cast<ship*>(player_model->controlled_ship);
+                data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
+            }
 
-                if(s)
-                {
-                    data.sample = radar.sample_for(s->r.position, *s, entities, player_model, s->get_radar_strength());
-                }
-            }
-            else
-            {
-                data.sample = decltype(data.sample)();
-            }
 
             if(data_manage.backup.find(i) != data_manage.backup.end())
             {
@@ -1387,7 +1377,7 @@ void server_thread(std::atomic_bool& should_term)
                 //conn.writes_to(model, i);
             }
 
-            if(player_model)
+            /*if(player_model)
             {
                 for(auto it = player_model->renderables.begin(); it != player_model->renderables.end();)
                 {
@@ -1400,7 +1390,7 @@ void server_thread(std::atomic_bool& should_term)
                         it++;
                     }
                 }
-            }
+            }*/
         }
 
         stagger_id++;

@@ -2143,10 +2143,7 @@ void ship::tick(double dt_s)
                     ///getting a bit complex to determine this value
                     em.intensity = 100000 * c.get_operating_efficiency();
 
-                    if(!model)
-                        radar.emit(em, r.position, *this);
-                    else
-                        radar.emit_with_imaginary_packet(em, r.position, *this, model);
+                    radar.emit(em, r.position, *this);
                 }
 
                 ///damage surrounding targets
@@ -2271,10 +2268,7 @@ void ship::tick(double dt_s)
 
                 alt_radar_field& radar = get_radar_field();
 
-                if(!model)
-                    radar.emit(heat, r.position, *this);
-                else
-                    radar.emit_with_imaginary_packet(heat, r.position, *this, model);
+                radar.emit(heat, r.position, *this);
             }
         }
     }

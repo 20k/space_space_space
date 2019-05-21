@@ -163,30 +163,6 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity
     add_packet_raw(freq, pos);
 }
 
-void alt_radar_field::emit_with_imaginary_packet(alt_frequency_packet freq, vec2f pos, heatable_entity& en, player_model* model)
-{
-    assert(model != nullptr);
-
-    freq.id = alt_frequency_packet::gid++;
-    freq.emitted_by = en.id;
-    freq.cross_dim = en.r.approx_dim;
-    freq.cross_angle = en.r.rotation;
-    freq.start_iteration = iteration_count;
-
-    ignore(freq.id, en);
-
-    freq.origin = pos;
-
-    packets.push_back(freq);
-
-    freq.id = alt_frequency_packet::gid++;
-
-    ignore(freq.id, en);
-
-    imaginary_packets.push_back(freq);
-    imaginary_collideable_list[freq.id] = model;
-}
-
 void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren)
 {
     freq.id = alt_frequency_packet::gid++;
@@ -657,90 +633,13 @@ void alt_radar_field::tick(double dt_s)
         subtractive_packets[i.first].insert(subtractive_packets[i.first].end(), i.second.begin(), i.second.end());
     }
 
-    auto next_imaginary_subtractive = decltype(subtractive_packets)();
 
-    std::vector<alt_frequency_packet> imaginary_speculative_packets;
-
-    ///ok so here's where it gets a bit crazy
-    ///ships or anything which performs 'realistic' persistent tracking emit 'fake' packets that reflect off the 'fake' objects they have stored
-    ///if a ship gets a reflection from this fake packet that does not meet the real expectations, the object does not exist
-    ///will need to update this down the line to have fake collideables themselves emit fake radiation
-    ///this can be a simple cut down model - only one reflection
-
-    int icollide = 0;
-
-    //#define NO_MULTI_REFLECT_IMAGINARY
-
-    for(alt_frequency_packet& packet : imaginary_packets)
-    {
-        player_model* player = imaginary_collideable_list[packet.id];
-
-        #ifdef NO_MULTI_REFLECT_IMAGINARY
-        if(player == nullptr)
-            continue;
-        #endif // NO_MULTI_REFLECT_IMAGINARY
-
-        assert(player != nullptr);
-
-        for(auto& [pid, detailed] : player->renderables)
-        {
-            /*alt_collideable collide;
-            collide.dim = detailed.r.approx_dim;
-            collide.angle = detailed.r.rotation;
-            collide.uid = pid;
-            collide.pos = detailed.r.position;
-            collide.en = nullptr; ///nope! this is imaginary thanks*/
-
-            heatable_entity hacky_en;
-            hacky_en.r = detailed.r;
-            hacky_en.id = pid;
-
-            auto reflected = test_reflect_from(packet, hacky_en, imaginary_subtractive_packets);
-
-            if(reflected)
-            {
-                reflect_info inf = reflected.value();
-
-                ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
-                ///which will affect compat with imaginary shadows
-
-                if(inf.collide)
-                    next_imaginary_subtractive[packet.id].push_back(inf.collide.value());
-
-                if(inf.reflect)
-                    imaginary_speculative_packets.push_back(inf.reflect.value());
-
-                #ifndef NO_MULTI_REFLECT_IMAGINARY
-                if(inf.reflect)
-                    imaginary_collideable_list[inf.reflect.value().id] = player;
-                #endif // NO_MULTI_REFLECT_IMAGINARY
-            }
-
-            icollide++;
-        }
-    }
-
-    for(auto& i : next_imaginary_subtractive)
-    {
-        imaginary_subtractive_packets[i.first].insert(imaginary_subtractive_packets[i.first].end(), i.second.begin(), i.second.end());
-    }
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
-    imaginary_packets.insert(imaginary_packets.end(), imaginary_speculative_packets.begin(), imaginary_speculative_packets.end());
 
     speculative_packets.clear();
-    imaginary_speculative_packets.clear();
 
     clean_old_packets(*this, packets, subtractive_packets);
-    std::vector<uint32_t> to_imaginary_clean = clean_old_packets(*this, imaginary_packets, imaginary_subtractive_packets);
-
-    for(auto& i : to_imaginary_clean)
-    {
-        if(imaginary_collideable_list.find(i) != imaginary_collideable_list.end())
-        {
-            imaginary_collideable_list.erase(imaginary_collideable_list.find(i));
-        }
-    }
 
     //std::cout << "ipackets " << icollide << std::endl;
 
@@ -868,18 +767,6 @@ float alt_radar_field::get_intensity_at(vec2f pos)
     for(alt_frequency_packet& packet : packets)
     {
         total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
-    }
-
-    return total_intensity;
-}
-
-float alt_radar_field::get_imaginary_intensity_at(vec2f pos)
-{
-    float total_intensity = 0;
-
-    for(alt_frequency_packet& packet : imaginary_packets)
-    {
-        total_intensity += get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
     }
 
     return total_intensity;
@@ -1063,7 +950,7 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
     return dim.max_elem();
 }
 
-alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, std::optional<player_model*> player, double radar_mult)
+alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, bool harvest_renderables, double radar_mult)
 {
     /*if(sample_time[uid].getElapsedTime().asMicroseconds() / 1000. < 500)
     {
@@ -1188,59 +1075,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     }*/
 
     std::set<uint32_t> considered_packets;
-    std::set<uint32_t> pseudo_packets;
-
-    if(player)
-    {
-        for(alt_frequency_packet packet : imaginary_packets)
-        {
-            #ifndef REVERSE_IGNORE
-            auto it_packet = ignore_map.find(packet.id);
-            #endif // REVERSE_IGNORE
-
-            if(it_packet != ignore_map.end())
-            {
-                #ifndef REVERSE_IGNORE
-                auto it_collide = it_packet->second.find(en.id);
-                #else
-                auto it_collide = it_packet->second.find(packet.id);
-                #endif
-
-                //auto it_collide = en.ignore_packets.find(packet.id);
-
-                //if(it_collide != en.ignore_packets.end())
-                if(it_collide != it_packet->second.end())
-                {
-                    if(it_collide->second.should_ignore())
-                    {
-                        if(!packet.last_packet)
-                            continue;
-
-                        alt_frequency_packet lpacket = *packet.last_packet;
-                        lpacket.start_iteration = packet.start_iteration;
-                        lpacket.id = packet.id;
-
-                        packet = lpacket;
-                    }
-                }
-            }
-
-            float intensity = get_intensity_at_of(pos, packet, imaginary_subtractive_packets);
-
-            packet.intensity = intensity;
-
-            uint64_t search_entity = packet.emitted_by;
-
-            if(packet.reflected_by != (uint32_t)-1)
-                search_entity = packet.reflected_by;
-
-            if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
-                continue;
-
-            if(packet.intensity * radar_mult >= 0.01)
-                pseudo_packets.insert(search_entity);
-        }
-    }
 
     //std::cout << "pseudo size " << pseudo_packets.size() << std::endl;
 
@@ -1365,7 +1199,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         }
     }
 
-    if(player)
+    if(harvest_renderables)
     {
         std::set<uint32_t> high_detail_entities;
         std::set<uint32_t> low_detail_entities;
@@ -1395,6 +1229,8 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             }
         }
 
+        std::map<uint32_t, common_renderable> renderables;
+
         ///initialise player collide
         {
             common_renderable play;
@@ -1402,7 +1238,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             play.r = en.r;
             play.velocity = en.velocity;
 
-            player.value()->renderables[en.id] = play;
+            renderables[en.id] = play;
         }
 
         for(uint32_t id : low_detail_entities)
@@ -1422,9 +1258,9 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
                 if(found && rs.vert_dist.size() >= 3)
                 {
-                    if(player.value()->renderables.find(id) != player.value()->renderables.end())
+                    if(renderables.find(id) != renderables.end())
                     {
-                        common_renderable& cr = player.value()->renderables[id];
+                        common_renderable& cr = renderables[id];
 
                         if(cr.type == 1)
                         {
@@ -1438,7 +1274,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                     if(high_detail_entities.find(id) != high_detail_entities.end())
                         continue;
 
-                    common_renderable split = player.value()->renderables[id];
+                    common_renderable split = renderables[id];
                     client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
                     if(split.type == 1)
@@ -1461,7 +1297,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                         split.r = rs;
                     }
 
-                    player.value()->renderables[id] = split;
+                    renderables[id] = split;
                 }
             }
         }
@@ -1483,7 +1319,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
                 if(found && rs.vert_dist.size() >= 3)
                 {
-                    common_renderable split = player.value()->renderables[id];
+                    common_renderable split = renderables[id];
                     client_renderable r = rs.split((pos - rs.position).angle() - M_PI/2);
 
                     if(split.type == 0)
@@ -1504,59 +1340,15 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                         split.r = rs;
                     }
 
-                    player.value()->renderables[id] = split;
+                    renderables[id] = split;
                 }
             }
         }
 
 
-        for(auto& i : player.value()->renderables)
+        for(auto& i : renderables)
         {
             s.renderables.push_back({i.first, i.second});
-        }
-
-        ///ok so
-        ///if we have a collide shadow packet but not a real packet
-        ///start a timer to erase it
-        ///cancel the timer if we receive more packets
-
-        std::optional<entity*> plr = entities.fetch(en.id);
-
-        if(plr && player)
-        {
-            player_model* model = player.value();
-
-            for(auto& i : model->renderables)
-            {
-                ///if this is a pseudo packet we've received but not got a considered packet, cleanup
-                if(pseudo_packets.find(i.first) != pseudo_packets.end() && considered_packets.find(i.first) == considered_packets.end())
-                {
-                    i.second.no_signal();
-
-                    //std::cout << "nope " << std::endl;
-                }
-
-                /*if(pseudo_packets.find(i.first) != pseudo_packets.end())
-                {
-                    std::cout << "received imaginary " << i.first << std::endl;
-                }*/
-
-                if(considered_packets.find(i.first) != considered_packets.end())
-                {
-                    i.second.got_signal();
-
-                    //std::cout << "got sig\n";
-                }
-
-                /*if(all_entities.find(i.first) == all_entities.end())
-                {
-                    i.second.unknown();
-                }*/
-
-                i.second.unknown(all_entities.find(i.first) == all_entities.end());
-            }
-
-            player.value()->cleanup(plr.value()->r.position);
         }
     }
 
