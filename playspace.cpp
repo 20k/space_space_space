@@ -44,14 +44,13 @@ void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
 
 playspace::playspace()
 {
-    field = new alt_radar_field({800, 800});
+    field = std::make_shared<alt_radar_field>((vec2f){800, 800});
     entity_manage = new entity_manager;
 }
 
 playspace::~playspace()
 {
     delete entity_manage;
-    delete field;
 }
 
 room* playspace::make_room(vec2f where)
@@ -100,7 +99,7 @@ void playspace::init_default()
                 continue;
             }
 
-            asteroid* a = test->entity_manage->make_new<asteroid>();
+            asteroid* a = test->entity_manage->make_new<asteroid>(field);
             a->init(1, 1);
             a->r.position = found_pos;
             a->ticks_between_collisions = 2;
@@ -111,7 +110,7 @@ void playspace::init_default()
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
-    asteroid* sun = entity_manage->make_new<asteroid>();
+    asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
     sun->r.position = {400, 400};
     sun->permanent_heat = intensity;
@@ -159,6 +158,30 @@ void room::tick(double dt_s)
 
 void playspace::tick(double dt_s)
 {
+    std::vector<ship*> preships = entity_manage->fetch<ship>();
+
+    for(auto& s : preships)
+    {
+        s->current_radar_field = field;
+    }
+
+    for(entity* e : entity_manage->to_spawn)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+
+        if(!s)
+            continue;
+
+        s->current_radar_field = field;
+    }
+
+    std::vector<asteroid*> roids = entity_manage->fetch<asteroid>();
+
+    for(auto& a : roids)
+    {
+        a->current_radar_field = field;
+    }
+
     for(room* r : rooms)
     {
         r->tick(dt_s);
@@ -173,6 +196,8 @@ void playspace::tick(double dt_s)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
     }
+
+    field->tick(*entity_manage, dt_s);
 }
 
 void playspace_manager::tick(double dt_s)

@@ -3,6 +3,7 @@
 
 #include <networking/serialisable_fwd.hpp>
 #include <vec/vec.hpp>
+#include <memory>
 
 struct entity;
 struct entity_manager;
@@ -57,7 +58,7 @@ struct playspace : serialisable, owned
 
     std::vector<room*> rooms;
 
-    alt_radar_field* field = nullptr;
+    std::shared_ptr<alt_radar_field> field;
     entity_manager* entity_manage = nullptr;
 
     playspace();

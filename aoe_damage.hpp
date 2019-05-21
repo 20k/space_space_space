@@ -3,6 +3,8 @@
 
 #include "entity.hpp"
 
+struct alt_radar_field;
+
 struct aoe_damage : entity
 {
     float radius = 0;
@@ -16,8 +18,9 @@ struct aoe_damage : entity
     double accumulated_time = 0;
 
     std::map<uint64_t, bool> collided_with;
+    std::shared_ptr<alt_radar_field> field;
 
-    aoe_damage();
+    aoe_damage(std::shared_ptr<alt_radar_field> _field);
 
     virtual void tick(double dt_s) override;
     virtual void on_collide(entity_manager& em, entity& other) override;

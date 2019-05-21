@@ -2,10 +2,11 @@
 #include "ship_components.hpp"
 #include "radar_field.hpp"
 
-aoe_damage::aoe_damage()
+aoe_damage::aoe_damage(std::shared_ptr<alt_radar_field> _field)
 {
     collides = true;
     is_collided_with = false;
+    field = _field;
 
     //r.init_rectangular({10, 10});
 }
@@ -29,7 +30,7 @@ void aoe_damage::tick(double dt_s)
 
     if(!emitted)
     {
-        alt_radar_field& radar = get_radar_field();
+        alt_radar_field& radar = *field;
 
         alt_frequency_packet alt_pack;
         alt_pack.intensity = damage * 100;

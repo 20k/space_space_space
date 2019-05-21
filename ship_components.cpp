@@ -1334,204 +1334,16 @@ void data_tracker::add(double sat, double held)
     add_to_vector(held, vheld, max_data);
 }
 
-struct torpedo : projectile
-{
-    sf::Clock clk;
-    sf::Clock inactivity_time;
-
-    float homing_frequency = HEAT_FREQ;
-    bool pinged = false;
-
-    //vec2f last_best_dir = {0,0};
-
-    uint32_t fired_by = -1;
-
-    virtual void pre_collide(entity& other) override
-    {
-        alt_radar_field& radar = get_radar_field();
-
-        alt_frequency_packet em;
-        em.frequency = HEAT_FREQ;
-        em.intensity = 10000;
-
-        radar.emit(em, r.position - velocity.norm() * 5, *this);
-    }
-
-    virtual void tick(double dt_s) override
-    {
-        projectile::tick(dt_s);
-
-        if(clk.getElapsedTime().asMicroseconds() / 1000. >= 50 * 1000)
-        {
-            cleanup = true;
-        }
-
-        double activate_time = 3 * 1000;
-        bool activated = (inactivity_time.getElapsedTime().asMicroseconds() / 1000.0) >= activate_time;
-
-        alt_radar_field& radar = get_radar_field();
-
-        alt_radar_sample sam = radar.sample_for(r.position, *this, *parent);
-
-        vec2f best_dir = {0, 0};
-        float best_intensity = 0;
-
-        for(auto& i : sam.receive_dir)
-        {
-            if(i.frequency != homing_frequency)
-                continue;
-
-            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
-                continue;
-
-            if(i.property.length() > best_intensity)
-            {
-                best_dir = i.property;
-                best_intensity = i.property.length();
-            }
-        }
-
-        for(auto& i : sam.echo_dir)
-        {
-            if(i.frequency != homing_frequency)
-                continue;
-
-            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
-                continue;
-
-            if(i.property.length() > best_intensity)
-            {
-                best_dir = i.property;
-                best_intensity = i.property.length();
-            }
-        }
-
-        for(auto& i : sam.echo_pos)
-        {
-            if(i.frequency != homing_frequency)
-                continue;
-
-            if((i.id_e == id || i.id_e == fired_by || i.id_r == id || i.id_r == fired_by) && !activated)
-                continue;
-
-            best_dir = i.property - r.position;
-            best_intensity = BEST_UNCERTAINTY;
-        }
-
-        /*if((inactivity_time.getElapsedTime().asMicroseconds() / 1000.) >= 1 * 1000 && !pinged)
-        {
-            alt_frequency_packet em;
-            em.frequency = HEAT_FREQ;
-            em.intensity = 100000;
-
-            radar.emit(em, r.position, id);
-
-            pinged = true;
-
-            printf("ping\n");
-        }
-
-        if(best_dir.x() == 0 && best_dir.y() == 0)
-        {
-            best_dir = last_best_dir;
-        }
-
-        last_best_dir = best_dir;*/
-
-        if(best_dir.x() == 0 && best_dir.y() == 0)
-        {
-            return;
-        }
-
-        float accuracy = best_intensity / BEST_UNCERTAINTY;
-
-        accuracy = clamp(accuracy, 0, 1);
-
-        //accuracy = 1;
-
-        float max_angle_per_s = dt_s * M_PI / 8;
-
-        vec2f my_dir = (vec2f){1, 0}.rot(r.rotation);
-        //vec2f my_dir = velocity;
-        vec2f target_angle = best_dir;
-
-        float requested_angle = signed_angle_between_vectors(my_dir, target_angle);
-
-        if(fabs(requested_angle) > max_angle_per_s)
-        {
-            requested_angle = signum(requested_angle) * max_angle_per_s;
-        }
-
-        float angle_change = requested_angle;
-
-        r.rotation += angle_change * accuracy;
-
-        //r.rotation = point_angle;
-
-        if(activated)
-        {
-            vec2f desired_velocity = best_dir.norm() * 100;
-
-            vec2f real_velocity = velocity;
-
-            double max_speed_ps = 30;
-
-            vec2f project = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation));
-
-            if(angle_between_vectors(project, (vec2f){1, 0}.rot(r.rotation)) > M_PI/2)
-            {
-                max_speed_ps = 10;
-            }
-
-            if(project.length() > max_speed_ps)
-            {
-                project = project.norm() * max_speed_ps;
-            }
-
-            float horizontal_speed_ps = 20;
-
-            vec2f reject = projection(desired_velocity - real_velocity, (vec2f){1, 0}.rot(r.rotation + M_PI/2));
-
-            if(reject.length() > horizontal_speed_ps)
-            {
-                reject = reject.norm() * horizontal_speed_ps;
-            }
-
-            velocity += project * dt_s;
-            velocity += reject * dt_s * accuracy;
-
-
-            alt_frequency_packet em;
-            em.frequency = 1500;
-            em.intensity = 1000;
-
-            radar.emit(em, r.position, *this);
-
-            phys_ignore.clear();
-
-            //float max_speed = 100;
-            //float max_speed_ps = 30;
-
-            /*velocity = velocity + (vec2f){max_speed_ps, 0}.rot(point_angle) * dt_s;
-
-            if(velocity.length() < max_speed)
-            {
-                velocity = velocity.norm() * velocity.length() + (vec2f){1, 0}.rot(point_angle) * max_speed_ps * dt_s;
-            }
-
-            if(velocity.length() > max_speed)
-            {
-                velocity = velocity.norm() * max_speed;
-            }*/
-
-            //velocity = velocity + (vec2f){10, 0}.rot(angle_change) * dt_s;
-        }
-    }
-};
-
 struct laser : projectile
 {
     sf::Clock clk;
+
+    std::shared_ptr<alt_radar_field> field;
+
+    laser(std::shared_ptr<alt_radar_field>& _field) : field(_field)
+    {
+
+    }
 
     virtual void tick(double dt_s) override
     {
@@ -1548,13 +1360,11 @@ struct laser : projectile
             cleanup = true;
         }
 
-        alt_radar_field& radar = get_radar_field();
-
         alt_frequency_packet em;
         em.frequency = 3000;
         em.intensity = 10000;
 
-        radar.emit(em, r.position, *this);
+        field->emit(em, r.position, *this);
     }
 };
 
@@ -1567,11 +1377,11 @@ struct mining_laser : projectile
 
     float power = 0;
 
-    mining_laser()
-    {
-        alt_radar_field& radar = get_radar_field();
+    std::shared_ptr<alt_radar_field> field;
 
-        float SoL = radar.speed_of_light_per_tick;
+    mining_laser(std::shared_ptr<alt_radar_field>& _field) : field(_field)
+    {
+        float SoL = field->speed_of_light_per_tick;
 
         r.init_rectangular({SoL/1.8, 0.2});
 
@@ -1596,13 +1406,11 @@ struct mining_laser : projectile
             cleanup = true;
         }
 
-        alt_radar_field& radar = get_radar_field();
-
         alt_frequency_packet em;
         em.frequency = 3000;
         em.intensity = 10000;
 
-        radar.emit(em, r.position, *this);
+        field->emit(em, r.position, *this);
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override
@@ -1685,7 +1493,7 @@ void ship::tick_missile_behaviour(double dt_s)
     double activate_time = 3 * 1000;
     bool activated = (spawn_clock.getElapsedTime().asMicroseconds() / 1000.0) >= activate_time;
 
-    alt_radar_field& radar = get_radar_field();
+    alt_radar_field& radar = *current_radar_field;
 
     alt_radar_sample sam = radar.sample_for(r.position, *this, *parent);
 
@@ -2040,7 +1848,7 @@ void ship::tick(double dt_s)
 
                     vec2f evector = (vec2f){1, 0}.rot(eangle);
                     vec2f ship_vector = (vec2f){1, 0}.rot(ship_rotation);
-                    alt_radar_field& radar = get_radar_field();
+                    alt_radar_field& radar = *current_radar_field;
 
                     if(fabs(angle_between_vectors(ship_vector, evector)) > fixed.max_use_angle)
                     {
@@ -2049,22 +1857,10 @@ void ship::tick(double dt_s)
                         evector = ship_vector.rot(signum(angle_signed) * fixed.max_use_angle);
                     }
 
-                    if(fixed.subtype == "missile")
-                    {
-                        torpedo* l = parent->make_new<torpedo>();
-                        l->r.position = r.position;
-                        l->r.rotation = evector.angle();
-                        //l->r.rotation = r.rotation + eangle;
-                        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                        l->velocity = velocity + evector.norm() * 50;
-                        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
-                        l->phys_ignore.push_back(id);
-                        l->fired_by = id;
-                    }
 
                     if(fixed.subtype == "laser")
                     {
-                        laser* l = parent->make_new<laser>();
+                        laser* l = parent->make_new<laser>(current_radar_field);
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
@@ -2083,7 +1879,7 @@ void ship::tick(double dt_s)
                     ///actually I really like that - sol to target, sol transport back as packets
                     if(fixed.subtype == "mining")
                     {
-                        mining_laser* l = parent->make_new<mining_laser>();
+                        mining_laser* l = parent->make_new<mining_laser>(current_radar_field);
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
@@ -2136,7 +1932,7 @@ void ship::tick(double dt_s)
 
                 if(c.has(component_info::SENSORS))
                 {
-                    alt_radar_field& radar = get_radar_field();
+                    alt_radar_field& radar = *current_radar_field;
 
                     alt_frequency_packet em;
                     em.frequency = 2000;
@@ -2179,7 +1975,7 @@ void ship::tick(double dt_s)
                                 if(parent == nullptr)
                                     throw std::runtime_error("Broken");
 
-                                aoe_damage* aoe = parent->make_new<aoe_damage>();
+                                aoe_damage* aoe = parent->make_new<aoe_damage>(current_radar_field);
 
                                 aoe->max_radius = radius;
                                 aoe->damage = power;
@@ -2266,7 +2062,7 @@ void ship::tick(double dt_s)
                 heat.frequency = HEAT_FREQ;
                 heat.intensity = real_emissions * 100;
 
-                alt_radar_field& radar = get_radar_field();
+                alt_radar_field& radar = *current_radar_field;
 
                 radar.emit(heat, r.position, *this);
             }
@@ -2877,7 +2673,7 @@ void ship::handle_heat(double dt_s)
     }
 
     {
-        alt_radar_field& radar = get_radar_field();
+        alt_radar_field& radar = *current_radar_field;
 
         alt_frequency_packet heat;
         heat.frequency = HEAT_FREQ;
@@ -4642,7 +4438,7 @@ void projectile::tick(double dt_s)
 
 }
 
-asteroid::asteroid()
+asteroid::asteroid(std::shared_ptr<alt_radar_field> field) : current_radar_field(field)
 {
     mass = 1000;
 }
@@ -4668,7 +4464,7 @@ void asteroid::init(float min_rad, float max_rad)
 
 void asteroid::tick(double dt_s)
 {
-    dissipate();
+    dissipate(*current_radar_field);
 }
 
 struct transient_entity : entity

@@ -685,6 +685,7 @@ struct ship : heatable_entity, owned
     std::vector<data_tracker> data_track;
 
     float construction_amount = 0;
+    std::shared_ptr<alt_radar_field> current_radar_field;
 
     ship();
 
@@ -828,7 +829,9 @@ struct projectile : heatable_entity
 
 struct asteroid : heatable_entity
 {
-    asteroid();
+    std::shared_ptr<alt_radar_field> current_radar_field;
+
+    asteroid(std::shared_ptr<alt_radar_field> field);
     void init(float min_rad, float max_rad);
 
     virtual void tick(double dt_s) override;

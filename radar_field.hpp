@@ -230,6 +230,8 @@ struct heatable
     float reflectivity = 0.5;
 };
 
+struct alt_radar_field;
+
 struct heatable_entity : entity, heatable
 {
     ///aka the sun, used for optimising
@@ -240,7 +242,7 @@ struct heatable_entity : entity, heatable
         is_heat = true;
     }
 
-    void dissipate(int ticks_between_emissions = 1);
+    void dissipate(alt_radar_field& radar, int ticks_between_emissions = 1);
 
     //std::unordered_map<uint32_t, hacky_clock> ignore_packets;
 };
@@ -300,12 +302,12 @@ struct alt_radar_field
     uint64_t sun_id = -1;
 };
 
-inline
+/*inline
 alt_radar_field& get_radar_field()
 {
     static thread_local alt_radar_field radar({800, 800});
 
     return radar;
-}
+}*/
 
 #endif // RADAR_FIELD_HPP_INCLUDED

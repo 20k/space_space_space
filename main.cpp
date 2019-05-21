@@ -83,6 +83,7 @@ bool once(sf::Mouse::Button b, bool has_focus)
 
 #define ONCE_MACRO(x, y) once<__COUNTER__>(x, y)
 
+#if 0
 struct solar_system
 {
     asteroid* sun = nullptr;
@@ -157,6 +158,7 @@ struct solar_system
         field.sun_id = sun->id;
     }
 };
+#endif // 0
 
 void server_thread(std::atomic_bool& should_term)
 {
@@ -181,8 +183,8 @@ void server_thread(std::atomic_bool& should_term)
     test_playspace->init_default();
 
 
-    entity_manager entities;
-    alt_radar_field& radar = get_radar_field();
+    //entity_manager entities;
+    //alt_radar_field& radar = get_radar_field();
 
     ship* test_ship = test_playspace->entity_manage->make_new<ship>();
     test_ship->network_owner = 0;
@@ -503,7 +505,7 @@ void server_thread(std::atomic_bool& should_term)
 
         double used_frametime_dt = clamp(frametime_dt, 14 / 1000., 18 / 1000.);
 
-        entities.tick(used_frametime_dt);
+        //entities.tick(used_frametime_dt);
 
         playspace_manage.tick(used_frametime_dt);
 
@@ -534,7 +536,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        entities.cleanup();
+        //entities.cleanup();
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;
 
@@ -567,20 +569,20 @@ void server_thread(std::atomic_bool& should_term)
         }
         #endif // SERVER_VIEW
 
-        if(ONCE_MACRO(sf::Keyboard::L, true))
+        /*if(ONCE_MACRO(sf::Keyboard::L, true))
         {
             for(int i=0; i < 100; i++)
             {
                 radar.add_packet(alt_pack, {i + 200,200});
             }
-        }
+        }*/
 
         if(ONCE_MACRO(sf::Keyboard::M, true))
         {
             render = !render;
         }
 
-        radar.tick(entities, used_frametime_dt);
+        //radar.tick(entities, used_frametime_dt);
         //player_manage.tick(frametime_dt);
 
         for(auto& i : data_manage.data)

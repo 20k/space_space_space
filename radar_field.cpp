@@ -81,7 +81,7 @@ float alt_collideable::get_physical_cross_section(float angle)
     return dim.max_elem();
 }*/
 
-void heatable_entity::dissipate(int ticks_between_emissions)
+void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissions)
 {
     if(ticks_between_emissions < 1)
         ticks_between_emissions = 1;
@@ -96,8 +96,6 @@ void heatable_entity::dissipate(int ticks_between_emissions)
 
     if(permanent_heat + emitted >= RADAR_CUTOFF)
     {
-        alt_radar_field& radar = get_radar_field();
-
         alt_frequency_packet heat;
         heat.frequency = HEAT_FREQ;
         heat.intensity = permanent_heat + emitted;
