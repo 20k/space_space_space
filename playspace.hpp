@@ -18,6 +18,8 @@ namespace room_type
     };
 }
 
+#define ROOM_POI_SCALE 0.1
+
 ///aka poi
 struct room : serialisable, owned
 {
@@ -40,6 +42,9 @@ struct room : serialisable, owned
     void tick(double dt_s);
     void add(entity* e);
     void rem(entity* e);
+
+    vec2f get_in_local(vec2f absolute);
+    vec2f get_in_absolute(vec2f local);
 };
 
 namespace playspace_type

@@ -40,8 +40,7 @@ void room::add(entity* e)
 
     if(!entity_manage->contains(e))
     {
-        vec2f relative_position = e->r.position - this->position;
-        e->r.position = relative_position;
+        e->r.position = get_in_local(e->r.position);
     }
 
     entity_manage->steal(e);
@@ -51,11 +50,20 @@ void room::rem(entity* e)
 {
     if(entity_manage->contains(e))
     {
-        vec2f absolute_position = e->r.position + this->position;
-        e->r.position = absolute_position;
+        e->r.position = get_in_absolute(e->r.position);
     }
 
     entity_manage->forget(e);
+}
+
+vec2f room::get_in_local(vec2f absolute)
+{
+    return (absolute - this->position) / ROOM_POI_SCALE;
+}
+
+vec2f room::get_in_absolute(vec2f local)
+{
+    return (local * ROOM_POI_SCALE) + this->position;
 }
 
 void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -107,7 +115,7 @@ void playspace::init_default()
 
     {
         vec2f pos = 0;
-        float dim = 50;
+        float dim = 500;
 
         room* test_poi = make_room({pos.x(), pos.y()});
 
@@ -123,7 +131,7 @@ void playspace::init_default()
 
             for(entity* e : test_poi->entity_manage->entities)
             {
-                if((e->r.position - found_pos).length() < 10)
+                if((e->r.position - found_pos).length() < 100)
                 {
                     cont = true;
                     break;
@@ -137,7 +145,7 @@ void playspace::init_default()
             }
 
             asteroid* a = test_poi->entity_manage->make_new<asteroid>(field);
-            a->init(1, 1);
+            a->init(2, 4);
             a->r.position = found_pos; ///poispace
             a->ticks_between_collisions = 2;
             entity_manage->cleanup();
