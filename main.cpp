@@ -736,7 +736,12 @@ void server_thread(std::atomic_bool& should_term)
 
                 if(read_data.to_poi_space)
                 {
+                    auto opt = playspace_manage.get_nearby_room(s);
 
+                    if(opt)
+                    {
+                        playspace_manage.enter_room(s, opt.value());
+                    }
                 }
             }
 

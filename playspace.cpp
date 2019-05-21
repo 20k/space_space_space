@@ -199,6 +199,15 @@ void room::tick(double dt_s)
             }
         }
     }
+
+    std::vector<ship*> ships = entity_manage->fetch<ship>();
+
+    for(ship* s : ships)
+    {
+        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
+    }
+
+    field->tick(*entity_manage, dt_s);
 }
 
 void playspace::tick(double dt_s)
@@ -342,7 +351,7 @@ std::optional<room*> playspace_manager::get_nearby_room(entity* e)
                 }
             }
 
-            if(near_dist >= 100)
+            if(near_dist >= 300)
                 return std::nullopt;
 
             assert(nearest);
@@ -362,6 +371,8 @@ void playspace_manager::exit_room(entity* e)
         {
             if(r->entity_manage->contains(e))
             {
+                std::cout << "exited room\n";
+
                 r->rem(e);
                 play->add(e);
 
@@ -379,6 +390,7 @@ void playspace_manager::enter_room(entity* e, room* r)
     {
         if(play->entity_manage->contains(e))
         {
+            play->rem(e);
             found = true;
             break;
         }
@@ -388,4 +400,6 @@ void playspace_manager::enter_room(entity* e, room* r)
         return;
 
     r->add(e);
+
+    std::cout << "entered room\n";
 }
