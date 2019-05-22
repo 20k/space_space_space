@@ -29,6 +29,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::CREW] = make_default("Crew", "CRW");
     ret[component_type::MISSILE_CORE] = make_default("Missile Core", "MCRE");
     ret[component_type::DESTRUCT] = make_default("Self Destruct", "SDST");
+    ret[component_type::CARGO_STORAGE] = make_default("Cargo", "CRG");
     ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
     ret[component_type::STORAGE_TANK_HS] = make_default("Storage Tank HS", "STNKH");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
@@ -68,6 +69,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::CREW].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::MISSILE_CORE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::DESTRUCT].add_composition_ratio({material_info::IRON}, {1});
+    ret[component_type::CARGO_STORAGE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::STORAGE_TANK].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::STORAGE_TANK_HS].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::HEAT_BLOCK].add_composition_ratio({material_info::LITHIUM}, {1});
@@ -256,6 +258,14 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     }
 
     {
+        component_fixed_properties& p = ret[component_type::CARGO_STORAGE];
+
+        p.add(component_info::HP, 0, 1);
+        p.set_internal_volume(1);
+        p.base_volume = 1;
+    }
+
+    {
         component_fixed_properties& p = ret[component_type::STORAGE_TANK];
 
         p.add(component_info::HP, 0, 1);
@@ -340,7 +350,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::SLIDER_ACTIVATION;
 
         p.base_volume = 1;
-        p.set_internal_volume(1);
+        //p.set_internal_volume(1);
     }
 
     return ret;

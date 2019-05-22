@@ -1428,7 +1428,7 @@ struct mining_laser : projectile
         for(component& c : parent_ship->components)
         {
             //if(c._pid == parent_component)
-            if(c.base_id == component_type::STORAGE_TANK)
+            if(c.base_id == component_type::CARGO_STORAGE)
             {
                 float free = c.get_internal_volume() - c.get_stored_volume();
 
@@ -1768,7 +1768,7 @@ void ship::tick(double dt_s)
 
                     if(found)
                     {
-                        c.manufacture_blueprint(*found.value());
+                        c.manufacture_blueprint(*found.value(), *this);
                     }
                 }
             }
@@ -1785,9 +1785,36 @@ void ship::tick(double dt_s)
                 {
                     ship spawn = c.build_queue.front();
 
-                    if(c.can_store(spawn))
+                    std::optional<component*> fc;
+
+                    for(component& scomp : components)
+                    {
+                        if(scomp.base_id != component_type::CARGO_STORAGE)
+                            continue;
+
+                        if(scomp.can_store(spawn))
+                        {
+                            fc = &scomp;
+                            break;
+                        }
+                    }
+
+                    /*if(c.can_store(spawn))
                     {
                         c.store(spawn);
+
+                        float extra = c.build_queue[0].construction_amount - front_cost;
+
+                        c.build_queue.erase(c.build_queue.begin());
+
+                        if(c.build_queue.size() > 0)
+                        {
+                            c.build_queue[0].construction_amount += extra;
+                        }
+                    }*/
+                    if(fc)
+                    {
+                        fc.value()->store(spawn);
 
                         float extra = c.build_queue[0].construction_amount - front_cost;
 
@@ -3120,15 +3147,21 @@ void component::manufacture_blueprint_id(size_t blue_id)
         unchecked_blueprints.resize(100);
 }
 
-void component::manufacture_blueprint(const blueprint& blue)
+void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 {
     std::vector<std::vector<material>> in_storage;
 
-    for_each_stored([&](component& c)
+    for(component& lc : parent.components)
     {
-        if(c.base_id == component_type::MATERIAL)
-            in_storage.push_back(c.composition);
-    });
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        lc.for_each_stored([&](component& c)
+        {
+            if(c.base_id == component_type::MATERIAL)
+                in_storage.push_back(c.composition);
+        });
+    }
 
     std::vector<std::vector<material>> cost = blue.get_cost();
 
@@ -3144,23 +3177,48 @@ void component::manufacture_blueprint(const blueprint& blue)
     if(free_volume < 0)
         return;*/
 
-    if(blue.to_ship().get_my_volume() > get_internal_volume())
+    /*if(blue.to_ship().get_my_volume() > get_internal_volume())
+        return;*/
+
+    ship blue_ship = blue.to_ship();
+
+    bool any = false;
+
+    for(component& lc : parent.components)
+    {
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        if(blue_ship.get_my_volume() <= lc.get_internal_volume())
+        {
+            any = true;
+            break;
+        }
+    }
+
+    if(any == false)
         return;
 
     if(!material_satisfies(cost, in_storage))
         return;
 
-    for_each_stored([&](component& c)
-                    {
-                        if(c.base_id == component_type::MATERIAL)
-                            material_partial_deplete(c.composition, cost);
-                    });
+    for(component& lc : parent.components)
+    {
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        lc.for_each_stored([&](component& c)
+        {
+            if(c.base_id == component_type::MATERIAL)
+                material_partial_deplete(c.composition, cost);
+        });
+    }
 
     building = true;
     build_queue.push_back(blue.to_ship());
 }
 
-void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
+void component::render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent)
 {
     if(!factory_view_open)
         return;
@@ -3204,14 +3262,19 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage)
 
     std::vector<std::vector<material>> in_storage;
 
-    for_each_stored([&](component& c)
+    for(component& lc : parent.components)
     {
-        if(c.base_id == component_type::MATERIAL)
-            in_storage.push_back(c.composition);
-    });
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        lc.for_each_stored([&](component& c)
+        {
+            if(c.base_id == component_type::MATERIAL)
+                in_storage.push_back(c.composition);
+        });
+    }
 
     material_deduplicate(in_storage);
-
 
     for(blueprint& blue : blueprint_manage.blueprints)
     {
@@ -4007,7 +4070,7 @@ void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage)
     {
         if(c.has_tag(tag_info::TAG_FACTORY))
         {
-            c.render_manufacturing_window(blueprint_manage);
+            c.render_manufacturing_window(blueprint_manage, *this);
         }
     }
 }

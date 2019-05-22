@@ -23,6 +23,7 @@ namespace component_type
         CREW,
         MISSILE_CORE,
         DESTRUCT,
+        CARGO_STORAGE,
         STORAGE_TANK,
         STORAGE_TANK_HS,
         HEAT_BLOCK,

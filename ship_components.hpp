@@ -415,7 +415,7 @@ struct component : virtual serialisable, owned
     }
 
     void manufacture_blueprint_id(size_t print_id);
-    void manufacture_blueprint(const blueprint& print);
+    void manufacture_blueprint(const blueprint& print, ship& parent);
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
     void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);
@@ -568,7 +568,7 @@ struct component : virtual serialisable, owned
     std::string phase_string();
     std::string get_render_long_name();
     void render_inline_ui();
-    void render_manufacturing_window(blueprint_manager& blueprint_manage);
+    void render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent);
 
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff

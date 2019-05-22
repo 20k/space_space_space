@@ -138,8 +138,9 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::MINING_LASER, 1));
     test_ship->add(get_component_default(component_type::REFINERY, 1));
     test_ship->add(get_component_default(component_type::FACTORY, 1));
-    test_ship->add(get_component_default(component_type::STORAGE_TANK, 1));
+    test_ship->add(get_component_default(component_type::CARGO_STORAGE, 1));
 
+    #if 0
     {
         storage_pipe rpipe;
 
@@ -175,6 +176,7 @@ void server_thread(std::atomic_bool& should_term)
 
         test_ship->add_pipe(rpipe2);
     }
+    #endif // 0
 
     blueprint default_missile;
 
@@ -280,7 +282,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        if(c.base_id == component_type::REFINERY)
+        if(c.base_id == component_type::CARGO_STORAGE)
         {
             component mat_1 = get_component_default(component_type::MATERIAL, 1);
             component mat_2 = get_component_default(component_type::MATERIAL, 1);
