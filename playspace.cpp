@@ -112,7 +112,9 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
 
 void room::import_radio_waves_from(alt_radar_field& theirs)
 {
-    sf::Clock clk;
+    //sf::Clock clk;
+
+    float lrad = entity_manage->collision.half_dim.largest_elem();
 
     for(alt_frequency_packet& pack : theirs.packets)
     {
@@ -131,7 +133,7 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
         field->packets.push_back(fixed_pack);
     }
 
-    std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+    //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -293,7 +295,7 @@ void room::tick(double dt_s)
     field->finite_bound = entity_manage->collision.half_dim.largest_elem() * 1.5;
     field->finite_centre = entity_manage->collision.pos;
 
-    std::cout << "finite bound " << field->finite_bound << std::endl;
+    //std::cout << "finite bound " << field->finite_bound << std::endl;
 
     field->tick(*entity_manage, dt_s);
 
@@ -304,7 +306,7 @@ void room::tick(double dt_s)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    std::cout << "fdnum " << field->packets.size() << std::endl;
+    //std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)
@@ -352,7 +354,7 @@ void playspace::tick(double dt_s)
 
     field->tick(*entity_manage, dt_s);
 
-    std::cout << "parent num " << field->packets.size() << std::endl;
+    //std::cout << "parent num " << field->packets.size() << std::endl;
 }
 
 void playspace_manager::tick(double dt_s)
