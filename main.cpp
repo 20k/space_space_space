@@ -90,7 +90,7 @@ void server_thread(std::atomic_bool& should_term)
     connection conn;
     conn.host("192.168.0.54", 11000);
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -382,7 +382,7 @@ void server_thread(std::atomic_bool& should_term)
 
     #ifdef SERVER_VIEW
     camera cam({debug.getSize().x, debug.getSize().y});
-    cam.position = {400, 400};
+    cam.position = {0, 0};
     #endif // SERVER_VIEW
 
     /*for(component& c : test_ship->components)
@@ -496,10 +496,10 @@ void server_thread(std::atomic_bool& should_term)
 
         //if(key.isKeyPressed(sf::Keyboard::K))
         #ifdef SERVER_VIEW
-        if(ONCE_MACRO(sf::Keyboard::K))
+        /*if(ONCE_MACRO(sf::Keyboard::K))
         {
             radar.add_packet(alt_pack, {mouse.getPosition(debug).x, mouse.getPosition(debug).y});
-        }
+        }*/
         #endif // SERVER_VIEW
 
         /*if(ONCE_MACRO(sf::Keyboard::L, true))
@@ -902,10 +902,23 @@ void server_thread(std::atomic_bool& should_term)
 
         if(render)
         {
-            entities.render(cam, debug);
+            /*entities.render(cam, debug);
             entities.debug_aggregates(cam, debug);
 
-            radar.render(cam, debug);
+            radar.render(cam, debug);*/
+
+            for(playspace* play : playspace_manage.spaces)
+            {
+                for(room* r : play->rooms)
+                {
+                    //if(r->entity_manage->contains(test_ship))
+                    {
+                        r->entity_manage->render(cam, debug);
+                        r->field->render(cam, debug);
+                        break;
+                    }
+                }
+            }
         }
 
         debug.display();
