@@ -3409,8 +3409,6 @@ void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_compone
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
-
-    printf("Regular rpc\n");
 }
 
 void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac)
@@ -3419,8 +3417,6 @@ void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_co
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
-
-    printf("Called ffdfdf\n");
 }
 
 void ship::show_resources(bool window)
@@ -4421,8 +4417,6 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 
             if(i.fraction != 1)
             {
-                std::cout << "FRACCY BOI " << i.fraction << std::endl;
-
                 auto scopy = *ship_opt.value();
 
                 std::optional<ship> psplit = scopy.split_materially(i.fraction);
@@ -4564,7 +4558,7 @@ std::optional<ship> ship::split_materially(float split_take_frac)
             float my_mat_vol = m.dynamic_desc.volume * my_frac;
             float their_mat_vol = m.dynamic_desc.volume * their_frac;
 
-            material them;
+            material them = m;
             them.dynamic_desc.volume = their_mat_vol;
             m.dynamic_desc.volume = my_mat_vol;
 
