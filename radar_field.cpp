@@ -179,7 +179,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     if(packet.force_cleanup)
         return true;
 
-    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * space_scaling;
 
     if(packet.start_iteration == iteration_count)
         return false;
@@ -543,6 +543,8 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             }
         }*/
 
+        ///ok need to scale the entities radius
+        ///shifted and scaled origins
         for(auto& coarse : em.collision.data)
         {
             if(coarse.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
@@ -742,7 +744,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         }
     }
 
-    float my_distance_to_packet_sq = (pos - packet.origin).squared_length();
+    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * space_scaling * space_scaling;
 
     float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / packet.packet_wavefront_width;
 

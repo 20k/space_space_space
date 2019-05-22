@@ -270,6 +270,7 @@ struct alt_radar_field
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
     float speed_of_light_per_tick = 10.5;
+    float space_scaling = 1;
 
     alt_radar_field(vec2f in);
 

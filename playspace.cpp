@@ -17,6 +17,7 @@ struct room_entity : entity
 room::room()
 {
     field = std::make_shared<alt_radar_field>((vec2f){800, 800});
+    field->space_scaling = ROOM_POI_SCALE;
 
     entity_manage = new entity_manager;
 }
@@ -91,7 +92,15 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
     if(ret.reflected_by != -1)
         ret.reflected_position = r.get_in_local(ret.reflected_position);
 
-    ret.start_iteration = ((parent_field.iteration_count - ret.start_iteration) / ROOM_POI_SCALE) + new_field.iteration_count;
+    uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
+
+    ret.start_iteration = new_field.iteration_count - it_diff;
+
+    //std::cout << "start " << ret.start_iteration << " real " << new_field.iteration_count << std::endl;
+
+    //float rdist = (new_field.iteration_count)
+
+    //std::cout << "expr? " << ret.force_cleanup << std::endl;
 
     return ret;
 }
@@ -124,8 +133,8 @@ playspace::playspace()
 {
     field = std::make_shared<alt_radar_field>((vec2f){800, 800});
     entity_manage = new entity_manager;
-
-    field->speed_of_light_per_tick *= ROOM_POI_SCALE;
+    //field->space_scaling = ROOM_POI_SCALE;
+    field->speed_of_light_per_tick = field->speed_of_light_per_tick * ROOM_POI_SCALE;
 }
 
 playspace::~playspace()
@@ -142,6 +151,7 @@ room* playspace::make_room(vec2f where)
 
     r->my_entity = entity_manage->make_new<room_entity>();
     r->my_entity->r.position = where;
+    r->field->sun_id = field->sun_id;
 
     return rooms.back();
 }
@@ -266,6 +276,15 @@ void room::tick(double dt_s)
     }
 
     field->tick(*entity_manage, dt_s);
+
+    /*for(alt_frequency_packet& pack : field->packets)
+    {
+        float rad = (field->iteration_count - pack.start_iteration) * field->speed_of_light_per_tick;
+
+        std::cout << "rad " << rad << std::endl;
+    }*/
+
+    std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)
@@ -312,6 +331,8 @@ void playspace::tick(double dt_s)
     }
 
     field->tick(*entity_manage, dt_s);
+
+    std::cout << "parent num " << field->packets.size() << std::endl;
 }
 
 void playspace_manager::tick(double dt_s)
