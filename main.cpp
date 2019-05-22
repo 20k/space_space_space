@@ -21,6 +21,16 @@
 #include <nauth/steam_api.hpp>
 #include "playspace.hpp"
 
+bool skip_keyboard_input(bool has_focus)
+{
+    if(!has_focus)
+        return true;
+
+    bool skip = ImGui::GetIO().WantCaptureKeyboard;
+
+    return skip;
+}
+
 template<int c>
 bool once(sf::Keyboard::Key k, bool has_focus)
 {
@@ -34,9 +44,11 @@ bool once(sf::Keyboard::Key k, bool has_focus)
         return false;
     }
 
+    bool skip = skip_keyboard_input(has_focus);
+
     sf::Keyboard key;
 
-    if(key.isKeyPressed(k) && !last[k])
+    if(key.isKeyPressed(k) && !skip && !last[k])
     {
         last[k] = true;
 
@@ -513,10 +525,12 @@ void server_thread(std::atomic_bool& should_term)
             }
         }*/
 
+        #ifdef SERVER_VIEW
         if(ONCE_MACRO(sf::Keyboard::M, true))
         {
             render = !render;
         }
+        #endif // SERVER_VIEW
 
         //radar.tick(entities, used_frametime_dt);
         //player_manage.tick(frametime_dt);
@@ -1177,13 +1191,13 @@ int main()
 
         float forward_vel = 0;
 
-        forward_vel += key.isKeyPressed(sf::Keyboard::W);
-        forward_vel -= key.isKeyPressed(sf::Keyboard::S);
+        forward_vel += key.isKeyPressed(sf::Keyboard::W) && !skip_keyboard_input(focus);
+        forward_vel -= key.isKeyPressed(sf::Keyboard::S) && !skip_keyboard_input(focus);
 
         float angular_vel = 0;
 
-        angular_vel += key.isKeyPressed(sf::Keyboard::D);
-        angular_vel -= key.isKeyPressed(sf::Keyboard::A);
+        angular_vel += key.isKeyPressed(sf::Keyboard::D) && !skip_keyboard_input(focus);
+        angular_vel -= key.isKeyPressed(sf::Keyboard::A) && !skip_keyboard_input(focus);
 
         cinput.direction = (vec2f){forward_vel, 0};
         cinput.rotation = angular_vel;
@@ -1229,7 +1243,7 @@ int main()
         {
             //if(ONCE_MACRO((sf::Keyboard::Key)num))
 
-            if(key.isKeyPressed((sf::Keyboard::Key)num) && focus)
+            if(key.isKeyPressed((sf::Keyboard::Key)num) && !skip_keyboard_input(focus))
             {
                 client_fire fire;
                 fire.weapon_offset = (int)num - (int)sf::Keyboard::Num1;
