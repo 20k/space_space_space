@@ -86,6 +86,7 @@ namespace tag_info
         TAG_MISSILE_BEHAVIOUR,
         TAG_WEAPON,
         TAG_FACTORY,
+        TAG_REFINERY,
     };
 }
 

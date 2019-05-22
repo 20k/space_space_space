@@ -1755,7 +1755,7 @@ void ship::tick(double dt_s)
 
     std::vector<double> produced_resources = get_net_resources(dt_s, all_sat);
 
-    ///manufacturing
+    ///manufacturing and refining
     for(component& c : components)
     {
         if(c.has(component_info::MANUFACTURING))
@@ -1799,19 +1799,6 @@ void ship::tick(double dt_s)
                         }
                     }
 
-                    /*if(c.can_store(spawn))
-                    {
-                        c.store(spawn);
-
-                        float extra = c.build_queue[0].construction_amount - front_cost;
-
-                        c.build_queue.erase(c.build_queue.begin());
-
-                        if(c.build_queue.size() > 0)
-                        {
-                            c.build_queue[0].construction_amount += extra;
-                        }
-                    }*/
                     if(fc)
                     {
                         fc.value()->store(spawn);
@@ -1836,6 +1823,22 @@ void ship::tick(double dt_s)
             {
                 c.building = false;
             }
+        }
+
+        ///so: approaches
+        ///1 would be that we sequester off materials automatically into the refinery
+        ///use the existing smelting approach, and then cart them back
+        ///2. approach is to make refining a mechanical process like manufacturing
+        ///advantages of 1. easier to implement, reuses existing things, no arbitraryness, keeps heat mechanics
+        ///disadvantages of 1. have to implement control system logic for refinery rather than just saying "smelt xyz"
+        ///doesn't necessarily add gameplay compared to 2
+        ///advantages of 2. Simple, leads to more ED style gameplay for refining in space
+        ///disadvanges of 2. Maybe too simple - does not feel physical, bit arbitrary
+        ///ok with 1 we can drag/drop resources in too which means breaking down existing stuff
+        ///1 is probably best because can reuse heat mechanics for salvaging
+        if(c.has_tag(tag_info::TAG_REFINERY))
+        {
+            //for(component& c : )
         }
     }
 

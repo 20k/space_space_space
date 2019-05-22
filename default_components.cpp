@@ -330,12 +330,13 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::HP, 0, 1);
         p.add(component_info::POWER, -20); ///2 power plants to run on full tilt
+        p.add(tag_info::TAG_REFINERY);
         //p.set_no_drain_on_full_production();
         p.set_heat(600);
         p.activation_type = component_info::SLIDER_ACTIVATION;
 
         p.base_volume = 1;
-        p.set_internal_volume(1);
+        //p.set_internal_volume(1);
     }
 
     {
