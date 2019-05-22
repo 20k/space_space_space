@@ -340,7 +340,7 @@ std::vector<pending_transfer>& client_pending_transfers()
     return txf;
 }
 
-struct component : virtual serialisable, owned
+struct component : serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
 
@@ -429,6 +429,7 @@ struct component : virtual serialisable, owned
         DO_RPC(set_use);
         DO_RPC(manufacture_blueprint_id);
         DO_RPC(transfer_stored_from_to);
+        DO_RPC(transfer_stored_from_to_frac);
     }
 
     FRIENDLY_RPC_NAME(manufacture_blueprint_id);
@@ -600,7 +601,9 @@ struct component : virtual serialisable, owned
     bool factory_view_open = false;
 
     void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
+    void transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac);
     FRIENDLY_RPC_NAME(transfer_stored_from_to);
+    FRIENDLY_RPC_NAME(transfer_stored_from_to_frac);
 
     void set_activation_level(double level)
     {
@@ -802,10 +805,12 @@ struct ship : heatable_entity, owned
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void consume_all_transfers(std::vector<pending_transfer>& xfers);
-    std::optional<ship> fetch_ship_by_id(size_t pid);
+    std::optional<ship*> fetch_ship_by_id(size_t pid);
     std::optional<component> fetch_component_by_id(size_t pid);
     std::optional<ship> remove_ship_by_id(size_t pid);
     void add_ship_to_component(ship& s, size_t pid);
+
+    std::optional<ship> split_materially(float split_take_frac);
 
     void new_network_copy();
 

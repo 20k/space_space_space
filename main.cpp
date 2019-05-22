@@ -1311,9 +1311,39 @@ int main()
         {
             bool open = true;
 
-            ImGui::Begin("Xfer", &open);
+            ImGui::Begin("Xfer", &open, ImGuiWindowFlags_AlwaysAutoResize);
 
             ImGui::SliderFloat("Xfer %", &xfers[i].fraction, 0, 1);
+
+            if(ImGui::Button("Accept"))
+            {
+                open = false;
+                ///rpc
+
+                owned* ocomp = find_by_id(model, xfers[i].pid_component);
+
+                std::cout << "xfer pid " << xfers[i].pid_component << std::endl;
+                std::cout << "found pid " << ocomp->_pid << std::endl;
+
+                if(ocomp)
+                {
+                    component* c = static_cast<component*>(ocomp);
+
+                    std::cout << "CPID " << c->_pid << std::endl;
+
+                    if(c)
+                    {
+                        c->transfer_stored_from_to_frac_rpc(xfers[i].pid_ship, xfers[i].pid_component, xfers[i].fraction);
+                    }
+                }
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button("Cancel"))
+            {
+                open = false;
+            }
 
             ImGui::End();
 

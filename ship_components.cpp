@@ -2153,7 +2153,27 @@ void ship::tick(double dt_s)
 
         for(auto& i : all_transfers)
         {
-            removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
+            printf("HAS XFER\n");
+
+            if(i.fraction == 1)
+            {
+                removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
+            }
+            else
+            {
+                auto fetched = fetch_ship_by_id(i.pid_ship);
+
+                if(fetched)
+                {
+                    removed_ships.push_back(fetched.value()->split_materially(i.fraction));
+
+                    printf("SPLIT\n");
+                }
+                else
+                {
+                    removed_ships.push_back(std::nullopt);
+                }
+            }
         }
 
         for(int i=0; i < (int)removed_ships.size(); i++)
@@ -3389,6 +3409,18 @@ void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_compone
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
+
+    printf("Regular rpc\n");
+}
+
+void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac)
+{
+    transfers.push_back({pid_ship_from, pid_component_to, frac});
+
+    while(transfers.size() > 100)
+        transfers.erase(transfers.begin());
+
+    printf("Called ffdfdf\n");
 }
 
 void ship::show_resources(bool window)
@@ -4387,8 +4419,25 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
             if(!ship_opt.has_value() || !comp_opt.has_value())
                 continue;
 
-            if(!comp_opt.value().can_store(ship_opt.value()))
-                continue;
+            if(i.fraction != 1)
+            {
+                std::cout << "FRACCY BOI " << i.fraction << std::endl;
+
+                auto scopy = *ship_opt.value();
+
+                std::optional<ship> psplit = scopy.split_materially(i.fraction);
+
+                if(!psplit)
+                    continue;
+
+                if(!comp_opt.value().can_store(psplit.value()))
+                    continue;
+            }
+            else
+            {
+                if(!comp_opt.value().can_store(*ship_opt.value()))
+                    continue;
+            }
 
             xfers.push_back(i);
         }
@@ -4402,14 +4451,14 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
     }
 }
 
-std::optional<ship> ship::fetch_ship_by_id(size_t pid)
+std::optional<ship*> ship::fetch_ship_by_id(size_t pid)
 {
     for(component& c : components)
     {
         for(ship& s : c.stored)
         {
             if(s._pid == pid)
-                return s;
+                return &s;
 
             ///not our ship, recurse
             auto it = s.fetch_ship_by_id(pid);
@@ -4488,6 +4537,44 @@ void ship::add_ship_to_component(ship& s, size_t pid)
             return;
         }
     }
+}
+
+std::optional<ship> ship::split_materially(float split_take_frac)
+{
+    split_take_frac = clamp(split_take_frac, 0, 1);
+
+    if(is_ship)
+        return std::nullopt;
+
+    ship nnext;
+
+    for(component& c : components)
+    {
+        component next = get_component_default(component_type::MATERIAL, 1);
+        next.my_temperature = c.get_my_temperature();
+        next.phase = c.phase;
+        next.long_name = c.long_name;
+        next.short_name = c.short_name;
+
+        for(material& m : c.composition)
+        {
+            float my_frac = (1 - split_take_frac);
+            float their_frac = split_take_frac;
+
+            float my_mat_vol = m.dynamic_desc.volume * my_frac;
+            float their_mat_vol = m.dynamic_desc.volume * their_frac;
+
+            material them;
+            them.dynamic_desc.volume = their_mat_vol;
+            m.dynamic_desc.volume = my_mat_vol;
+
+            next.composition.push_back(them);
+        }
+
+        nnext.add(next);
+    }
+
+    return nnext;
 }
 
 void ship::new_network_copy()
