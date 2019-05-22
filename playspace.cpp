@@ -91,7 +91,7 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
     if(ret.reflected_by != -1)
         ret.reflected_position = r.get_in_local(ret.reflected_position);
 
-    ret.start_iteration = (parent_field.iteration_count - ret.start_iteration) + new_field.iteration_count;
+    ret.start_iteration = ((parent_field.iteration_count - ret.start_iteration) / ROOM_POI_SCALE) + new_field.iteration_count;
 
     return ret;
 }
