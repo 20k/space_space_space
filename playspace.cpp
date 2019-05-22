@@ -75,6 +75,42 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other
     DO_SERIALISE(entity_manage);
 }
 
+alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
+{
+    alt_frequency_packet ret = in;
+
+    alt_radar_field& new_field = *r.field;
+
+    if(ret.last_packet)
+    {
+        ret.last_packet = std::make_shared<alt_frequency_packet>(transform_space(*ret.last_packet, r, parent_field));
+    }
+
+    ret.origin = r.get_in_local(ret.origin);
+
+    if(ret.reflected_by != -1)
+        ret.reflected_position = r.get_in_local(ret.reflected_position);
+
+    ret.start_iteration = (parent_field.iteration_count - ret.start_iteration) + new_field.iteration_count;
+
+    return ret;
+}
+
+void room::import_radio_waves_from(alt_radar_field& theirs)
+{
+    for(alt_frequency_packet& pack : theirs.packets)
+    {
+        if(imported_waves.find(pack.id) != imported_waves.end())
+            continue;
+
+        imported_waves[pack.id] = true;
+
+        alt_frequency_packet fixed_pack = transform_space(pack, *this, theirs);
+
+        field->packets.push_back(fixed_pack);
+    }
+}
+
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
     DO_SERIALISE(friendly_id);
@@ -260,6 +296,8 @@ void playspace::tick(double dt_s)
 
     for(room* r : rooms)
     {
+        r->import_radio_waves_from(*field);
+
         r->tick(dt_s);
     }
 
