@@ -181,6 +181,16 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
     float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * packet.scale * space_scaling;
 
+    float dist = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+
+    if(has_finite_bound)
+    {
+        ///so packets form a circle around some origin
+        ///if the closest point from that packet's surface to the centre of this radar system is >= finite_bound, its dead
+        if(point2circle_shortest_distance(packet.origin, dist, finite_centre) >= finite_bound)
+            return true;
+    }
+
     if(packet.start_iteration == iteration_count)
         return false;
 

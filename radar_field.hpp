@@ -273,6 +273,10 @@ struct alt_radar_field
     float speed_of_light_per_tick = 10.5;
     float space_scaling = 1;
 
+    bool has_finite_bound = false;
+    float finite_bound = 0;
+    vec2f finite_centre;
+
     alt_radar_field(vec2f in);
 
     std::optional<reflect_info>

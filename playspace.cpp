@@ -3,6 +3,7 @@
 #include "entity.hpp"
 #include "radar_field.hpp"
 #include "ship_components.hpp"
+#include <SFML/System/Clock.hpp>
 
 struct room_entity : entity
 {
@@ -17,6 +18,7 @@ struct room_entity : entity
 room::room()
 {
     field = std::make_shared<alt_radar_field>((vec2f){1200, 1200});
+    field->has_finite_bound = true;
     //field->space_scaling = ROOM_POI_SCALE;
 
     entity_manage = new entity_manager;
@@ -92,7 +94,9 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
     if(ret.reflected_by != -1)
         ret.reflected_position = r.get_in_local(ret.reflected_position);
 
-    uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
+    //uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
+
+    uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration);
 
     ret.start_iteration = new_field.iteration_count - it_diff;
     //ret.scale = ROOM_POI_SCALE;
@@ -108,17 +112,26 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
 
 void room::import_radio_waves_from(alt_radar_field& theirs)
 {
+    sf::Clock clk;
+
     for(alt_frequency_packet& pack : theirs.packets)
     {
         if(imported_waves.find(pack.id) != imported_waves.end())
             continue;
 
-        imported_waves[pack.id] = true;
-
         alt_frequency_packet fixed_pack = transform_space(pack, *this, theirs);
 
+        float current_radius = (field->iteration_count - fixed_pack.start_iteration) * field->speed_of_light_per_tick;
+        float next_radius = current_radius + field->speed_of_light_per_tick;
+
+        if(!entity_manage->collision.intersects(fixed_pack.origin, current_radius, next_radius, fixed_pack.precalculated_start_angle, fixed_pack.restrict_angle, fixed_pack.left_restrict, fixed_pack.right_restrict))
+            continue;
+
+        imported_waves[pack.id] = true;
         field->packets.push_back(fixed_pack);
     }
+
+    std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -276,6 +289,11 @@ void room::tick(double dt_s)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
     }
+
+    field->finite_bound = entity_manage->collision.half_dim.largest_elem() * 1.5;
+    field->finite_centre = entity_manage->collision.pos;
+
+    std::cout << "finite bound " << field->finite_bound << std::endl;
 
     field->tick(*entity_manage, dt_s);
 
