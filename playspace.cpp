@@ -259,7 +259,7 @@ void room::tick(double dt_s)
     entity_manage->tick(dt_s);
     entity_manage->cleanup();
 
-    for(entity* e : entity_manage->entities)
+    /*for(entity* e : entity_manage->entities)
     {
         ship* s = dynamic_cast<ship*>(e);
 
@@ -283,7 +283,7 @@ void room::tick(double dt_s)
                 s->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
             }
         }
-    }
+    }*/
 
     std::vector<ship*> ships = entity_manage->fetch<ship>();
 

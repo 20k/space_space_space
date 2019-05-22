@@ -794,6 +794,8 @@ struct ship : heatable_entity, owned
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void consume_all_transfers(std::vector<pending_transfer>& xfers);
+    std::optional<ship> fetch_ship_by_id(size_t pid);
+    std::optional<component> fetch_component_by_id(size_t pid);
     std::optional<ship> remove_ship_by_id(size_t pid);
     void add_ship_to_component(ship& s, size_t pid);
 

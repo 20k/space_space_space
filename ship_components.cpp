@@ -2144,6 +2144,27 @@ void ship::tick(double dt_s)
     last_sat_percentage = all_sat;
 
 
+    ///pending transfers
+    {
+        std::vector<pending_transfer> all_transfers;
+        this->consume_all_transfers(all_transfers);
+
+        std::vector<std::optional<ship>> removed_ships;
+
+        for(auto& i : all_transfers)
+        {
+            removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
+        }
+
+        for(int i=0; i < (int)removed_ships.size(); i++)
+        {
+            if(!removed_ships[i])
+                continue;
+
+            this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
+        }
+    }
+
     handle_heat(dt_s);
     handle_degredation(dt_s);
 
@@ -4333,8 +4354,17 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 {
     for(component& c : components)
     {
-        for(auto& i : c.transfers)
+        for(pending_transfer& i : c.transfers)
         {
+            auto ship_opt = fetch_ship_by_id(i.pid_ship);
+            auto comp_opt = fetch_component_by_id(i.pid_component);
+
+            if(!ship_opt.has_value() || !comp_opt.has_value())
+                continue;
+
+            if(!comp_opt.value().can_store(ship_opt.value()))
+                continue;
+
             xfers.push_back(i);
         }
 
@@ -4345,6 +4375,45 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
             s.consume_all_transfers(xfers);
         }
     }
+}
+
+std::optional<ship> ship::fetch_ship_by_id(size_t pid)
+{
+    for(component& c : components)
+    {
+        for(ship& s : c.stored)
+        {
+            if(s._pid == pid)
+                return s;
+
+            ///not our ship, recurse
+            auto it = s.fetch_ship_by_id(pid);
+
+            if(it)
+                return it;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<component> ship::fetch_component_by_id(size_t pid)
+{
+    for(component& c : components)
+    {
+        if(c._pid == pid)
+            return c;
+
+        for(ship& s : c.stored)
+        {
+            auto it = s.fetch_component_by_id(pid);
+
+            if(it)
+                return it;
+        }
+    }
+
+    return std::nullopt;
 }
 
 std::optional<ship> ship::remove_ship_by_id(size_t pid)
