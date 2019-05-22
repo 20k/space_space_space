@@ -381,11 +381,16 @@ void InputFixedText(const std::string& name, std::string& buffer)
         ftag[kk] = buffer[kk];
     }
 
-    float width = ImGui::CalcTextSize(" ").x * max_len;
+    int num = buffer.size() + 1;
+
+    if(num < 3)
+        num = 3;
+
+    float width = ImGui::CalcTextSize(" ").x * num;
 
     ImGui::PushItemWidth(width);
 
-    ImGui::InputText(name.c_str(), &ftag[0], max_len, ImGuiInputTextFlags_CallbackCharFilter, filter_callback);
+    ImGui::InputText(name.c_str(), &ftag[0], max_len, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_NoHorizontalScroll, filter_callback);
 
     ImGui::PopItemWidth();
 
