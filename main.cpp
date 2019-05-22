@@ -1305,6 +1305,26 @@ int main()
             //std::cout << "mnum " << model.ships[0].components.size() << std::endl;
         }
 
+        std::vector<pending_transfer>& xfers = client_pending_transfers();
+
+        for(int i=0; i < (int)xfers.size(); i++)
+        {
+            bool open = true;
+
+            ImGui::Begin("Xfer", &open);
+
+            ImGui::SliderFloat("Xfer %", &xfers[i].fraction, 0, 1);
+
+            ImGui::End();
+
+            if(!open)
+            {
+                xfers.erase(xfers.begin() + i);
+                i--;
+                continue;
+            }
+        }
+
         render_radar_data(window, sample);
 
         entities.render(cam, window);

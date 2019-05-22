@@ -24,8 +24,8 @@ namespace drag_drop_info
 {
     enum type
     {
-        SHIP,
-        COMPONENT,
+        UNIT,
+        FRACTIONAL,
     };
 }
 
@@ -330,7 +330,15 @@ struct pending_transfer
 {
     size_t pid_ship = -1;
     size_t pid_component = -1;
+    float fraction = 1;
 };
+
+inline
+std::vector<pending_transfer>& client_pending_transfers()
+{
+    static thread_local std::vector<pending_transfer> txf;
+    return txf;
+}
 
 struct component : virtual serialisable, owned
 {

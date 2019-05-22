@@ -3080,7 +3080,20 @@ void component::render_inline_ui()
 
                 ImGui::SameLine();
 
-                ImGui::Text(store.get_render_long_name().c_str());
+                //ImGui::Text(store.get_render_long_name().c_str());
+
+                ImGui::Button(store.get_render_long_name().c_str());
+
+                if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
+                {
+                    drag_drop_data data;
+                    data.id = s._pid;
+                    data.type = drag_drop_info::FRACTIONAL;
+
+                    ImGui::SetDragDropPayload("SHIPPY", &data, sizeof(data));
+
+                    ImGui::EndDragDropSource();
+                }
             }
         }
         else
@@ -3135,7 +3148,7 @@ void component::render_inline_ui()
             {
                 drag_drop_data data;
                 data.id = s._pid;
-                data.type = drag_drop_info::SHIP;
+                data.type = drag_drop_info::UNIT;
 
                 ImGui::SetDragDropPayload("SHIPPY", &data, sizeof(data));
 
@@ -3165,7 +3178,19 @@ void component::render_inline_ui()
             drag_drop_data data;
             memcpy(&data, payload->Data, sizeof(data));
 
-            transfer_stored_from_to_rpc(data.id, _pid);
+            if(data.type == drag_drop_info::UNIT)
+            {
+                transfer_stored_from_to_rpc(data.id, _pid);
+            }
+
+            if(data.type == drag_drop_info::FRACTIONAL)
+            {
+                pending_transfer tran;
+                tran.pid_ship = data.id;
+                tran.pid_component = _pid;
+
+                client_pending_transfers().push_back(tran);
+            }
         }
 
         ImGui::EndDragDropTarget();
