@@ -1836,6 +1836,11 @@ void ship::tick(double dt_s)
         ///disadvanges of 2. Maybe too simple - does not feel physical, bit arbitrary
         ///ok with 1 we can drag/drop resources in too which means breaking down existing stuff
         ///1 is probably best because can reuse heat mechanics for salvaging
+
+        ///ok so
+        ///material transfer into and out of refinery should be manual but easily automateable
+        ///(hello this is a game about automation)
+        ///so refinery needs no changes but we do need ui options to handle transfer of ore
         if(c.has_tag(tag_info::TAG_REFINERY))
         {
             //for(component& c : )
@@ -3105,18 +3110,22 @@ void component::render_inline_ui()
 
             ImGui::Button((s.blueprint_name + "##" + std::to_string(s._pid)).c_str());
 
+            if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
+            {
+                drag_drop_data data;
+                data.id = s._pid;
+                data.type = drag_drop_info::SHIP;
+
+                ImGui::SetDragDropPayload("SHIPPY", &data, sizeof(data));
+
+                ImGui::EndDragDropSource();
+            }
+
             if(num > 1)
             {
                 ImGui::SameLine();
 
                 ImGui::Text(("x" + std::to_string(num)).c_str());
-            }
-
-            if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
-            {
-                ImGui::SetDragDropPayload("SHIPPY", &s._pid, sizeof(s._pid));
-
-                ImGui::EndDragDropSource();
             }
         }
     }
@@ -3132,10 +3141,10 @@ void component::render_inline_ui()
                 throw std::runtime_error("Bad Payload");
             }
 
-            size_t data;
+            drag_drop_data data;
             memcpy(&data, payload->Data, sizeof(data));
 
-            transfer_stored_from_to_rpc(data, _pid);
+            transfer_stored_from_to_rpc(data.id, _pid);
         }
 
         ImGui::EndDragDropTarget();

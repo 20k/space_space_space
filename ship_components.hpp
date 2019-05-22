@@ -20,6 +20,21 @@ namespace sf
     struct RenderWindow;
 }
 
+namespace drag_drop_info
+{
+    enum type
+    {
+        SHIP,
+        COMPONENT,
+    };
+}
+
+struct drag_drop_data
+{
+    size_t id;
+    drag_drop_info::type type;
+};
+
 namespace component_info
 {
     enum does_type
