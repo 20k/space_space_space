@@ -746,6 +746,16 @@ void component::store(const ship& s)
     if(!can_store(s))
         throw std::runtime_error("Cannot store ship");
 
+    if(!s.is_ship)
+    {
+        for(const component& c : s.components)
+        {
+            store(c);
+        }
+
+        return;
+    }
+
     ship nship = s;
     nship.new_network_copy();
 
@@ -2153,7 +2163,7 @@ void ship::tick(double dt_s)
 
         for(auto& i : all_transfers)
         {
-            if(i.fraction == 1)
+            if(!i.is_fractiony)
             {
                 removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
             }
@@ -2171,6 +2181,8 @@ void ship::tick(double dt_s)
                 }
             }
         }
+
+        assert(removed_ships.size() == all_transfers.size());
 
         for(int i=0; i < (int)removed_ships.size(); i++)
         {
@@ -3409,7 +3421,7 @@ void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_compone
 
 void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac)
 {
-    transfers.push_back({pid_ship_from, pid_component_to, frac});
+    transfers.push_back({pid_ship_from, pid_component_to, frac, true});
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
@@ -4411,7 +4423,7 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
             if(!ship_opt.has_value() || !comp_opt.has_value())
                 continue;
 
-            if(i.fraction != 1)
+            if(i.is_fractiony)
             {
                 component& comp = comp_opt.value();
                 ship* s = ship_opt.value();
@@ -4421,9 +4433,11 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 
                 float free_space = comp.get_internal_volume() - comp.get_stored_volume();
 
-                if(free_space < s->get_my_volume())
+                float requested_volume = s->get_my_volume() * i.fraction;
+
+                if(free_space < requested_volume)
                 {
-                    if(s->get_my_volume() < 0.0001)
+                    if(requested_volume < 0.0001)
                         continue;
 
                     float takeable_frac = free_space / s->get_my_volume();
@@ -4431,7 +4445,10 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
                     i.fraction = clamp(takeable_frac, 0, 1);
                 }
 
-                auto scopy = *ship_opt.value();
+                if(i.fraction < 0.00001)
+                    continue;
+
+                ship scopy = *s;
 
                 std::optional<ship> psplit = scopy.split_materially(i.fraction);
 
@@ -4541,7 +4558,7 @@ void ship::add_ship_to_component(ship& s, size_t pid)
         }
         else
         {
-            c.stored.push_back(s);
+            c.store(s);
             return;
         }
     }

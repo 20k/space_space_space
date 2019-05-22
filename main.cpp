@@ -1324,7 +1324,7 @@ int main()
 
                 if(ocomp)
                 {
-                    component* c = static_cast<component*>(ocomp);
+                    component* c = dynamic_cast<component*>(ocomp);
 
                     if(c)
                     {

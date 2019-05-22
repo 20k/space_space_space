@@ -331,6 +331,7 @@ struct pending_transfer
     size_t pid_ship = -1;
     size_t pid_component = -1;
     float fraction = 1;
+    bool is_fractiony = false;
 };
 
 inline
