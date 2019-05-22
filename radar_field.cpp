@@ -179,7 +179,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     if(packet.force_cleanup)
         return true;
 
-    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * space_scaling;
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * packet.scale * space_scaling;
 
     if(packet.start_iteration == iteration_count)
         return false;
@@ -744,9 +744,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         }
     }
 
-    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * space_scaling * space_scaling;
+    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * packet.scale * packet.scale * space_scaling * space_scaling;
 
-    float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * space_scaling);
+    float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * packet.scale * space_scaling);
     //float err = 0.01;
 
     float err = 1;

@@ -17,7 +17,7 @@ struct room_entity : entity
 room::room()
 {
     field = std::make_shared<alt_radar_field>((vec2f){1200, 1200});
-    field->space_scaling = ROOM_POI_SCALE;
+    //field->space_scaling = ROOM_POI_SCALE;
 
     entity_manage = new entity_manager;
 }
@@ -95,6 +95,7 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
     uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
 
     ret.start_iteration = new_field.iteration_count - it_diff;
+    //ret.scale = ROOM_POI_SCALE;
 
     //std::cout << "start " << ret.start_iteration << " real " << new_field.iteration_count << std::endl;
 
@@ -135,6 +136,7 @@ playspace::playspace()
     entity_manage = new entity_manager;
     //field->space_scaling = ROOM_POI_SCALE;
     field->speed_of_light_per_tick = field->speed_of_light_per_tick * ROOM_POI_SCALE;
+    field->space_scaling = 1/ROOM_POI_SCALE;
 }
 
 playspace::~playspace()
@@ -206,7 +208,7 @@ void playspace::init_default()
     asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
     sun->r.position = {400, 400}; ///realspace
-    sun->permanent_heat = intensity;
+    sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
 
     field->sun_id = sun->id;

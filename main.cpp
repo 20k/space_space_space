@@ -90,7 +90,7 @@ void server_thread(std::atomic_bool& should_term)
     connection conn;
     conn.host("192.168.0.54", 11000);
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
