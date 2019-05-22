@@ -1322,14 +1322,9 @@ int main()
 
                 owned* ocomp = find_by_id(model, xfers[i].pid_component);
 
-                std::cout << "xfer pid " << xfers[i].pid_component << std::endl;
-
                 if(ocomp)
                 {
-                    std::cout << "found pid " << ocomp->_pid << std::endl;
                     component* c = static_cast<component*>(ocomp);
-
-                    std::cout << "CPID " << c->_pid << std::endl;
 
                     if(c)
                     {

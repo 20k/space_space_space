@@ -2153,8 +2153,6 @@ void ship::tick(double dt_s)
 
         for(auto& i : all_transfers)
         {
-            printf("HAS XFER\n");
-
             if(i.fraction == 1)
             {
                 removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
@@ -2166,8 +2164,6 @@ void ship::tick(double dt_s)
                 if(fetched)
                 {
                     removed_ships.push_back(fetched.value()->split_materially(i.fraction));
-
-                    printf("SPLIT\n");
                 }
                 else
                 {
@@ -4417,6 +4413,24 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 
             if(i.fraction != 1)
             {
+                component& comp = comp_opt.value();
+                ship* s = ship_opt.value();
+
+                if(s->is_ship)
+                    continue;
+
+                float free_space = comp.get_internal_volume() - comp.get_stored_volume();
+
+                if(free_space < s->get_my_volume())
+                {
+                    if(s->get_my_volume() < 0.0001)
+                        continue;
+
+                    float takeable_frac = free_space / s->get_my_volume();
+
+                    i.fraction = clamp(takeable_frac, 0, 1);
+                }
+
                 auto scopy = *ship_opt.value();
 
                 std::optional<ship> psplit = scopy.split_materially(i.fraction);
