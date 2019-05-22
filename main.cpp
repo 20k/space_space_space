@@ -145,14 +145,14 @@ void server_thread(std::atomic_bool& should_term)
 
         int cnum = test_ship->components.size();
 
-        size_t id_1 = -1;
+        //size_t id_1 = -1;
         size_t id_2 = -1;
         size_t id_3 = -1;
 
         for(component& c : test_ship->components)
         {
-            if(c.base_id == component_type::MINING_LASER)
-                id_1 = c._pid;
+            /*if(c.base_id == component_type::MINING_LASER)
+                id_1 = c._pid;*/
 
             if(c.base_id == component_type::REFINERY)
                 id_2 = c._pid;
@@ -161,11 +161,11 @@ void server_thread(std::atomic_bool& should_term)
                 id_3 = c._pid;
         }
 
-        rpipe.id_1 = id_1;
-        rpipe.id_2 = id_2;
-        rpipe.max_flow_rate = 1;
+        //rpipe.id_1 = id_1;
+        //rpipe.id_2 = id_2;
+        //rpipe.max_flow_rate = 1;
 
-        test_ship->add_pipe(rpipe);
+        //test_ship->add_pipe(rpipe);
 
 
         storage_pipe rpipe2;

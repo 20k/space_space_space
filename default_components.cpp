@@ -309,7 +309,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add_on_use(component_info::POWER, -1, 0);
         p.add_on_use(component_info::MINING, 0.001, 0);
 
-        p.set_internal_volume(1);
+        //p.set_internal_volume(1);
         p.base_volume = 1;
 
         p.subtype = "mining";

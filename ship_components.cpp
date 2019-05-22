@@ -1427,7 +1427,8 @@ struct mining_laser : projectile
 
         for(component& c : parent_ship->components)
         {
-            if(c._pid == parent_component)
+            //if(c._pid == parent_component)
+            if(c.base_id == component_type::STORAGE_TANK)
             {
                 float free = c.get_internal_volume() - c.get_stored_volume();
 
@@ -1443,7 +1444,7 @@ struct mining_laser : projectile
                 float quantity = to_store;
 
                 if(to_store <= 0.00001)
-                    break;
+                    continue;
 
                 /*component my_iron = get_component_default(component_type::MATERIAL, 1);
                 component my_junk = get_component_default(component_type::MATERIAL, 1);
