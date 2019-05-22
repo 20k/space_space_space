@@ -16,7 +16,7 @@ struct room_entity : entity
 
 room::room()
 {
-    field = std::make_shared<alt_radar_field>((vec2f){800, 800});
+    field = std::make_shared<alt_radar_field>((vec2f){1200, 1200});
     field->space_scaling = ROOM_POI_SCALE;
 
     entity_manage = new entity_manager;

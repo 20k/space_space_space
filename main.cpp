@@ -382,7 +382,7 @@ void server_thread(std::atomic_bool& should_term)
 
     #ifdef SERVER_VIEW
     camera cam({debug.getSize().x, debug.getSize().y});
-    cam.position = {0, 0};
+    cam.position = {debug.getSize().x/2, debug.getSize().y/2};
     #endif // SERVER_VIEW
 
     /*for(component& c : test_ship->components)
