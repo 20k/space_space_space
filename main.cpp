@@ -642,22 +642,7 @@ void server_thread(std::atomic_bool& should_term)
                     user_data.research = default_research;
                     user_data.research._pid = get_next_persistent_id();
 
-                    if(std::ifstream("temp.blueprint").good())
-                        user_data.blueprint_manage.load("temp.blueprint");
-
-                    bool has_missile = false;
-
-                    for(blueprint& p : user_data.blueprint_manage.blueprints)
-                    {
-                        if(p.name == default_missile.name)
-                            has_missile = true;
-                    }
-
-                    if(!has_missile)
-                        user_data.blueprint_manage.blueprints.push_back(default_missile);
-
-                    if(user_data.blueprint_manage.blueprints.size() == 0)
-                        user_data.blueprint_manage.create_blueprint();
+                    user_data.blueprint_manage.blueprints.push_back(default_missile);
 
                     found_auth.value()->data.default_init = true;
 

@@ -148,34 +148,7 @@ struct blueprint_manager : serialisable, owned
             if(p._pid == print._pid)
             {
                 p = print;
-
-                save("temp.blueprint");
                 return;
-            }
-        }
-    }
-
-    void save(const std::string& file)
-    {
-        save_to_file(file, ::serialise(*this));
-    }
-
-    void load(const std::string& file)
-    {
-        nlohmann::json data = load_from_file(file);
-
-        deserialise(data, *this);
-
-        _pid = get_next_persistent_id();
-
-        for(blueprint& p : blueprints)
-        {
-            p._pid = get_next_persistent_id();
-
-            for(blueprint_node& node : p.nodes)
-            {
-                node.original._pid = get_next_persistent_id();
-                node.my_comp._pid = get_next_persistent_id();
             }
         }
     }
