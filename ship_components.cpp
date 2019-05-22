@@ -1973,6 +1973,7 @@ void ship::tick(double dt_s)
                         spawned->spawn_clock.restart();
                         spawned->spawned_by = id;
                         spawned->phys_drag = false;
+                        spawned->current_radar_field = current_radar_field;
                     }
                 }
 

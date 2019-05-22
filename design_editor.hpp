@@ -75,6 +75,7 @@ struct blueprint : serialisable, owned
     std::vector<blueprint_node> nodes;
     std::string name;
     float overall_size = 1;
+    std::vector<std::string> tags;
 
     void add_component_at(const component& c, vec2f pos, float size);
 
@@ -85,11 +86,16 @@ struct blueprint : serialisable, owned
 
     std::vector<std::vector<material>> get_cost() const;
 
+    void add_tag(const std::string& tg);
+
+    std::string unbaked_tag;
+
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(nodes);
         DO_SERIALISE(name);
         DO_SERIALISE(overall_size);
+        DO_SERIALISE(tags);
     }
 };
 
@@ -97,6 +103,8 @@ bool shares_blueprint(const ship& s1, const ship& s2);
 
 float get_build_time_s(const ship& s, float build_power);
 float get_build_work(const ship& s);
+
+void clean_tag(std::string& in);
 
 struct blueprint_manager : serialisable, owned
 {
@@ -141,6 +149,11 @@ struct blueprint_manager : serialisable, owned
         for(blueprint_node& n : print.nodes)
         {
             n.size = clamp(n.size, 0.25, 4);
+        }
+
+        for(auto& t : print.tags)
+        {
+            clean_tag(t);
         }
 
         for(blueprint& p : blueprints)

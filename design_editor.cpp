@@ -278,6 +278,11 @@ std::vector<std::vector<material>> blueprint::get_cost() const
     return ret;
 }
 
+void blueprint::add_tag(const std::string& tg)
+{
+    tags.push_back(tg);
+}
+
 void design_editor::tick(double dt_s)
 {
 
@@ -344,6 +349,61 @@ void render_ship_cost(const ship& s, const std::vector<std::vector<material>>& m
                 ImGui::SameLine();
             }
         }
+    }
+}
+
+char make_acceptable(char in)
+{
+    if(in == ' ')
+        return '_';
+
+    in = tolower(in);
+
+    if(!isalpha(in))
+        return '_';
+
+    return in;
+}
+
+int filter_callback(ImGuiTextEditCallbackData* data)
+{
+    data->EventChar = make_acceptable(data->EventChar);
+    return 0;
+}
+
+template<int max_len>
+void InputFixedText(const std::string& name, std::string& buffer)
+{
+    std::array<char, max_len+1> ftag = {};
+
+    for(int kk=0; kk < (int)buffer.size() && kk < max_len; kk++)
+    {
+        ftag[kk] = buffer[kk];
+    }
+
+    float width = ImGui::CalcTextSize(" ").x * max_len;
+
+    ImGui::PushItemWidth(width);
+
+    ImGui::InputText(name.c_str(), &ftag[0], max_len, ImGuiInputTextFlags_CallbackCharFilter, filter_callback);
+
+    ImGui::PopItemWidth();
+
+    buffer.resize(strlen(&ftag[0]));
+
+    for(int kk=0; kk < (int)strlen(&ftag[0]); kk++)
+    {
+        assert(kk < max_len + 1 && kk < (int)buffer.size());
+
+        buffer[kk] = ftag[kk];
+    }
+}
+
+void clean_tag(std::string& in)
+{
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        in[i] = make_acceptable(in[i]);
     }
 }
 
@@ -480,6 +540,36 @@ void design_editor::render(sf::RenderWindow& win)
 
         server_blueprint_manage.upload_blueprint_rpc(cur);
     }
+
+    ImGui::BeginGroup();
+
+    ImGui::Text("Tags:");
+
+    constexpr int max_len = 20;
+
+    for(int i=0; i < (int)cur.tags.size(); i++)
+    {
+        ImGui::SameLine();
+
+        InputFixedText<max_len>("##" + std::to_string(i), cur.tags[i]);
+
+        clean_tag(cur.tags[i]);
+    }
+
+    ImGui::SameLine();
+
+    InputFixedText<max_len>("##-1", cur.unbaked_tag);
+    clean_tag(cur.unbaked_tag);
+
+    ImGui::SameLine();
+
+    if(ImGui::Button("+"))
+    {
+        cur.add_tag(cur.unbaked_tag);
+        cur.unbaked_tag = "";
+    }
+
+    ImGui::EndGroup();
 
     //ImVec2 win_screen = ImGui::GetWindowPos();
 
