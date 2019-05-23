@@ -1011,6 +1011,10 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     auto it_packet = ignore_map.find(uid);
     #endif // REVERSE_IGNORE
 
+    #define SUPER_LOW_DETAIL 0.001
+    #define LOW_DETAIL 0.01
+    #define HIGH_DETAIL 0.1
+
 
     std::vector<alt_frequency_packet> post_intensity_calculate;
 
@@ -1018,7 +1022,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     {
         float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
 
-        if(intensity <= 0.01)
+        if(intensity <= SUPER_LOW_DETAIL)
             continue;
 
         #ifndef REVERSE_IGNORE
@@ -1117,7 +1121,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         if(packet.reflected_by != (uint32_t)-1)
             search_entity = packet.reflected_by;
 
-        if(intensity >= 0.01f)
+        if(intensity >= SUPER_LOW_DETAIL)
             considered_packets.insert(search_entity);
 
         /*if(consider.reflected_by == uid && consider.last_packet)
@@ -1135,7 +1139,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         #if 1
         #define RECT
         #ifdef RECT
-        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > 1)
+        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > HIGH_DETAIL)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
@@ -1150,7 +1154,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         #define RECT_RECV
         #ifdef RECT_RECV
-        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > 1)
+        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > HIGH_DETAIL)
         {
             /*s.echo_position.push_back(packet.reflected_position);
             s.echo_id.push_back(packet.reflected_by);*/
@@ -1164,7 +1168,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         #endif // RECT_RECV
 
         ///specifically excludes self because we never need to know where we are
-        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > 0.1)
+        if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > LOW_DETAIL)
         {
             vec2f next_dir = (consider.reflected_position - pos).norm();
 
@@ -1173,7 +1177,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
         }
 
-        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > 0.1)
+        if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > LOW_DETAIL)
         {
             vec2f next_dir = (consider.origin - pos).norm();
 
@@ -1226,12 +1230,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             if(packet.reflected_by != (uint32_t)-1)
                 search_entity = packet.reflected_by;
 
-            if(intensity >= 1)
+            if(intensity >= HIGH_DETAIL)
             {
                 high_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);
             }
-            else if(intensity >= 0.1)
+            else if(intensity >= LOW_DETAIL)
             {
                 low_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);
