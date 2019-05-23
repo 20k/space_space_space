@@ -188,7 +188,7 @@ void playspace::init_default()
 
         for(int i=0; i < num_asteroids; i++)
         {
-            float ffrac = rand_det_s(rng, 0, 1);
+            //float ffrac = rand_det_s(rng, 0, 1);
 
             vec2f found_pos = rand_det(rng, (vec2f){-dim, -dim}, (vec2f){dim, dim});
 
@@ -196,7 +196,7 @@ void playspace::init_default()
 
             for(entity* e : test_poi->entity_manage->entities)
             {
-                if((e->r.position - found_pos).length() < 100)
+                if((e->r.position - found_pos).length() < 40)
                 {
                     cont = true;
                     break;
@@ -213,7 +213,7 @@ void playspace::init_default()
             a->init(2, 4);
             a->r.position = found_pos; ///poispace
             a->ticks_between_collisions = 2;
-            entity_manage->cleanup();
+            test_poi->entity_manage->cleanup();
         }
     }
 

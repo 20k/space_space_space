@@ -683,9 +683,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
     }*/
 
-    //pdump.dump();
-    //pdump.stop();
-    //profile_dumper::dump();
+    pdump.dump();
+    pdump.stop();
+    profile_dumper::dump();
 
     //collideables.clear();
 
