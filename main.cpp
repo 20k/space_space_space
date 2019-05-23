@@ -229,7 +229,7 @@ void server_thread(std::atomic_bool& should_term)
 
     const component_fixed_properties& cold_fixed = get_component_fixed_props(component_type::STORAGE_TANK, 1);
     const component_fixed_properties& hot_fixed = get_component_fixed_props(component_type::STORAGE_TANK_HS, 1);
-    const component_fixed_properties& destruct_fixed = get_component_fixed_props(component_type::DESTRUCT, 1);
+    //const component_fixed_properties& destruct_fixed = get_component_fixed_props(component_type::DESTRUCT, 1);
 
 
     component destruct = get_component_default(component_type::DESTRUCT, 1);
@@ -682,8 +682,6 @@ void server_thread(std::atomic_bool& should_term)
                 {
                     uint32_t pid = read_id;
                     data_model<ship*>& data = data_manage.fetch_by_id(pid);
-
-                    player_model& fmodel = data.networked_model;
 
                     persistent_user_data& user_data = data.persistent_data;
 
