@@ -200,7 +200,7 @@ void server_thread(std::atomic_bool& should_term)
     default_missile.add_component_at(get_component_default(component_type::MISSILE_CORE, 1), {250, 250}, 1);
     default_missile.add_component_at(get_component_default(component_type::HEAT_BLOCK, 1), {300, 300}, 2);
     default_missile.add_component_at(get_component_default(component_type::RADIATOR, 1), {350, 350}, 2);
-    default_missile.add_component_at(get_component_default(component_type::CARGO_STORAGE, 1), {350, 350}, 3);
+    default_missile.add_component_at(get_component_default(component_type::CARGO_STORAGE, 1), {350, 350}, 4);
     default_missile.name = "Default Missile";
     default_missile.add_tag("missile");
 
