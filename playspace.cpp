@@ -186,6 +186,8 @@ void playspace::init_default()
 
         int num_asteroids = 100;
 
+        int tries = 0;
+
         for(int i=0; i < num_asteroids; i++)
         {
             //float ffrac = rand_det_s(rng, 0, 1);
@@ -203,11 +205,18 @@ void playspace::init_default()
                 }
             }
 
+            if(tries > 100)
+                break;
+
             if(cont)
             {
+                tries++;
+
                 i--;
                 continue;
             }
+
+            tries = 0;
 
             asteroid* a = test_poi->entity_manage->make_new<asteroid>(field);
             a->init(2, 4);
