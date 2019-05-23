@@ -3151,7 +3151,7 @@ void component::render_inline_ui()
 
                 //ImGui::Text(store.get_render_long_name().c_str());
 
-                ImGui::Button(store.get_render_long_name().c_str());
+                ImGui::Button((store.get_render_long_name() + "##" + std::to_string(store._pid)).c_str());
 
                 if(ImGui::IsItemActive() && ImGui::BeginDragDropSource())
                 {
