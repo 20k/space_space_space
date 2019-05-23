@@ -715,6 +715,8 @@ struct ship : heatable_entity, owned
     float construction_amount = 0;
     std::shared_ptr<alt_radar_field> current_radar_field;
 
+    std::vector<std::string> blueprint_tags;
+
     ship();
 
     std::optional<component*> get_component_from_id(uint64_t id);
