@@ -95,12 +95,35 @@ bool once(sf::Mouse::Button b, bool has_focus)
 
 #define ONCE_MACRO(x, y) once<__COUNTER__>(x, y)
 
+void db_pid_saver(size_t cur, size_t requested, void* udata)
+{
+    assert(udata);
+
+    db_backend& db = *(db_backend*)udata;
+
+    db_read_write tx(db, DB_PERSIST_ID);
+
+    std::string data;
+    data.resize(sizeof(size_t));
+
+    size_t to_write = cur + requested;
+
+    memcpy(&data[0], &to_write, sizeof(size_t));
+
+    tx.write("pid", data);
+}
+
 void server_thread(std::atomic_bool& should_term)
 {
+    set_db_location("./db");
+    set_num_dbs(3);
+
     fixed_clock::init = true;
 
     connection conn;
     conn.host("192.168.0.54", 11000);
+    set_pid_callback(db_pid_saver);
+    set_pid_udata((void*)&get_db());
 
     //#define SERVER_VIEW
     #ifdef SERVER_VIEW
@@ -427,17 +450,14 @@ void server_thread(std::atomic_bool& should_term)
 
     auth_manager<auth_data> auth_manage;
 
-    set_db_location("./db");
-    set_num_dbs(3);
-
     std::string secret_key = "secret/akey.ect";
     uint64_t net_code_appid = 814820;
 
     set_app_description({secret_key, net_code_appid});
 
-    size_t persist_id_saved = 0;
-
     {
+        size_t persist_id_saved = 0;
+
         db_read_write tx(get_db(), DB_PERSIST_ID);
 
         std::optional<db_data> opt = tx.read("pid");
@@ -458,8 +478,6 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
     }
-
-    size_t last_id_wrote = 0;
 
     while(1)
     {
@@ -787,22 +805,6 @@ void server_thread(std::atomic_bool& should_term)
 
                 data.persistent_data.blueprint_manage.dirty = false;
             }
-        }
-
-        if(last_id_wrote == 0 || get_raw_id_impl() >= last_id_wrote - 2000)
-        {
-            db_read_write tx(get_db(), DB_PERSIST_ID);
-
-            std::string data;
-            data.resize(sizeof(size_t));
-
-            size_t to_write = get_raw_id_impl() + 10000;
-
-            memcpy(&data[0], &to_write, sizeof(size_t));
-
-            tx.write("pid", data);
-
-            last_id_wrote = to_write;
         }
 
         if(key.isKeyPressed(sf::Keyboard::P))
