@@ -197,7 +197,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::RADIATOR, 0.1);
         p.add(component_info::HP, 0, 1);
-        p.activation_type = component_info::NO_ACTIVATION;
+        p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
     }
 
