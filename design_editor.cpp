@@ -557,8 +557,16 @@ void design_editor::render(sf::RenderWindow& win)
         ImGui::SameLine();
 
         InputFixedText<max_len>("##" + std::to_string(i), cur.tags[i]);
-
         clean_tag(cur.tags[i]);
+
+        ImGui::SameLine();
+
+        if(ImGui::Button("-"))
+        {
+            cur.tags.erase(cur.tags.begin() + i);
+            i--;
+            continue;
+        }
     }
 
     ImGui::SameLine();
@@ -568,7 +576,7 @@ void design_editor::render(sf::RenderWindow& win)
 
     ImGui::SameLine();
 
-    if(ImGui::Button("+"))
+    if(ImGui::Button("+") && cur.unbaked_tag.size() > 0)
     {
         cur.add_tag(cur.unbaked_tag);
         cur.unbaked_tag = "";
