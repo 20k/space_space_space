@@ -105,10 +105,10 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.add(component_info::POWER, -5); ///power consumption of 5 modules when charging
         p.add(component_info::S_POWER, 0.05, 1); ///20s to recharge
-        p.add(component_info::S_POWER, -0.1); ///10s to deplete
+        p.add_unconditional(component_info::S_POWER, -0.1); ///10s to deplete
         p.add(component_info::S_POWER, 0.1);
         p.add(component_info::HP, 0, 1);
-        p.set_no_drain_on_full_production();
+        //p.set_no_drain_on_full_production();
         p.set_heat(5); ///heat of 5 modules
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1.5;
@@ -122,7 +122,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::W_POWER, -0.1); ///10s to deplete
         p.add(component_info::W_POWER, 0.1);
         p.add(component_info::HP, 0, 1);
-        p.set_no_drain_on_full_production();
+        //p.set_no_drain_on_full_production();
         p.set_heat(5); ///heat of 5 modules
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1.5;
@@ -348,7 +348,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::POWER, -20); ///2 power plants to run on full tilt
         p.add(tag_info::TAG_REFINERY);
         //p.set_no_drain_on_full_production();
-        p.set_heat(600);
+        p.set_heat(40);
         p.activation_type = component_info::SLIDER_ACTIVATION;
 
         p.base_volume = 1;
@@ -362,7 +362,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::POWER, -10); ///1 power plant to run on full tilt
         p.add(component_info::MANUFACTURING, 1);
         p.add(tag_info::TAG_FACTORY);
-        p.set_heat(50);
+        p.set_heat(10);
 
         p.activation_type = component_info::SLIDER_ACTIVATION;
 

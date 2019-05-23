@@ -59,6 +59,15 @@ void component_fixed_properties::add(component_info::does_type type, double amou
     d_info.push_back(d);
 }
 
+void component_fixed_properties::add_unconditional(component_info::does_type type, double amount)
+{
+    does_fixed d;
+    d.type = type;
+    d.recharge_unconditional = amount;
+
+    d_info.push_back(d);
+}
+
 void component_fixed_properties::add(tag_info::tag_type type)
 {
     tag t;
@@ -188,7 +197,7 @@ std::vector<double> component::get_theoretical_produced()
 
         double mod = last_sat;
 
-        if(d.recharge < 0)
+        if(d.recharge < 0 || d.recharge_unconditional < 0)
             continue;
 
         float hacky_lpf = last_production_frac;
@@ -196,7 +205,7 @@ std::vector<double> component::get_theoretical_produced()
         if(fixed.complex_no_drain_on_full_production)
             hacky_lpf = 1;
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod * activation_level * hacky_lpf;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod * activation_level * hacky_lpf + d.recharge_unconditional;
     }
 
     return needed;
@@ -218,10 +227,10 @@ std::vector<double> component::get_theoretical_consumed()
     {
         does_fixed d = unscaled.scale(current_scale);
 
-        if(d.recharge > 0)
+        if(d.recharge > 0 || d.recharge_unconditional > 0)
             continue;
 
-        needed[d.type] += fabs(d.recharge) * (hp / max_hp) * activation_level * last_production_frac;
+        needed[d.type] += fabs(d.recharge) * (hp / max_hp) * activation_level * last_production_frac + fabs(d.recharge_unconditional);
     }
 
     return needed;
@@ -245,10 +254,10 @@ std::vector<double> component::get_produced()
 
         double mod = last_sat;
 
-        if(d.recharge < 0)
+        if(d.recharge < 0 || d.recharge_unconditional < 0)
             continue;
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod * last_production_frac * activation_level;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod * last_production_frac * activation_level + d.recharge_unconditional;
     }
 
     return needed;
@@ -277,7 +286,7 @@ std::vector<double> component::get_needed()
             mod = last_sat;
         }
 
-        needed[d.type] += d.recharge * (hp / max_hp) * mod  * last_production_frac * activation_level;
+        needed[d.type] += d.recharge * (hp / max_hp) * mod  * last_production_frac * activation_level + d.recharge_unconditional;
     }
 
     return needed;
@@ -989,10 +998,10 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
         {
             does_fixed d = c.scale(unscaled);
 
-            if(d.recharge > 0)
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level;
+            if(d.recharge > 0 || d.recharge_unconditional > 0)
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
             else
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac * c.activation_level;
+                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
         }
 
         c.last_sat = min_sat;
@@ -1011,7 +1020,7 @@ double component::get_sat(const std::vector<double>& sat)
     {
         does_fixed d = scale(unscaled);
 
-        if(d.recharge > 0)
+        if(d.recharge > 0 || d.recharge_unconditional > 0)
             continue;
 
         min_sat = std::min(sat[d.type], min_sat);
@@ -1287,10 +1296,10 @@ std::vector<double> ship::get_sat_percentage()
             does_fixed d = c.scale(unscaled);
 
             if(d.recharge < 0)
-                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level;
+                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level + d.recharge_unconditional;
 
             if(d.recharge > 0)
-                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac * c.activation_level;
+                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac * c.activation_level + d.recharge_unconditional;
         }
     }
 
@@ -1716,7 +1725,7 @@ void ship::tick(double dt_s)
         {
             does_fixed d = c.scale(unscaled);
 
-            if(d.recharge <= 0)
+            if(d.recharge <= 0 || d.recharge_unconditional < 0)
                 continue;
 
             if(resource_status[d.type] < max_resource_status[d.type])
@@ -3011,7 +3020,7 @@ void component::render_inline_stats()
     {
         does_fixed d = scale(unscaled);
 
-        net[d.type] += d.recharge;
+        net[d.type] += d.recharge + d.recharge_unconditional;
         stored[d.type] += d.capacity;
     }
 

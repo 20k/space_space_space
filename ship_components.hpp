@@ -15,6 +15,8 @@
 ///1 size at a power of 1 takes 100s
 #define SIZE_TO_TIME 100
 
+#define HEATING_MULTIPLIER 5
+
 namespace sf
 {
     struct RenderWindow;
@@ -114,6 +116,7 @@ struct does_fixed : serialisable
     double capacity = 0;
     //double held = 0;
     double recharge = 0;
+    double recharge_unconditional = 0;
 
     double time_between_use_s = 0;
     //double last_use_s = 0;
@@ -125,6 +128,7 @@ struct does_fixed : serialisable
         DO_SERIALISE(capacity);
         //DO_SERIALISE(held);
         DO_SERIALISE(recharge);
+        DO_SERIALISE(recharge_unconditional);
         DO_SERIALISE(time_between_use_s);
         //DO_SERIALISE(last_use_s);
         DO_SERIALISE(type);
@@ -136,6 +140,7 @@ struct does_fixed : serialisable
 
         ret.capacity *= scale;
         ret.recharge *= scale;
+        ret.recharge_unconditional *= scale;
         //ret.time_between_use_s *= scale;
 
         return ret;
@@ -243,6 +248,7 @@ struct component_fixed_properties : serialisable
 
     void add(component_info::does_type, double amount);
     void add(component_info::does_type, double amount, double cap);
+    void add_unconditional(component_info::does_type, double amount);
     void add(tag_info::tag_type);
 
     void add_on_use(component_info::does_type, double amount, double time_between_use_s);
@@ -317,7 +323,7 @@ struct component_fixed_properties : serialisable
 
     float get_heat_produced_at_full_usage(float scale) const
     {
-        return heat_produced_at_full_usage * scale;
+        return heat_produced_at_full_usage * scale * HEATING_MULTIPLIER;
     }
 
 private:
