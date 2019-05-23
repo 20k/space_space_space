@@ -196,10 +196,11 @@ void server_thread(std::atomic_bool& should_term)
     default_missile.add_component_at(get_component_default(component_type::THRUSTER, 1), {50, 50}, 2);
     default_missile.add_component_at(get_component_default(component_type::SENSOR, 1), {100, 100}, 1);
     default_missile.add_component_at(get_component_default(component_type::POWER_GENERATOR, 1), {150, 150}, 3);
-    default_missile.add_component_at(get_component_default(component_type::DESTRUCT, 1), {200, 200}, 4);
+    default_missile.add_component_at(get_component_default(component_type::DESTRUCT, 1), {200, 200}, 1);
     default_missile.add_component_at(get_component_default(component_type::MISSILE_CORE, 1), {250, 250}, 1);
     default_missile.add_component_at(get_component_default(component_type::HEAT_BLOCK, 1), {300, 300}, 2);
     default_missile.add_component_at(get_component_default(component_type::RADIATOR, 1), {350, 350}, 2);
+    default_missile.add_component_at(get_component_default(component_type::CARGO_STORAGE, 1), {350, 350}, 3);
     default_missile.name = "Default Missile";
     default_missile.add_tag("missile");
 
@@ -212,10 +213,10 @@ void server_thread(std::atomic_bool& should_term)
     component cold_tank = get_component_default(component_type::STORAGE_TANK, 1);
     component hot_tank = get_component_default(component_type::STORAGE_TANK_HS, 1);
 
-    component explosives = get_component_default(component_type::MATERIAL, 1);
+    /*component explosives = get_component_default(component_type::MATERIAL, 1);
     explosives.add_composition(material_info::HTX, destruct_fixed.get_internal_volume(destruct.current_scale));
 
-    destruct.store(explosives);
+    destruct.store(explosives);*/
 
     component coolant_material = get_component_default(component_type::MATERIAL, 1);
     coolant_material.add_composition(material_info::HYDROGEN, cold_fixed.get_internal_volume(cold_tank.current_scale));
@@ -267,7 +268,10 @@ void server_thread(std::atomic_bool& should_term)
 
             for(component& lc : mship.components)
             {
-                if(!lc.has(component_info::SELF_DESTRUCT))
+                //if(!lc.has(component_info::CARGO_STORAGE))
+                //    continue;
+
+                if(lc.base_id != component_type::CARGO_STORAGE)
                     continue;
 
                 const component_fixed_properties& fixed = lc.get_fixed_props();
@@ -300,13 +304,16 @@ void server_thread(std::atomic_bool& should_term)
             component mat_1 = get_component_default(component_type::MATERIAL, 1);
             component mat_2 = get_component_default(component_type::MATERIAL, 1);
             component mat_3 = get_component_default(component_type::MATERIAL, 1);
+            component mat_4 = get_component_default(component_type::MATERIAL, 1);
             mat_1.add_composition(material_info::IRON, 1);
             mat_2.add_composition(material_info::COPPER, 1);
             mat_3.add_composition(material_info::LITHIUM, 1);
+            mat_4.add_composition(material_info::HTX, 1);
 
             c.store(mat_1);
             c.store(mat_2);
             c.store(mat_3);
+            c.store(mat_4);
 
             c.store(default_missile.to_ship());
         }

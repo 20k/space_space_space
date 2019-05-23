@@ -369,6 +369,7 @@ struct component : serialisable, owned
 
     double last_sat = 1;
     bool flows = false;
+    bool cleanup = false;
     //bool heat_sink = false;
 
     ///0 = solid, 1 = liquid
@@ -720,6 +721,8 @@ struct ship : heatable_entity, owned
     ship();
 
     std::optional<component*> get_component_from_id(uint64_t id);
+
+    void handle_cleanup();
 
     void handle_heat(double dt_s);
     std::vector<component> handle_degredation(double dt_s);

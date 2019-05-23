@@ -1660,8 +1660,28 @@ void ship::tick_missile_behaviour(double dt_s)
     }
 }
 
+void ship::handle_cleanup()
+{
+    for(int i=0; i < (int)components.size(); i++)
+    {
+        if(components[i].cleanup)
+        {
+            components.erase(components.begin() + i);
+            i--;
+            continue;
+        }
+
+        for(ship& s : components[i].stored)
+        {
+            s.handle_cleanup();
+        }
+    }
+}
+
 void ship::tick(double dt_s)
 {
+    handle_cleanup();
+
     mass = get_mass();
 
     std::vector<double> resource_status = sum<double>([](component& c)
@@ -1998,42 +2018,60 @@ void ship::tick(double dt_s)
                 ///at minimum make it so it has to bust open the container, armour, and shields of us first
                 if(c.has(component_info::SELF_DESTRUCT))
                 {
-                    for(ship& s : c.stored)
+                    float total_power = 0;
+
+                    for(component& my_comp : components)
                     {
-                        for(component& store : s.components)
+                        if(my_comp.base_id != component_type::CARGO_STORAGE)
+                            continue;
+
+                        for(ship& s : my_comp.stored)
                         {
-                            std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(store.composition);
-                            material_dynamic_properties& dynamic = props.first;
-                            material_fixed_properties& fixed = props.second;
+                            if(s.is_ship)
+                                continue;
 
-                            double power = dynamic.volume * fixed.specific_explosiveness;
-
-                            std::cout << "POWER " << power << std::endl;
-
-                            if(power < resource_status[component_info::HP])
+                            for(component& store : s.components)
                             {
-                                take_damage(power, true);
-                            }
-                            else
-                            {
-                                take_damage(resource_status[component_info::HP], true);
-                                power -= resource_status[component_info::HP];
+                                std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(store.composition);
+                                material_dynamic_properties& dynamic = props.first;
+                                material_fixed_properties& fixed = props.second;
 
-                                double radius = sqrt(power);
+                                if(fixed.specific_explosiveness == 0)
+                                    continue;
 
-                                if(parent == nullptr)
-                                    throw std::runtime_error("Broken");
+                                double power = dynamic.volume * fixed.specific_explosiveness;
 
-                                aoe_damage* aoe = parent->make_new<aoe_damage>(current_radar_field);
+                                total_power += power;
 
-                                aoe->max_radius = radius;
-                                aoe->damage = power;
-                                aoe->collided_with[id] = true;
-                                aoe->r.position = r.position;
-                                aoe->emitted_by = id;
-                                aoe->velocity = velocity;
+                                store.cleanup = true;
                             }
                         }
+                    }
+
+                    std::cout << "POWER " << total_power << std::endl;
+
+                    if(total_power < resource_status[component_info::HP])
+                    {
+                        take_damage(total_power, true);
+                    }
+                    else
+                    {
+                        take_damage(resource_status[component_info::HP], true);
+                        total_power -= resource_status[component_info::HP];
+
+                        double radius = sqrt(total_power);
+
+                        if(parent == nullptr)
+                            throw std::runtime_error("Broken");
+
+                        aoe_damage* aoe = parent->make_new<aoe_damage>(current_radar_field);
+
+                        aoe->max_radius = radius;
+                        aoe->damage = total_power;
+                        aoe->collided_with[id] = true;
+                        aoe->r.position = r.position;
+                        aoe->emitted_by = id;
+                        aoe->velocity = velocity;
                     }
                 }
             }
