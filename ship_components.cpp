@@ -730,6 +730,8 @@ void component::store(const component& c, bool force_and_fixup)
                     existing_component.add_composition(m);
                 }
 
+                existing_component.bad_time = fixed_clock();
+
                 return;
             }
         }
