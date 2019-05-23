@@ -342,6 +342,12 @@ void server_thread(std::atomic_bool& should_term)
     data_model_manager<ship*> data_manage;
 
     player_research default_research;
+
+    for(int i=0; i < (int)component_type::COUNT; i++)
+    {
+        default_research.components.push_back(get_component_default((component_type::type)i, 1));
+    }
+
     /*default_research.components.push_back(thruster);
     default_research.components.push_back(warp);
     default_research.components.push_back(shields);
@@ -614,6 +620,8 @@ void server_thread(std::atomic_bool& should_term)
 
                         data.persistent_data.load(found_auth.value()->user_id, tx);
                     }
+
+                    data.persistent_data.research.merge_into_me(default_research);
 
                     std::vector<ship*> s1;
 
@@ -1046,7 +1054,7 @@ int main()
 
     sf::Clock read_clock;
 
-    design_editor design;
+    design_editor design(model.persistent_data.research);
     design.open = true;
 
     steamapi api;
@@ -1147,9 +1155,8 @@ int main()
 
             //std::cout << "pid " << model.ships[0].data_track.pid << std::endl;
 
-
             sf::Clock copy_time;
-            design.research = std::move(model.persistent_data.research);
+            //design.research = std::move(model.persistent_data.research);
             //std::cout << "copytime " << copy_time.getElapsedTime().asMicroseconds() / 1000. << std::endl;
             design.server_blueprint_manage = model.persistent_data.blueprint_manage;
 

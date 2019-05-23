@@ -91,6 +91,29 @@ void player_research::render(design_editor& edit, vec2f upper_size)
     ImGui::EndChild();
 }
 
+void player_research::merge_into_me(player_research& other)
+{
+    for(component& c : other.components)
+    {
+        bool has = false;
+
+        for(component& oc : components)
+        {
+            if(oc.base_id == c.base_id)
+            {
+                oc = c;
+                has = true;
+                break;
+            }
+        }
+
+        if(!has)
+        {
+            components.push_back(c);
+        }
+    }
+}
+
 void blueprint_node::render(design_editor& edit, blueprint& parent)
 {
     auto old_pos = ImGui::GetCursorPos();

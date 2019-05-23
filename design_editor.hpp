@@ -36,6 +36,8 @@ struct player_research : serialisable, owned
     }
 
     player_research& operator=(const player_research& other) = default;
+
+    void merge_into_me(player_research& other);
 };
 
 struct blueprint;
@@ -175,9 +177,11 @@ struct design_editor
     bool rpcd_default_blueprint = false;
     uint32_t currently_selected = -1;
 
-    player_research research;
+    player_research& research;
     blueprint_manager server_blueprint_manage;
     blueprint_manager blueprint_manage;
+
+    design_editor(player_research& _r) : research(_r){}
 
     void tick(double dt_s);
     void render(sf::RenderWindow& win);
