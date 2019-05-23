@@ -190,8 +190,6 @@ void playspace::init_default()
 
         for(int i=0; i < num_asteroids; i++)
         {
-            //float ffrac = rand_det_s(rng, 0, 1);
-
             vec2f found_pos = rand_det(rng, (vec2f){-dim, -dim}, (vec2f){dim, dim});
 
             bool cont = false;

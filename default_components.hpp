@@ -11,7 +11,8 @@ namespace component_type
     enum type
     {
         THRUSTER,
-        WARP,
+        S_DRIVE,
+        W_DRIVE,
         SHIELDS,
         LASER,
         SENSOR,

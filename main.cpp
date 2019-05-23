@@ -159,7 +159,8 @@ void server_thread(std::atomic_bool& should_term)
     component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);
 
     test_ship->add(get_component_default(component_type::THRUSTER, 1));
-    test_ship->add(get_component_default(component_type::WARP, 1));
+    test_ship->add(get_component_default(component_type::S_DRIVE, 1));
+    test_ship->add(get_component_default(component_type::W_DRIVE, 1));
     test_ship->add(get_component_default(component_type::SHIELDS, 1));
     test_ship->add(component_launch);
     test_ship->add(get_component_default(component_type::LASER, 1));

@@ -17,7 +17,8 @@ std::array<component, component_type::COUNT> get_default_component_map()
     std::array<component, component_type::COUNT> ret;
 
     ret[component_type::THRUSTER] = make_default("Thruster", "THRST");
-    ret[component_type::WARP] = make_default("Warp Drive", "WARP");
+    ret[component_type::S_DRIVE] = make_default("System Drive", "S-D");
+    ret[component_type::W_DRIVE] = make_default("Warp Drive", "W-D");
     ret[component_type::SHIELDS] = make_default("Shields", "SHLD");
     ret[component_type::LASER] = make_default("Laser", "LAS");
     ret[component_type::SENSOR] = make_default("Sensors", "SENS");
@@ -57,7 +58,8 @@ std::array<component, component_type::COUNT> get_default_component_map()
     }
 
     ret[component_type::THRUSTER].add_composition_ratio({material_info::COPPER}, {1});
-    ret[component_type::WARP].add_composition_ratio({material_info::COPPER}, {1});
+    ret[component_type::S_DRIVE].add_composition_ratio({material_info::COPPER}, {1});
+    ret[component_type::W_DRIVE].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::SHIELDS].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::LASER].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::SENSOR].add_composition_ratio({material_info::COPPER}, {1});
@@ -99,12 +101,26 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     }
 
     {
-        component_fixed_properties& p = ret[component_type::WARP];
+        component_fixed_properties& p = ret[component_type::S_DRIVE];
         p.add(component_info::HP, 0, 1);
         p.add(component_info::POWER, -5); ///power consumption of 5 modules when charging
-        p.add(component_info::WARP, 0.05, 1); ///20s to recharge
-        p.add(component_info::WARP, -0.1); ///10s to deplete
-        p.add(component_info::WARP, 0.1);
+        p.add(component_info::S_POWER, 0.05, 1); ///20s to recharge
+        p.add(component_info::S_POWER, -0.1); ///10s to deplete
+        p.add(component_info::S_POWER, 0.1);
+        p.add(component_info::HP, 0, 1);
+        p.set_no_drain_on_full_production();
+        p.set_heat(5); ///heat of 5 modules
+        p.activation_type = component_info::TOGGLE_ACTIVATION;
+        p.base_volume = 1.5;
+    }
+
+    {
+        component_fixed_properties& p = ret[component_type::W_DRIVE];
+        p.add(component_info::HP, 0, 1);
+        p.add(component_info::POWER, -5); ///power consumption of 5 modules when charging
+        p.add(component_info::W_POWER, 0.05, 1); ///20s to recharge
+        p.add(component_info::W_POWER, -0.1); ///10s to deplete
+        p.add(component_info::W_POWER, 0.1);
         p.add(component_info::HP, 0, 1);
         p.set_no_drain_on_full_production();
         p.set_heat(5); ///heat of 5 modules

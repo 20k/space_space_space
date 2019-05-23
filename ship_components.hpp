@@ -41,7 +41,8 @@ namespace component_info
     {
         HP,
         THRUST,
-        WARP,
+        S_POWER,
+        W_POWER,
         SHIELDS,
         WEAPONS,
         SENSORS,
@@ -65,7 +66,8 @@ namespace component_info
     {
         "HP",
         "Thrust",
-        "Warp",
+        "S-Power",
+        "W-Power",
         "Shield",
         "Weapons",
         "Sensors",
@@ -696,7 +698,8 @@ struct ship : heatable_entity, owned
 
     std::vector<component_info::does_type> tracked
     {
-        component_info::WARP,
+        component_info::S_POWER,
+        component_info::W_POWER,
         component_info::SHIELDS,
         component_info::ARMOUR,
         component_info::HP,
