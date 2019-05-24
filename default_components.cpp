@@ -132,6 +132,8 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         component_fixed_properties& p = ret[component_type::SHIELDS];
         p.add(component_info::HP, 0, 1);
         p.add(component_info::SHIELDS, 0.05, 1); ///20s to recharge
+        p.add(component_info::SHIELDS, 0.05);
+        p.add_unconditional(component_info::SHIELDS, -0.05);
         p.add(component_info::POWER, -5); ///power consumption of 5 modules when charging
         p.add(component_info::HP, 0, 1);
         p.set_no_drain_on_full_production();
