@@ -732,7 +732,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
 
     float distance_to_packet = (pos - packet_position).length();
 
-    if(distance_to_packet > packet.packet_wavefront_width)
+    if(distance_to_packet > packet.packet_wavefront_width / space_scaling)
         return 0;
 
     //float my_packet_angle = (pos - packet.origin).angle();
@@ -763,7 +763,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
                 continue;
             }*/
 
-            if(distance_to_shadow <= shadow.packet_wavefront_width)
+            if(distance_to_shadow <= shadow.packet_wavefront_width / space_scaling)
             {
                 return 0;
             }
@@ -774,7 +774,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
 
     float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * packet.scale * packet.scale * space_scaling * space_scaling;
 
-    float ivdistance = (awidth - distance_to_packet) / (awidth);
+    float ivdistance = 1;
+
+    //float ivdistance = (awidth - distance_to_packet) / (awidth);
     //float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * packet.scale * space_scaling);
     //float err = 0.01;
 
@@ -816,13 +818,20 @@ float alt_radar_field::get_refl_intensity_at(vec2f pos)
 }
 
 ///https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Shape.cpp
-sf::Vector2f get_point(float radius, int index, int num_verts)
+sf::Vector2f get_point(float radius, int index, int num_verts, float start_ang, float restrict_ang)
 {
-    float angle = index * 2 * M_PI / num_verts - M_PI / 2;
+    float angle = start_ang - restrict_ang + index * 2 * M_PI / num_verts;
     float x = cos(angle) * radius;
     float y = sin(angle) * radius;
 
     return {x, y };
+
+    /*float angle = start_ang - restrict_ang + index * 2 * restrict_ang / num_verts;
+
+    float x = cos(angle) * radius;
+    float y = sin(angle) * radius;
+
+    return {x, y};*/
 }
 
 sf::Vector2f computeNormal(const sf::Vector2f& p1, const sf::Vector2f& p2)
@@ -854,7 +863,7 @@ void render_partial_circle(sf::RenderWindow& win, vec2f pos, float thickness, fl
 
     for(int i=0; i < num_verts; i++)
     {
-        verts[i + 1].position = get_point(radius, i, num_verts) + sf::Vector2f(pos.x(), pos.y());
+        verts[i + 1].position = get_point(radius, i, num_verts, start_angle, restrict_angle) + sf::Vector2f(pos.x(), pos.y());
     }
 
     verts[num_verts + 1].position = verts[1].position;
@@ -889,7 +898,9 @@ void render_partial_circle(sf::RenderWindow& win, vec2f pos, float thickness, fl
 
     int count = num_verts;
 
-    sf::Vertex outline_verts[(count + 1) * 2];
+    //sf::Vertex outline_verts[(count + 1) * 2];
+
+    std::vector<sf::Vertex> outline_verts;
 
     for(int i=0; i < count; i++)
     {
@@ -915,24 +926,40 @@ void render_partial_circle(sf::RenderWindow& win, vec2f pos, float thickness, fl
         sf::Vector2f normal = (n1 + n2) / factor;
 
         // Update the outline points
-        outline_verts[i * 2 + 0].position = p1;
-        outline_verts[i * 2 + 1].position = p1 + normal * thickness;
+        //outline_verts[i * 2 + 0].position = p1;
+        //outline_verts[i * 2 + 1].position = p1 + normal * thickness;
+
+        sf::Vertex v1, v2;
+        v1.position = p1;
+        v2.position = p1 + normal * thickness;
+
+        vec2f start_vec = (vec2f){1, 0}.rot(start_angle);
+
+        auto relative = p1 - verts[0].position;
+
+        if(angle_between_vectors(start_vec, (vec2f){relative.x, relative.y}) > restrict_angle)
+            continue;
+
+        outline_verts.push_back(v1);
+        outline_verts.push_back(v2);
     }
 
-    outline_verts[count * 2 + 0].position = outline_verts[0].position;
-    outline_verts[count * 2 + 1].position = outline_verts[1].position;
+    //outline_verts[count * 2 + 0].position = outline_verts[0].position;
+    //outline_verts[count * 2 + 1].position = outline_verts[1].position;
 
     /*for(sf::Vertex& i : outline_verts)
     {
         i.color = col;
     }*/
 
-    for(int i=0; i < (count + 1) * 2; i++)
+    //for(int i=0; i < (count + 1) * 2; i++)
+
+    for(auto& i : outline_verts)
     {
-        outline_verts[i].color = col;
+        i.color = col;
     }
 
-    win.draw(outline_verts, (count + 1) * 2, sf::TriangleStrip);
+    win.draw(&outline_verts[0], outline_verts.size(), sf::TriangleStrip);
 
     //win.draw(verts, num_verts + 2, sf::TriangleFan);
 }
@@ -1036,6 +1063,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
     std::cout << "sub " << num_subtract << std::endl;*/
 
+    //#define CIRC
     #ifdef CIRC
     sf::CircleShape shape;
 
@@ -1063,6 +1091,8 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
             }
 
             float fcol = 255 * ffrac;
+
+            fcol = clamp(fcol, 0, 255);
 
             vec2f world = cam.world_to_screen({x, y}, 1);
 
