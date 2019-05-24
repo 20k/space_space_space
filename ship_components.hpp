@@ -733,7 +733,7 @@ struct ship : heatable_entity, owned
 
     ship();
 
-    int space_type = 0;
+    int room_type = 0;
 
     bool move_up = false;
     bool has_s_power = false;
@@ -827,7 +827,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(is_ship);
         DO_SERIALISE(blueprint_name);
         DO_SERIALISE(has_s_power);
-        DO_SERIALISE(space_type);
+        DO_SERIALISE(room_type);
     }
 
     virtual void pre_collide(entity& other) override;

@@ -1694,6 +1694,9 @@ void ship::tick(double dt_s)
 
     mass = get_mass();
 
+    if(room_type != space_type::REAL_SPACE)
+        thrusters_active = false;
+
     std::vector<double> resource_status = sum<double>([](component& c)
     {
         return c.get_held();
@@ -4236,14 +4239,24 @@ float ship::get_max_angular_thrust()
 {
     float mass = get_mass();
 
-    return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 / mass;
+    if(room_type == space_type::REAL_SPACE)
+        return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 / mass;
+    if(room_type == space_type::S_SPACE)
+        return get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 / mass;
+
+    return 0;
 }
 
 float ship::get_max_velocity_thrust()
 {
     float mass = get_mass();
 
-    return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 * 20 / mass;
+    if(room_type == space_type::REAL_SPACE)
+        return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 * 20 / mass;
+    if(room_type == space_type::S_SPACE)
+        return get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / mass;
+
+    return 0;
 }
 
 float ship::get_mass()

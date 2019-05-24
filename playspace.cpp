@@ -34,7 +34,7 @@ void room::add(entity* e)
     if(auto s = dynamic_cast<ship*>(e); s != nullptr)
     {
         s->current_radar_field = field;
-        s->space_type = space_type::REAL_SPACE;
+        s->room_type = space_type::REAL_SPACE;
     }
 
     if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
@@ -242,7 +242,7 @@ void playspace::add(entity* e)
     if(auto s = dynamic_cast<ship*>(e); s != nullptr)
     {
         s->current_radar_field = field;
-        s->space_type = space_type::S_SPACE;
+        s->room_type = space_type::S_SPACE;
     }
 
     if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
