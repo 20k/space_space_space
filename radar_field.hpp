@@ -245,6 +245,10 @@ struct heatable_entity : entity, heatable
 
     void dissipate(alt_radar_field& radar, int ticks_between_emissions = 1);
 
+    #ifdef HEATABLE_VIRTUAL
+    virtual ~heatable_entity() = default;
+    #endif // HEATABLE_VIRTUAL
+
     //std::unordered_map<uint32_t, hacky_clock> ignore_packets;
 };
 

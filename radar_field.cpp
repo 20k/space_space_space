@@ -254,7 +254,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         float local_intensity = get_intensity_at_of(collide.r.position, packet, subtractive);
 
-        if(local_intensity <= 0.001)
+        if(local_intensity <= 0.0001)
             return std::nullopt;
 
         float circle_circumference = 2 * M_PI * len;
@@ -292,13 +292,22 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage = collide.en->reflectivity;
         }*/
 
+        ///ok so i think the reason why this is incorrect
+        ///is that it does not take wave width into account
         float reflect_percentage = collide.reflectivity;
+        #if 0
 
         if(packet.frequency == HEAT_FREQ)
         {
             ///only absorb 10% of heat? we only reflect 90%
             collide.latent_heat += local_intensity * (1 - reflect_percentage);
+
+            /*if(dynamic_cast<ship*>(&collide))
+            {
+                std::cout << "LHEAT " << dynamic_cast<ship*>(&collide)->latent_heat << std::endl;
+            }*/
         }
+        #endif // 0
 
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
@@ -574,7 +583,14 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                             if(!collide->is_collided_with)
                                 continue;
 
-                            std::optional<reflect_info> reflected = test_reflect_from(packet, *static_cast<heatable_entity*>(collide), subtractive_packets);
+                            heatable_entity* en = static_cast<heatable_entity*>(collide);
+
+                            //float reflect_percentage = en->reflectivity;
+
+                            //if(!ignore_map[packet.id][en->id].should_ignore())
+                            //    en->latent_heat += get_intensity_at_of(en->r.position, packet, subtractive_packets) * (1 - reflect_percentage);
+
+                            std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
 
                             if(reflected)
                             {
@@ -683,9 +699,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
     }*/
 
-    //pdump.dump();
-    //pdump.stop();
-    //profile_dumper::dump();
+    pdump.dump();
+    pdump.stop();
+    profile_dumper::dump();
 
     //collideables.clear();
 
@@ -754,9 +770,12 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         }
     }
 
+    float awidth = packet.packet_wavefront_width / space_scaling;
+
     float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * packet.scale * packet.scale * space_scaling * space_scaling;
 
-    float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * packet.scale * space_scaling);
+    float ivdistance = (awidth - distance_to_packet) / (awidth);
+    //float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * packet.scale * space_scaling);
     //float err = 0.01;
 
     float err = 1;
@@ -798,17 +817,35 @@ float alt_radar_field::get_refl_intensity_at(vec2f pos)
 
 void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 {
-    #if 0
+    #if 1
     for(alt_frequency_packet& packet : packets)
     {
-        float real_distance = packet.iterations * speed_of_light_per_tick;
+        float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+        float intens = 0;
+
+        float my_distance_to_packet_sq = real_distance * real_distance * packet.scale * packet.scale * space_scaling * space_scaling;
+
+        //float ivdistance = (packet.packet_wavefront_width - sqrtf(my_distance_to_packet_sq)) / (packet.packet_wavefront_width * packet.scale * space_scaling);
+
+        float ivdistance = 1;
+
+        float err = 1;
+
+        if(my_distance_to_packet_sq > err*err)
+            intens = ivdistance * packet.intensity / my_distance_to_packet_sq;
+        else
+            intens = ivdistance * packet.intensity / (err * err);
+
+        float calc = 255 * intens;
+
+        calc = clamp(calc, 0, 255);
 
         sf::CircleShape shape;
         shape.setRadius(real_distance);
         shape.setPosition(packet.origin.x(), packet.origin.y());
-        shape.setOutlineThickness(packet.packet_wavefront_width);
+        shape.setOutlineThickness(packet.packet_wavefront_width / space_scaling);
         shape.setFillColor(sf::Color(0,0,0,0));
-        shape.setOutlineColor(sf::Color(255, 255, 255, 255));
+        shape.setOutlineColor(sf::Color(255, 255, 255, calc));
         shape.setOrigin(shape.getRadius(), shape.getRadius());
         shape.setPointCount(100);
 
@@ -875,6 +912,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
     std::cout << "sub " << num_subtract << std::endl;*/
 
+    #ifdef CIRC
     sf::CircleShape shape;
 
     for(int y=0; y < target_dim.y(); y+=20)
@@ -912,6 +950,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
             win.draw(shape);
         }
     }
+    #endif // CIRC
 }
 
 struct random_constants
@@ -1061,6 +1100,17 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         packet.intensity = intensity;
 
         post_intensity_calculate.push_back(packet);
+    }
+
+    {
+        float dsum = 0;
+
+        for(auto& i : post_intensity_calculate)
+        {
+            dsum += i.intensity;
+        }
+
+        std::cout << "DSUM " << dsum << std::endl;
     }
 
     ///could get around the jitter by sending intensity as frequently as we update randomness

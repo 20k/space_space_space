@@ -26,6 +26,9 @@ bool skip_keyboard_input(bool has_focus)
     if(!has_focus)
         return true;
 
+    if(ImGui::GetCurrentContext() == nullptr)
+        return false;
+
     bool skip = ImGui::GetIO().WantCaptureKeyboard;
 
     return skip;
@@ -125,7 +128,7 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -936,12 +939,19 @@ void server_thread(std::atomic_bool& should_term)
             {
                 for(room* r : play->rooms)
                 {
-                    //if(r->entity_manage->contains(test_ship))
+                    if(r->entity_manage->contains(test_ship))
                     {
                         r->entity_manage->render(cam, debug);
                         r->field->render(cam, debug);
                         break;
                     }
+                }
+
+                if(play->entity_manage->contains(test_ship))
+                {
+                    play->entity_manage->render(cam, debug);
+                    play->field->render(cam, debug);
+                    break;
                 }
             }
         }
