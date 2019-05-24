@@ -815,6 +815,128 @@ float alt_radar_field::get_refl_intensity_at(vec2f pos)
     return total_intensity;
 }
 
+///https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Shape.cpp
+sf::Vector2f get_point(float radius, int index, int num_verts)
+{
+    float angle = index * 2 * M_PI / num_verts - M_PI / 2;
+    float x = cos(angle) * radius;
+    float y = sin(angle) * radius;
+
+    return {x, y };
+}
+
+sf::Vector2f computeNormal(const sf::Vector2f& p1, const sf::Vector2f& p2)
+{
+    sf::Vector2f normal(p1.y - p2.y, p2.x - p1.x);
+    float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+    if (length != 0.f)
+        normal /= length;
+    return normal;
+}
+
+// Compute the dot product of two vectors
+float dotProduct(const sf::Vector2f& p1, const sf::Vector2f& p2)
+{
+    return p1.x * p2.x + p1.y * p2.y;
+}
+
+void render_partial_circle(sf::RenderWindow& win, vec2f pos, float thickness, float radius, float start_angle, float restrict_angle, sf::Color col)
+{
+    //std::vector<sf::Vertex> verts;
+
+    int num_verts = 100;
+
+    //verts.resize(num_verts + 2);
+
+    sf::Vertex verts[num_verts + 2];
+
+    float ffrac = 2 * M_PI / num_verts;
+
+    for(int i=0; i < num_verts; i++)
+    {
+        verts[i + 1].position = get_point(radius, i, num_verts) + sf::Vector2f(pos.x(), pos.y());
+    }
+
+    verts[num_verts + 1].position = verts[1].position;
+
+    verts[0] = verts[1];
+
+    vec2f tl = {FLT_MAX, FLT_MAX};
+    vec2f br = {-FLT_MAX, -FLT_MAX};
+
+    for(auto& i : verts)
+    {
+        if(i.position.x < tl.x())
+            tl.x() = i.position.x;
+
+        if(i.position.y < tl.y())
+            tl.y() = i.position.y;
+
+        if(i.position.x >= br.x())
+            br.x() = i.position.x;
+
+        if(i.position.y >= br.y())
+            br.y() = i.position.y;
+    }
+
+    verts[0].position.x = tl.x() + (br.x() - tl.x())/2;
+    verts[0].position.y = tl.y() + (br.y() - tl.y())/2;
+
+    for(sf::Vertex& i : verts)
+    {
+        i.color = col;
+    }
+
+    int count = num_verts;
+
+    sf::Vertex outline_verts[(count + 1) * 2];
+
+    for(int i=0; i < count; i++)
+    {
+        int idx = i + 1;
+
+        sf::Vector2f p0 = (i == 0) ? verts[count].position : verts[idx - 1].position;
+        sf::Vector2f p1 = verts[idx].position;
+        sf::Vector2f p2 = verts[idx + 1].position;
+
+        // Compute their normal
+        sf::Vector2f n1 = computeNormal(p0, p1);
+        sf::Vector2f n2 = computeNormal(p1, p2);
+
+        // Make sure that the normals point towards the outside of the shape
+        // (this depends on the order in which the points were defined)
+        if (dotProduct(n1, verts[0].position - p1) > 0)
+            n1 = -n1;
+        if (dotProduct(n2, verts[0].position - p1) > 0)
+            n2 = -n2;
+
+        // Combine them to get the extrusion direction
+        float factor = 1.f + (n1.x * n2.x + n1.y * n2.y);
+        sf::Vector2f normal = (n1 + n2) / factor;
+
+        // Update the outline points
+        outline_verts[i * 2 + 0].position = p1;
+        outline_verts[i * 2 + 1].position = p1 + normal * thickness;
+    }
+
+    outline_verts[count * 2 + 0].position = outline_verts[0].position;
+    outline_verts[count * 2 + 1].position = outline_verts[1].position;
+
+    /*for(sf::Vertex& i : outline_verts)
+    {
+        i.color = col;
+    }*/
+
+    for(int i=0; i < (count + 1) * 2; i++)
+    {
+        outline_verts[i].color = col;
+    }
+
+    win.draw(outline_verts, (count + 1) * 2, sf::TriangleStrip);
+
+    //win.draw(verts, num_verts + 2, sf::TriangleFan);
+}
+
 void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 {
     #if 1
@@ -836,11 +958,11 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         else
             intens = ivdistance * packet.intensity / (err * err);
 
-        float calc = 255 * intens;
+        float calc = 255 * intens/50;
 
         calc = clamp(calc, 0, 255);
 
-        sf::CircleShape shape;
+        /*sf::CircleShape shape;
         shape.setRadius(real_distance);
         shape.setPosition(packet.origin.x(), packet.origin.y());
         shape.setOutlineThickness(packet.packet_wavefront_width / space_scaling);
@@ -849,7 +971,9 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         shape.setOrigin(shape.getRadius(), shape.getRadius());
         shape.setPointCount(100);
 
-        win.draw(shape);
+        win.draw(shape);*/
+
+        render_partial_circle(win, packet.origin, packet.packet_wavefront_width / space_scaling, real_distance, packet.start_angle, packet.restrict_angle, sf::Color(255, 255, 255, calc));
 
         /*for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
         {

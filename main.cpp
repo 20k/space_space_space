@@ -128,7 +128,7 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
