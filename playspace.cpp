@@ -472,6 +472,9 @@ void accumulate_entities(const std::vector<entity*>& entities, ship_network_data
 
     for(entity* e : entities)
     {
+        if(e->cleanup)
+            continue;
+
         ship* s = dynamic_cast<ship*>(e);
         room_entity* rem = dynamic_cast<room_entity*>(e);
 
