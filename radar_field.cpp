@@ -725,6 +725,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
 {
     float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+    float next_distance = real_distance + speed_of_light_per_tick;
 
     vec2f packet_vector = (pos - packet.origin).norm() * real_distance;
 
@@ -732,7 +733,15 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
 
     float distance_to_packet = (pos - packet_position).length();
 
-    if(distance_to_packet > packet.packet_wavefront_width / space_scaling)
+    //if(distance_to_packet > packet.packet_wavefront_width / space_scaling)
+    //    return 0;
+
+    //if(distance_to_packet > speed_of_light_per_tick / 2)
+    //    return 0;
+
+    float packet_len = (pos - packet.origin).length();
+
+    if(packet_len < real_distance || packet_len >= next_distance)
         return 0;
 
     //float my_packet_angle = (pos - packet.origin).angle();
@@ -763,10 +772,12 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
                 continue;
             }*/
 
-            if(distance_to_shadow <= shadow.packet_wavefront_width / space_scaling)
-            {
+            float sdist = (pos - shadow.origin).length();
+
+            float shadow_next_distance = shadow_real_distance + speed_of_light_per_tick;
+
+            if(sdist >= shadow_real_distance && sdist < shadow_next_distance)
                 return 0;
-            }
         }
     }
 
