@@ -146,6 +146,13 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
             field->subtractive_packets[pack.id] = vec;
         }
+
+        auto f_ignore = theirs.ignore_map.find(pack.id);
+
+        if(f_ignore != theirs.ignore_map.end())
+        {
+            field->ignore_map[pack.id] = f_ignore->second;
+        }
     }
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;

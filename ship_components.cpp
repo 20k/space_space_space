@@ -4331,13 +4331,31 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
 
         alt_frequency_packet heat;
         heat.frequency = HEAT_FREQ;
-        heat.intensity = my_mass * 100;
+        heat.intensity = 20000;
 
-        s.current_radar_field->emit(heat, s.r.position, s);
+        /*double health = s.get_capacity()[component_info::HP] / 2;
+        s.take_damage(health, true, true);*/
+
+        for(component& c : s.components)
+        {
+            if(c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE)
+            {
+                does_dynamic& d = c.get_dynamic(component_info::HP);
+                const does_fixed& fix = c.get_fixed(component_info::HP);
+
+                float held = d.held;
+
+                apply_to_does(-d.held * 0.7, d, fix);
+
+                c.my_temperature += 500;
+            }
+        }
 
         room* new_poi = space->make_room(s.r.position);
 
         play.enter_room(&s, new_poi);
+
+        s.current_radar_field->emit(heat, s.r.position, s);
     }
 }
 
