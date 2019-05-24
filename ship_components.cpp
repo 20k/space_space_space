@@ -12,6 +12,7 @@
 #include <set>
 #include "aoe_damage.hpp"
 #include "player.hpp"
+#include "playspace.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -1712,6 +1713,8 @@ void ship::tick(double dt_s)
     {
         return c.get_theoretical_consumed();
     });
+
+    has_s_power = resource_status[component_info::S_POWER] >= my_size;
 
     for(component& c : components)
     {
@@ -4284,6 +4287,55 @@ void ship::tick_pre_phys(double dt_s)
 
     apply_inputs(dt_s, velocity_thrust, angular_thrust);
     //e.tick_phys(dt_s);
+}
+
+struct playspace_resetter
+{
+    ship& s;
+
+    playspace_resetter(ship& in) : s(in){}
+    ~playspace_resetter(){s.move_down = false; s.move_up = false;}
+};
+
+void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
+{
+
+}
+
+void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
+{
+    playspace_resetter dummy(*this);
+
+    if(!has_s_power && r == nullptr)
+    {
+        ///NEW ROOM
+        ship_drop_to(*this, play, space, nullptr);
+        return;
+    }
+
+    ///already in a room
+    if(move_down && r != nullptr)
+        return;
+
+    ///already in fsd space
+    if(move_up && r == nullptr)
+        return;
+
+    if(move_up && has_s_power && r != nullptr)
+    {
+        play.exit_room(this);
+        //play->enter_room(this, r);
+    }
+
+    if(move_down && r == nullptr)
+    {
+        std::optional<room*> found = play.get_nearby_room(this);
+
+        if(found)
+        {
+            play.enter_room(this, found.value());
+        }
+    }
 }
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)

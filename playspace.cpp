@@ -34,6 +34,7 @@ void room::add(entity* e)
     if(auto s = dynamic_cast<ship*>(e); s != nullptr)
     {
         s->current_radar_field = field;
+        s->space_type = space_type::REAL_SPACE;
     }
 
     if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
@@ -241,6 +242,7 @@ void playspace::add(entity* e)
     if(auto s = dynamic_cast<ship*>(e); s != nullptr)
     {
         s->current_radar_field = field;
+        s->space_type = space_type::S_SPACE;
     }
 
     if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
@@ -369,6 +371,26 @@ void playspace_manager::tick(double dt_s)
     for(playspace* play : spaces)
     {
         play->tick(dt_s);
+    }
+
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+
+            for(ship* s : ships)
+            {
+                s->check_space_rules(*this, play, r);
+            }
+        }
+
+        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+
+        for(ship* s : ships)
+        {
+            s->check_space_rules(*this, play, nullptr);
+        }
     }
 }
 

@@ -692,6 +692,10 @@ struct client_fire;
 struct player_model;
 struct persistent_user_data;
 
+struct playspace_manager;
+struct playspace;
+struct room;
+
 struct ship : heatable_entity, owned
 {
     size_t network_owner = 0;
@@ -729,6 +733,12 @@ struct ship : heatable_entity, owned
 
     ship();
 
+    int space_type = 0;
+
+    bool move_up = false;
+    bool has_s_power = false;
+    bool move_down = false;
+
     std::optional<component*> get_component_from_id(uint64_t id);
 
     void handle_cleanup();
@@ -738,6 +748,8 @@ struct ship : heatable_entity, owned
     void tick(double dt_s) override;
     void tick_pre_phys(double dt_s) override;
     //void render(sf::RenderWindow& win);
+
+    void check_space_rules(playspace_manager& play, playspace* space, room* r);
 
     void add(const component& c);
 
@@ -814,6 +826,8 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(my_size);
         DO_SERIALISE(is_ship);
         DO_SERIALISE(blueprint_name);
+        DO_SERIALISE(has_s_power);
+        DO_SERIALISE(space_type);
     }
 
     virtual void pre_collide(entity& other) override;

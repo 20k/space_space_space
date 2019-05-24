@@ -772,7 +772,7 @@ void server_thread(std::atomic_bool& should_term)
                     do_recurse(ctx, mod);
                 }
 
-                if(read_data.to_fsd_space)
+                /*if(read_data.to_fsd_space)
                 {
                     playspace_manage.exit_room(s);
                 }
@@ -785,7 +785,13 @@ void server_thread(std::atomic_bool& should_term)
                     {
                         playspace_manage.enter_room(s, opt.value());
                     }
-                }
+                }*/
+
+                if(read_data.to_fsd_space)
+                    s->move_up = true;
+
+                if(read_data.to_poi_space)
+                    s->move_down = true;
             }
 
             {

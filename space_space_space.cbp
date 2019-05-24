@@ -102,6 +102,7 @@
 		<Unit filename="deps/networking/networking.hpp" />
 		<Unit filename="deps/networking/serialisable.cpp" />
 		<Unit filename="deps/networking/serialisable.hpp" />
+		<Unit filename="deps/networking/serialisable_fwd.hpp" />
 		<Unit filename="design_editor.cpp" />
 		<Unit filename="design_editor.hpp" />
 		<Unit filename="entity.cpp" />

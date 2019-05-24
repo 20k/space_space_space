@@ -19,6 +19,15 @@ namespace room_type
     };
 }
 
+namespace space_type
+{
+    enum type
+    {
+        REAL_SPACE,///thrusters
+        S_SPACE,///sdrive
+    };
+}
+
 #define ROOM_POI_SCALE 0.1f
 
 ///aka poi
