@@ -360,6 +360,8 @@ void playspace::tick(double dt_s)
 
     for(room* r : rooms)
     {
+        r->field->sun_id = field->sun_id;
+
         r->import_radio_waves_from(*field);
 
         r->tick(dt_s);
