@@ -295,7 +295,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         ///ok so i think the reason why this is incorrect
         ///is that it does not take wave width into account
         float reflect_percentage = collide.reflectivity;
-        #if 0
+        #if 1
 
         if(packet.frequency == HEAT_FREQ)
         {
@@ -699,9 +699,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
     }*/
 
-    pdump.dump();
-    pdump.stop();
-    profile_dumper::dump();
+    //pdump.dump();
+    //pdump.stop();
+    //profile_dumper::dump();
 
     //collideables.clear();
 
@@ -1102,7 +1102,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         post_intensity_calculate.push_back(packet);
     }
 
-    {
+    /*{
         float dsum = 0;
 
         for(auto& i : post_intensity_calculate)
@@ -1111,7 +1111,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         }
 
         std::cout << "DSUM " << dsum << std::endl;
-    }
+    }*/
 
     ///could get around the jitter by sending intensity as frequently as we update randomness
     ///aka move to a frequency sampling basis
