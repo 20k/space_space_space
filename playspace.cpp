@@ -7,7 +7,8 @@
 
 struct room_entity : entity
 {
-    room_entity()
+    room* ren = nullptr;
+    room_entity(room* in) : ren(in)
     {
         r.init_rectangular({5, 5});
 
@@ -200,12 +201,27 @@ room* playspace::make_room(vec2f where)
 
     pending_rooms.push_back(r);
 
-    r->my_entity = entity_manage->make_new<room_entity>();
+    r->my_entity = entity_manage->make_new<room_entity>(r);
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
     r->field->sun_id = field->sun_id;
 
     return r;
+}
+
+void playspace::delete_room(room* r)
+{
+    std::vector<room_entity*> ens = entity_manage->fetch<room_entity>();
+
+    for(room_entity* e : ens)
+    {
+        if(e->ren == r)
+        {
+            e->cleanup = true;
+        }
+    }
+
+    delete r;
 }
 
 void playspace::init_default()
@@ -383,6 +399,18 @@ void playspace::tick(double dt_s)
     }
 
     pending_rooms.clear();
+
+    for(int i=0; i < (int)rooms.size(); i++)
+    {
+        if(rooms[i]->entity_manage->entities.size() == 0 && rooms[i]->entity_manage->to_spawn.size() == 0)
+        {
+            room* ptr = rooms[i];
+            rooms.erase(rooms.begin() + i);
+            i--;
+            delete_room(ptr);
+            continue;
+        }
+    }
 
     for(room* r : rooms)
     {
