@@ -966,7 +966,7 @@ void render_partial_circle(sf::RenderWindow& win, vec2f pos, float thickness, fl
 
 void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 {
-    #if 1
+    #if 0
     for(alt_frequency_packet& packet : packets)
     {
         float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
@@ -1063,7 +1063,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
     std::cout << "sub " << num_subtract << std::endl;*/
 
-    //#define CIRC
+    #define CIRC
     #ifdef CIRC
     sf::CircleShape shape;
 
