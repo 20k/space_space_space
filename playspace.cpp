@@ -132,6 +132,13 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
         imported_waves[pack.id] = true;
         field->packets.push_back(fixed_pack);
+
+        auto subtr_it = theirs.subtractive_packets.find(pack.id);
+
+        if(subtr_it != theirs.subtractive_packets.end())
+        {
+            field->subtractive_packets[pack.id] = subtr_it->second;
+        }
     }
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
