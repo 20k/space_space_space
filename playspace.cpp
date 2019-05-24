@@ -137,7 +137,14 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
         if(subtr_it != theirs.subtractive_packets.end())
         {
-            field->subtractive_packets[pack.id] = subtr_it->second;
+            auto vec = subtr_it->second;
+
+            for(auto& i : vec)
+            {
+                i = transform_space(i, *this, theirs);
+            }
+
+            field->subtractive_packets[pack.id] = vec;
         }
     }
 
