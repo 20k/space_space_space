@@ -4242,7 +4242,7 @@ float ship::get_max_angular_thrust()
     if(room_type == space_type::REAL_SPACE)
         return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 / mass;
     if(room_type == space_type::S_SPACE)
-        return get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 / mass;
+        return std::max(get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 / mass, 0.);
 
     return 0;
 }
@@ -4254,7 +4254,7 @@ float ship::get_max_velocity_thrust()
     if(room_type == space_type::REAL_SPACE)
         return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 * 20 / mass;
     if(room_type == space_type::S_SPACE)
-        return get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / mass;
+        return std::max(get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / mass, 0.);
 
     return 0;
 }
