@@ -4327,6 +4327,14 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
 {
     if(r == nullptr)
     {
+        float my_mass = s.get_mass();
+
+        alt_frequency_packet heat;
+        heat.frequency = HEAT_FREQ;
+        heat.intensity = my_mass * 100;
+
+        s.current_radar_field->emit(heat, s.r.position, s);
+
         room* new_poi = space->make_room(s.r.position);
 
         play.enter_room(&s, new_poi);
