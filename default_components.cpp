@@ -154,6 +154,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
         p.add_on_use(component_info::CAPACITOR, -0.5, 1);
+        p.add_on_use(component_info::LASER, 1, 1);
         p.subtype = "laser";
 
         p.max_use_angle = M_PI/8;

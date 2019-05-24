@@ -1359,12 +1359,23 @@ void data_tracker::add(double sat, double held)
 struct laser : projectile
 {
     sf::Clock clk;
+    float damage = 0;
 
     std::shared_ptr<alt_radar_field> field;
 
     laser(std::shared_ptr<alt_radar_field>& _field) : field(_field)
     {
 
+    }
+
+    virtual void on_collide(entity_manager& em, entity& other) override
+    {
+        if(dynamic_cast<ship*>(&other))
+        {
+            dynamic_cast<ship*>(&other)->take_damage(damage);
+        }
+
+        cleanup = true;
     }
 
     virtual void tick(double dt_s) override
@@ -1949,6 +1960,8 @@ void ship::tick(double dt_s)
                         ///speed of light is notionally a constant
                         l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
                         l->phys_ignore.push_back(id);
+
+                        l->damage = c.get_activate_fixed(component_info::LASER).capacity;
                     }
 
                     ///ok so:

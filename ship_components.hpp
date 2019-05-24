@@ -61,6 +61,7 @@ namespace component_info
         SELF_DESTRUCT,
         MINING,
         MANUFACTURING,
+        LASER,
         COUNT
     };
 
@@ -86,6 +87,7 @@ namespace component_info
         "Self Destruct",
         "Mining",
         "Manufacturing",
+        "Laser",
     };
 
     enum activation_type
