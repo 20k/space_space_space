@@ -834,13 +834,7 @@ void server_thread(std::atomic_bool& should_term)
         ///come up with solution to radar locality (aka globalness)
         for(auto& i : clients)
         {
-            ship_network_data network_ships = playspace_manage.get_network_data_for(i);
-
             data_model<ship*>& data = data_manage.fetch_by_id(i);
-
-            data.client_network_id = i;
-            data.ships = network_ships.ships;
-            data.renderables = network_ships.renderables;
 
             ship* s = dynamic_cast<ship*>(data.networked_model.controlled_ship);
 
@@ -851,6 +845,11 @@ void server_thread(std::atomic_bool& should_term)
                 //data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
             }
 
+            ship_network_data network_ships = playspace_manage.get_network_data_for(s, i);
+
+            data.client_network_id = i;
+            data.ships = network_ships.ships;
+            data.renderables = network_ships.renderables;
 
             if(data_manage.backup.find(i) != data_manage.backup.end())
             {

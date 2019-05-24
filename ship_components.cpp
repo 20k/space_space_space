@@ -4325,7 +4325,12 @@ struct playspace_resetter
 
 void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
 {
+    if(r == nullptr)
+    {
+        room* new_poi = space->make_room(s.r.position);
 
+        play.enter_room(&s, new_poi);
+    }
 }
 
 void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)

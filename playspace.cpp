@@ -174,18 +174,31 @@ playspace::~playspace()
     delete entity_manage;
 }
 
+std::vector<room*> playspace::all_rooms()
+{
+    auto r1 = rooms;
+
+    for(auto& i : pending_rooms)
+    {
+        r1.push_back(i);
+    }
+
+    return r1;
+}
+
 room* playspace::make_room(vec2f where)
 {
     room* r = new room;
     r->position = where;
 
-    rooms.push_back(r);
+    pending_rooms.push_back(r);
 
     r->my_entity = entity_manage->make_new<room_entity>();
     r->my_entity->r.position = where;
+    r->my_entity->collides = false;
     r->field->sun_id = field->sun_id;
 
-    return rooms.back();
+    return r;
 }
 
 void playspace::init_default()
@@ -238,7 +251,6 @@ void playspace::init_default()
             test_poi->entity_manage->cleanup();
         }
     }
-
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
@@ -358,6 +370,13 @@ void playspace::tick(double dt_s)
         a->current_radar_field = field;
     }*/
 
+    for(auto& i : pending_rooms)
+    {
+        rooms.push_back(i);
+    }
+
+    pending_rooms.clear();
+
     for(room* r : rooms)
     {
         r->field->sun_id = field->sun_id;
@@ -386,12 +405,9 @@ void playspace_manager::tick(double dt_s)
 {
     for(playspace* play : spaces)
     {
-        play->tick(dt_s);
-    }
+        auto all = play->all_rooms();
 
-    for(playspace* play : spaces)
-    {
-        for(room* r : play->rooms)
+        for(room* r : all)
         {
             std::vector<ship*> ships = r->entity_manage->fetch<ship>();
 
@@ -408,9 +424,14 @@ void playspace_manager::tick(double dt_s)
             s->check_space_rules(*this, play, nullptr);
         }
     }
+
+    for(playspace* play : spaces)
+    {
+        play->tick(dt_s);
+    }
 }
 
-void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id)
+void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id, bool get_room_entity)
 {
     #define SEE_ONLY_REAL
 
@@ -437,18 +458,18 @@ void accumulate_entities(const std::vector<entity*>& entities, ship_network_data
 
         }
 
-        if(rem)
+        if(rem && get_room_entity)
         {
             ret.renderables.push_back(rem->r);
         }
     }
 }
 
-ship_network_data playspace_manager::get_network_data_for(size_t id)
+ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
 {
     ship_network_data ret;
 
-    for(playspace* play : spaces)
+    /*for(playspace* play : spaces)
     {
         accumulate_entities(play->entity_manage->entities, ret, id);
         accumulate_entities(play->entity_manage->to_spawn, ret, id);
@@ -457,6 +478,34 @@ ship_network_data playspace_manager::get_network_data_for(size_t id)
         {
             accumulate_entities(r->entity_manage->entities, ret, id);
             accumulate_entities(r->entity_manage->to_spawn, ret, id);
+        }
+    }*/
+
+    if(e == nullptr)
+        return ret;
+
+    bool in_fsd_space = false;
+
+    for(playspace* play : spaces)
+    {
+        if(play->entity_manage->contains(e))
+        {
+            in_fsd_space = true;
+            break;
+        }
+    }
+
+    for(playspace* play : spaces)
+    {
+        accumulate_entities(play->entity_manage->entities, ret, id, in_fsd_space);
+        accumulate_entities(play->entity_manage->to_spawn, ret, id, in_fsd_space);
+
+        auto all = play->all_rooms();
+
+        for(room* r : all)
+        {
+            accumulate_entities(r->entity_manage->entities, ret, id, false);
+            accumulate_entities(r->entity_manage->to_spawn, ret, id, false);
         }
     }
 
@@ -502,7 +551,9 @@ void playspace_manager::exit_room(entity* e)
 {
     for(playspace* play : spaces)
     {
-        for(room* r : play->rooms)
+        auto rms = play->all_rooms();
+
+        for(room* r : rms)
         {
             if(r->entity_manage->contains(e))
             {

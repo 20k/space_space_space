@@ -79,12 +79,15 @@ struct playspace : serialisable, owned
     vec2f position;
 
     std::vector<room*> rooms;
+    std::vector<room*> pending_rooms;
 
     std::shared_ptr<alt_radar_field> field;
     entity_manager* entity_manage = nullptr;
 
     playspace();
     ~playspace();
+
+    std::vector<room*> all_rooms();
 
     room* make_room(vec2f where);
 
@@ -124,7 +127,7 @@ struct playspace_manager : serialisable
 
     void tick(double dt_s);
 
-    ship_network_data get_network_data_for(size_t id);
+    ship_network_data get_network_data_for(entity* e, size_t id);
 
     std::optional<room*> get_nearby_room(entity* e);
     void exit_room(entity* e);
