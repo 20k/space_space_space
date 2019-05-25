@@ -299,13 +299,18 @@ void playspace::init_default()
     std::minstd_rand rng;
     rng.seed(0);
 
+    for(int i=0; i < 100; i++)
+        rng();
+
     int real_belts = 1;
 
     for(int i=0; i < real_belts; i++)
     {
         float rad = 200;
 
-        float poi_angle = 0;
+        float poi_angle = rand_det_s(rng, 0, 2 * M_PI);
+
+        std::cout << "POIANG " << poi_angle << std::endl;
 
         {
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
