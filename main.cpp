@@ -128,7 +128,7 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -440,7 +440,7 @@ void server_thread(std::atomic_bool& should_term)
 
     #ifdef SERVER_VIEW
     camera cam({debug.getSize().x, debug.getSize().y});
-    cam.position = {0, 0};
+    cam.position = {-cam.screen_size.x()/2, -cam.screen_size.y()/2};
     #endif // SERVER_VIEW
 
     /*for(component& c : test_ship->components)
@@ -521,6 +521,14 @@ void server_thread(std::atomic_bool& should_term)
                 }
             }
         }
+
+        #define CCC
+        #ifdef CCC
+        cam.position.x() += key.isKeyPressed(sf::Keyboard::Numpad6)*10;
+        cam.position.x() -= key.isKeyPressed(sf::Keyboard::Numpad4)*10;
+        cam.position.y() += key.isKeyPressed(sf::Keyboard::Numpad2)*10;
+        cam.position.y() -= key.isKeyPressed(sf::Keyboard::Numpad8)*10;
+        #endif // CCC
 
         //entities.cleanup();
 

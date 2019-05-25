@@ -292,6 +292,8 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim)
         a->init(2, 4);
         a->r.position = found_pos; ///poispace
         a->ticks_between_collisions = 2;
+        //a->is_heat = false;
+
         r->entity_manage->cleanup();
     }
 }
@@ -422,7 +424,7 @@ void room::tick(double dt_s)
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
     }
 
-    field->finite_bound = entity_manage->collision.half_dim.largest_elem() * 1.5;
+    field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);
 
     field->finite_bound = std::max(field->finite_bound, 100.f);
 
@@ -431,6 +433,8 @@ void room::tick(double dt_s)
     //std::cout << "FCENTRE " << field->finite_centre << " RAD " << field->finite_bound << std::endl;
 
     //std::cout << "finite bound " << field->finite_bound << std::endl;
+
+    //std::cout << "FNAME " << name << std::endl;
 
     field->tick(*entity_manage, dt_s);
 
@@ -441,7 +445,7 @@ void room::tick(double dt_s)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    //std::cout << "fdnum " << field->packets.size() << std::endl;
+    std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)
@@ -510,7 +514,7 @@ void playspace::tick(double dt_s)
 
     field->tick(*entity_manage, dt_s);
 
-    //std::cout << "parent num " << field->packets.size() << std::endl;
+    std::cout << "parent num " << field->packets.size() << std::endl;
 }
 
 void playspace_manager::tick(double dt_s)

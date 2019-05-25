@@ -980,6 +980,9 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
     #if 0
     for(alt_frequency_packet& packet : packets)
     {
+        if(packet.reflected_by == -1)
+            continue;
+
         float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
         float intens = 0;
 
@@ -1011,7 +1014,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
         win.draw(shape);*/
 
-        render_partial_circle(win, packet.origin, packet.packet_wavefront_width / space_scaling, real_distance, packet.start_angle, packet.restrict_angle, sf::Color(255, 255, 255, calc));
+        render_partial_circle(win, cam.world_to_screen(packet.origin), packet.packet_wavefront_width / space_scaling, real_distance, packet.start_angle, packet.restrict_angle, sf::Color(255, 255, 255, calc));
 
         /*for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
         {
@@ -1084,8 +1087,10 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         {
             //float intensity = get_imaginary_intensity_at({x, y});
 
-            //float intensity = get_refl_intensity_at({x, y});
-            float intensity = get_intensity_at({x, y});
+            vec2f world = cam.screen_to_world({x, y});
+
+            float intensity = get_refl_intensity_at(world);
+            //float intensity = get_intensity_at(world);
 
             if(intensity == 0)
                 continue;
@@ -1105,10 +1110,12 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
             fcol = clamp(fcol, 0, 255);
 
-            vec2f world = cam.world_to_screen({x, y}, 1);
+            //vec2f world = cam.world_to_screen({x, y}, 1);
+
+            vec2f rpos = {x, y};
 
             shape.setRadius(intensity);
-            shape.setPosition(world.x(), world.y());
+            shape.setPosition(rpos.x(), rpos.y());
             shape.setFillColor(sf::Color(fcol, fcol, fcol, fcol));
             shape.setOrigin(shape.getRadius(), shape.getRadius());
 

@@ -58,7 +58,7 @@ material_fixed_properties material_info::fetch(material_info::material_type type
     if(type == material_info::SILICON)
     {
         fixed.specific_heat = 0.71;
-        fixed.reflectivity = 1;
+        fixed.reflectivity = 0.9;
         fixed.melting_point = 1414;
         fixed.density = 2.3;
     }
