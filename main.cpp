@@ -853,6 +853,17 @@ void server_thread(std::atomic_bool& should_term)
             data.ships = network_ships.ships;
             data.renderables = network_ships.renderables;
 
+            data.labels.clear();
+
+            for(auto& i : network_ships.pois)
+            {
+                clientside_label lab;
+                lab.name = i.name;
+                lab.position = i.position;
+
+                data.labels.push_back(lab);
+            }
+
             if(data_manage.backup.find(i) != data_manage.backup.end())
             {
                 sf::Clock total_encode;
@@ -1214,6 +1225,24 @@ int main()
         //vec2f mfrac = mpos / (vec2f){window.getSize().x, window.getSize().y};
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
+
+        for(clientside_label& lab : model.labels)
+        {
+            vec2f sspace = cam.world_to_screen(lab.position);
+
+            //if((mpos - sspace).length() > 20)
+            //    continue;
+
+            ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
+
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
+
+            ImGui::Begin(("##" + lab.name).c_str(), nullptr, flags);
+
+            ImGui::Text(lab.name.c_str());
+
+            ImGui::End();
+        }
 
         renderables.render(cam, window);
 

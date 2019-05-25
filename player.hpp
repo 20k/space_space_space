@@ -93,11 +93,24 @@ struct auth_data : serialisable
     }
 };
 
+struct clientside_label : serialisable
+{
+    std::string name;
+    vec2f position;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(name);
+        DO_SERIALISE(position);
+    }
+};
+
 template<typename T>
 struct data_model : serialisable
 {
     std::vector<T> ships;
     std::vector<client_renderable> renderables;
+    std::vector<clientside_label> labels;
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
     player_model networked_model;
@@ -107,6 +120,7 @@ struct data_model : serialisable
     {
         DO_SERIALISE(ships);
         DO_SERIALISE(renderables);
+        DO_SERIALISE(labels);
         DO_SERIALISE(sample);
         DO_SERIALISE(client_network_id);
         DO_SERIALISE(networked_model);

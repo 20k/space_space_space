@@ -104,10 +104,19 @@ struct playspace : serialisable, owned
 struct ship;
 struct client_renderable;
 
+struct client_poi_data : serialisable
+{
+    std::string name;
+    vec2f position;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct ship_network_data
 {
     std::vector<ship*> ships;
     std::vector<client_renderable> renderables;
+    std::vector<client_poi_data> pois;
 };
 
 struct playspace_manager : serialisable

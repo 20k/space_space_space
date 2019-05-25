@@ -80,6 +80,12 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other
     DO_SERIALISE(entity_manage);
 }
 
+void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(name);
+    DO_SERIALISE(position);
+}
+
 alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
 {
     alt_frequency_packet ret = in;
@@ -202,10 +208,30 @@ room* playspace::make_room(vec2f where)
     pending_rooms.push_back(r);
 
     r->my_entity = entity_manage->make_new<room_entity>(r);
+
+    {
+        r->my_entity->r = client_renderable();
+
+        int n = 7;
+
+        for(int i=0; i < n; i++)
+        {
+            r->my_entity->r.vert_dist.push_back(4);
+
+            float angle = ((float)i / n) * 2 * M_PI;
+
+            r->my_entity->r.vert_angle.push_back(angle);
+
+            r->my_entity->r.vert_cols.push_back({1,0.7,0,1});
+        }
+
+        r->my_entity->r.approx_rad = 4;
+        r->my_entity->r.approx_dim = {4, 4};
+    }
+
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
     r->field->sun_id = field->sun_id;
-
     return r;
 }
 
@@ -226,6 +252,8 @@ void playspace::delete_room(room* r)
 
 void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim)
 {
+    r->name = "Asteroid Belt";
+
     int num_asteroids = 100;
 
     int tries = 0;
@@ -271,20 +299,49 @@ void playspace::init_default()
     std::minstd_rand rng;
     rng.seed(0);
 
+    int real_belts = 1;
+
+    for(int i=0; i < real_belts; i++)
     {
-        vec2f pos = 0;
-        float dim = 500;
+        float rad = 200;
 
-        room* test_poi = make_room({pos.x(), pos.y()});
+        float poi_angle = 0;
 
-        make_asteroid_poi(rng, test_poi, dim);
+        {
+            vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
+            float dim = 500;
+
+            room* test_poi = make_room({pos.x(), pos.y()});
+
+            make_asteroid_poi(rng, test_poi, dim);
+        }
+
+        float cfrac = poi_angle + 0.01;
+
+        int max_num = 100;
+
+        for(int idx = 0; idx < max_num; idx++)
+        {
+            asteroid* a = entity_manage->make_new<asteroid>(field);
+            a->init(1, 2);
+            a->is_heat = false;
+            a->collides = false;
+
+            float ang = cfrac + idx * 2 * M_PI / max_num;
+
+            float my_rad = rad + rand_det_s(rng, -rad * 0.1, rad * 0.1);
+
+            vec2f pos = (vec2f){my_rad, 0}.rot(ang);
+
+            a->r.position = pos;
+        }
     }
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
     asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
-    sun->r.position = {400, 400}; ///realspace
+    sun->r.position = {0, 0}; ///realspace
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
 
@@ -543,12 +600,33 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
         accumulate_entities(play->entity_manage->entities, ret, id, in_fsd_space);
         accumulate_entities(play->entity_manage->to_spawn, ret, id, in_fsd_space);
 
+        if(in_fsd_space)
+        {
+            for(auto& e : play->entity_manage->entities)
+            {
+                if(!e->collides)
+                {
+                    ret.renderables.push_back(e->r);
+                    continue;
+                }
+            }
+        }
+
         auto all = play->all_rooms();
 
         for(room* r : all)
         {
             accumulate_entities(r->entity_manage->entities, ret, id, false);
             accumulate_entities(r->entity_manage->to_spawn, ret, id, false);
+
+            if(in_fsd_space)
+            {
+                client_poi_data poi;
+                poi.name = r->name;
+                poi.position = r->position;
+
+                ret.pois.push_back(poi);
+            }
         }
     }
 
