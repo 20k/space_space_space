@@ -128,7 +128,7 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -440,7 +440,7 @@ void server_thread(std::atomic_bool& should_term)
 
     #ifdef SERVER_VIEW
     camera cam({debug.getSize().x, debug.getSize().y});
-    cam.position = {debug.getSize().x/2, debug.getSize().y/2};
+    cam.position = {0, 0};
     #endif // SERVER_VIEW
 
     /*for(component& c : test_ship->components)

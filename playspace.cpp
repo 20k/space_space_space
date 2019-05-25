@@ -97,10 +97,10 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
         ret.last_packet = std::make_shared<alt_frequency_packet>(transform_space(*ret.last_packet, r, parent_field));
     }
 
-    ret.origin = r.get_in_local(ret.origin);
+    ret.origin = r.get_in_local(in.origin);
 
     if(ret.reflected_by != -1)
-        ret.reflected_position = r.get_in_local(ret.reflected_position);
+        ret.reflected_position = r.get_in_local(in.reflected_position);
 
     //uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
 
@@ -139,6 +139,8 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
         imported_waves[pack.id] = true;
         field->packets.push_back(fixed_pack);
+
+        //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
 
         auto subtr_it = theirs.subtractive_packets.find(pack.id);
 
@@ -302,11 +304,16 @@ void playspace::init_default()
     for(int i=0; i < 100; i++)
         rng();
 
-    int real_belts = 1;
+    int real_belts = 0;
+
+    float min_rad = 100;
+    float max_rad = 800;
 
     for(int i=0; i < real_belts; i++)
     {
-        float rad = 200;
+        //float rad = 200;
+
+        float rad = ((float)i / real_belts) * (max_rad - min_rad) + min_rad;
 
         float poi_angle = rand_det_s(rng, 0, 2 * M_PI);
 
@@ -418,7 +425,12 @@ void room::tick(double dt_s)
     }
 
     field->finite_bound = entity_manage->collision.half_dim.largest_elem() * 1.5;
+
+    field->finite_bound = std::max(field->finite_bound, 100.f);
+
     field->finite_centre = entity_manage->collision.pos;
+
+    //std::cout << "FCENTRE " << field->finite_centre << " RAD " << field->finite_bound << std::endl;
 
     //std::cout << "finite bound " << field->finite_bound << std::endl;
 
