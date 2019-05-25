@@ -1226,8 +1226,11 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
-        for(clientside_label& lab : model.labels)
+        //for(clientside_label& lab : model.labels)
+        for(int i=0; i < (int)model.labels.size(); i++)
         {
+            clientside_label& lab = model.labels[i];
+
             vec2f sspace = cam.world_to_screen(lab.position);
 
             //if((mpos - sspace).length() > 20)
@@ -1237,7 +1240,7 @@ int main()
 
             ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
 
-            ImGui::Begin(("##" + lab.name).c_str(), nullptr, flags);
+            ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
 
             ImGui::Text(lab.name.c_str());
 

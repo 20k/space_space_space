@@ -304,7 +304,7 @@ void playspace::init_default()
     for(int i=0; i < 100; i++)
         rng();
 
-    int real_belts = 0;
+    int real_belts = 3;
 
     float min_rad = 100;
     float max_rad = 800;
@@ -316,8 +316,6 @@ void playspace::init_default()
         float rad = ((float)i / real_belts) * (max_rad - min_rad) + min_rad;
 
         float poi_angle = rand_det_s(rng, 0, 2 * M_PI);
-
-        std::cout << "POIANG " << poi_angle << std::endl;
 
         {
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
