@@ -700,9 +700,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
     }*/
 
-    //pdump.dump();
-    //pdump.stop();
-    //profile_dumper::dump();
+    pdump.dump();
+    pdump.stop();
+    profile_dumper::dump();
 
     //collideables.clear();
 
@@ -1090,8 +1090,8 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
             vec2f world = cam.screen_to_world({x, y});
 
-            float intensity = get_refl_intensity_at(world);
-            //float intensity = get_intensity_at(world);
+            //float intensity = get_refl_intensity_at(world);
+            float intensity = get_intensity_at(world);
 
             if(intensity == 0)
                 continue;

@@ -252,11 +252,9 @@ void playspace::delete_room(room* r)
     delete r;
 }
 
-void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim)
+void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_asteroids)
 {
     r->name = "Asteroid Belt";
-
-    int num_asteroids = 100;
 
     int tries = 0;
 
@@ -325,7 +323,7 @@ void playspace::init_default()
 
             room* test_poi = make_room({pos.x(), pos.y()});
 
-            make_asteroid_poi(rng, test_poi, dim);
+            make_asteroid_poi(rng, test_poi, dim, 100);
         }
 
         float cfrac = poi_angle + 0.01;
