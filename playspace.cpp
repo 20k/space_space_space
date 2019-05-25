@@ -224,6 +224,48 @@ void playspace::delete_room(room* r)
     delete r;
 }
 
+void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim)
+{
+    int num_asteroids = 100;
+
+    int tries = 0;
+
+    for(int i=0; i < num_asteroids; i++)
+    {
+        vec2f found_pos = rand_det(rng, (vec2f){-dim, -dim}, (vec2f){dim, dim});
+
+        bool cont = false;
+
+        for(entity* e : r->entity_manage->entities)
+        {
+            if((e->r.position - found_pos).length() < 40)
+            {
+                cont = true;
+                break;
+            }
+        }
+
+        if(tries > 100)
+            break;
+
+        if(cont)
+        {
+            tries++;
+
+            i--;
+            continue;
+        }
+
+        tries = 0;
+
+        asteroid* a = r->entity_manage->make_new<asteroid>(r->field);
+        a->init(2, 4);
+        a->r.position = found_pos; ///poispace
+        a->ticks_between_collisions = 2;
+        r->entity_manage->cleanup();
+    }
+}
+
 void playspace::init_default()
 {
     std::minstd_rand rng;
@@ -235,44 +277,7 @@ void playspace::init_default()
 
         room* test_poi = make_room({pos.x(), pos.y()});
 
-        int num_asteroids = 100;
-
-        int tries = 0;
-
-        for(int i=0; i < num_asteroids; i++)
-        {
-            vec2f found_pos = rand_det(rng, (vec2f){-dim, -dim}, (vec2f){dim, dim});
-
-            bool cont = false;
-
-            for(entity* e : test_poi->entity_manage->entities)
-            {
-                if((e->r.position - found_pos).length() < 40)
-                {
-                    cont = true;
-                    break;
-                }
-            }
-
-            if(tries > 100)
-                break;
-
-            if(cont)
-            {
-                tries++;
-
-                i--;
-                continue;
-            }
-
-            tries = 0;
-
-            asteroid* a = test_poi->entity_manage->make_new<asteroid>(field);
-            a->init(2, 4);
-            a->r.position = found_pos; ///poispace
-            a->ticks_between_collisions = 2;
-            test_poi->entity_manage->cleanup();
-        }
+        make_asteroid_poi(rng, test_poi, dim);
     }
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;

@@ -839,7 +839,7 @@ float component::get_operating_efficiency()
 
 void component::scale(float size)
 {
-    current_scale = size;
+    current_scale *= size;
 
     for(does_dynamic& d : dyn_info)
     {

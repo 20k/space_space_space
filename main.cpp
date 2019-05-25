@@ -160,6 +160,8 @@ void server_thread(std::atomic_bool& should_term)
     }
 
     component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);
+    component test_power = get_component_default(component_type::POWER_GENERATOR, 1);
+    test_power.scale(2);
 
     test_ship->add(get_component_default(component_type::THRUSTER, 1));
     test_ship->add(get_component_default(component_type::S_DRIVE, 1));
@@ -172,7 +174,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::ARMOUR, 1));
     test_ship->add(get_component_default(component_type::LIFE_SUPPORT, 1));
     test_ship->add(get_component_default(component_type::RADIATOR, 1));
-    test_ship->add(get_component_default(component_type::POWER_GENERATOR, 1));
+    test_ship->add(test_power);
     test_ship->add(get_component_default(component_type::CREW, 1));
     test_ship->add(get_component_default(component_type::MINING_LASER, 1));
     test_ship->add(get_component_default(component_type::REFINERY, 1));
