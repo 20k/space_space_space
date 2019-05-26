@@ -21,6 +21,7 @@
 #include <nauth/steam_api.hpp>
 #include "playspace.hpp"
 #include "format.hpp"
+#include "ui_util.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -1441,7 +1442,10 @@ int main()
 
             std::string fstr = "(" + activation[i] + ")";
 
-            ImGui::Text(fstr.c_str());
+            if(ImGuiX::SimpleButton(fstr))
+            {
+                std::cout << "clicked\n";
+            }
         }
 
         ImGui::End();
