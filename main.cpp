@@ -852,6 +852,7 @@ void server_thread(std::atomic_bool& should_term)
             if(s)
             {
                 data.sample = s->last_sample;
+                data.controlled_ship_id = s->_pid;
 
                 //data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
             }
@@ -1125,6 +1126,7 @@ int main()
     }
 
     bool focus = true;
+    vec2f last_s_size = {0,0};
 
     while(window.isOpen())
     {
@@ -1362,6 +1364,21 @@ int main()
             s.show_power();
 
             s.show_manufacturing_windows(design.server_blueprint_manage);
+
+            /*if(s._pid == model.controlled_ship_id && s.has_s_power && s.room_type == space_type::REAL_SPACE)
+            {
+                ImGui::SetNextWindowPos(ImVec2(window.getSize().x/2 - last_s_size.x()/2, 6*window.getSize().y/7));
+
+                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize;
+
+                ImGui::Begin("##active", nullptr, flags);
+
+                ImGui::Text("S-Drive Ready");
+
+                last_s_size = {ImGui::GetWindowWidth(), ImGui::GetWindowHeight()};
+
+                ImGui::End();
+            }*/
         }
 
         //std::cout << "showtime " << showtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;

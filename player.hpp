@@ -115,6 +115,7 @@ struct data_model : serialisable
     uint32_t client_network_id = 0;
     player_model networked_model;
     persistent_user_data persistent_data;
+    size_t controlled_ship_id = -1;
 
     SERIALISE_SIGNATURE()
     {
@@ -125,6 +126,7 @@ struct data_model : serialisable
         DO_SERIALISE(client_network_id);
         DO_SERIALISE(networked_model);
         DO_SERIALISE(persistent_data);
+        DO_SERIALISE(controlled_ship_id);
     }
 };
 

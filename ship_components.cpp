@@ -13,6 +13,7 @@
 #include "aoe_damage.hpp"
 #include "player.hpp"
 #include "playspace.hpp"
+#include "colours.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -3864,7 +3865,15 @@ void ship::show_power()
             }
             else
             {
-                ImGui::Text(name.c_str());
+                if(c.base_id == component_type::S_DRIVE && c.activation_level > 0)
+                {
+                    if(has_s_power)
+                        ImGui::TextColored(colours::pastel_green, name.c_str());
+                    else
+                        ImGui::TextColored(colours::pastel_red, name.c_str());
+                }
+                else
+                    ImGui::Text(name.c_str());
             }
         }
         #endif // HORIZONTAL
