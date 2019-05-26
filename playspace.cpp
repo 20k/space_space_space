@@ -286,8 +286,24 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
 
         tries = 0;
 
+        std::vector<vec2f> sizes;
+        sizes.push_back({1, 1.5});
+        sizes.push_back({1.5, 2.5});
+        sizes.push_back({2.5, 3});
+        sizes.push_back({3.5, 4});
+        sizes.push_back({9, 10});
+
+        float rval = rand_det_s(rng, 0, 1);
+
+        vec2f val;
+
+        piecewise_linear(val, sizes[0], sizes[1], 0, 0.3, rval);
+        piecewise_linear(val, sizes[1], sizes[2], 0.3, 0.7, rval);
+        piecewise_linear(val, sizes[2], sizes[3], 0.7, 0.95, rval);
+        piecewise_linear(val, sizes[3], sizes[4], 0.95, 1, rval);
+
         asteroid* a = r->entity_manage->make_new<asteroid>(r->field);
-        a->init(2, 4);
+        a->init(val.x(), val.y());
         a->r.position = found_pos; ///poispace
         a->ticks_between_collisions = 2;
         //a->is_heat = false;

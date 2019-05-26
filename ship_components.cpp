@@ -4939,6 +4939,8 @@ void asteroid::init(float min_rad, float max_rad)
 
     r.approx_rad = max_rad;
     r.approx_dim = {max_rad, max_rad};
+
+    mass = 500 * pow(max_rad, 3);
 }
 
 void asteroid::tick(double dt_s)
