@@ -154,6 +154,19 @@ void client_renderable::render(camera& cam, sf::RenderWindow& window)
 
     //vec3f lcol = col * 255.f;
 
+    vec2f tl = position - approx_dim;
+    vec2f br = position + approx_dim;
+
+    vec2f tr = position + (vec2f){approx_dim.x(), -approx_dim.y()};
+    vec2f bl = position + (vec2f){-approx_dim.x(), approx_dim.y()};
+
+    if(!cam.within_screen(cam.world_to_screen(tl)) &&
+       !cam.within_screen(cam.world_to_screen(tr)) &&
+       !cam.within_screen(cam.world_to_screen(bl)) &&
+       !cam.within_screen(cam.world_to_screen(br))
+       )
+        return;
+
     for(int i=0; i<(int)vert_dist.size(); i++)
     {
         int cur = i;
