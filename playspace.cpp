@@ -202,7 +202,7 @@ std::vector<room*> playspace::all_rooms()
     return r1;
 }
 
-room* playspace::make_room(vec2f where)
+room* playspace::make_room(vec2f where, float entity_rad)
 {
     room* r = new room;
     r->position = where;
@@ -218,7 +218,7 @@ room* playspace::make_room(vec2f where)
 
         for(int i=0; i < n; i++)
         {
-            r->my_entity->r.vert_dist.push_back(4);
+            r->my_entity->r.vert_dist.push_back(entity_rad);
 
             float angle = ((float)i / n) * 2 * M_PI;
 
@@ -317,11 +317,12 @@ void playspace::init_default()
 
         float poi_angle = rand_det_s(rng, 0, 2 * M_PI);
 
+        float dim = 1000;
+
         {
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
-            float dim = 500;
 
-            room* test_poi = make_room({pos.x(), pos.y()});
+            room* test_poi = make_room({pos.x(), pos.y()}, dim * ROOM_POI_SCALE);
 
             make_asteroid_poi(rng, test_poi, dim, 100);
         }
@@ -419,7 +420,7 @@ void room::tick(double dt_s)
 
     for(ship* s : ships)
     {
-        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
+        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
     }
 
     field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);
@@ -507,7 +508,7 @@ void playspace::tick(double dt_s)
 
     for(ship* s : ships)
     {
-        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_radar_strength());
+        s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
     }
 
     field->tick(*entity_manage, dt_s);

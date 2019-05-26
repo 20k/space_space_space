@@ -301,7 +301,6 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage *= 0.5;
 
         #if 1
-
         if(packet.frequency == HEAT_FREQ)
         {
             ///only absorb 10% of heat? we only reflect 90%
@@ -985,8 +984,8 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
     #if 0
     for(alt_frequency_packet& packet : packets)
     {
-        if(packet.reflected_by == -1)
-            continue;
+        //if(packet.reflected_by == -1)
+        //    continue;
 
         float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
         float intens = 0;

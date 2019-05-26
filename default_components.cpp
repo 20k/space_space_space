@@ -39,6 +39,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::MINING_LASER] = make_default("Mining Laser", "MLAS");
     ret[component_type::REFINERY] = make_default("Refinery", "REF");
     ret[component_type::FACTORY] = make_default("Factory", "FAC");
+    ret[component_type::RADAR] = make_default("Radar", "RAD");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -79,6 +80,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::MINING_LASER].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::REFINERY].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::FACTORY].add_composition_ratio({material_info::IRON}, {1});
+    ret[component_type::RADAR].add_composition_ratio({material_info::IRON}, {1});
 
 
     ret[component_type::REFINERY].activation_level = 0;
@@ -214,7 +216,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     {
         component_fixed_properties& p = ret[component_type::RADIATOR];
 
-        p.add(component_info::RADIATOR, 0.1);
+        p.add(component_info::RADIATOR, 1);
         p.add(component_info::HP, 0, 1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
@@ -371,6 +373,17 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.base_volume = 1;
         //p.set_internal_volume(1);
+    }
+
+    {
+        component_fixed_properties& p = ret[component_type::RADAR];
+        p.add(component_info::POWER, -1);
+        p.add(component_info::RADAR, 1);
+        p.add(component_info::HP, 0, 1);
+
+        p.set_heat(5);
+        p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.base_volume = 1;
     }
 
     return ret;

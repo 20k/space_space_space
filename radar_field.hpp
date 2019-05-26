@@ -274,7 +274,7 @@ struct alt_radar_field
     std::map<uint32_t, fixed_clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
 
-    float speed_of_light_per_tick = 100.5;
+    float speed_of_light_per_tick = 20.5;
     float space_scaling = 1;
 
     bool has_finite_bound = false;

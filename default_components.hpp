@@ -33,6 +33,7 @@ namespace component_type
         MINING_LASER,
         REFINERY,
         FACTORY,
+        RADAR,
         COUNT,
     };
 }

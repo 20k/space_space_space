@@ -62,6 +62,7 @@ namespace component_info
         MINING,
         MANUFACTURING,
         LASER,
+        RADAR,
         COUNT
     };
 
@@ -88,6 +89,7 @@ namespace component_info
         "Mining",
         "Manufacturing",
         "Laser",
+        "Radar",
     };
 
     enum activation_type
@@ -810,7 +812,7 @@ struct ship : heatable_entity, owned
 
     void add_pipe(const storage_pipe& p);
 
-    double get_radar_strength();
+    double get_sensor_strength();
     float get_max_angular_thrust();
     float get_max_velocity_thrust();
     float get_mass();

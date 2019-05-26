@@ -1921,6 +1921,23 @@ void ship::tick(double dt_s)
         }
     }
 
+    for(component& c : components)
+    {
+        if(!c.has(component_info::RADAR))
+            continue;
+
+        does_fixed d = c.get_fixed(component_info::RADAR);
+
+        alt_radar_field& radar = *current_radar_field;
+
+        alt_frequency_packet em;
+        em.frequency = 2000;
+        ///getting a bit complex to determine this value
+        em.intensity = 20000 * c.get_operating_efficiency() * d.recharge;
+
+        radar.emit(em, r.position, *this);
+    }
+
 
     ///item uses
     for(component& c : components)
@@ -2027,7 +2044,7 @@ void ship::tick(double dt_s)
                     }
                 }
 
-                if(c.has(component_info::SENSORS))
+                /*if(c.has(component_info::SENSORS))
                 {
                     alt_radar_field& radar = *current_radar_field;
 
@@ -2037,7 +2054,7 @@ void ship::tick(double dt_s)
                     em.intensity = 100000 * c.get_operating_efficiency();
 
                     radar.emit(em, r.position, *this);
-                }
+                }*/
 
                 ///damage surrounding targets
                 ///should not be instantaneous but an expanding explosion ring, repurposable
@@ -4351,7 +4368,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
             }
         }
 
-        room* new_poi = space->make_room(s.r.position);
+        room* new_poi = space->make_room(s.r.position, 5);
 
         play.enter_room(&s, new_poi);
 
@@ -4493,7 +4510,7 @@ void ship::add_pipe(const storage_pipe& p)
     pipes.push_back(p);
 }
 
-double ship::get_radar_strength()
+double ship::get_sensor_strength()
 {
     std::vector<double> net = sum<double>
     ([](component& c)

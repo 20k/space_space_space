@@ -89,7 +89,7 @@ struct playspace : serialisable, owned
 
     std::vector<room*> all_rooms();
 
-    room* make_room(vec2f where);
+    room* make_room(vec2f where, float entity_rad);
     void delete_room(room* r);
 
     SERIALISE_SIGNATURE();
