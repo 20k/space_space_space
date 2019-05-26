@@ -307,6 +307,7 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
         a->r.position = found_pos; ///poispace
         a->ticks_between_collisions = 2;
         //a->is_heat = false;
+        a->angular_velocity = rand_det_s(rng, -0.01, 0.3);
 
         r->entity_manage->cleanup();
     }
