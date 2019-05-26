@@ -296,6 +296,10 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         ///ok so i think the reason why this is incorrect
         ///is that it does not take wave width into account
         float reflect_percentage = collide.reflectivity;
+
+        if(packet.reflected_by != -1)
+            reflect_percentage *= 0.5;
+
         #if 1
 
         if(packet.frequency == HEAT_FREQ)
