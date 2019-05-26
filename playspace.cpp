@@ -353,7 +353,7 @@ void playspace::init_default()
     asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
     sun->r.position = {0, 0}; ///realspace
-    sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
+    //sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
 
     field->sun_id = sun->id;
@@ -444,7 +444,7 @@ void room::tick(double dt_s)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    std::cout << "fdnum " << field->packets.size() << std::endl;
+    //std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)
@@ -513,7 +513,7 @@ void playspace::tick(double dt_s)
 
     field->tick(*entity_manage, dt_s);
 
-    std::cout << "parent num " << field->packets.size() << std::endl;
+    //std::cout << "parent num " << field->packets.size() << std::endl;
 }
 
 void playspace_manager::tick(double dt_s)

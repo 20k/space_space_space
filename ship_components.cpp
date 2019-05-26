@@ -43,6 +43,12 @@ ship::ship()
 
 void component_fixed_properties::add(component_info::does_type type, double amount)
 {
+    for(does_fixed& d : d_info)
+    {
+        if(d.type == component_info::HP && type == component_info::HP)
+            assert(false);
+    }
+
     does_fixed d;
     d.type = type;
     d.recharge = amount;
@@ -52,6 +58,12 @@ void component_fixed_properties::add(component_info::does_type type, double amou
 
 void component_fixed_properties::add(component_info::does_type type, double amount, double capacity)
 {
+    for(does_fixed& d : d_info)
+    {
+        if(d.type == component_info::HP && type == component_info::HP)
+            assert(false);
+    }
+
     does_fixed d;
     d.type = type;
     d.recharge = amount;
