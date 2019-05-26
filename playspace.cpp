@@ -533,6 +533,12 @@ void playspace::tick(double dt_s)
     //std::cout << "parent num " << field->packets.size() << std::endl;
 }
 
+void playspace_connect(playspace* p1, playspace* p2)
+{
+    p1->connections.push_back(p2);
+    p2->connections.push_back(p1);
+}
+
 void playspace_manager::tick(double dt_s)
 {
     for(playspace* play : spaces)

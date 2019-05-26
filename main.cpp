@@ -140,8 +140,17 @@ void server_thread(std::atomic_bool& should_term)
 
     playspace_manager playspace_manage;
 
-    playspace* test_playspace = playspace_manage.make_new();
-    test_playspace->init_default();
+    playspace* sys_1 = playspace_manage.make_new();
+    sys_1->init_default();
+    sys_1->name = "P-C";
+
+    sys_1->position = {100, 0};
+
+    playspace* sys_2 = playspace_manage.make_new();
+    sys_2->init_default();
+    sys_2->name = "A-C";
+
+    playspace_connect(sys_1, sys_2);
 
 
     //entity_manager entities;
@@ -156,7 +165,7 @@ void server_thread(std::atomic_bool& should_term)
         test_ship->network_owner = 0;
         test_ship->r.network_owner = 0;
 
-        test_playspace->add(test_ship);
+        sys_1->add(test_ship);
     }
 
     component component_launch = get_component_default(component_type::COMPONENT_LAUNCHER, 1);

@@ -78,6 +78,8 @@ struct playspace : serialisable, owned
     std::string name;
     vec2f position;
 
+    std::vector<playspace*> connections;
+
     std::vector<room*> rooms;
     std::vector<room*> pending_rooms;
 
@@ -100,6 +102,8 @@ struct playspace : serialisable, owned
     void add(entity* e);
     void rem(entity* e);
 };
+
+void playspace_connect(playspace* p1, playspace* p2);
 
 struct ship;
 struct client_renderable;
