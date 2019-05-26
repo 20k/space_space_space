@@ -20,6 +20,7 @@
 #include <nauth/steam_auth.hpp>
 #include <nauth/steam_api.hpp>
 #include "playspace.hpp"
+#include "format.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -128,7 +129,7 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
-    #define SERVER_VIEW
+    //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -532,7 +533,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        #define CCC
+        //#define CCC
         #ifdef CCC
         cam.position.x() += key.isKeyPressed(sf::Keyboard::Numpad6)*10;
         cam.position.x() -= key.isKeyPressed(sf::Keyboard::Numpad4)*10;
@@ -873,6 +874,22 @@ void server_thread(std::atomic_bool& should_term)
             data.renderables = network_ships.renderables;
 
             data.labels.clear();
+            data.connected_systems.clear();
+
+            if(s)
+            {
+                auto connected_systems = playspace_manage.get_connected_systems_for(s);
+
+                for(playspace* p : connected_systems)
+                {
+                    system_descriptor desc;
+                    desc.name = p->name;
+                    desc.position = p->position;
+
+                    data.connected_systems.push_back(desc);
+                }
+            }
+
 
             for(auto& i : network_ships.pois)
             {
@@ -1389,6 +1406,45 @@ int main()
                 ImGui::End();
             }*/
         }
+
+        ImGui::Begin("Star Systems");
+
+        std::vector<std::string> names{"Name"};
+        std::vector<std::string> positions{"Position"};
+        std::vector<std::string> misc{"Type"};
+        std::vector<std::string> activation{""};
+
+        for(system_descriptor& desc : model.connected_systems)
+        {
+            std::string spos = to_string_with(desc.position.x(), 1) + " " + to_string_with(desc.position.y());
+
+            names.push_back(desc.name);
+            positions.push_back(spos);
+            misc.push_back("Star");
+            activation.push_back("Warp");
+        }
+
+        for(int i=0; i < (int)names.size(); i++)
+        {
+            std::string formatted = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(misc[i], misc);
+
+            ImGui::Text(formatted.c_str());
+
+            if(i == 0)
+                continue;
+
+            ImGui::SameLine();
+
+            ImGui::Text("|");
+
+            ImGui::SameLine();
+
+            std::string fstr = "(" + activation[i] + ")";
+
+            ImGui::Text(fstr.c_str());
+        }
+
+        ImGui::End();
 
         //std::cout << "showtime " << showtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 

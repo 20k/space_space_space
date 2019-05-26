@@ -146,6 +146,9 @@ struct playspace_manager : serialisable
     std::optional<room*> get_nearby_room(entity* e);
     void exit_room(entity* e);
     void enter_room(entity* e, room* r);
+
+    std::pair<playspace*, room*> get_location_for(entity* e);
+    std::vector<playspace*> get_connected_systems_for(entity* e);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

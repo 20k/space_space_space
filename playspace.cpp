@@ -751,3 +751,35 @@ void playspace_manager::enter_room(entity* e, room* r)
 
     std::cout << "entered room\n";
 }
+
+std::pair<playspace*, room*> playspace_manager::get_location_for(entity* e)
+{
+    for(playspace* play : spaces)
+    {
+        if(play->entity_manage->contains(e))
+            return {play, nullptr};
+
+        for(room* r : play->rooms)
+        {
+            if(r->entity_manage->contains(e))
+                return {play, r};
+        }
+
+        for(room* r : play->pending_rooms)
+        {
+            if(r->entity_manage->contains(e))
+                return {play, r};
+        }
+    }
+
+    return {nullptr, nullptr};
+}
+
+std::vector<playspace*> playspace_manager::get_connected_systems_for(entity* e)
+{
+    auto [play, room] = get_location_for(e);
+
+    assert(play);
+
+    return play->connections;
+}

@@ -105,6 +105,18 @@ struct clientside_label : serialisable
     }
 };
 
+struct system_descriptor : serialisable
+{
+    std::string name;
+    vec2f position;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(name);
+        DO_SERIALISE(position);
+    }
+};
+
 template<typename T>
 struct data_model : serialisable
 {
@@ -116,6 +128,7 @@ struct data_model : serialisable
     player_model networked_model;
     persistent_user_data persistent_data;
     size_t controlled_ship_id = -1;
+    std::vector<system_descriptor> connected_systems;
 
     SERIALISE_SIGNATURE()
     {
@@ -127,6 +140,7 @@ struct data_model : serialisable
         DO_SERIALISE(networked_model);
         DO_SERIALISE(persistent_data);
         DO_SERIALISE(controlled_ship_id);
+        DO_SERIALISE(connected_systems);
     }
 };
 
