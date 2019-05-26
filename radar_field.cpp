@@ -264,7 +264,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             return std::nullopt;
 
         ///non physical cross section
-        float my_fraction = (collide.get_cross_section(relative_pos.angle()) * 5) / circle_circumference;
+        float my_fraction = collide.get_cross_section(relative_pos.angle()) / circle_circumference;
 
         vec2f packet_vector = collide.r.position - packet.origin;
 

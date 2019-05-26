@@ -529,7 +529,7 @@ vec2f entity::get_dim()
 
 float entity::get_cross_section(float angle)
 {
-    return r.approx_dim.max_elem();
+    return r.approx_dim.max_elem()*2;
 }
 
 void entity_manager::forget(entity* in)
