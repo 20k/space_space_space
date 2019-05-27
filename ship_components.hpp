@@ -746,6 +746,9 @@ struct ship : heatable_entity, owned
     bool move_warp = false;
     size_t warp_to_pid = 0;
     size_t current_room_pid = -1;
+    size_t destination_poi_pid = -1;
+    bool travelling_to_poi = false;
+    vec2f destination_poi_position;
 
     std::optional<component*> get_component_from_id(uint64_t id);
 
@@ -757,7 +760,7 @@ struct ship : heatable_entity, owned
     void tick_pre_phys(double dt_s) override;
     //void render(sf::RenderWindow& win);
 
-    void check_space_rules(playspace_manager& play, playspace* space, room* r);
+    void check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r);
 
     void add(const component& c);
 

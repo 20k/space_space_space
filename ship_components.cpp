@@ -4366,6 +4366,8 @@ struct playspace_resetter
 
 void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
 {
+    s.travelling_to_poi = false;
+
     if(r == nullptr)
     {
         float my_mass = s.get_mass();
@@ -4415,7 +4417,55 @@ void deplete_w(ship& s)
     }
 }
 
-void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
+void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
+{
+    if(s.room_type == space_type::REAL_SPACE)
+    {
+        play.exit_room(&s);
+    }
+
+    float drop_range = 10;
+
+    vec2f position = s.destination_poi_position;
+    vec2f my_pos = s.r.position;
+
+    float dist = (position - my_pos).length();
+
+    vec2f destination_vector = (position - my_pos).norm();
+
+    ///yeah so uh this obviously isn't great
+    float speed = std::max(s.get_net_resources(1, s.last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / s.mass, 0.);
+
+    vec2f translate = destination_vector * dt_s * speed;
+
+    if(translate.length() > dist)
+    {
+        translate = translate.norm() * dist;
+    }
+
+    s.r.position += translate;
+    s.r.rotation = translate.angle();
+
+    if(dist <= drop_range)
+    {
+        std::optional<std::pair<playspace*, room*>> dest = play.get_room_from_id(s.destination_poi_pid);
+
+        s.travelling_to_poi = false;
+
+        if(dest)
+        {
+            play.enter_room(&s, dest.value().second);
+        }
+        else
+        {
+            room* new_poi = dest.value().first->make_room(s.r.position, 5);
+
+            play.enter_room(&s, new_poi);
+        }
+    }
+}
+
+void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)
 {
     playspace_resetter dummy(*this);
 
@@ -4432,6 +4482,12 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
     {
         ///NEW ROOM
         ship_drop_to(*this, play, space, nullptr);
+        return;
+    }
+
+    if(travelling_to_poi)
+    {
+        handle_fsd_movement(dt_s, play, *this);
         return;
     }
 

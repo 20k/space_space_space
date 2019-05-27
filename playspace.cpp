@@ -567,7 +567,7 @@ void playspace_manager::tick(double dt_s)
 
             for(ship* s : ships)
             {
-                s->check_space_rules(*this, play, r);
+                s->check_space_rules(dt_s, *this, play, r);
             }
         }
 
@@ -575,7 +575,7 @@ void playspace_manager::tick(double dt_s)
 
         for(ship* s : ships)
         {
-            s->check_space_rules(*this, play, nullptr);
+            s->check_space_rules(dt_s, *this, play, nullptr);
         }
     }
 
@@ -852,6 +852,22 @@ std::optional<playspace*> playspace_manager::get_playspace_from_id(size_t pid)
     {
         if(s->_pid == pid)
             return s;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::pair<playspace*, room*>> playspace_manager::get_room_from_id(size_t pid)
+{
+    for(playspace* s : spaces)
+    {
+        auto all = s->all_rooms();
+
+        for(auto& i : all)
+        {
+            if(i->_pid == pid)
+                return {{s, i}};
+        }
     }
 
     return std::nullopt;

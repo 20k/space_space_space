@@ -827,11 +827,24 @@ void server_thread(std::atomic_bool& should_term)
                     {
                         auto [my_sys, my_room] = playspace_manage.get_location_for(s);
 
-                        if(my_sys && playspaces_connected(my_sys, sys_opt.value()))
+                        if(my_sys && playspaces_connected(my_sys, sys_opt.value()) && !s->travelling_to_poi)
                         {
                             s->move_warp = true;
                             s->warp_to_pid = read_data.warp.sys_pid;
                         }
+                    }
+                }
+
+                if(read_data.travel.should_travel)
+                {
+                    std::optional<std::pair<playspace*, room*>> room_opt = playspace_manage.get_room_from_id(read_data.travel.poi_pid);
+                    auto [play, my_room] = playspace_manage.get_location_for(s);
+
+                    if(room_opt && play && my_room && play == room_opt.value().first && my_room != room_opt.value().second && s->has_s_power)
+                    {
+                        s->destination_poi_pid = room_opt.value().second->_pid;
+                        s->travelling_to_poi = true;
+                        s->destination_poi_position = room_opt.value().second->position;
                     }
                 }
             }
