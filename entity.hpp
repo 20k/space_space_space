@@ -19,6 +19,7 @@ struct client_renderable : serialisable
     float rotation = 0;
 
     float z_level = 1;
+    int render_layer = -1;
 
     std::vector<float> vert_dist;
     std::vector<float> vert_angle;
@@ -37,6 +38,7 @@ struct client_renderable : serialisable
     {
         DO_SERIALISE(position);
         DO_SERIALISE(rotation);
+        DO_SERIALISE(render_layer);
 
         DO_SERIALISE(vert_dist);
         DO_SERIALISE(vert_angle);
@@ -207,6 +209,7 @@ struct entity_manager : serialisable
     void tick(double dt_s);
 
     void render(camera& cam, sf::RenderWindow& window);
+    void render_layer(camera& cam, sf::RenderWindow& window, int layer);
 
     void force_spawn();
 

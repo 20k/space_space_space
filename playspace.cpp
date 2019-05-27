@@ -580,7 +580,7 @@ void playspace_manager::tick(double dt_s)
     }
 }
 
-void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id, bool get_room_entity)
+void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id, bool get_room_entity, bool is_poi)
 {
     #define SEE_ONLY_REAL
 
@@ -601,6 +601,11 @@ void accumulate_entities(const std::vector<entity*>& entities, ship_network_data
 
             ret.ships.push_back(s);
             ret.renderables.push_back(s->r);
+
+            if(is_poi)
+                ret.renderables.back().render_layer = RENDER_LAYER_REALSPACE;
+            else
+                ret.renderables.back().render_layer = RENDER_LAYER_SSPACE;
         }
         else
         {
@@ -613,6 +618,7 @@ void accumulate_entities(const std::vector<entity*>& entities, ship_network_data
         if(rem && get_room_entity)
         {
             ret.renderables.push_back(rem->r);
+            ret.renderables.back().render_layer = RENDER_LAYER_SSPACE;
         }
     }
 }
@@ -687,8 +693,8 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
     if(play == nullptr)
         return ret;
 
-    accumulate_entities(play->entity_manage->entities, ret, id, in_fsd_space);
-    accumulate_entities(play->entity_manage->to_spawn, ret, id, in_fsd_space);
+    accumulate_entities(play->entity_manage->entities, ret, id, in_fsd_space, false);
+    accumulate_entities(play->entity_manage->to_spawn, ret, id, in_fsd_space, false);
 
     if(in_fsd_space)
     {
@@ -697,6 +703,7 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
             if(!e->collides)
             {
                 ret.renderables.push_back(e->r);
+                ret.renderables.back().render_layer = RENDER_LAYER_SSPACE;
                 continue;
             }
         }
@@ -716,8 +723,8 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
             continue;
         }
 
-        accumulate_entities(r->entity_manage->entities, ret, id, false);
-        accumulate_entities(r->entity_manage->to_spawn, ret, id, false);
+        accumulate_entities(r->entity_manage->entities, ret, id, false, true);
+        accumulate_entities(r->entity_manage->to_spawn, ret, id, false, true);
     }
 
     return ret;

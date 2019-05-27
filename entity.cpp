@@ -836,6 +836,17 @@ void entity_manager::render(camera& cam, sf::RenderWindow& window)
     }
 }
 
+void entity_manager::render_layer(camera& cam, sf::RenderWindow& window, int layer)
+{
+    for(entity* e : entities)
+    {
+        if(e->r.render_layer != layer && e->r.render_layer != -1)
+            continue;
+
+        e->r.render(cam, window);
+    }
+}
+
 void entity_manager::force_spawn()
 {
     for(auto& i : to_spawn)

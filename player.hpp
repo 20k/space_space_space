@@ -165,6 +165,7 @@ struct client_entities : serialisable
     std::vector<client_renderable> entities;
 
     void render(camera& cam, sf::RenderWindow& win);
+    void render_layer(camera& cam, sf::RenderWindow& win, int layer);
 
     SERIALISE_SIGNATURE()
     {

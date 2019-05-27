@@ -10,6 +10,9 @@ struct entity;
 struct entity_manager;
 struct alt_radar_field;
 
+#define RENDER_LAYER_REALSPACE 0
+#define RENDER_LAYER_SSPACE 1
+
 namespace room_type
 {
     enum type

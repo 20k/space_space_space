@@ -1302,7 +1302,7 @@ int main()
             ImGui::End();
         }
 
-        renderables.render(cam, window);
+        renderables.render_layer(cam, window, RENDER_LAYER_REALSPACE);
 
         network_protocol nproto;
         nproto.type = network_mode::DATA;
