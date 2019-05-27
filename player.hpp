@@ -188,6 +188,18 @@ struct warp_info : serialisable
     }
 };
 
+struct poi_travel_info : serialisable
+{
+    size_t poi_pid = 0;
+    bool should_travel = false;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(poi_pid);
+        DO_SERIALISE(should_travel);
+    }
+};
+
 struct client_input : serialisable
 {
     vec2f direction = {0,0};
@@ -199,6 +211,7 @@ struct client_input : serialisable
     bool to_poi_space = false;
     bool to_fsd_space = false;
     warp_info warp;
+    poi_travel_info travel;
 
     SERIALISE_SIGNATURE()
     {
@@ -211,6 +224,7 @@ struct client_input : serialisable
         DO_SERIALISE(to_poi_space);
         DO_SERIALISE(to_fsd_space);
         DO_SERIALISE(warp);
+        DO_SERIALISE(travel);
     }
 };
 

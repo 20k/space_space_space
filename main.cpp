@@ -1347,68 +1347,6 @@ int main()
             }
         }
 
-        {
-            ///remember off by 1
-            std::vector<std::string> names{"Name"};
-            std::vector<std::string> positions{"Position"};
-
-            ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-            for(int i=0; i < (int)model.labels.size(); i++)
-            {
-                client_poi_data& lab = model.labels[i];
-
-                std::string spos = to_string_with(lab.position.x(), 1) + " " + to_string_with(lab.position.y());
-
-                names.push_back(lab.name);
-                positions.push_back(spos);
-            }
-
-            for(int i=0; i < (int)names.size(); i++)
-            {
-                int real_idx = i - 1;
-
-                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions);
-
-                ImGui::Text(rstr.c_str());
-
-                if(i == 0)
-                    continue;
-
-                if(my_ship == nullptr)
-                    continue;
-
-                if(my_ship->room_type == space_type::S_SPACE)
-                    continue;
-
-                size_t pid = model.labels[real_idx].poi_pid;
-
-                ImGui::SameLine();
-
-                ImGui::Text("|");
-
-                ImGui::SameLine();
-
-                if(pid == current_room_pid)
-                {
-                    ImGuiX::SimpleButtonColored(colours::pastel_red, "[Here]");
-                }
-                else
-                {
-                    if(my_ship->has_s_power)
-                    {
-                        ImGuiX::SimpleButtonColored(colours::pastel_green, "(Warp)");
-                    }
-                    else
-                    {
-                        ImGuiX::SimpleButtonColored(colours::pastel_red, "(Warp)");
-                    }
-                }
-            }
-
-            ImGui::End();
-        }
-
         renderables.render_layer(cam, window, render_mode);
 
         network_protocol nproto;
@@ -1562,6 +1500,77 @@ int main()
 
             ImGui::End();
         }
+
+
+        {
+            ///remember off by 1
+            std::vector<std::string> names{"Name"};
+            std::vector<std::string> positions{"Position"};
+
+            ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+            for(int i=0; i < (int)model.labels.size(); i++)
+            {
+                client_poi_data& lab = model.labels[i];
+
+                std::string spos = to_string_with(lab.position.x(), 1) + " " + to_string_with(lab.position.y());
+
+                names.push_back(lab.name);
+                positions.push_back(spos);
+            }
+
+            for(int i=0; i < (int)names.size(); i++)
+            {
+                int real_idx = i - 1;
+
+                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions);
+
+                ImGui::Text(rstr.c_str());
+
+                if(i == 0)
+                    continue;
+
+                if(my_ship == nullptr)
+                    continue;
+
+                if(my_ship->room_type == space_type::S_SPACE)
+                    continue;
+
+                size_t pid = model.labels[real_idx].poi_pid;
+
+                ImGui::SameLine();
+
+                ImGui::Text("|");
+
+                ImGui::SameLine();
+
+                if(pid == current_room_pid)
+                {
+                    ImGuiX::SimpleButtonColored(colours::pastel_red, "[Here]");
+                }
+                else
+                {
+                    if(my_ship->has_s_power)
+                    {
+                        if(ImGuiX::SimpleButtonColored(colours::pastel_green, "(Warp)"))
+                        {
+                            poi_travel_info info;
+                            info.poi_pid = pid;
+                            info.should_travel = true;
+
+                            cinput.travel = info;
+                        }
+                    }
+                    else
+                    {
+                        ImGuiX::SimpleButtonColored(colours::pastel_red, "(Warp)");
+                    }
+                }
+            }
+
+            ImGui::End();
+        }
+
 
         get_global_serialise_info().all_rpcs.clear();
 
