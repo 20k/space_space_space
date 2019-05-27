@@ -131,6 +131,7 @@ struct data_model : serialisable
     persistent_user_data persistent_data;
     size_t controlled_ship_id = -1;
     std::vector<system_descriptor> connected_systems;
+    vec2f room_position;
 
     SERIALISE_SIGNATURE()
     {
@@ -143,6 +144,7 @@ struct data_model : serialisable
         DO_SERIALISE(persistent_data);
         DO_SERIALISE(controlled_ship_id);
         DO_SERIALISE(connected_systems);
+        DO_SERIALISE(room_position);
     }
 };
 

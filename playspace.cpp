@@ -696,7 +696,7 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
     accumulate_entities(play->entity_manage->entities, ret, id, in_fsd_space, false);
     accumulate_entities(play->entity_manage->to_spawn, ret, id, in_fsd_space, false);
 
-    if(in_fsd_space)
+    //if(in_fsd_space)
     {
         for(auto& e : play->entity_manage->entities)
         {
@@ -713,14 +713,13 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
 
     for(room* r : all)
     {
-        if(in_fsd_space)
+        //if(in_fsd_space)
         {
             client_poi_data poi;
             poi.name = r->name;
             poi.position = r->position;
 
             ret.pois.push_back(poi);
-            continue;
         }
 
         accumulate_entities(r->entity_manage->entities, ret, id, false, true);

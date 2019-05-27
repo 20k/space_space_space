@@ -906,6 +906,13 @@ void server_thread(std::atomic_bool& should_term)
 
                     data.connected_systems.push_back(desc);
                 }
+
+                auto [play, found_room] = playspace_manage.get_location_for(s);
+
+                if(play && found_room)
+                {
+                    data.room_position = found_room->position;
+                }
             }
 
 
@@ -1077,9 +1084,11 @@ int main()
 
     sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
+    camera real_cam({window.getSize().x, window.getSize().y});
     camera cam({window.getSize().x, window.getSize().y});
 
     cam.position = {400, 400};
+    real_cam.position = cam.position;
 
     sf::Texture font_atlas;
 
@@ -1219,7 +1228,9 @@ int main()
         }
 
         cam.screen_size = {window.getSize().x, window.getSize().y};
+        real_cam.screen_size = {window.getSize().x, window.getSize().y};
         cam.add_linear_zoom(mouse_delta);
+        real_cam.add_linear_zoom(mouse_delta);
 
         while(conn.has_read())
         {
@@ -1266,6 +1277,7 @@ int main()
                 ship_proxy->r.position = r.position;
 
                 cam.position = r.position;
+                real_cam.position = r.position;
             }
         }
 
@@ -1281,28 +1293,7 @@ int main()
 
         ImGui::SFML::Update(window,  imgui_delta.restart());
 
-        //for(clientside_label& lab : model.labels)
-        for(int i=0; i < (int)model.labels.size(); i++)
-        {
-            clientside_label& lab = model.labels[i];
-
-            vec2f sspace = cam.world_to_screen(lab.position);
-
-            //if((mpos - sspace).length() > 20)
-            //    continue;
-
-            ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
-
-            ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
-
-            ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
-
-            ImGui::Text(lab.name.c_str());
-
-            ImGui::End();
-        }
-
-        int mode = RENDER_LAYER_SSPACE;
+        int render_mode = RENDER_LAYER_SSPACE;
 
         for(ship& s : model.ships)
         {
@@ -1310,16 +1301,53 @@ int main()
             {
                 if(s.room_type == space_type::REAL_SPACE)
                 {
-                    mode = RENDER_LAYER_REALSPACE;
+                    if(real_cam.get_linear_zoom() <= -3)
+                    {
+                        render_mode = RENDER_LAYER_SSPACE;
+                        cam = real_cam;
+                        cam.add_linear_zoom(3);
+                        cam.position = (real_cam.position * ROOM_POI_SCALE) + model.room_position;
+                    }
+                    else
+                    {
+                        render_mode = RENDER_LAYER_REALSPACE;
+                        cam = real_cam;
+                    }
                 }
                 else
                 {
-                    mode = RENDER_LAYER_SSPACE;
+                    render_mode = RENDER_LAYER_SSPACE;
+                    cam = real_cam;
                 }
             }
         }
 
-        renderables.render_layer(cam, window, mode);
+        //for(clientside_label& lab : model.labels)
+
+        if(render_mode == RENDER_LAYER_SSPACE)
+        {
+            for(int i=0; i < (int)model.labels.size(); i++)
+            {
+                clientside_label& lab = model.labels[i];
+
+                vec2f sspace = cam.world_to_screen(lab.position);
+
+                //if((mpos - sspace).length() > 20)
+                //    continue;
+
+                ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
+
+                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
+
+                ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
+
+                ImGui::Text(lab.name.c_str());
+
+                ImGui::End();
+            }
+        }
+
+        renderables.render_layer(cam, window, render_mode);
 
         network_protocol nproto;
         nproto.type = network_mode::DATA;

@@ -19,6 +19,7 @@ struct camera
     bool within_screen(vec2f screen_position);
 
     void add_linear_zoom(float linear);
+    float get_linear_zoom();
 };
 
 #endif // CAMERA_HPP_INCLUDED
