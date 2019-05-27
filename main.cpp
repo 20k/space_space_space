@@ -1304,6 +1304,7 @@ int main()
 
         size_t current_room_pid = -1;
         ship* my_ship = nullptr;
+        vec2f ship_current_position;
 
         for(ship& s : model.ships)
         {
@@ -1321,6 +1322,8 @@ int main()
                     {
                         render_mode = RENDER_LAYER_SSPACE;
 
+                        ship_current_position = (ship_proxy->r.position * ROOM_POI_SCALE) + model.room_position;
+
                         sspace_cam.position = (poi_cam.position * ROOM_POI_SCALE) + model.room_position;
                         sspace_cam.zoom = poi_cam.zoom;
                         sspace_cam.add_linear_zoom(4);
@@ -1328,6 +1331,8 @@ int main()
                     else
                     {
                         render_mode = RENDER_LAYER_REALSPACE;
+                        ship_current_position = (ship_proxy->r.position * ROOM_POI_SCALE) + model.room_position;
+                        sspace_cam.zoom = 1;
                     }
                 }
                 else
@@ -1335,6 +1340,8 @@ int main()
                     ship_proxy->r.render_layer = RENDER_LAYER_SSPACE;
 
                     render_mode = RENDER_LAYER_SSPACE;
+                    ship_current_position = ship_proxy->r.position;
+                    poi_cam.zoom = 1;
                 }
             }
         }
@@ -1351,29 +1358,6 @@ int main()
         }
 
         //for(clientside_label& lab : model.labels)
-
-        if(render_mode == RENDER_LAYER_SSPACE)
-        {
-            for(int i=0; i < (int)model.labels.size(); i++)
-            {
-                client_poi_data& lab = model.labels[i];
-
-                vec2f sspace = cam.world_to_screen(lab.position);
-
-                //if((mpos - sspace).length() > 20)
-                //    continue;
-
-                ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
-
-                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
-
-                ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
-
-                ImGui::Text(lab.name.c_str());
-
-                ImGui::End();
-            }
-        }
 
         renderables.render_layer(cam, window, render_mode);
 
@@ -1529,11 +1513,13 @@ int main()
             ImGui::End();
         }
 
+        std::map<size_t, bool> highlighted_pois;
 
         {
             ///remember off by 1
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
+            std::vector<std::string> distances{"Distance"};
 
             ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -1543,17 +1529,25 @@ int main()
 
                 std::string spos = to_string_with(lab.position.x(), 1) + " " + to_string_with(lab.position.y());
 
+                std::string dist = to_string_with((lab.position - ship_current_position).length(), 1);
+
                 names.push_back(lab.name);
                 positions.push_back(spos);
+                distances.push_back(dist);
             }
 
             for(int i=0; i < (int)names.size(); i++)
             {
                 int real_idx = i - 1;
 
-                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions);
+                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(distances[i], distances);
 
                 ImGui::Text(rstr.c_str());
+
+                if(ImGui::IsItemHovered() && i != 0)
+                {
+                    highlighted_pois[model.labels[real_idx].poi_pid] = true;
+                }
 
                 if(i == 0)
                     continue;
@@ -1594,11 +1588,64 @@ int main()
                         ImGuiX::SimpleButtonColored(colours::pastel_red, "(Warp)");
                     }
                 }
+
+                if(ImGui::IsItemHovered())
+                {
+                    highlighted_pois[pid] = true;
+                }
             }
 
             ImGui::End();
         }
 
+        if(render_mode == RENDER_LAYER_SSPACE)
+        {
+            for(int i=0; i < (int)model.labels.size(); i++)
+            {
+                client_poi_data& lab = model.labels[i];
+
+                vec2f sspace = cam.world_to_screen(lab.position);
+
+                //if((mpos - sspace).length() > 20)
+                //    continue;
+
+                ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
+
+                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
+
+                ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
+
+                std::string str = lab.name.c_str();
+                ImVec4 col = ImVec4(1,1,1,1);
+
+                if(highlighted_pois[lab.poi_pid])
+                {
+                    col = colours::pastel_green;
+                }
+
+                ImGui::TextColored(col, str.c_str());
+
+                ImGui::End();
+            }
+
+            for(client_poi_data& lab : model.labels)
+            {
+                if(!highlighted_pois[lab.poi_pid])
+                    continue;
+
+                if(!my_ship)
+                    continue;
+
+                vec2f to_poi = lab.position - ship_current_position;
+
+                client_renderable ren;
+                ren.init_rectangular({(to_poi.length()/4) * 0.9, 1});
+                ren.rotation = to_poi.angle();
+
+                ren.position = (to_poi / 2.f) + ship_current_position;
+                ren.render(cam, window);
+            }
+        }
 
         get_global_serialise_info().all_rpcs.clear();
 
