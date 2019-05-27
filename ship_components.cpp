@@ -4446,6 +4446,9 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
         space->rem(this);
         dest.value()->add(this);
 
+        room* nr = dest.value()->make_room(this->r.position, 5);
+        play.enter_room(this, nr);
+
         return;
     }
 
