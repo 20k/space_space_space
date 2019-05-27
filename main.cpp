@@ -1085,10 +1085,8 @@ int main()
     sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
     camera real_cam({window.getSize().x, window.getSize().y});
-    camera cam({window.getSize().x, window.getSize().y});
 
-    cam.position = {400, 400};
-    real_cam.position = cam.position;
+    real_cam.position = {400, 400};
 
     sf::Texture font_atlas;
 
@@ -1146,7 +1144,7 @@ int main()
 
     entity* ship_proxy = entities.make_new<entity>();
 
-    stardust_manager star_manage(cam, entities);
+    stardust_manager star_manage(real_cam, entities);
 
     alt_radar_sample sample;
     entity_manager transients;
@@ -1227,9 +1225,7 @@ int main()
             mouse_delta = 0;
         }
 
-        cam.screen_size = {window.getSize().x, window.getSize().y};
         real_cam.screen_size = {window.getSize().x, window.getSize().y};
-        cam.add_linear_zoom(mouse_delta);
         real_cam.add_linear_zoom(mouse_delta);
 
         while(conn.has_read())
@@ -1276,7 +1272,6 @@ int main()
             {
                 ship_proxy->r.position = r.position;
 
-                cam.position = r.position;
                 real_cam.position = r.position;
             }
         }
@@ -1295,6 +1290,8 @@ int main()
 
         int render_mode = RENDER_LAYER_SSPACE;
 
+        camera cam = real_cam;
+
         for(ship& s : model.ships)
         {
             if(s._pid == model.controlled_ship_id)
@@ -1305,7 +1302,7 @@ int main()
                     {
                         render_mode = RENDER_LAYER_SSPACE;
                         cam = real_cam;
-                        cam.add_linear_zoom(3);
+                        cam.add_linear_zoom(4);
                         cam.position = (real_cam.position * ROOM_POI_SCALE) + model.room_position;
                     }
                     else
