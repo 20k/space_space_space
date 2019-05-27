@@ -17,8 +17,8 @@ std::array<component, component_type::COUNT> get_default_component_map()
     std::array<component, component_type::COUNT> ret;
 
     ret[component_type::THRUSTER] = make_default("Thruster", "THRST");
-    ret[component_type::S_DRIVE] = make_default("System Drive", "S-D");
-    ret[component_type::W_DRIVE] = make_default("Warp Drive", "W-D");
+    ret[component_type::S_DRIVE] = make_default("S-Drive", "S-D");
+    ret[component_type::W_DRIVE] = make_default("W-Drive", "W-D");
     ret[component_type::SHIELDS] = make_default("Shields", "SHLD");
     ret[component_type::LASER] = make_default("Laser", "LAS");
     ret[component_type::SENSOR] = make_default("Sensors", "SENS");

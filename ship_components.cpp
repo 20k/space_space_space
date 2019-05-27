@@ -4426,7 +4426,7 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
         return;
     }
 
-    if(move_warp && space && has_w_power)
+    if(move_warp && space && has_w_power && r != nullptr)
     {
         std::optional<playspace*> dest = play.get_playspace_from_id(warp_to_pid);
 
@@ -4436,6 +4436,7 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
         if(!playspaces_connected(space, dest.value()))
             return;
 
+        ///leaving this here for future correctness in case i allow warping from fsd space
         if(r != nullptr)
         {
             r->rem(this);

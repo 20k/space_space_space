@@ -1409,6 +1409,22 @@ int main()
                 if(i == 0)
                     continue;
 
+                bool skip = false;
+
+                for(ship& s : model.ships)
+                {
+                    if(s._pid == model.controlled_ship_id)
+                    {
+                        if(s.room_type == space_type::S_SPACE)
+                            skip = true;
+
+                        break;
+                    }
+                }
+
+                if(skip)
+                    continue;
+
                 int model_idx = i - 1;
 
                 ImGui::SameLine();
