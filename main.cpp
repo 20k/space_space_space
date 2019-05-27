@@ -1302,7 +1302,24 @@ int main()
             ImGui::End();
         }
 
-        renderables.render_layer(cam, window, RENDER_LAYER_REALSPACE);
+        int mode = RENDER_LAYER_SSPACE;
+
+        for(ship& s : model.ships)
+        {
+            if(s._pid == model.controlled_ship_id)
+            {
+                if(s.room_type == space_type::REAL_SPACE)
+                {
+                    mode = RENDER_LAYER_REALSPACE;
+                }
+                else
+                {
+                    mode = RENDER_LAYER_SSPACE;
+                }
+            }
+        }
+
+        renderables.render_layer(cam, window, mode);
 
         network_protocol nproto;
         nproto.type = network_mode::DATA;
