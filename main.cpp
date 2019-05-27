@@ -1187,9 +1187,6 @@ int main()
     bool focus = true;
     vec2f last_s_size = {0,0};
 
-    int last_ship_space = RENDER_LAYER_SSPACE;
-    float last_sspace_zoom = 1;
-
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -1308,8 +1305,6 @@ int main()
         size_t current_room_pid = -1;
         ship* my_ship = nullptr;
 
-        bool use_sspace_cam = true;
-
         for(ship& s : model.ships)
         {
             if(s._pid == model.controlled_ship_id)
@@ -1325,10 +1320,7 @@ int main()
                     if(poi_cam.get_linear_zoom() <= -3)
                     {
                         render_mode = RENDER_LAYER_SSPACE;
-                        /*cam.add_linear_zoom(4);
-                        cam.position = (real_cam.position * ROOM_POI_SCALE) + model.room_position;*/
 
-                        use_sspace_cam = true;
                         sspace_cam.position = (poi_cam.position * ROOM_POI_SCALE) + model.room_position;
                         sspace_cam.zoom = poi_cam.zoom;
                         sspace_cam.add_linear_zoom(4);
@@ -1336,27 +1328,20 @@ int main()
                     else
                     {
                         render_mode = RENDER_LAYER_REALSPACE;
-                        use_sspace_cam = false;
                     }
-
-                    last_ship_space = RENDER_LAYER_REALSPACE;
                 }
                 else
                 {
                     ship_proxy->r.render_layer = RENDER_LAYER_SSPACE;
 
                     render_mode = RENDER_LAYER_SSPACE;
-
-                    last_ship_space = RENDER_LAYER_SSPACE;
-
-                    use_sspace_cam = true;
                 }
             }
         }
 
         camera cam(sspace_cam.screen_size);
 
-        if(use_sspace_cam)
+        if(render_mode == RENDER_LAYER_SSPACE)
         {
             cam = sspace_cam;
         }
