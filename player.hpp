@@ -7,6 +7,7 @@
 #include "fixed_clock.hpp"
 #include "design_editor.hpp"
 #include "radar_field.hpp"
+#include "playspace.hpp"
 
 struct common_renderable;
 
@@ -93,18 +94,6 @@ struct auth_data : serialisable
     }
 };
 
-struct clientside_label : serialisable
-{
-    std::string name;
-    vec2f position;
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(name);
-        DO_SERIALISE(position);
-    }
-};
-
 struct system_descriptor : serialisable
 {
     std::string name;
@@ -124,7 +113,7 @@ struct data_model : serialisable
 {
     std::vector<T> ships;
     std::vector<client_renderable> renderables;
-    std::vector<clientside_label> labels;
+    std::vector<client_poi_data> labels;
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
     player_model networked_model;

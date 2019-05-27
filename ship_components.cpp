@@ -4419,6 +4419,15 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
 {
     playspace_resetter dummy(*this);
 
+    if(r == nullptr)
+    {
+        current_room_pid = -1;
+    }
+    else
+    {
+        current_room_pid = r->_pid;
+    }
+
     if(!has_s_power && r == nullptr)
     {
         ///NEW ROOM

@@ -84,6 +84,8 @@ void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, se
 {
     DO_SERIALISE(name);
     DO_SERIALISE(position);
+    DO_SERIALISE(poi_pid);
+    DO_SERIALISE(type);
 }
 
 alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
@@ -234,6 +236,7 @@ room* playspace::make_room(vec2f where, float entity_rad)
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
     r->field->sun_id = field->sun_id;
+    r->name = "Dead Space";
     return r;
 }
 
@@ -718,6 +721,8 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
             client_poi_data poi;
             poi.name = r->name;
             poi.position = r->position;
+            poi.poi_pid = r->_pid;
+            //poi.type = r->type;
 
             ret.pois.push_back(poi);
         }

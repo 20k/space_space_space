@@ -116,6 +116,8 @@ struct client_poi_data : serialisable
 {
     std::string name;
     vec2f position;
+    size_t poi_pid = 0;
+    std::string type;
 
     SERIALISE_SIGNATURE();
 };

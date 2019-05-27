@@ -22,6 +22,7 @@
 #include "playspace.hpp"
 #include "format.hpp"
 #include "ui_util.hpp"
+#include "colours.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -915,15 +916,7 @@ void server_thread(std::atomic_bool& should_term)
                 }
             }
 
-
-            for(auto& i : network_ships.pois)
-            {
-                clientside_label lab;
-                lab.name = i.name;
-                lab.position = i.position;
-
-                data.labels.push_back(lab);
-            }
+            data.labels = network_ships.pois;
 
             if(data_manage.backup.find(i) != data_manage.backup.end())
             {
@@ -1291,11 +1284,17 @@ int main()
         int render_mode = RENDER_LAYER_SSPACE;
 
         camera cam = real_cam;
+        size_t current_room_pid = -1;
+        ship* my_ship = nullptr;
 
         for(ship& s : model.ships)
         {
             if(s._pid == model.controlled_ship_id)
             {
+                my_ship = &s;
+
+                current_room_pid = s.current_room_pid;
+
                 if(s.room_type == space_type::REAL_SPACE)
                 {
                     if(real_cam.get_linear_zoom() <= -3)
@@ -1325,7 +1324,7 @@ int main()
         {
             for(int i=0; i < (int)model.labels.size(); i++)
             {
-                clientside_label& lab = model.labels[i];
+                client_poi_data& lab = model.labels[i];
 
                 vec2f sspace = cam.world_to_screen(lab.position);
 
@@ -1342,6 +1341,70 @@ int main()
 
                 ImGui::End();
             }
+        }
+
+        {
+            ///remember off by 1
+            std::vector<std::string> names{"Name"};
+            std::vector<std::string> positions{"Position"};
+            //std::vector<std::string> types{"Type"};
+
+            ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+            for(int i=0; i < (int)model.labels.size(); i++)
+            {
+                client_poi_data& lab = model.labels[i];
+
+                std::string spos = to_string_with(lab.position.x(), 1) + " " + to_string_with(lab.position.y());
+
+                names.push_back(lab.name);
+                positions.push_back(spos);
+                //types.push_back(lab[i].type);
+            }
+
+            for(int i=0; i < (int)names.size(); i++)
+            {
+                int real_idx = i - 1;
+
+                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions);
+
+                ImGui::Text(rstr.c_str());
+
+                if(i == 0)
+                    continue;
+
+                if(my_ship == nullptr)
+                    continue;
+
+                if(my_ship->room_type == space_type::S_SPACE)
+                    continue;
+
+                size_t pid = model.labels[real_idx].poi_pid;
+
+                ImGui::SameLine();
+
+                ImGui::Text("|");
+
+                ImGui::SameLine();
+
+                if(pid == current_room_pid)
+                {
+                    ImGuiX::SimpleButtonColored(colours::pastel_red, "[Here]");
+                }
+                else
+                {
+                    if(my_ship->has_s_power)
+                    {
+                        ImGuiX::SimpleButtonColored(colours::pastel_green, "(Warp)");
+                    }
+                    else
+                    {
+                        ImGuiX::SimpleButtonColored(colours::pastel_red, "(Warp)");
+                    }
+                }
+            }
+
+            ImGui::End();
         }
 
         renderables.render_layer(cam, window, render_mode);
@@ -1425,7 +1488,7 @@ int main()
         cinput.rpcs = get_global_serialise_info();
 
         {
-            ImGui::Begin("Star Systems");
+            ImGui::Begin("Star Systems", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
@@ -1467,6 +1530,9 @@ int main()
                 if(skip)
                     continue;
 
+                if(my_ship == nullptr)
+                    continue;
+
                 int model_idx = i - 1;
 
                 ImGui::SameLine();
@@ -1477,7 +1543,12 @@ int main()
 
                 std::string fstr = "(" + activation[i] + ")";
 
-                if(ImGuiX::SimpleButton(fstr))
+                ImVec4 col = colours::pastel_red;
+
+                if(my_ship->has_w_power)
+                    col = colours::pastel_green;
+
+                if(ImGuiX::SimpleButtonColored(col, fstr))
                 {
                     warp_info inf;
                     inf.sys_pid = model.connected_systems[model_idx].sys_pid;

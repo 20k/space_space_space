@@ -745,6 +745,7 @@ struct ship : heatable_entity, owned
     bool move_down = false;
     bool move_warp = false;
     size_t warp_to_pid = 0;
+    size_t current_room_pid = -1;
 
     std::optional<component*> get_component_from_id(uint64_t id);
 
@@ -836,6 +837,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(has_s_power);
         DO_SERIALISE(has_w_power);
         DO_SERIALISE(room_type);
+        DO_SERIALISE(current_room_pid);
     }
 
     virtual void pre_collide(entity& other) override;
