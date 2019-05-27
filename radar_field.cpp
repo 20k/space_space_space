@@ -1476,6 +1476,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             play.type = 1;
             play.r = en.r;
             play.velocity = en.velocity;
+            play.r.render_layer = space;
 
             renderables[en.id] = play;
         }
@@ -1530,6 +1531,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                     split.r.approx_rad = rs.approx_rad;
                     split.velocity = found->velocity;
                     split.type = 0;
+                    split.r.render_layer = space;
 
                     if(rs.transient)
                     {
@@ -1573,6 +1575,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                     split.r.approx_rad = rs.approx_rad;
                     split.velocity = found->velocity;
                     split.type = 1;
+                    split.r.render_layer = space;
 
                     if(rs.transient)
                     {

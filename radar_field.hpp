@@ -308,8 +308,8 @@ struct alt_radar_field
     alt_radar_sample sample_for(vec2f pos, heatable_entity& en, entity_manager& entities, bool harvest_renderables = false, double radar_mult = 1);
 
     uint64_t get_sun_id();
-
     uint64_t sun_id = -1;
+    int space = 0;
 };
 
 /*inline

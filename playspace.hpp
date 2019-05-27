@@ -26,8 +26,8 @@ namespace space_type
 {
     enum type
     {
-        REAL_SPACE,///thrusters
-        S_SPACE,///sdrive
+        REAL_SPACE = 0,///thrusters
+        S_SPACE = 1,///sdrive
     };
 }
 

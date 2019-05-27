@@ -20,6 +20,7 @@ room::room()
 {
     field = std::make_shared<alt_radar_field>((vec2f){1200, 1200});
     field->has_finite_bound = true;
+    field->space = RENDER_LAYER_REALSPACE;
     //field->space_scaling = ROOM_POI_SCALE;
 
     entity_manage = new entity_manager;
@@ -181,6 +182,7 @@ void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
 playspace::playspace()
 {
     field = std::make_shared<alt_radar_field>((vec2f){800, 800});
+    field->space = RENDER_LAYER_SSPACE;
     entity_manage = new entity_manager;
     //field->space_scaling = ROOM_POI_SCALE;
     field->speed_of_light_per_tick = field->speed_of_light_per_tick * ROOM_POI_SCALE;

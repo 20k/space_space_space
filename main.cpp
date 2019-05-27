@@ -1297,6 +1297,8 @@ int main()
 
                 if(s.room_type == space_type::REAL_SPACE)
                 {
+                    ship_proxy->r.render_layer = RENDER_LAYER_REALSPACE;
+
                     if(real_cam.get_linear_zoom() <= -3)
                     {
                         render_mode = RENDER_LAYER_SSPACE;
@@ -1312,6 +1314,8 @@ int main()
                 }
                 else
                 {
+                    ship_proxy->r.render_layer = RENDER_LAYER_SSPACE;
+
                     render_mode = RENDER_LAYER_SSPACE;
                     cam = real_cam;
                 }
@@ -1347,7 +1351,6 @@ int main()
             ///remember off by 1
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
-            //std::vector<std::string> types{"Type"};
 
             ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -1359,7 +1362,6 @@ int main()
 
                 names.push_back(lab.name);
                 positions.push_back(spos);
-                //types.push_back(lab[i].type);
             }
 
             for(int i=0; i < (int)names.size(); i++)
@@ -1665,8 +1667,8 @@ int main()
 
         render_radar_data(window, sample);
 
-        entities.render(cam, window);
-        transients.render(cam, window);
+        entities.render_layer(cam, window, render_mode);
+        transients.render_layer(cam, window, render_mode);
         design.render(window);
 
         sf::Clock render_clock;
