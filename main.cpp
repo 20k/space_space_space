@@ -761,14 +761,17 @@ void server_thread(std::atomic_bool& should_term)
                 {
                     double time = (control_elapsed[read_id].restart().asMicroseconds() / 1000.) / 1000.;
 
-                    s->apply_force(read_data.direction * time);
-                    s->apply_rotation_force(read_data.rotation * time);
+                    if(s->room_type == space_type::REAL_SPACE)
+                    {
+                        s->apply_force(read_data.direction * time);
+                        s->apply_rotation_force(read_data.rotation * time);
 
-                    double thruster_active_percent = read_data.direction.length() + fabs(read_data.rotation);
+                        double thruster_active_percent = read_data.direction.length() + fabs(read_data.rotation);
 
-                    thruster_active_percent = clamp(thruster_active_percent, 0, 1);
+                        thruster_active_percent = clamp(thruster_active_percent, 0, 1);
 
-                    s->set_thrusters_active(thruster_active_percent);
+                        s->set_thrusters_active(thruster_active_percent);
+                    }
 
                     if(read_data.fired.size() > 0)
                     {
