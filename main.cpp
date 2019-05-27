@@ -1090,9 +1090,11 @@ int main()
 
     sf::RenderWindow window(sf::VideoMode(1600, 900), "hi", sf::Style::Default, sett);
 
-    camera real_cam({window.getSize().x, window.getSize().y});
+    camera poi_cam({window.getSize().x, window.getSize().y});
+    camera sspace_cam({window.getSize().x, window.getSize().y});
 
-    real_cam.position = {400, 400};
+    poi_cam.position = {400, 400};
+    sspace_cam.position = {400, 400};
 
     sf::Texture font_atlas;
 
@@ -1150,7 +1152,7 @@ int main()
 
     entity* ship_proxy = entities.make_new<entity>();
 
-    stardust_manager star_manage(real_cam, entities);
+    stardust_manager star_manage(poi_cam, entities);
 
     alt_radar_sample sample;
     entity_manager transients;
@@ -1184,6 +1186,9 @@ int main()
 
     bool focus = true;
     vec2f last_s_size = {0,0};
+
+    int last_ship_space = RENDER_LAYER_SSPACE;
+    float last_sspace_zoom = 1;
 
     while(window.isOpen())
     {
@@ -1231,8 +1236,11 @@ int main()
             mouse_delta = 0;
         }
 
-        real_cam.screen_size = {window.getSize().x, window.getSize().y};
-        real_cam.add_linear_zoom(mouse_delta);
+        poi_cam.screen_size = {window.getSize().x, window.getSize().y};
+        poi_cam.add_linear_zoom(mouse_delta);
+
+        sspace_cam.screen_size = {window.getSize().x, window.getSize().y};
+        sspace_cam.add_linear_zoom(mouse_delta);
 
         while(conn.has_read())
         {
@@ -1278,7 +1286,8 @@ int main()
             {
                 ship_proxy->r.position = r.position;
 
-                real_cam.position = r.position;
+                poi_cam.position = r.position;
+                sspace_cam.position = r.position;
             }
         }
 
@@ -1296,9 +1305,10 @@ int main()
 
         int render_mode = RENDER_LAYER_SSPACE;
 
-        camera cam = real_cam;
         size_t current_room_pid = -1;
         ship* my_ship = nullptr;
+
+        bool use_sspace_cam = true;
 
         for(ship& s : model.ships)
         {
@@ -1312,27 +1322,47 @@ int main()
                 {
                     ship_proxy->r.render_layer = RENDER_LAYER_REALSPACE;
 
-                    if(real_cam.get_linear_zoom() <= -3)
+                    if(poi_cam.get_linear_zoom() <= -3)
                     {
                         render_mode = RENDER_LAYER_SSPACE;
-                        cam = real_cam;
-                        cam.add_linear_zoom(4);
-                        cam.position = (real_cam.position * ROOM_POI_SCALE) + model.room_position;
+                        /*cam.add_linear_zoom(4);
+                        cam.position = (real_cam.position * ROOM_POI_SCALE) + model.room_position;*/
+
+                        use_sspace_cam = true;
+                        sspace_cam.position = (poi_cam.position * ROOM_POI_SCALE) + model.room_position;
+                        sspace_cam.zoom = poi_cam.zoom;
+                        sspace_cam.add_linear_zoom(4);
                     }
                     else
                     {
                         render_mode = RENDER_LAYER_REALSPACE;
-                        cam = real_cam;
+                        use_sspace_cam = false;
                     }
+
+                    last_ship_space = RENDER_LAYER_REALSPACE;
                 }
                 else
                 {
                     ship_proxy->r.render_layer = RENDER_LAYER_SSPACE;
 
                     render_mode = RENDER_LAYER_SSPACE;
-                    cam = real_cam;
+
+                    last_ship_space = RENDER_LAYER_SSPACE;
+
+                    use_sspace_cam = true;
                 }
             }
+        }
+
+        camera cam(sspace_cam.screen_size);
+
+        if(use_sspace_cam)
+        {
+            cam = sspace_cam;
+        }
+        else
+        {
+            cam = poi_cam;
         }
 
         //for(clientside_label& lab : model.labels)
