@@ -741,6 +741,7 @@ struct ship : heatable_entity, owned
 
     bool move_up = false;
     bool has_s_power = false;
+    bool has_w_power = false;
     bool move_down = false;
     bool move_warp = false;
     size_t warp_to_pid = 0;
@@ -833,6 +834,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(is_ship);
         DO_SERIALISE(blueprint_name);
         DO_SERIALISE(has_s_power);
+        DO_SERIALISE(has_w_power);
         DO_SERIALISE(room_type);
     }
 

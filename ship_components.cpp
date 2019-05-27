@@ -1742,6 +1742,7 @@ void ship::tick(double dt_s)
     });
 
     has_s_power = resource_status[component_info::S_POWER] >= my_size;
+    has_w_power = resource_status[component_info::W_POWER] >= my_size;
 
     for(component& c : components)
     {
@@ -3865,9 +3866,11 @@ void ship::show_power()
             }
             else
             {
-                if(c.base_id == component_type::S_DRIVE && c.activation_level > 0)
+                if((c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE) && c.activation_level > 0)
                 {
-                    if(has_s_power)
+                    bool success = (c.base_id == component_type::S_DRIVE && has_s_power) || (c.base_id == component_type::W_DRIVE && has_w_power);
+
+                    if(success)
                         ImGui::TextColored(colours::pastel_green, name.c_str());
                     else
                         ImGui::TextColored(colours::pastel_red, name.c_str());
