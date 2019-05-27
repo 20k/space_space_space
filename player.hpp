@@ -109,11 +109,13 @@ struct system_descriptor : serialisable
 {
     std::string name;
     vec2f position;
+    size_t sys_pid = 0;
 
     SERIALISE_SIGNATURE()
     {
         DO_SERIALISE(name);
         DO_SERIALISE(position);
+        DO_SERIALISE(sys_pid);
     }
 };
 
@@ -182,6 +184,18 @@ struct client_fire : serialisable
     }
 };
 
+struct warp_info : serialisable
+{
+    size_t sys_pid = 0;
+    bool should_warp = false;
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(sys_pid);
+        DO_SERIALISE(should_warp);
+    }
+};
+
 struct client_input : serialisable
 {
     vec2f direction = {0,0};
@@ -192,6 +206,7 @@ struct client_input : serialisable
     global_serialise_info rpcs;
     bool to_poi_space = false;
     bool to_fsd_space = false;
+    warp_info warp;
 
     SERIALISE_SIGNATURE()
     {
@@ -203,6 +218,7 @@ struct client_input : serialisable
         DO_SERIALISE(rpcs);
         DO_SERIALISE(to_poi_space);
         DO_SERIALISE(to_fsd_space);
+        DO_SERIALISE(warp);
     }
 };
 

@@ -4358,7 +4358,7 @@ struct playspace_resetter
     ship& s;
 
     playspace_resetter(ship& in) : s(in){}
-    ~playspace_resetter(){s.move_down = false; s.move_up = false;}
+    ~playspace_resetter(){s.move_down = false; s.move_up = false; s.move_warp = false;}
 };
 
 void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
@@ -4405,6 +4405,21 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
     {
         ///NEW ROOM
         ship_drop_to(*this, play, space, nullptr);
+        return;
+    }
+
+    if(move_warp && space)
+    {
+        std::optional<playspace*> dest = play.get_playspace_from_id(warp_to_pid);
+
+        if(!dest.has_value())
+            return;
+
+        if(!playspaces_connected(space, dest.value()))
+            return;
+
+        space->rem(this);
+        dest.value()->add(this);
         return;
     }
 

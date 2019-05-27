@@ -97,13 +97,14 @@ struct playspace : serialisable, owned
     SERIALISE_SIGNATURE();
 
     void tick(double dt_s);
-    void init_default();
+    void init_default(int seed);
 
     void add(entity* e);
     void rem(entity* e);
 };
 
 void playspace_connect(playspace* p1, playspace* p2);
+bool playspaces_connected(playspace* p1, playspace* p2);
 
 struct ship;
 struct client_renderable;
@@ -149,6 +150,7 @@ struct playspace_manager : serialisable
 
     std::pair<playspace*, room*> get_location_for(entity* e);
     std::vector<playspace*> get_connected_systems_for(entity* e);
+    std::optional<playspace*> get_playspace_from_id(size_t pid);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

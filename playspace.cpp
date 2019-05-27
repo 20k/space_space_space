@@ -313,12 +313,12 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
     }
 }
 
-void playspace::init_default()
+void playspace::init_default(int seed)
 {
     std::minstd_rand rng;
-    rng.seed(0);
+    rng.seed(seed);
 
-    for(int i=0; i < 100; i++)
+    for(int i=0; i < 10000; i++)
         rng();
 
     int real_belts = 3;
@@ -537,6 +537,17 @@ void playspace_connect(playspace* p1, playspace* p2)
 {
     p1->connections.push_back(p2);
     p2->connections.push_back(p1);
+}
+
+bool playspaces_connected(playspace* p1, playspace* p2)
+{
+    for(auto& i : p1->connections)
+    {
+        if(i == p2)
+            return true;
+    }
+
+    return false;
 }
 
 void playspace_manager::tick(double dt_s)
@@ -820,4 +831,15 @@ std::vector<playspace*> playspace_manager::get_connected_systems_for(entity* e)
     assert(play);
 
     return play->connections;
+}
+
+std::optional<playspace*> playspace_manager::get_playspace_from_id(size_t pid)
+{
+    for(playspace* s : spaces)
+    {
+        if(s->_pid == pid)
+            return s;
+    }
+
+    return std::nullopt;
 }

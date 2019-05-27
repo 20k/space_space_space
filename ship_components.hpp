@@ -742,6 +742,8 @@ struct ship : heatable_entity, owned
     bool move_up = false;
     bool has_s_power = false;
     bool move_down = false;
+    bool move_warp = false;
+    size_t warp_to_pid = 0;
 
     std::optional<component*> get_component_from_id(uint64_t id);
 

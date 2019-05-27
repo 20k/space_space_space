@@ -130,6 +130,30 @@ void server_thread(std::atomic_bool& should_term)
     set_pid_callback(db_pid_saver);
     set_pid_udata((void*)&get_db());
 
+    {
+        size_t persist_id_saved = 0;
+
+        db_read_write tx(get_db(), DB_PERSIST_ID);
+
+        std::optional<db_data> opt = tx.read("pid");
+
+        if(opt)
+        {
+            db_data& dat = opt.value();
+
+            if(dat.data.size() > 0)
+            {
+                assert(dat.data.size() == sizeof(size_t));
+
+                memcpy(&persist_id_saved, &dat.data[0], sizeof(size_t));
+
+                set_next_persistent_id(persist_id_saved);
+
+                std::cout << "loaded pid " << persist_id_saved << std::endl;
+            }
+        }
+    }
+
     //#define SERVER_VIEW
     #ifdef SERVER_VIEW
 
@@ -143,13 +167,13 @@ void server_thread(std::atomic_bool& should_term)
     playspace_manager playspace_manage;
 
     playspace* sys_1 = playspace_manage.make_new();
-    sys_1->init_default();
+    sys_1->init_default(0);
     sys_1->name = "P-C";
 
     sys_1->position = {100, 0};
 
     playspace* sys_2 = playspace_manage.make_new();
-    sys_2->init_default();
+    sys_2->init_default(10000);
     sys_2->name = "A-C";
 
     playspace_connect(sys_1, sys_2);
@@ -473,30 +497,6 @@ void server_thread(std::atomic_bool& should_term)
 
     set_app_description({secret_key, net_code_appid});
 
-    {
-        size_t persist_id_saved = 0;
-
-        db_read_write tx(get_db(), DB_PERSIST_ID);
-
-        std::optional<db_data> opt = tx.read("pid");
-
-        if(opt)
-        {
-            db_data& dat = opt.value();
-
-            if(dat.data.size() > 0)
-            {
-                assert(dat.data.size() == sizeof(size_t));
-
-                memcpy(&persist_id_saved, &dat.data[0], sizeof(size_t));
-
-                set_next_persistent_id(persist_id_saved);
-
-                std::cout << "loaded pid " << persist_id_saved << std::endl;
-            }
-        }
-    }
-
     while(1)
     {
         sf::Clock tickclock;
@@ -817,6 +817,22 @@ void server_thread(std::atomic_bool& should_term)
 
                 if(read_data.to_poi_space)
                     s->move_down = true;
+
+                if(read_data.warp.should_warp)
+                {
+                    std::optional sys_opt = playspace_manage.get_playspace_from_id(read_data.warp.sys_pid);
+
+                    if(sys_opt)
+                    {
+                        auto [my_sys, my_room] = playspace_manage.get_location_for(s);
+
+                        if(my_sys && playspaces_connected(my_sys, sys_opt.value()))
+                        {
+                            s->move_warp = true;
+                            s->warp_to_pid = read_data.warp.sys_pid;
+                        }
+                    }
+                }
             }
 
             {
@@ -886,6 +902,7 @@ void server_thread(std::atomic_bool& should_term)
                     system_descriptor desc;
                     desc.name = p->name;
                     desc.position = p->position;
+                    desc.sys_pid = p->_pid;
 
                     data.connected_systems.push_back(desc);
                 }
@@ -1365,6 +1382,56 @@ int main()
         cinput.mouse_world_pos = cam.screen_to_world(mpos);
         cinput.rpcs = get_global_serialise_info();
 
+        {
+            ImGui::Begin("Star Systems");
+
+            std::vector<std::string> names{"Name"};
+            std::vector<std::string> positions{"Position"};
+            std::vector<std::string> misc{"Type"};
+            std::vector<std::string> activation{""};
+
+            for(system_descriptor& desc : model.connected_systems)
+            {
+                std::string spos = to_string_with(desc.position.x(), 1) + " " + to_string_with(desc.position.y());
+
+                names.push_back(desc.name);
+                positions.push_back(spos);
+                misc.push_back("Star");
+                activation.push_back("Warp");
+            }
+
+            for(int i=0; i < (int)names.size(); i++)
+            {
+                std::string formatted = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(misc[i], misc);
+
+                ImGui::Text(formatted.c_str());
+
+                if(i == 0)
+                    continue;
+
+                int model_idx = i - 1;
+
+                ImGui::SameLine();
+
+                ImGui::Text("|");
+
+                ImGui::SameLine();
+
+                std::string fstr = "(" + activation[i] + ")";
+
+                if(ImGuiX::SimpleButton(fstr))
+                {
+                    warp_info inf;
+                    inf.sys_pid = model.connected_systems[model_idx].sys_pid;
+                    inf.should_warp = true;
+
+                    cinput.warp = inf;
+                }
+            }
+
+            ImGui::End();
+        }
+
         get_global_serialise_info().all_rpcs.clear();
 
         nproto.data = serialise(cinput);
@@ -1407,48 +1474,6 @@ int main()
                 ImGui::End();
             }*/
         }
-
-        ImGui::Begin("Star Systems");
-
-        std::vector<std::string> names{"Name"};
-        std::vector<std::string> positions{"Position"};
-        std::vector<std::string> misc{"Type"};
-        std::vector<std::string> activation{""};
-
-        for(system_descriptor& desc : model.connected_systems)
-        {
-            std::string spos = to_string_with(desc.position.x(), 1) + " " + to_string_with(desc.position.y());
-
-            names.push_back(desc.name);
-            positions.push_back(spos);
-            misc.push_back("Star");
-            activation.push_back("Warp");
-        }
-
-        for(int i=0; i < (int)names.size(); i++)
-        {
-            std::string formatted = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(misc[i], misc);
-
-            ImGui::Text(formatted.c_str());
-
-            if(i == 0)
-                continue;
-
-            ImGui::SameLine();
-
-            ImGui::Text("|");
-
-            ImGui::SameLine();
-
-            std::string fstr = "(" + activation[i] + ")";
-
-            if(ImGuiX::SimpleButton(fstr))
-            {
-                std::cout << "clicked\n";
-            }
-        }
-
-        ImGui::End();
 
         //std::cout << "showtime " << showtime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
