@@ -1228,8 +1228,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     #define SUPER_LOW_DETAIL 0.001
     #define LOW_DETAIL 0.01
-    #define HIGH_DETAIL 0.1
-
+    #define HIGH_DETAIL 0.5
 
     std::vector<alt_frequency_packet> post_intensity_calculate;
 
