@@ -4400,6 +4400,21 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
     }
 }
 
+void deplete_w(ship& s)
+{
+    float amount = s.my_size;
+    float cur = 0;
+
+    for(component& c : s.components)
+    {
+        if(c.base_id == component_type::W_DRIVE)
+        {
+            c.try_use = true;
+            c.force_use = true;
+        }
+    }
+}
+
 void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
 {
     playspace_resetter dummy(*this);
@@ -4411,7 +4426,7 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
         return;
     }
 
-    if(move_warp && space)
+    if(move_warp && space && has_w_power)
     {
         std::optional<playspace*> dest = play.get_playspace_from_id(warp_to_pid);
 
@@ -4421,8 +4436,15 @@ void ship::check_space_rules(playspace_manager& play, playspace* space, room* r)
         if(!playspaces_connected(space, dest.value()))
             return;
 
+        if(r != nullptr)
+        {
+            r->rem(this);
+        }
+
+        deplete_w(*this);
         space->rem(this);
         dest.value()->add(this);
+
         return;
     }
 
