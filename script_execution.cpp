@@ -354,7 +354,7 @@ void cpu_state::step()
     if(next.type == instructions::COUNT)
         throw std::runtime_error("Bad instruction at runtime?");
 
-    std::cout << "NEXT " << instructions::rnames[(int)next.type] << std::endl;
+    //std::cout << "NEXT " << instructions::rnames[(int)next.type] << std::endl;
 
     switch(next.type)
     {
