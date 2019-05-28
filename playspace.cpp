@@ -872,3 +872,17 @@ std::optional<std::pair<playspace*, room*>> playspace_manager::get_room_from_id(
 
     return std::nullopt;
 }
+
+void playspace_manager::start_room_travel(ship& s, size_t pid)
+{
+    std::optional<std::pair<playspace*, room*>> room_opt = get_room_from_id(pid);
+    auto [play, my_room] = get_location_for(&s);
+
+    if(room_opt && play && my_room && play == room_opt.value().first && my_room != room_opt.value().second && s.has_s_power)
+    {
+        s.destination_poi_pid = room_opt.value().second->_pid;
+        s.travelling_to_poi = true;
+        s.destination_poi_position = room_opt.value().second->position;
+    }
+}
+

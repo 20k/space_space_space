@@ -844,15 +844,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 if(read_data.travel.should_travel)
                 {
-                    std::optional<std::pair<playspace*, room*>> room_opt = playspace_manage.get_room_from_id(read_data.travel.poi_pid);
-                    auto [play, my_room] = playspace_manage.get_location_for(s);
-
-                    if(room_opt && play && my_room && play == room_opt.value().first && my_room != room_opt.value().second && s->has_s_power)
-                    {
-                        s->destination_poi_pid = room_opt.value().second->_pid;
-                        s->travelling_to_poi = true;
-                        s->destination_poi_position = room_opt.value().second->position;
-                    }
+                    playspace_manage.start_room_travel(*s, read_data.travel.poi_pid);
                 }
             }
 
@@ -1540,6 +1532,7 @@ int main()
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
             std::vector<std::string> distances{"Distance"};
+            std::vector<std::string> pids{"IDs"};
 
             ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -1554,13 +1547,14 @@ int main()
                 names.push_back(lab.name);
                 positions.push_back(spos);
                 distances.push_back(dist);
+                pids.push_back(std::to_string(model.labels[i].poi_pid));
             }
 
             for(int i=0; i < (int)names.size(); i++)
             {
                 int real_idx = i - 1;
 
-                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(distances[i], distances);
+                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(distances[i], distances) + " | " + format(pids[i], pids);
 
                 ImGui::Text(rstr.c_str());
 

@@ -288,7 +288,7 @@ cpu_state::cpu_state()
     for(int i=0; i < (int)hardware::COUNT; i++)
     {
         register_value val;
-        val.set_int(0);
+        val.set_int(-1);
 
         ports[i] = val;
     }

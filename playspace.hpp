@@ -7,6 +7,7 @@
 #include <map>
 
 struct entity;
+struct ship;
 struct entity_manager;
 struct alt_radar_field;
 
@@ -157,6 +158,8 @@ struct playspace_manager : serialisable
     std::vector<playspace*> get_connected_systems_for(entity* e);
     std::optional<playspace*> get_playspace_from_id(size_t pid);
     std::optional<std::pair<playspace*, room*>> get_room_from_id(size_t pid);
+
+    void start_room_travel(ship& s, size_t pid);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

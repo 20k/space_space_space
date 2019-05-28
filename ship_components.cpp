@@ -14,6 +14,7 @@
 #include "player.hpp"
 #include "playspace.hpp"
 #include "colours.hpp"
+#include "script_execution.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -4465,9 +4466,41 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
     }
 }
 
+void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r)
+{
+    ///CPU BEHAVIOUR
+    for(component& c : s.components)
+    {
+        if(!c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        cpu_state& cpu = c.cpu_core;
+
+        ///use ints
+        /*if(cpu.ports[hardware::S_DRIVE].is_symbol())
+        {
+            std::string poi_name = cpu.ports[hardware::S_DRIVE].symbol;
+        }*/
+
+        if(cpu.ports[hardware::S_DRIVE].is_int())
+        {
+            int id = cpu.ports[hardware::S_DRIVE].value;
+
+            if(id != -1)
+            {
+                play.start_room_travel(s, id);
+            }
+        }
+
+        cpu.ports[hardware::S_DRIVE].set_int(-1);
+    }
+}
+
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)
 {
     playspace_resetter dummy(*this);
+
+    check_cpu_rules(*this, play, space, r);
 
     if(r == nullptr)
     {
