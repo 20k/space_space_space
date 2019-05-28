@@ -1,10 +1,37 @@
 #include "script_execution.hpp"
 #include <assert.h>
 
+///need to parse 0xFF to 255
+
+bool all_numeric(const std::string& str)
+{
+    for(auto i : str)
+    {
+        if(!isdigit(i))
+            return false;
+    }
+
+    return true;
+}
+
 void register_value::make(const std::string& str)
 {
     if(str.size() == 0)
         throw std::runtime_error("Bad register value, 0 length");
+
+    if(all_numeric(str))
+    {
+        try
+        {
+            int val = std::stoi(str);
+
+            set_int(val);
+        }
+        catch(...)
+        {
+            throw std::runtime_error("Not a valid integer " + str);
+        }
+    }
 
     if(str.size() == 1)
     {
@@ -16,7 +43,7 @@ void register_value::make(const std::string& str)
         {
             set_reg(registers::TEST);
         }
-        else
+        else if(isalpha(str[0]))
         {
             throw std::runtime_error("Bad register " + str);
         }
