@@ -38,7 +38,7 @@ void code_editor::render(cpu_state& cpu)
         cpu.upload_program_rpc(text_edit.GetText());
     }
 
-    ImGui::Text(cpu.last_error.c_str());
+    ImGui::TextWrapped(cpu.last_error.c_str());
 
     ImGui::EndChild();
 
