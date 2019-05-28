@@ -171,6 +171,11 @@ struct instruction
     void make(const std::vector<std::string>& raw);
 
     register_value& fetch(int idx);
+
+    register_value& operator[](int idx)
+    {
+        return fetch(idx);
+    }
 };
 
 struct cpu_state

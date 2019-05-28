@@ -191,6 +191,22 @@ register_value& restrict_r(register_value& in)
     return in;
 }
 
+register_value& restrict_n(register_value& in)
+{
+    if(!in.is_int())
+        throw std::runtime_error("Expected value, got " + in.as_string());
+
+    return in;
+}
+
+register_value& restrict_rn(register_value& in)
+{
+    if(!in.is_reg() && !in.is_int())
+        throw std::runtime_error("Expected register or integer, got " + in.as_string());
+
+    return in;
+}
+
 register_value& restrict_all(register_value& in)
 {
     //if(!in.is_reg() && !in.is_int())
@@ -199,13 +215,24 @@ register_value& restrict_all(register_value& in)
     return in;
 }
 
-#define R(x) restrict_r(x)
-#define RN(x) restrict_rn(x)
-#define E(x) x
+#define R(x) restrict_r(x).decode(*this) ///register only
+#define RN(x) restrict_rn(x).decode(*this) ///register or number
+#define E(x) x.decode(*this) ///everything
+
+#define N_X(x) restrict_n(x)
 
 void icopy(register_value& one, register_value& two)
 {
     two = one;
+}
+
+///need to restrict post register result as well
+void iaddi(register_value& r1, register_value& r2, register_value& r3)
+{
+    N_X(r1);
+    N_X(r2);
+
+    r3.set_int(r1.value + r2.value);
 }
 
 void cpu_state::step()
@@ -225,8 +252,10 @@ void cpu_state::step()
     switch(next.type)
     {
     case COPY:
-        printf("COPY\n");
-        icopy(E(next.fetch(0)).decode(*this), R(next.fetch(1)).decode(*this));
+        icopy(E(next[0]), R(next[1]));
+        break;
+    case ADDI:
+        iaddi(RN(next[0]), RN(next[1]), R(next[2]));
         break;
     }
 
@@ -263,12 +292,20 @@ void cpu_tests()
     cpu_state test;
 
     instruction i1;
+    instruction i2;
+    instruction i3;
     //i1.make({"ADDI", "1", "2", "X"});
 
-    i1.make({"COPY", "1", "X"});
+    i1.make({"COPY", "5", "X"});
+    i2.make({"COPY", "7", "T"});
+    i3.make({"ADDI", "X", "T", "X"});
 
     test.inst.push_back(i1);
+    test.inst.push_back(i2);
+    test.inst.push_back(i3);
 
+    test.step();
+    test.step();
     test.step();
 
     test.debug_state();
