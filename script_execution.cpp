@@ -411,6 +411,9 @@ bool cpu_state::any_blocked()
 
 void cpu_state::step()
 {
+    if(waiting_for_hardware_feedback)
+        return;
+
     if(inst.size() == 0)
         return;
 
@@ -511,14 +514,17 @@ void cpu_state::step()
     case WARP:
         ports[(int)hardware::W_DRIVE] = RNS(next[0]);
         blocking_status[(int)hardware::W_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
         break;
     case SLIP:
         ports[(int)hardware::S_DRIVE] = RNS(next[0]);
         blocking_status[(int)hardware::S_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
         break;
     case TRVL:
         ports[(int)hardware::T_DRIVE] = RNS(next[0]);
         blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
         break;
     case COUNT:
         throw std::runtime_error("Unreachable?");

@@ -4527,10 +4527,18 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
 
             if(id != -1)
             {
-                if(!play.start_room_travel(s, id))
+                int success = 0;
+
+                if(play.start_room_travel(s, id))
+                {
+                    success = 1;
+                }
+                else
                 {
                     unblock_cpu_hardware(s, hardware::S_DRIVE);
                 }
+
+                cpu.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
@@ -4542,14 +4550,24 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
 
             if(id != -1)
             {
-                if(!play.start_warp_travel(s, id))
+                int success = 0;
+
+                if(play.start_warp_travel(s, id))
+                {
+                    success = 1;
+                }
+                else
                 {
                     unblock_cpu_hardware(s, hardware::W_DRIVE);
                 }
+
+                cpu.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
         cpu.ports[hardware::W_DRIVE].set_int(-1);
+
+        cpu.waiting_for_hardware_feedback = false;
     }
 }
 

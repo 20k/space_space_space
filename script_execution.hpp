@@ -216,6 +216,7 @@ struct cpu_state : serialisable, owned
 
     std::vector<register_value> ports;
     std::vector<int> blocking_status;
+    bool waiting_for_hardware_feedback = false;
 
     bool any_blocked();
 
