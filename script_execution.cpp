@@ -379,6 +379,24 @@ register_value& restrict_all(register_value& in)
 
 #include "instructions.hpp"
 
+bool should_skip(cpu_state& s)
+{
+    if(s.inst.size() == 0)
+        return false;
+
+    int npc = s.pc % (int)s.inst.size();
+
+    if(npc < 0 || npc >= (int)s.inst.size())
+        throw std::runtime_error("Bad pc somehow");
+
+    instruction& next = s.inst[npc];
+
+    if(next.type == instructions::COUNT)
+        throw std::runtime_error("Bad instruction at runtime?");
+
+    return next.type == instructions::NOTE || next.type == instructions::MARK;
+}
+
 void cpu_state::step()
 {
     if(inst.size() == 0)
@@ -419,20 +437,20 @@ void cpu_state::step()
         CALL3(imodi, RN, RN, R);
         break;
     case MARK:///pseudo instruction
-        pc++;
-        step();
-        return;
+        //pc++;
+        //step();
+        //return;
         break;
     case SWIZ:
         throw std::runtime_error("Unimplemented SWIZ");
     case JUMP:
-        pc = label_to_pc(L(next[0]).label);
+        pc = label_to_pc(L(next[0]).label) + 1;
         return;
         break;
     case TJMP:
         if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value != 0)
         {
-            pc = label_to_pc(L(next[0]).label);
+            pc = label_to_pc(L(next[0]).label) + 1;
             return;
         }
 
@@ -440,7 +458,7 @@ void cpu_state::step()
     case FJMP:
         if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value == 0)
         {
-            pc = label_to_pc(L(next[0]).label);
+            pc = label_to_pc(L(next[0]).label) + 1;
             return;
         }
 
@@ -462,9 +480,9 @@ void cpu_state::step()
     case NOOP:
         break;
     case NOTE:
-        pc++;
-        step();
-        return;
+        //pc++;
+        //step();
+        //return;
         break;
     case RAND:
         CALL3(irandi, RN, RN, R);
@@ -491,6 +509,15 @@ void cpu_state::step()
     }
 
     pc++;
+
+    int num_skip = 0;
+
+    while(should_skip(*this) && num_skip < (int)inst.size())
+    {
+        pc++;
+
+        num_skip++;
+    }
 }
 
 void cpu_state::inc_pc()

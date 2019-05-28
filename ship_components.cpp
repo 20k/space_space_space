@@ -4474,6 +4474,9 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
         if(!c.has_tag(tag_info::TAG_CPU))
             continue;
 
+        if(c.get_operating_efficiency() < 0.2)
+            continue;
+
         cpu_state& cpu = c.cpu_core;
 
         ///use ints

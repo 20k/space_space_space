@@ -1457,7 +1457,7 @@ int main()
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
             std::vector<std::string> misc{"Type"};
-            std::vector<std::string> activation{""};
+            std::vector<std::string> pids{"ID"};
 
             for(system_descriptor& desc : model.connected_systems)
             {
@@ -1466,12 +1466,12 @@ int main()
                 names.push_back(desc.name);
                 positions.push_back(spos);
                 misc.push_back("Star");
-                activation.push_back("Warp");
+                pids.push_back(std::to_string(desc.sys_pid));
             }
 
             for(int i=0; i < (int)names.size(); i++)
             {
-                std::string formatted = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(misc[i], misc);
+                std::string formatted = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(misc[i], misc) + " | " + format(pids[i], pids);
 
                 ImGui::Text(formatted.c_str());
 
@@ -1505,7 +1505,7 @@ int main()
 
                 ImGui::SameLine();
 
-                std::string fstr = "(" + activation[i] + ")";
+                std::string fstr = "(Warp)";
 
                 ImVec4 col = colours::pastel_red;
 
@@ -1532,7 +1532,7 @@ int main()
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
             std::vector<std::string> distances{"Distance"};
-            std::vector<std::string> pids{"IDs"};
+            std::vector<std::string> pids{"ID"};
 
             ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
