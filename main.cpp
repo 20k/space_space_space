@@ -794,8 +794,16 @@ void server_thread(std::atomic_bool& should_term)
                     ctx.inf = read_data.rpcs;
                     ctx.exec_rpcs = true;
 
-                    do_recurse(ctx, mod);
+                    do_recurse(ctx, s);
                 }
+
+                /*{
+                    serialise_context ctx;
+                    ctx.inf = read_data.rpcs;
+                    ctx.exec_rpcs = true;
+
+                    do_recurse(ctx, mod);
+                }*/
 
                 /*if(read_data.to_fsd_space)
                 {

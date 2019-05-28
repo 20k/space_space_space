@@ -495,9 +495,8 @@ void cpu_state::step()
 
 void cpu_state::inc_pc()
 {
-    std::cout << "spid " << _pid << std::endl;
-
     free_running = false;
+
     try
     {
         step();
@@ -586,16 +585,24 @@ int cpu_state::label_to_pc(const std::string& label)
 
 void cpu_state::set_program(std::string str)
 {
-    if(str.size() > 10000)
-        return;
-
-    inst.clear();
-
-    auto all = split(str, '\n');
-
-    for(const auto& i : all)
+    try
     {
-        add_line(i);
+        if(str.size() > 10000)
+            return;
+
+        inst.clear();
+
+        auto all = split(str, '\n');
+
+        for(const auto& i : all)
+        {
+            add_line(i);
+        }
+    }
+    catch(std::runtime_error& err)
+    {
+        last_error = err.what();
+        free_running = false;
     }
 }
 

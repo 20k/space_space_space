@@ -31,8 +31,6 @@ void code_editor::render(cpu_state& cpu)
     if(ImGuiX::SimpleButton("(Step)"))
     {
         cpu.inc_pc_rpc();
-
-        std::cout << "pid " << cpu._pid << std::endl;
     }
 
     if(ImGuiX::SimpleButton("(Upload)"))
