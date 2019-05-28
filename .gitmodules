@@ -19,3 +19,6 @@
 [submodule "deps/ndb"]
 	path = deps/ndb
 	url = https://github.com/20k/ndb
+[submodule "deps/ImGuiColorTextEdit"]
+	path = deps/ImGuiColorTextEdit
+	url = https://github.com/BalazsJako/ImGuiColorTextEdit

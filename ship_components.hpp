@@ -377,6 +377,8 @@ struct component : serialisable, owned
     std::string long_name;
     std::string short_name;
 
+    cpu_state cpu_core;
+
     ///?????????????????
     ///this will go to the house
     //std::string subtype;
@@ -440,6 +442,7 @@ struct component : serialisable, owned
         DO_SERIALISE(activation_level);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
+        DO_SERIALISE(cpu_core);
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
