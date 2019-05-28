@@ -21,6 +21,8 @@ namespace registers
     };
 }
 
+struct cpu_state;
+
 struct register_value
 {
     registers::type reg = registers::COUNT;
@@ -31,6 +33,7 @@ struct register_value
     int which = 0;
 
     void make(const std::string& str);
+    std::string as_string();
 
     bool is_reg()
     {
@@ -75,6 +78,8 @@ struct register_value
         label = lab;
         which = 3;
     }
+
+    register_value& decode(cpu_state& state);
 };
 
 ///so extensions to exapunks syntax
@@ -164,10 +169,14 @@ struct instruction
     std::vector<register_value> args;
 
     void make(const std::vector<std::string>& raw);
+
+    register_value& fetch(int idx);
 };
 
 struct cpu_state
 {
+    cpu_state();
+
     std::map<registers::type, register_value> register_states;
     std::vector<instruction> inst;
     int pc = 0; ///instruction to be executed next
@@ -175,6 +184,8 @@ struct cpu_state
     void step();
 
     void debug_state();
+
+    register_value& fetch(registers::type type);
 };
 
 void cpu_tests();
