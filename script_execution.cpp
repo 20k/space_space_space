@@ -232,6 +232,14 @@ cpu_state::cpu_state()
 
         register_states[(registers::type)i] = val;
     }
+
+    for(int i=0; i < (int)hardware::COUNT; i++)
+    {
+        register_value val;
+        val.set_int(0);
+
+        ports[i] = val;
+    }
 }
 
 /*struct value_r
@@ -264,6 +272,14 @@ register_value& restrict_rn(register_value& in)
 {
     if(!in.is_reg() && !in.is_int())
         throw std::runtime_error("Expected register or integer, got " + in.as_string());
+
+    return in;
+}
+
+register_value& restrict_rns(register_value& in)
+{
+    if(!in.is_reg() && !in.is_int() && !in.is_symbol())
+        throw std::runtime_error("Expected register, integer or symbol, got " + in.as_string());
 
     return in;
 }
@@ -303,6 +319,7 @@ register_value& restrict_all(register_value& in)
 
 #define R(x) restrict_r(x).decode(*this) ///register only
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
+#define RNS(x) restrict_rns(x).decode(*this) ///register or number or symbol
 #define E(x) x.decode(*this) ///everything
 #define L(x) restrict_l(x).decode(*this)
 
@@ -393,6 +410,9 @@ void cpu_state::step()
     case HALT:
         throw std::runtime_error("Received HALT");
         break;
+    case WAIT:
+        throw std::runtime_error("Unimplemented WAIT");
+        break;
     case HOST:
         ///get name of area
         throw std::runtime_error("Unimplemented HOST");
@@ -417,6 +437,15 @@ void cpu_state::step()
         throw std::runtime_error("Unimpl");
     case COUNT:
         throw std::runtime_error("Unreachable?");
+    case WARP:
+        ports[(int)hardware::W_DRIVE] = RNS(next[0]);
+        break;
+    case SLIP:
+        ports[(int)hardware::S_DRIVE] = RNS(next[0]);
+        break;
+    case TRVL:
+        ports[(int)hardware::T_DRIVE] = RNS(next[0]);
+        break;
     }
 
     pc++;
@@ -432,6 +461,11 @@ void cpu_state::debug_state()
         std::string val = i.second.as_string();
 
         printf("%s: %s\n", name.c_str(), val.c_str());
+    }
+
+    for(int i=0; i < (int)hardware::COUNT; i++)
+    {
+        std::cout << "Port: " + std::to_string(i) + ": " + ports[i].as_string() << std::endl;
     }
 }
 
@@ -550,5 +584,16 @@ void cpu_tests()
         test.debug_state();
     }
 
-    exit(0);
+    {
+        cpu_state test;
+        test.add_line("WARP 123");
+
+        test.step();
+
+        assert(test.ports[(int)hardware::W_DRIVE].value == 123);
+
+        test.debug_state();
+    }
+
+    //exit(0);
 }

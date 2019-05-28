@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <array>
 
 namespace registers
 {
@@ -103,6 +104,7 @@ namespace instructions
         TEST,
         //REPL,
         HALT,
+        WAIT,
         //KILL,
         //LINK,
         HOST,
@@ -122,6 +124,9 @@ namespace instructions
         AT_N_M,
         //WAIT,
         DATA,
+        WARP,
+        SLIP,
+        TRVL,
         COUNT,
     };
 
@@ -140,6 +145,7 @@ namespace instructions
         "FJMP",
         "TEST",
         "HALT",
+        "WAIT",
         //"KILL",
         //"LINK",
         "HOST",
@@ -158,9 +164,23 @@ namespace instructions
         "@END",
         "@@@@",
         "DATA",
+        "WARP",
+        "SLIP",
+        "TRVL",
     };
 
     type fetch(const std::string& name);
+}
+
+namespace hardware
+{
+    enum type
+    {
+        W_DRIVE, ///warp drive
+        S_DRIVE, ///fsd space
+        T_DRIVE, ///thrusters
+        COUNT,
+    };
 }
 
 struct instruction
@@ -186,6 +206,8 @@ struct cpu_state
     std::map<registers::type, register_value> register_states;
     std::vector<instruction> inst;
     int pc = 0; ///instruction to be executed next
+
+    std::array<register_value, (int)hardware::COUNT> ports;
 
     void step();
 
