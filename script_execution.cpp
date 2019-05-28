@@ -2,6 +2,27 @@
 #include <assert.h>
 #include <iostream>
 #include <networking/serialisable.hpp>
+#include <sstream>
+
+inline
+std::vector<std::string>& split(const std::string &s, char delim, std::vector<std::string> &elems)
+{
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+inline
+std::vector<std::string> split(const std::string &s, char delim)
+{
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
 
 ///need to parse 0xFF to 255
 
@@ -531,6 +552,18 @@ int cpu_state::label_to_pc(const std::string& label)
     }
 
     throw std::runtime_error("Attempted to jump to non existent label: " + label);
+}
+
+void cpu_state::set_program(const std::string& str)
+{
+    inst.clear();
+
+    auto all = split(str, '\n');
+
+    for(const auto& i : all)
+    {
+        add_line(i);
+    }
 }
 
 void cpu_tests()

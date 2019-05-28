@@ -225,6 +225,8 @@ struct cpu_state : serialisable
     int label_to_pc(const std::string& label);
 
     SERIALISE_SIGNATURE();
+
+    void set_program(const std::string& str);
 };
 
 void cpu_tests();
