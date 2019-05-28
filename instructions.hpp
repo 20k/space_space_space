@@ -1,6 +1,9 @@
 #ifndef INSTRUCTIONS_HPP_INCLUDED
 #define INSTRUCTIONS_HPP_INCLUDED
 
+#include <random>
+#include "random.hpp"
+
 void icopy(register_value& one, register_value& two)
 {
     two = one;
@@ -117,6 +120,24 @@ void itest(register_value& r1, register_value& msym, register_value& r2, registe
     }
 
     t.set_int(res);
+}
+
+void irandi(register_value& r1, register_value& r2, register_value& r3)
+{
+    NUM(r1);
+    NUM(r2);
+
+    int mx = r2.value;
+    int mn = r1.value;
+
+    auto rnd = get_random_value();
+
+    std::default_random_engine generator(rnd);
+    std::uniform_int_distribution<int> distribution(mn,mx);
+
+    int rval = distribution(generator);
+
+    r3.set_int(rval);
 }
 
 #endif // INSTRUCTIONS_HPP_INCLUDED

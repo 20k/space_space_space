@@ -286,6 +286,9 @@ void cpu_state::step()
 
     instruction& next = inst[pc];
 
+    if(next.type == instructions::COUNT)
+        throw std::runtime_error("Bad instruction at runtime?");
+
     std::cout << "NEXT " << instructions::rnames[(int)next.type] << std::endl;
 
     switch(next.type)
@@ -339,6 +342,33 @@ void cpu_state::step()
     case TEST:
         itest(RN(next[0]), SYM(next[1]), RN(next[2]), fetch(registers::TEST));
         break;
+    case HALT:
+        throw std::runtime_error("Received HALT");
+        break;
+    case HOST:
+        ///get name of area
+        throw std::runtime_error("Unimplemented HOST");
+        break;
+    case NOOP:
+        break;
+    case NOTE:
+        pc++;
+        step();
+        return;
+        break;
+    case RAND:
+        CALL3(irandi, RN, RN, R);
+        break;
+    case AT_REP:
+        throw std::runtime_error("Should never be executed [rep]");
+    case AT_END:
+        throw std::runtime_error("Should never be executed [end]");
+    case AT_N_M:
+        throw std::runtime_error("Should never be executed [n_m]");
+    case DATA:
+        throw std::runtime_error("Unimpl");
+    case COUNT:
+        throw std::runtime_error("Unreachable?");
     }
 
     pc++;
@@ -451,6 +481,15 @@ void cpu_tests()
 
         test.step();
         test.step();
+        test.debug_state();
+    }
+
+    {
+        cpu_state test;
+        test.add({"RAND", "0", "15", "X"});
+
+        test.step();
+
         test.debug_state();
     }
 
