@@ -4365,33 +4365,43 @@ struct playspace_resetter
     ~playspace_resetter(){s.move_down = false; s.move_up = false; s.move_warp = false;}
 };
 
-void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
+void unblock_cpu_hardware(ship& s, hardware::type type)
+{
+    for(component& c : s.components)
+    {
+        if(!c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        c.cpu_core.blocking_status[(int)type] = 0;
+    }
+}
+
+void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, bool disruptive = true)
 {
     s.travelling_to_poi = false;
 
     if(r == nullptr)
     {
-        float my_mass = s.get_mass();
-
-        alt_frequency_packet heat;
-        heat.frequency = HEAT_FREQ;
-        heat.intensity = 20000;
-
-        /*double health = s.get_capacity()[component_info::HP] / 2;
-        s.take_damage(health, true, true);*/
-
-        for(component& c : s.components)
+        if(disruptive)
         {
-            if(c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE)
+            float my_mass = s.get_mass();
+
+            /*double health = s.get_capacity()[component_info::HP] / 2;
+            s.take_damage(health, true, true);*/
+
+            for(component& c : s.components)
             {
-                does_dynamic& d = c.get_dynamic(component_info::HP);
-                const does_fixed& fix = c.get_fixed(component_info::HP);
+                if(c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE)
+                {
+                    does_dynamic& d = c.get_dynamic(component_info::HP);
+                    const does_fixed& fix = c.get_fixed(component_info::HP);
 
-                float held = d.held;
+                    float held = d.held;
 
-                apply_to_does(-d.held * 0.7, d, fix);
+                    apply_to_does(-d.held * 0.7, d, fix);
 
-                c.my_temperature += 500;
+                    c.my_temperature += 500;
+                }
             }
         }
 
@@ -4399,8 +4409,17 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r)
 
         play.enter_room(&s, new_poi);
 
-        s.current_radar_field->emit(heat, s.r.position, s);
+        if(disruptive)
+        {
+            alt_frequency_packet heat;
+            heat.frequency = HEAT_FREQ;
+            heat.intensity = 20000;
+
+            s.current_radar_field->emit(heat, s.r.position, s);
+        }
     }
+
+    unblock_cpu_hardware(s, hardware::S_DRIVE);
 }
 
 void deplete_w(ship& s)
@@ -4449,6 +4468,8 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 
     if(dist <= drop_range)
     {
+        unblock_cpu_hardware(s, hardware::S_DRIVE);
+
         std::optional<std::pair<playspace*, room*>> dest = play.get_room_from_id(s.destination_poi_pid);
 
         s.travelling_to_poi = false;
@@ -4468,7 +4489,22 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 
 void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r)
 {
-    ///CPU BEHAVIOUR
+    /*if(s.last_room_type != s.room_type)
+    {
+        ///was real space, now sspace, dont unblock s_drive
+        if(s.last_room_type == space_type::REAL_SPACE)
+        {
+            unblock_cpu_hardware(s, hardware::T_DRIVE);
+            unblock_cpu_hardware(s, hardware::W_DRIVE);
+        }
+        else ///was sspace, now realspace. unblock everything
+        {
+            unblock_cpu_hardware(s, hardware::T_DRIVE);
+            unblock_cpu_hardware(s, hardware::W_DRIVE);
+            unblock_cpu_hardware(s, hardware::S_DRIVE);
+        }
+    }*/
+
     for(component& c : s.components)
     {
         if(!c.has_tag(tag_info::TAG_CPU))
@@ -4491,11 +4527,29 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
 
             if(id != -1)
             {
-                play.start_room_travel(s, id);
+                if(!play.start_room_travel(s, id))
+                {
+                    unblock_cpu_hardware(s, hardware::S_DRIVE);
+                }
             }
         }
 
         cpu.ports[hardware::S_DRIVE].set_int(-1);
+
+        if(cpu.ports[hardware::W_DRIVE].is_int())
+        {
+            int id = cpu.ports[hardware::W_DRIVE].value;
+
+            if(id != -1)
+            {
+                if(!play.start_warp_travel(s, id))
+                {
+                    unblock_cpu_hardware(s, hardware::W_DRIVE);
+                }
+            }
+        }
+
+        cpu.ports[hardware::W_DRIVE].set_int(-1);
     }
 }
 
@@ -4504,6 +4558,8 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
     playspace_resetter dummy(*this);
 
     check_cpu_rules(*this, play, space, r);
+
+    last_room_type = room_type;
 
     if(r == nullptr)
     {
@@ -4514,10 +4570,16 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         current_room_pid = r->_pid;
     }
 
+    if(r == nullptr && !travelling_to_poi)
+    {
+        ship_drop_to(*this, play, space, nullptr, false);
+        return;
+    }
+
     if(!has_s_power && r == nullptr)
     {
         ///NEW ROOM
-        ship_drop_to(*this, play, space, nullptr);
+        ship_drop_to(*this, play, space, nullptr, true);
         return;
     }
 
@@ -4529,6 +4591,8 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 
     if(move_warp && space && has_w_power && r != nullptr)
     {
+        unblock_cpu_hardware(*this, hardware::W_DRIVE);
+
         std::optional<playspace*> dest = play.get_playspace_from_id(warp_to_pid);
 
         if(!dest.has_value())
@@ -4553,8 +4617,15 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         return;
     }
 
+    ///could not warp
+    if(move_warp)
+    {
+        unblock_cpu_hardware(*this, hardware::W_DRIVE);
+        return;
+    }
+
     ///already in a room
-    if(move_down && r != nullptr)
+    /*if(move_down && r != nullptr)
         return;
 
     ///already in fsd space
@@ -4575,7 +4646,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         {
             play.enter_room(this, found.value());
         }
-    }
+    }*/
 }
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)

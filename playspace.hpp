@@ -159,7 +159,8 @@ struct playspace_manager : serialisable
     std::optional<playspace*> get_playspace_from_id(size_t pid);
     std::optional<std::pair<playspace*, room*>> get_room_from_id(size_t pid);
 
-    void start_room_travel(ship& s, size_t pid);
+    bool start_warp_travel(ship& s, size_t pid);
+    bool start_room_travel(ship& s, size_t pid);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

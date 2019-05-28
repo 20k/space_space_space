@@ -215,6 +215,9 @@ struct cpu_state : serialisable, owned
     std::string last_error;
 
     std::vector<register_value> ports;
+    std::vector<int> blocking_status;
+
+    bool any_blocked();
 
     void step();
 

@@ -873,7 +873,27 @@ std::optional<std::pair<playspace*, room*>> playspace_manager::get_room_from_id(
     return std::nullopt;
 }
 
-void playspace_manager::start_room_travel(ship& s, size_t pid)
+bool playspace_manager::start_warp_travel(ship& s, size_t pid)
+{
+    std::optional sys_opt = get_playspace_from_id(pid);
+
+    if(sys_opt)
+    {
+        auto [my_sys, my_room] = get_location_for(&s);
+
+        if(my_sys && playspaces_connected(my_sys, sys_opt.value()) && !s.travelling_to_poi)
+        {
+            s.move_warp = true;
+            s.warp_to_pid = pid;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool playspace_manager::start_room_travel(ship& s, size_t pid)
 {
     std::optional<std::pair<playspace*, room*>> room_opt = get_room_from_id(pid);
     auto [play, my_room] = get_location_for(&s);
@@ -883,6 +903,10 @@ void playspace_manager::start_room_travel(ship& s, size_t pid)
         s.destination_poi_pid = room_opt.value().second->_pid;
         s.travelling_to_poi = true;
         s.destination_poi_position = room_opt.value().second->position;
+
+        return true;
     }
+
+    return false;
 }
 

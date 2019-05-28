@@ -828,18 +828,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 if(read_data.warp.should_warp)
                 {
-                    std::optional sys_opt = playspace_manage.get_playspace_from_id(read_data.warp.sys_pid);
-
-                    if(sys_opt)
-                    {
-                        auto [my_sys, my_room] = playspace_manage.get_location_for(s);
-
-                        if(my_sys && playspaces_connected(my_sys, sys_opt.value()) && !s->travelling_to_poi)
-                        {
-                            s->move_warp = true;
-                            s->warp_to_pid = read_data.warp.sys_pid;
-                        }
-                    }
+                    playspace_manage.start_warp_travel(*s, read_data.warp.sys_pid);
                 }
 
                 if(read_data.travel.should_travel)

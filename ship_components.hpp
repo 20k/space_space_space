@@ -743,6 +743,7 @@ struct ship : heatable_entity, owned
     ship();
 
     int room_type = 0;
+    int last_room_type = 0;
 
     bool move_up = false;
     bool has_s_power = false;
@@ -845,6 +846,7 @@ struct ship : heatable_entity, owned
         DO_SERIALISE(has_s_power);
         DO_SERIALISE(has_w_power);
         DO_SERIALISE(room_type);
+        DO_SERIALISE(last_room_type);
         DO_SERIALISE(current_room_pid);
     }
 

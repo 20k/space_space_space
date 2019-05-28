@@ -275,6 +275,7 @@ void instruction::make(const std::string& str)
 cpu_state::cpu_state()
 {
     ports.resize(hardware::COUNT);
+    blocking_status.resize(hardware::COUNT);
     register_states.resize(registers::COUNT);
 
     for(int i=0; i < registers::COUNT; i++)
@@ -397,6 +398,17 @@ bool should_skip(cpu_state& s)
     return next.type == instructions::NOTE || next.type == instructions::MARK;
 }
 
+bool cpu_state::any_blocked()
+{
+    for(int i=0; i < (int)blocking_status.size(); i++)
+    {
+        if(blocking_status[i])
+            return true;
+    }
+
+    return false;
+}
+
 void cpu_state::step()
 {
     if(inst.size() == 0)
@@ -471,8 +483,9 @@ void cpu_state::step()
         throw std::runtime_error("Received HALT");
         break;
     case WAIT:
-        throw std::runtime_error("Unimplemented WAIT");
-        break;
+            if(any_blocked())
+                return;
+            break;
     case HOST:
         ///get name of area
         throw std::runtime_error("Unimplemented HOST");
@@ -497,12 +510,15 @@ void cpu_state::step()
         throw std::runtime_error("Unimpl");
     case WARP:
         ports[(int)hardware::W_DRIVE] = RNS(next[0]);
+        blocking_status[(int)hardware::W_DRIVE] = 1;
         break;
     case SLIP:
         ports[(int)hardware::S_DRIVE] = RNS(next[0]);
+        blocking_status[(int)hardware::S_DRIVE] = 1;
         break;
     case TRVL:
         ports[(int)hardware::T_DRIVE] = RNS(next[0]);
+        blocking_status[(int)hardware::T_DRIVE] = 1;
         break;
     case COUNT:
         throw std::runtime_error("Unreachable?");
