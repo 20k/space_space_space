@@ -1,8 +1,32 @@
 #include "script_execution.hpp"
 #include <assert.h>
 #include <iostream>
+#include <networking/serialisable.hpp>
 
 ///need to parse 0xFF to 255
+
+void register_value::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(reg);
+    DO_SERIALISE(value);
+    DO_SERIALISE(symbol);
+    DO_SERIALISE(label);
+    DO_SERIALISE(which);
+}
+
+void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(type);
+    DO_SERIALISE(args);
+}
+
+void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(register_states);
+    DO_SERIALISE(inst);
+    DO_SERIALISE(pc);
+    DO_SERIALISE(ports);
+}
 
 bool all_numeric(const std::string& str)
 {
@@ -225,12 +249,15 @@ void instruction::make(const std::string& str)
 
 cpu_state::cpu_state()
 {
+    ports.resize(hardware::COUNT);
+    register_states.resize(registers::COUNT);
+
     for(int i=0; i < registers::COUNT; i++)
     {
         register_value val;
         val.set_int(0);
 
-        register_states[(registers::type)i] = val;
+        register_states[i] = val;
     }
 
     for(int i=0; i < (int)hardware::COUNT; i++)
@@ -241,16 +268,6 @@ cpu_state::cpu_state()
         ports[i] = val;
     }
 }
-
-/*struct value_r
-{
-    register_value& in;
-
-    value_r(register_value& val) : in(val)
-    {
-        if(!)
-    }
-};*/
 
 register_value& restrict_r(register_value& in)
 {
@@ -455,10 +472,11 @@ void cpu_state::debug_state()
 {
     printf("PC %i\n", pc);
 
-    for(auto& i : register_states)
+    //for(auto& i : register_states)
+    for(int i=0; i < (int)register_states.size(); i++)
     {
-        std::string name = registers::rnames[(int)i.first];
-        std::string val = i.second.as_string();
+        std::string name = registers::rnames[i];
+        std::string val = register_states[i].as_string();
 
         printf("%s: %s\n", name.c_str(), val.c_str());
     }
@@ -471,12 +489,10 @@ void cpu_state::debug_state()
 
 register_value& cpu_state::fetch(registers::type type)
 {
-    auto it = register_states.find(type);
-
-    if(it == register_states.end())
+    if((int)type < 0 || (int)type >= register_states.size())
         throw std::runtime_error("No such register " + std::to_string((int)type));
 
-    return it->second;
+    return register_states[(int)type];
 }
 
 void cpu_state::add(const std::vector<std::string>& raw)

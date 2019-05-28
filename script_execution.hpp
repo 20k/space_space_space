@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <array>
+#include <networking/serialisable_fwd.hpp>
 
 namespace registers
 {
@@ -24,7 +25,7 @@ namespace registers
 
 struct cpu_state;
 
-struct register_value
+struct register_value : serialisable
 {
     registers::type reg = registers::COUNT;
     int value = 0;
@@ -81,6 +82,8 @@ struct register_value
     }
 
     register_value& decode(cpu_state& state);
+
+    SERIALISE_SIGNATURE();
 };
 
 ///so extensions to exapunks syntax
@@ -183,7 +186,7 @@ namespace hardware
     };
 }
 
-struct instruction
+struct instruction : serialisable
 {
     instructions::type type = instructions::COUNT;
     std::vector<register_value> args;
@@ -197,17 +200,19 @@ struct instruction
     {
         return fetch(idx);
     }
+
+    SERIALISE_SIGNATURE();
 };
 
-struct cpu_state
+struct cpu_state : serialisable
 {
     cpu_state();
 
-    std::map<registers::type, register_value> register_states;
+    std::vector<register_value> register_states;
     std::vector<instruction> inst;
     int pc = 0; ///instruction to be executed next
 
-    std::array<register_value, (int)hardware::COUNT> ports;
+    std::vector<register_value> ports;
 
     void step();
 
@@ -218,6 +223,8 @@ struct cpu_state
     void add(const std::vector<std::string>& raw);
     void add_line(const std::string& str);
     int label_to_pc(const std::string& label);
+
+    SERIALISE_SIGNATURE();
 };
 
 void cpu_tests();

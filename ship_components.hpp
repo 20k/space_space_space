@@ -11,6 +11,7 @@
 #include "radar_field.hpp"
 #include "material_info.hpp"
 #include "default_components.hpp"
+#include "script_execution.hpp"
 
 ///1 size at a power of 1 takes 100s
 #define SIZE_TO_TIME 100
