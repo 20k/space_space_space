@@ -35,22 +35,22 @@ struct register_value
     void make(const std::string& str);
     std::string as_string();
 
-    bool is_reg()
+    bool is_reg() const
     {
         return which == 0;
     }
 
-    bool is_int()
+    bool is_int() const
     {
         return which == 1;
     }
 
-    bool is_symbol()
+    bool is_symbol() const
     {
         return which == 2;
     }
 
-    bool is_label()
+    bool is_label() const
     {
         return which == 3;
     }
@@ -193,6 +193,7 @@ struct cpu_state
     register_value& fetch(registers::type type);
 
     void add(const std::vector<std::string>& raw);
+    int label_to_pc(const std::string& label);
 };
 
 void cpu_tests();
