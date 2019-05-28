@@ -219,7 +219,7 @@ register_value& restrict_all(register_value& in)
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
 #define E(x) x.decode(*this) ///everything
 
-#define N_X(x) restrict_n(x)
+#define NUM(x) restrict_n(x)
 
 void icopy(register_value& one, register_value& two)
 {
@@ -229,8 +229,8 @@ void icopy(register_value& one, register_value& two)
 ///need to restrict post register result as well
 void iaddi(register_value& r1, register_value& r2, register_value& r3)
 {
-    N_X(r1);
-    N_X(r2);
+    NUM(r1);
+    NUM(r2);
 
     r3.set_int(r1.value + r2.value);
 }
