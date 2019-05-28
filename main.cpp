@@ -24,6 +24,7 @@
 #include "ui_util.hpp"
 #include "colours.hpp"
 #include "script_execution.hpp"
+#include "code_editor.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -1194,6 +1195,8 @@ int main()
     bool focus = true;
     vec2f last_s_size = {0,0};
 
+    std::map<size_t, code_editor> editors;
+
     while(window.isOpen())
     {
         double frametime_dt = (frametime_delta.restart().asMicroseconds() / 1000.) / 1000.;
@@ -1349,6 +1352,17 @@ int main()
                     render_mode = RENDER_LAYER_SSPACE;
                     ship_current_position = ship_proxy->r.position;
                     poi_cam.zoom = 1;
+                }
+            }
+        }
+
+        if(my_ship)
+        {
+            for(component& c : my_ship->components)
+            {
+                if(c.has_tag(tag_info::TAG_CPU))
+                {
+                    editors[c._pid].render();
                 }
             }
         }
