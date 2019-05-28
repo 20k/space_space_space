@@ -27,6 +27,8 @@ void register_value::make(const std::string& str)
             int val = std::stoi(str);
 
             set_int(val);
+
+            return;
         }
         catch(...)
         {
@@ -39,14 +41,22 @@ void register_value::make(const std::string& str)
         if(str[0] == 'G' || str[0] == 'X')
         {
             set_reg(registers::GENERAL_PURPOSE0);
+            return;
         }
         else if(str[0] == 'T')
         {
             set_reg(registers::TEST);
+            return;
         }
         else if(isalpha(str[0]))
         {
             throw std::runtime_error("Bad register " + str);
+        }
+
+        if(str[0] == '>' || str[0] == '<' || str[0] == '=')
+        {
+            set_symbol(str);
+            return;
         }
     }
 
@@ -64,6 +74,8 @@ void register_value::make(const std::string& str)
             {
                 throw std::runtime_error("No G/X registers available > 0");
             }
+
+            return;
         }
     }
 
@@ -216,6 +228,23 @@ register_value& restrict_l(register_value& in)
     return in;
 }
 
+register_value& restrict_s(register_value& in)
+{
+    if(!in.is_symbol())
+        throw std::runtime_error("Expected symbol, got " + in.as_string());
+
+    return in;
+}
+
+register_value& pseudo_symbol(register_value& in)
+{
+    ///BIT HACKY
+    if(!in.is_label())
+        throw std::runtime_error("Expected <, > or =, got " + in.as_string());
+
+    return in;
+}
+
 register_value& restrict_all(register_value& in)
 {
     //if(!in.is_reg() && !in.is_int())
@@ -228,6 +257,8 @@ register_value& restrict_all(register_value& in)
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
 #define E(x) x.decode(*this) ///everything
 #define L(x) restrict_l(x).decode(*this)
+
+#define SYM(x) restrict_s(x)
 
 #define NUM(x) restrict_n(x)
 
@@ -286,8 +317,27 @@ void cpu_state::step()
         throw std::runtime_error("Unimplemented SWIZ");
     case JUMP:
         pc = label_to_pc(L(next[0]).label);
-
         return;
+        break;
+    case TJMP:
+        if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value != 0)
+        {
+            pc = label_to_pc(L(next[0]).label);
+            return;
+        }
+
+        break;
+    case FJMP:
+        if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value == 0)
+        {
+            pc = label_to_pc(L(next[0]).label);
+            return;
+        }
+
+        break;
+
+    case TEST:
+        itest(RN(next[0]), SYM(next[1]), RN(next[2]), fetch(registers::TEST));
         break;
     }
 
@@ -330,6 +380,9 @@ int cpu_state::label_to_pc(const std::string& label)
     for(int i=0; i < (int)inst.size(); i++)
     {
         const instruction& instr = inst[i];
+
+        if(instr.type != instructions::MARK)
+            continue;
 
         if(instr.args.size() == 0)
             continue;
@@ -376,6 +429,28 @@ void cpu_tests()
         test.step();
         test.step();
 
+        test.debug_state();
+    }
+
+    {
+        cpu_state test;
+
+        test.add({"COPY", "53", "X"});
+        test.add({"TEST", "54", ">", "X"});
+
+        test.step();
+        test.step();
+        test.debug_state();
+    }
+
+    {
+        cpu_state test;
+
+        test.add({"COPY", "53", "X"});
+        test.add({"TEST", "54", "=", "X"});
+
+        test.step();
+        test.step();
         test.debug_state();
     }
 

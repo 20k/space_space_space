@@ -52,5 +52,71 @@ void imodi(register_value& r1, register_value& r2, register_value& r3)
     r3.set_int(r1.value % r2.value);
 }
 
+void itest(register_value& r1, register_value& msym, register_value& r2, register_value& t)
+{
+    if(r1.which != r2.which)
+    {
+        t.set_int(0);
+        return;
+    }
+
+    int res = 0;
+
+    if(msym.symbol == "=")
+    {
+        if(r1.is_int())
+        {
+            res = r1.value == r2.value;
+        }
+
+        if(r1.is_label())
+        {
+            res = r1.label == r2.label;
+        }
+
+        if(r1.is_symbol())
+        {
+            res = r1.symbol == r2.symbol;
+        }
+    }
+
+    if(msym.symbol == "<")
+    {
+        if(r1.is_int())
+        {
+            res = r1.value < r2.value;
+        }
+
+        if(r1.is_label())
+        {
+            res = r1.label < r2.label;
+        }
+
+        if(r1.is_symbol())
+        {
+            res = r1.symbol < r2.symbol;
+        }
+    }
+
+    if(msym.symbol == ">")
+    {
+        if(r1.is_int())
+        {
+            res = r1.value > r2.value;
+        }
+
+        if(r1.is_label())
+        {
+            res = r1.label > r2.label;
+        }
+
+        if(r1.is_symbol())
+        {
+            res = r1.symbol > r2.symbol;
+        }
+    }
+
+    t.set_int(res);
+}
 
 #endif // INSTRUCTIONS_HPP_INCLUDED

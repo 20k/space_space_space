@@ -30,7 +30,7 @@ struct register_value
     std::string symbol;
     std::string label;
 
-    int which = 0;
+    int which = -1;
 
     void make(const std::string& str);
     std::string as_string();
