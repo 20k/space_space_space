@@ -452,8 +452,6 @@ void cpu_state::step()
         throw std::runtime_error("Should never be executed [n_m]");
     case DATA:
         throw std::runtime_error("Unimpl");
-    case COUNT:
-        throw std::runtime_error("Unreachable?");
     case WARP:
         ports[(int)hardware::W_DRIVE] = RNS(next[0]);
         break;
@@ -463,6 +461,8 @@ void cpu_state::step()
     case TRVL:
         ports[(int)hardware::T_DRIVE] = RNS(next[0]);
         break;
+    case COUNT:
+        throw std::runtime_error("Unreachable?");
     }
 
     pc++;
