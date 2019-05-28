@@ -7,6 +7,17 @@
 void code_editor::render(cpu_state& cpu)
 {
     ImGui::Begin("Code Editor");
+
+    int pc_loop = cpu.pc + 1;
+
+    if(cpu.inst.size() == 0)
+        pc_loop = 0;
+
+    if(pc_loop > cpu.inst.size())
+        pc_loop %= (int)cpu.inst.size();
+
+    text_edit.SetBreakpoints({pc_loop});
+
     text_edit.Render("Code", ImVec2(200, 0));
 
     ImGui::SameLine();
