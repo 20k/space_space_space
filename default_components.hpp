@@ -34,6 +34,7 @@ namespace component_type
         REFINERY,
         FACTORY,
         RADAR,
+        CPU,
         COUNT,
     };
 }

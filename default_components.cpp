@@ -40,6 +40,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::REFINERY] = make_default("Refinery", "REF");
     ret[component_type::FACTORY] = make_default("Factory", "FAC");
     ret[component_type::RADAR] = make_default("Radar", "RAD");
+    ret[component_type::CPU] = make_default("CPU", "CPU");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -81,7 +82,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::REFINERY].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::FACTORY].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::RADAR].add_composition_ratio({material_info::IRON}, {1});
-
+    ret[component_type::CPU].add_composition_ratio({material_info::IRON}, {1});
 
     ret[component_type::REFINERY].activation_level = 0;
 
@@ -381,6 +382,17 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.set_heat(5);
         p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.base_volume = 1;
+    }
+
+    {
+        component_fixed_properties& p = ret[component_type::CPU];
+        p.add(component_info::POWER, -1);
+        p.add(component_info::HP, 0, 1);
+        p.add(tag_info::TAG_CPU);
+
+        p.set_heat(1);
+        p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
     }
 
