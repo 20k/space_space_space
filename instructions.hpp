@@ -130,7 +130,7 @@ void irandi(register_value& r1, register_value& r2, register_value& r3)
     int mx = r2.value;
     int mn = r1.value;
 
-    auto rnd = get_random_value();
+    auto rnd = random_variable();
 
     std::default_random_engine generator(rnd);
     std::uniform_int_distribution<int> distribution(mn,mx);

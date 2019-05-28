@@ -4,5 +4,6 @@
 #include <stdint.h>
 
 uint32_t get_random_value();
+uint32_t random_variable();
 
 #endif // RANDOM_HPP_INCLUDED
