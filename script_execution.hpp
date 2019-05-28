@@ -102,7 +102,7 @@ namespace instructions
         LINK,
         HOST,
         MODE,
-        VOID,
+        VOID_FUCK_WINAPI,
         MAKE,
         GRAB,
         FILE,
@@ -119,12 +119,51 @@ namespace instructions
         DATA,
         COUNT,
     };
+
+    static inline std::vector<std::string> rnames
+    {
+        "COPY",
+        "ADDI",
+        "SUBI",
+        "MULI",
+        "DIVI",
+        "MODI",
+        "SWIZ",
+        "MARK",
+        "JUMP",
+        "TJMP",
+        "FJMP",
+        "TEST",
+        "HALT",
+        "KILL",
+        "LINK",
+        "HOST",
+        "MODE",
+        "VOID",
+        "MAKE",
+        "GRAB",
+        "FILE",
+        "SEEK",
+        "DROP",
+        "WIPE",
+        "NOOP",
+        "NOTE",
+        "RAND",
+        "@REP",
+        "@END",
+        "@@@@",
+        "DATA",
+    };
+
+    type fetch(const std::string& name);
 }
 
 struct instruction
 {
     instructions::type type = instructions::COUNT;
     std::vector<register_value> args;
+
+    void make(const std::vector<std::string>& raw);
 };
 
 struct cpu_state

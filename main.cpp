@@ -23,6 +23,7 @@
 #include "format.hpp"
 #include "ui_util.hpp"
 #include "colours.hpp"
+#include "script_execution.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -154,6 +155,8 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
     }
+
+    cpu_tests();
 
     //#define SERVER_VIEW
     #ifdef SERVER_VIEW
