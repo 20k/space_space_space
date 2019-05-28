@@ -4521,6 +4521,18 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
             std::string poi_name = cpu.ports[hardware::S_DRIVE].symbol;
         }*/
 
+        if(cpu.ports[hardware::T_DRIVE].is_int())
+        {
+            int id = cpu.ports[hardware::T_DRIVE].value;
+
+            ///unimplemented
+
+            if(id != -1)
+            {
+                cpu.register_states[(int)registers::TEST].set_int(0);
+            }
+        }
+
         if(cpu.ports[hardware::S_DRIVE].is_int())
         {
             int id = cpu.ports[hardware::S_DRIVE].value;

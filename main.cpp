@@ -155,6 +155,9 @@ void server_thread(std::atomic_bool& should_term)
                 std::cout << "loaded pid " << persist_id_saved << std::endl;
             }
         }
+
+        if(persist_id_saved < 1024)
+            persist_id_saved = 1024;
     }
 
     cpu_tests();
