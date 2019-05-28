@@ -110,6 +110,7 @@
 		<Unit filename="entity.hpp" />
 		<Unit filename="fixed_clock.hpp" />
 		<Unit filename="format.hpp" />
+		<Unit filename="instructions.hpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="material_info.cpp" />
 		<Unit filename="material_info.hpp" />

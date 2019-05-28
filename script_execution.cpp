@@ -221,19 +221,15 @@ register_value& restrict_all(register_value& in)
 
 #define NUM(x) restrict_n(x)
 
-void icopy(register_value& one, register_value& two)
-{
-    two = one;
-}
+#define A1(x) x(next[0])
+#define A2(x, y) x(next[0]), y(next[1])
+#define A3(x, y, z) x(next[0]), y(next[1]), z(next[2])
 
-///need to restrict post register result as well
-void iaddi(register_value& r1, register_value& r2, register_value& r3)
-{
-    NUM(r1);
-    NUM(r2);
+#define CALL1(x, y) x(y(next[0]))
+#define CALL2(x, y, z) x(y(next[0]), z(next[1]))
+#define CALL3(x, y, z, w) x(y(next[0]), z(next[1]), w(next[2]))
 
-    r3.set_int(r1.value + r2.value);
-}
+#include "instructions.hpp"
 
 void cpu_state::step()
 {
@@ -252,10 +248,22 @@ void cpu_state::step()
     switch(next.type)
     {
     case COPY:
-        icopy(E(next[0]), R(next[1]));
+        CALL2(icopy, E, R);
         break;
     case ADDI:
-        iaddi(RN(next[0]), RN(next[1]), R(next[2]));
+        CALL3(iaddi, RN, RN, R);
+        break;
+    case SUBI:
+        CALL3(isubi, RN, RN, R);
+        break;
+    case MULI:
+        CALL3(imuli, RN, RN, R);
+        break;
+    case DIVI:
+        CALL3(idivi, RN, RN, R);
+        break;
+    case MODI:
+        CALL3(imodi, RN, RN, R);
         break;
     }
 
@@ -285,24 +293,23 @@ register_value& cpu_state::fetch(registers::type type)
     return it->second;
 }
 
+void cpu_state::add(const std::vector<std::string>& raw)
+{
+    instruction i1;
+    i1.make(raw);
+
+    inst.push_back(i1);
+}
+
 void cpu_tests()
 {
     assert(instructions::rnames.size() == instructions::COUNT);
 
     cpu_state test;
 
-    instruction i1;
-    instruction i2;
-    instruction i3;
-    //i1.make({"ADDI", "1", "2", "X"});
-
-    i1.make({"COPY", "5", "X"});
-    i2.make({"COPY", "7", "T"});
-    i3.make({"ADDI", "X", "T", "X"});
-
-    test.inst.push_back(i1);
-    test.inst.push_back(i2);
-    test.inst.push_back(i3);
+    test.add({"COPY", "5", "X"});
+    test.add({"COPY", "7", "T"});
+    test.add({"ADDI", "X", "T", "X"});
 
     test.step();
     test.step();

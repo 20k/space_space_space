@@ -191,6 +191,8 @@ struct cpu_state
     void debug_state();
 
     register_value& fetch(registers::type type);
+
+    void add(const std::vector<std::string>& raw);
 };
 
 void cpu_tests();
