@@ -204,13 +204,15 @@ struct instruction : serialisable
     SERIALISE_SIGNATURE();
 };
 
-struct cpu_state : serialisable
+struct cpu_state : serialisable, owned
 {
     cpu_state();
 
     std::vector<register_value> register_states;
     std::vector<instruction> inst;
     int pc = 0; ///instruction to be executed next
+    bool free_running = false;
+    std::string last_error;
 
     std::vector<register_value> ports;
 
@@ -226,7 +228,12 @@ struct cpu_state : serialisable
 
     SERIALISE_SIGNATURE();
 
-    void set_program(const std::string& str);
+    void set_program(std::string str);
+
+    void inc_pc();
+    void inc_pc_rpc();
+
+    void upload_program_rpc(std::string str);
 };
 
 void cpu_tests();

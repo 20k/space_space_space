@@ -794,15 +794,6 @@ void server_thread(std::atomic_bool& should_term)
                     ctx.inf = read_data.rpcs;
                     ctx.exec_rpcs = true;
 
-                    //s->serialise(ctx, ctx.faux);
-                    do_recurse(ctx, s);
-                }
-
-                {
-                    serialise_context ctx;
-                    ctx.inf = read_data.rpcs;
-                    ctx.exec_rpcs = true;
-
                     do_recurse(ctx, mod);
                 }
 
@@ -1362,7 +1353,7 @@ int main()
             {
                 if(c.has_tag(tag_info::TAG_CPU))
                 {
-                    editors[c._pid].render();
+                    editors[c._pid].render(c.cpu_core);
                 }
             }
         }

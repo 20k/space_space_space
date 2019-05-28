@@ -47,6 +47,10 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(inst);
     DO_SERIALISE(pc);
     DO_SERIALISE(ports);
+    DO_SERIALISE(last_error);
+
+    DO_RPC(inc_pc);
+    DO_RPC(set_program);
 }
 
 bool all_numeric(const std::string& str)
@@ -489,6 +493,32 @@ void cpu_state::step()
     pc++;
 }
 
+void cpu_state::inc_pc()
+{
+    std::cout << "spid " << _pid << std::endl;
+
+    free_running = false;
+    try
+    {
+        step();
+    }
+    catch(std::runtime_error& err)
+    {
+        last_error = err.what();
+        free_running = false;
+    }
+}
+
+void cpu_state::inc_pc_rpc()
+{
+    rpc("inc_pc", *this);
+}
+
+void cpu_state::upload_program_rpc(std::string str)
+{
+    rpc("set_program", *this, str);
+}
+
 void cpu_state::debug_state()
 {
     printf("PC %i\n", pc);
@@ -554,8 +584,11 @@ int cpu_state::label_to_pc(const std::string& label)
     throw std::runtime_error("Attempted to jump to non existent label: " + label);
 }
 
-void cpu_state::set_program(const std::string& str)
+void cpu_state::set_program(std::string str)
 {
+    if(str.size() > 10000)
+        return;
+
     inst.clear();
 
     auto all = split(str, '\n');
