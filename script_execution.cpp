@@ -175,6 +175,54 @@ void instruction::make(const std::vector<std::string>& raw)
     }
 }
 
+std::string get_next(const std::string& in, int& offset)
+{
+    if(offset >= (int)in.size())
+        return "";
+
+    std::string ret;
+    bool in_string = false;
+
+    for(; offset < (int)in.size(); offset++)
+    {
+        char next = in[offset];
+
+        if(next == '\"')
+        {
+            in_string = !in_string;
+        }
+
+        if(next == ' ' && !in_string)
+        {
+            offset++;
+            return ret;
+        }
+
+        ret += next;
+    }
+
+    return ret;
+}
+
+void instruction::make(const std::string& str)
+{
+    int offset = 0;
+
+    std::vector<std::string> vc;
+
+    while(1)
+    {
+        auto it = get_next(str, offset);
+
+        if(it == "")
+            break;
+
+        vc.push_back(it);
+    }
+
+    make(vc);
+}
+
 cpu_state::cpu_state()
 {
     for(int i=0; i < registers::COUNT; i++)
@@ -405,6 +453,14 @@ void cpu_state::add(const std::vector<std::string>& raw)
     inst.push_back(i1);
 }
 
+void cpu_state::add_line(const std::string& str)
+{
+    instruction i1;
+    i1.make(str);
+
+    inst.push_back(i1);
+}
+
 int cpu_state::label_to_pc(const std::string& label)
 {
     for(int i=0; i < (int)inst.size(); i++)
@@ -434,9 +490,9 @@ void cpu_tests()
     {
         cpu_state test;
 
-        test.add({"COPY", "5", "X"});
-        test.add({"COPY", "7", "T"});
-        test.add({"ADDI", "X", "T", "X"});
+        test.add_line("COPY 5 X");
+        test.add_line("COPY 7 T");
+        test.add_line("ADDI X T X");
 
         test.step();
         test.step();
@@ -444,40 +500,29 @@ void cpu_tests()
 
         test.debug_state();
 
-        test.add({"COPY", "0", "X"});
-        test.add({"COPY", "0", "T"});
+        test.add_line("COPY 0 X");
+        test.add_line("COPY 0 T");
 
         test.step();
         test.step();
 
-        test.add({"MARK", "MY_LAB"});
-        test.add({"ADDI", "X", "1", "X"});
-        test.add({"JUMP", "MY_LAB"});
+        test.add_line("MARK MY_LAB");
+        test.add_line("ADDI X 1 X");
+        test.add_line("JUMP MY_LAB");
 
         test.step();
         test.step();
         test.step();
         test.step();
 
-        test.debug_state();
-    }
-
-    {
-        cpu_state test;
-
-        test.add({"COPY", "53", "X"});
-        test.add({"TEST", "54", ">", "X"});
-
-        test.step();
-        test.step();
         test.debug_state();
     }
 
     {
         cpu_state test;
 
-        test.add({"COPY", "53", "X"});
-        test.add({"TEST", "54", "=", "X"});
+        test.add_line("COPY 53 X");
+        test.add_line("TEST 54 > X");
 
         test.step();
         test.step();
@@ -486,7 +531,19 @@ void cpu_tests()
 
     {
         cpu_state test;
-        test.add({"RAND", "0", "15", "X"});
+
+        test.add_line("COPY 53 X");
+        test.add_line("TEST 54 = X");
+
+        test.step();
+        test.step();
+        test.debug_state();
+    }
+
+    {
+        cpu_state test;
+        //test.add({"RAND", "0", "15", "X"});
+        test.add_line("RAND 0 15 X");
 
         test.step();
 

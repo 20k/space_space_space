@@ -169,6 +169,7 @@ struct instruction
     std::vector<register_value> args;
 
     void make(const std::vector<std::string>& raw);
+    void make(const std::string& str);
 
     register_value& fetch(int idx);
 
@@ -193,6 +194,7 @@ struct cpu_state
     register_value& fetch(registers::type type);
 
     void add(const std::vector<std::string>& raw);
+    void add_line(const std::string& str);
     int label_to_pc(const std::string& label);
 };
 
