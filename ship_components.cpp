@@ -4529,7 +4529,46 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 
 void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, playspace* space, room* r)
 {
+    int bands = 128;
 
+    std::vector<int> rdata;
+    rdata.resize(bands);
+
+    alt_radar_sample& sam = s.last_sample;
+
+    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR");
+
+    if(!opt_fle.has_value())
+        return;
+
+    cpu_file& fle = *opt_fle.value();
+
+    int max_radar_data = 128;
+
+    if((int)fle.data.size() < max_radar_data)
+    {
+        fle.data.resize(max_radar_data);
+        cpu.update_length_register();
+
+    }
+
+    for(int i=0; i < (int)fle.data.size(); i++)
+    {
+        fle.data[i].set_int(0);
+    }
+
+    for(int i=0; i < (int)sam.frequencies.size(); i++)
+    {
+        float freq = round((sam.frequencies[i] - MIN_FREQ) / (MAX_FREQ - MIN_FREQ));
+        float intens = round(sam.intensities[i] * 10);
+
+        int ifreq = (int)freq;
+
+        ifreq = clamp(ifreq, 0, 127);
+        intens = clamp(intens, 0, 255 * 10);
+
+        fle.data[ifreq].set_int((int)intens);
+    }
 }
 
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
