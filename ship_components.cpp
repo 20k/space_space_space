@@ -4623,26 +4623,80 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
     std::optional<entity*> target = r->entity_manage->fetch(s.realspace_pid_target);
 
     vec2f dest = s.realspace_destination;
+    vec2f velocity;
 
     if(target)
     {
         dest = target.value()->r.position;
         s.realspace_destination = dest;
+        velocity = target.value()->velocity;
     }
 
     vec2f start_pos = s.r.position;
 
     vec2f to_dest = dest - start_pos;
 
-    if(to_dest.length() < 50)
+    if(to_dest.length() < 70)
     {
         unblock_cpu_hardware(s, hardware::T_DRIVE);
         s.travelling_in_realspace = false;
         return;
     }
 
+    float search_distance = 50;
+    vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
+
+    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 5}); coll.has_value())
+    {
+        vec2f my_travel_direction = s.velocity;
+        vec2f my_position = s.r.position;
+
+        vec2f their_travel_direction = velocity;
+        vec2f their_position = dest;
+
+        ///counterclockwise
+        vec2f perpendicular_direction = perpendicular((their_position - my_position).norm());
+
+        float burn_dir = 1;
+
+        int my_velocity_in_perp = angle_between_vectors(perpendicular_direction, my_travel_direction) < M_PI/2;
+        int their_velocity_in_perp = angle_between_vectors(perpendicular_direction, their_travel_direction) < M_PI/2;
+
+        vec2f my_perp_component = projection(my_travel_direction, perpendicular_direction.norm());
+        vec2f their_perp_component = projection(their_travel_direction, perpendicular_direction.norm());
+
+        ///so, if their velocity has a component which is the opposite direction to our velocity
+        ///should accelerate in our velocity perpendicular direction
+        if(my_velocity_in_perp != their_velocity_in_perp)
+        {
+            burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
+        }
+        else
+        {
+            ///both in same direction
+
+            if(their_perp_component.length() > my_perp_component.length())
+            {
+                ///their velocity in the perpendicular > mine, should reverse velocity away
+                burn_dir = my_velocity_in_perp > 0 ? -1 : 1;
+            }
+            else
+            {
+                ///my velocity in perp is > theirs, should more in the same direction
+                burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
+            }
+        }
+
+        to_dest = perpendicular_direction.norm() * burn_dir;
+
+        //vec2f relative_velocity = s.velocity - velocity;
+    }
+
     s.apply_force(to_dest.norm().rot(-s.r.rotation) * dt_s);
     s.set_thrusters_active(1);
+
+    vec2f crot = (vec2f){1, 0}.rot(s.r.rotation);
+    s.r.rotation = (crot * 100 + to_dest.norm()).angle();
 }
 
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)

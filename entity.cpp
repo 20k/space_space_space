@@ -847,6 +847,21 @@ void entity_manager::render_layer(camera& cam, sf::RenderWindow& window, int lay
     }
 }
 
+std::optional<entity*> entity_manager::collides_with_any(vec2f centre, vec2f dim)
+{
+    entity test;
+    test.r.init_rectangular(dim);
+    test.r.position = centre;
+
+    for(entity* e : entities)
+    {
+        if(collides(*e, test))
+            return e;
+    }
+
+    return std::nullopt;
+}
+
 void entity_manager::force_spawn()
 {
     for(auto& i : to_spawn)

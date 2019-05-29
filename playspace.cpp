@@ -271,7 +271,7 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
 
         for(entity* e : r->entity_manage->entities)
         {
-            if((e->r.position - found_pos).length() < 40)
+            if((e->r.position - found_pos).length() < 10)
             {
                 cont = true;
                 break;
@@ -346,7 +346,7 @@ void playspace::init_default(int seed)
 
             room* test_poi = make_room({pos.x(), pos.y()}, dim * ROOM_POI_SCALE);
 
-            make_asteroid_poi(rng, test_poi, dim, 100);
+            make_asteroid_poi(rng, test_poi, dim, 80);
         }
 
         float cfrac = poi_angle + 0.01;
