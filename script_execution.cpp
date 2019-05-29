@@ -105,9 +105,21 @@ void register_value::make(const std::string& str)
             set_reg(registers::TEST);
             return;
         }
-        else if(isalpha(str[0]))
+        else
         {
-            throw std::runtime_error("Bad register " + str);
+            for(int i=0; i < (int)registers::COUNT; i++)
+            {
+                if(str == registers::rnames[i])
+                {
+                    set_reg((registers::type)i);
+                    return;
+                }
+            }
+
+            if(isalpha(str[0]))
+            {
+                throw std::runtime_error("Bad register " + str);
+            }
         }
 
         if(str[0] == '>' || str[0] == '<' || str[0] == '=')
@@ -545,6 +557,7 @@ void cpu_state::step()
             files.push_back(fle);
 
             held_file = (int)files.size() - 1;
+            update_length_register();
         }
         else if(next.num_args() == 1)
         {
@@ -562,6 +575,7 @@ void cpu_state::step()
             files.push_back(fle);
 
             held_file = (int)files.size() - 1;
+            update_length_register();
         }
         else
         {
@@ -602,9 +616,12 @@ void cpu_state::step()
             {
                 cur.data.resize(next_size);
             }
+
+            update_length_register();
         }
 
         break;
+
     case GRAB:
     {
         if(held_file != -1)
@@ -624,6 +641,8 @@ void cpu_state::step()
         if(held_file == -1)
             throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
 
+        update_length_register();
+
         break;
     }
     case instructions::FILE:
@@ -631,10 +650,12 @@ void cpu_state::step()
             throw std::runtime_error("Not holding file [FILE]");
 
         R(next[0]) = files[held_file].name;
+        update_length_register();
         break;
 
     case DROP:
         held_file = -1;
+        update_length_register();
         break;
 
     case WIPE:
@@ -644,6 +665,7 @@ void cpu_state::step()
         files.erase(files.begin() + held_file);
         held_file = -1;
 
+        update_length_register();
         break;
 
     case NOOP:
@@ -730,6 +752,18 @@ void cpu_state::inc_pc_rpc()
 void cpu_state::upload_program_rpc(std::string str)
 {
     rpc("set_program", *this, str);
+}
+
+void cpu_state::update_length_register()
+{
+    int len = -1;
+
+    if(held_file != -1)
+    {
+        len = files[held_file].data.size();
+    }
+
+    register_states[(int)registers::FILE_LENGTH].set_int(len);
 }
 
 void cpu_state::debug_state()

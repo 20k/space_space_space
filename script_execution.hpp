@@ -13,6 +13,7 @@ namespace registers
     {
         TEST,
         GENERAL_PURPOSE0,
+        FILE_LENGTH,
         COUNT,
     };
 
@@ -20,6 +21,7 @@ namespace registers
     {
         "T",
         "X0",
+        "L",
     };
 }
 
@@ -272,6 +274,8 @@ struct cpu_state : serialisable, owned
     void inc_pc_rpc();
 
     void upload_program_rpc(std::string str);
+
+    void update_length_register();
 };
 
 void cpu_tests();
