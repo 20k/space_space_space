@@ -4549,7 +4549,6 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     {
         fle.data.resize(max_radar_data);
         cpu.update_length_register();
-
     }
 
     for(int i=0; i < (int)fle.data.size(); i++)
