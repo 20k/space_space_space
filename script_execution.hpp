@@ -63,7 +63,7 @@ struct register_value : serialisable
 
     bool is_address() const
     {
-        return which == 4;
+        return which == 4 || which == 5;
     }
 
     void set_reg(registers::type type)
