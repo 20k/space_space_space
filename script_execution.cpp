@@ -1023,7 +1023,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
             if(held_file == i)
                 return std::nullopt;
 
-            return files[i];
+            return &files[i];
         }
     }
 
