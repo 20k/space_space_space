@@ -4636,6 +4636,18 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
     vec2f to_dest = dest - start_pos;
 
+    vec2f additional_force = {0,0};
+
+    if(to_dest.length() < 150)
+    {
+        vec2f my_vel = s.velocity;
+
+        if(my_vel.length() > 20)
+        {
+            additional_force = -my_vel.norm();
+        }
+    }
+
     if(to_dest.length() < 70)
     {
         unblock_cpu_hardware(s, hardware::T_DRIVE);
@@ -4643,7 +4655,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         return;
     }
 
-    float search_distance = 50;
+    float search_distance = 80 + s.velocity.length() * 5;
     vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
 
     if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 5}); coll.has_value())
@@ -4692,11 +4704,13 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         //vec2f relative_velocity = s.velocity - velocity;
     }
 
-    s.apply_force(to_dest.norm().rot(-s.r.rotation) * dt_s);
+    vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
+
+    s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
     s.set_thrusters_active(1);
 
     vec2f crot = (vec2f){1, 0}.rot(s.r.rotation);
-    s.r.rotation = (crot * 100 + to_dest.norm()).angle();
+    s.r.rotation = (crot * 100 + final_force).angle();
 }
 
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)
