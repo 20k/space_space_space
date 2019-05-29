@@ -3,6 +3,7 @@
 #include <iostream>
 #include <networking/serialisable.hpp>
 #include <sstream>
+#include <string>
 
 void strip_whitespace(std::string& in)
 {
@@ -41,6 +42,8 @@ void register_value::serialise(serialise_context& ctx, nlohmann::json& data, sel
     DO_SERIALISE(value);
     DO_SERIALISE(symbol);
     DO_SERIALISE(label);
+    DO_SERIALISE(address);
+    DO_SERIALISE(reg_address);
     DO_SERIALISE(which);
 }
 
@@ -72,13 +75,15 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
 
 bool all_numeric(const std::string& str)
 {
-    for(auto i : str)
+    try
     {
-        if(!isdigit(i))
-            return false;
+        std::stoi(str, nullptr, 0);
+        return true;
     }
-
-    return true;
+    catch(...)
+    {
+        return false;
+    }
 }
 
 void register_value::make(const std::string& str)
@@ -90,7 +95,7 @@ void register_value::make(const std::string& str)
     {
         try
         {
-            int val = std::stoi(str);
+            int val = std::stoi(str, nullptr, 0);
 
             set_int(val);
 
@@ -185,16 +190,29 @@ void register_value::make(const std::string& str)
                 }
             }
 
+            register_value fval;
+
             try
             {
-                int val = std::stoi(stripped);
-
-                set_address(val);
+                fval.make(stripped);
             }
-            catch(...)
+            catch(std::runtime_error& err)
             {
-                throw std::runtime_error("Invalid integer address " + str);
+                std::string what = err.what();
+
+                what = "Error in address operator: " + what;
+
+                throw std::runtime_error(what);
             }
+
+            if(!fval.is_int() && !fval.is_reg())
+                throw std::runtime_error("Element in address must be integer or register, got " + fval.as_string());
+
+            if(fval.is_int())
+                set_address(fval.value);
+
+            if(fval.is_reg())
+                set_reg_address(fval.reg);
 
             return;
         }
@@ -239,9 +257,14 @@ std::string register_value::as_string()
         return label;
     }
 
-    if(is_address())
+    if(which == 4)
     {
         return "[" + std::to_string(address) + "]";
+    }
+
+    if(which == 5)
+    {
+        return "[" + registers::rnames[(int)reg_address] + "]";
     }
 
     throw std::runtime_error("Bad register val?");
@@ -257,17 +280,33 @@ register_value& register_value::decode(cpu_state& state)
     if(is_address())
     {
         if(state.held_file == -1)
-            throw std::runtime_error("No file held in [address] decode " + as_string());
+            throw std::runtime_error("No file held, caused by [address] " + as_string());
 
         cpu_file& fle = state.files[state.held_file];
 
-        if(address < 0)
+        int check_address = address;
+
+        if(which == 5)
+        {
+            register_value& nval = state.register_states[(int)reg_address];
+
+            if(!nval.is_int())
+            {
+                throw std::runtime_error("Expected register in address operator to be int, got " + nval.as_string());
+            }
+
+            check_address = nval.value;
+        }
+
+        if(check_address < 0)
             throw std::runtime_error("Address < 0 " + as_string());
 
-        if(address >= (int)fle.data.size())
+        if(check_address >= (int)fle.data.size())
             throw std::runtime_error("Address out of bounds " + as_string() + " in file " + fle.name.as_string());
 
-        return fle.data[address];
+        std::cout << "CHECK ADDRESS " << check_address << std::endl;
+
+        return fle.data[check_address];
     }
 
     return *this;
