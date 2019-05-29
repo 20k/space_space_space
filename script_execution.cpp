@@ -190,6 +190,11 @@ register_value& register_value::decode(cpu_state& state)
     return *this;
 }
 
+int instruction::num_args()
+{
+    return args.size();
+}
+
 instructions::type instructions::fetch(const std::string& name)
 {
     for(int i=0; i < (int)instructions::rnames.size(); i++)
@@ -327,6 +332,22 @@ register_value& restrict_rns(register_value& in)
     return in;
 }
 
+register_value& restrict_rls(register_value& in)
+{
+    if(!in.is_reg() && !in.is_label() && !in.is_symbol())
+        throw std::runtime_error("Expected register, label or symbol, got " + in.as_string());
+
+    return in;
+}
+
+register_value& restrict_rs(register_value& in)
+{
+    if(!in.is_reg() && !in.is_symbol())
+        throw std::runtime_error("Expected register or symbol, got " + in.as_string());
+
+    return in;
+}
+
 register_value& restrict_l(register_value& in)
 {
     if(!in.is_label())
@@ -363,6 +384,8 @@ register_value& restrict_all(register_value& in)
 #define R(x) restrict_r(x).decode(*this) ///register only
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
 #define RNS(x) restrict_rns(x).decode(*this) ///register or number or symbol
+#define RLS(x) restrict_rls(x).decode(*this)
+#define RS(x) restrict_rs(x).decode(*this)
 #define E(x) x.decode(*this) ///everything
 #define L(x) restrict_l(x).decode(*this)
 
@@ -517,7 +540,20 @@ void cpu_state::step()
         waiting_for_hardware_feedback = true;
         break;
     case SLIP:
-        ports[(int)hardware::S_DRIVE] = RNS(next[0]);
+
+        if(next.num_args() == 1)
+        {
+            ports[(int)hardware::S_DRIVE] = RNS(next[0]);
+        }
+        else if(next.num_args() == 2)
+        {
+            ports[(int)hardware::S_DRIVE].set_symbol(RLS(next[0]).as_string() + RNS(next[1]).as_string());
+        }
+        else
+        {
+            throw std::runtime_error("SLIP expects 1 or 2 args");
+        }
+
         blocking_status[(int)hardware::S_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;

@@ -4589,7 +4589,28 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
             }
         }
 
-        cpu.ports[hardware::S_DRIVE].set_int(-1);
+        if(cpu.ports[hardware::S_DRIVE].is_symbol())
+        {
+            std::string symb = cpu.ports[hardware::S_DRIVE].symbol;
+
+            int success = 0;
+
+            if(auto froom = play.get_room_from_symbol(space, symb); froom.has_value())
+            {
+                if(play.start_room_travel(s, froom.value()->_pid))
+                {
+                    success = 1;
+                }
+            }
+
+            if(!success)
+            {
+                unblock_cpu_hardware(s, hardware::S_DRIVE);
+            }
+
+            cpu.register_states[(int)registers::TEST].set_int(success);
+        }
+
 
         if(cpu.ports[hardware::W_DRIVE].is_int())
         {
@@ -4612,6 +4633,8 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
             }
         }
 
+        cpu.ports[hardware::T_DRIVE].set_int(-1);
+        cpu.ports[hardware::S_DRIVE].set_int(-1);
         cpu.ports[hardware::W_DRIVE].set_int(-1);
 
         cpu.waiting_for_hardware_feedback = false;

@@ -194,6 +194,7 @@ struct instruction : serialisable
     void make(const std::vector<std::string>& raw);
     void make(const std::string& str);
 
+    int num_args();
     register_value& fetch(int idx);
 
     register_value& operator[](int idx)
