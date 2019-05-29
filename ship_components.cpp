@@ -4544,17 +4544,19 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     cpu_file& fle = *opt_fle.value();
 
     int max_radar_data = 128;
+    int max_connected_systems = 127;
+    int max_pois = 127;
+    int max_objects = 255;
 
-    if((int)fle.data.size() < max_radar_data)
-    {
-        fle.data.resize(max_radar_data);
-        cpu.update_length_register();
-    }
+    fle.data.resize(max_radar_data + max_connected_systems + max_pois + max_objects);
+    cpu.update_length_register();
 
     for(int i=0; i < (int)fle.data.size(); i++)
     {
         fle.data[i].set_int(0);
     }
+
+    int base = 0;
 
     for(int i=0; i < (int)sam.frequencies.size(); i++)
     {
@@ -4566,7 +4568,24 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         ifreq = clamp(ifreq, 0, 127);
         intens = clamp(intens, 0, 255 * 10);
 
-        fle.data[ifreq].set_int((int)intens);
+        fle.data[base + ifreq].set_int((int)intens);
+    }
+
+    base = max_radar_data;
+
+    std::vector<playspace*> connected = play.get_connected_systems_for(&s);
+
+    fle.data[base + 0].set_int(connected.size());
+
+    base++;
+
+    for(int i=0; i < (int)connected.size(); i++)
+    {
+        size_t pid = connected[i]->_pid;
+        std::string name = connected[i]->name;
+
+        fle.data[base + i*2 + 0].set_int(pid);
+        fle.data[base + i*2 + 1].set_symbol(name);
     }
 }
 

@@ -304,8 +304,6 @@ register_value& register_value::decode(cpu_state& state)
         if(check_address >= (int)fle.data.size())
             throw std::runtime_error("Address out of bounds " + as_string() + " in file " + fle.name.as_string());
 
-        std::cout << "CHECK ADDRESS " << check_address << std::endl;
-
         return fle.data[check_address];
     }
 
