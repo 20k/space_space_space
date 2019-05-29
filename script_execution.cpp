@@ -535,7 +535,7 @@ void cpu_state::step()
         break;
     case MAKE:
         if(held_file != -1)
-            throw std::runtime_error("Already holding file " + files[held_file].name.as_string());
+            throw std::runtime_error("Already holding file [MAKE] " + files[held_file].name.as_string());
 
         if(next.num_args() == 0)
         {
@@ -553,7 +553,7 @@ void cpu_state::step()
             for(auto& i : files)
             {
                 if(i.name == name)
-                    throw std::runtime_error("Duplicate file name " + name.as_string());
+                    throw std::runtime_error("Duplicate file name [MAKE] " + name.as_string());
             }
 
             cpu_file fle;
@@ -567,6 +567,43 @@ void cpu_state::step()
         {
             throw std::runtime_error("MAKE takes 0 or 1 args");
         }
+        break;
+    case RSIZ:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file [RSIZ]");
+
+        {
+            cpu_file& cur = files[held_file];
+            int next_size = NUM(RN(next[0])).value;
+
+            if(next_size > 1024 * 1024)
+                throw std::runtime_error("Files are limited to 1KiB of storage");
+
+            if(next_size < 0)
+                throw std::runtime_error("[RSIZ] argument must be >= 0");
+
+            if(next_size > (int)cur.data.size())
+            {
+                for(int kk=0; kk < (int)next_size; kk++)
+                {
+                    register_value next;
+                    next.set_int(0);
+
+                    cur.data.push_back(next);
+                }
+            }
+
+            if(next_size == (int)cur.data.size())
+            {
+
+            }
+
+            if(next_size < (int)cur.data.size())
+            {
+                cur.data.resize(next_size);
+            }
+        }
+
         break;
     case GRAB:
     {
@@ -585,13 +622,13 @@ void cpu_state::step()
         }
 
         if(held_file == -1)
-            throw std::runtime_error("No file " + to_grab.as_string());
+            throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
 
         break;
     }
     case instructions::FILE:
         if(held_file == -1)
-            throw std::runtime_error("Not holding file");
+            throw std::runtime_error("Not holding file [FILE]");
 
         R(next[0]) = files[held_file].name;
         break;
@@ -602,9 +639,10 @@ void cpu_state::step()
 
     case WIPE:
         if(held_file == -1)
-            throw std::runtime_error("No file held");
+            throw std::runtime_error("Not holding file [WIPE]");
 
         files.erase(files.begin() + held_file);
+        held_file = -1;
 
         break;
 
@@ -858,6 +896,15 @@ void cpu_tests()
         assert(test.ports[(int)hardware::W_DRIVE].value == 123);
 
         test.debug_state();
+    }
+
+    {
+        cpu_state test;
+        test.add_line("MAKE 1234");
+        test.add_line("DROP");
+
+        //test.step();
+        //test.step();
     }
 
     //exit(0);
