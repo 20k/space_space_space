@@ -113,12 +113,12 @@ namespace instructions
         HOST,
         //MODE,
         //VOID_FUCK_WINAPI,
-        //MAKE,
-        //GRAB,
-        //FILE,
+        MAKE,
+        GRAB,
+        FILE,
         //SEEK,
-        //DROP,
-        //WIPE,
+        DROP,
+        WIPE,
         NOOP,
         NOTE,
         RAND,
@@ -154,12 +154,12 @@ namespace instructions
         "HOST",
         //"MODE",
         //"VOID",
-        //"MAKE",
-        //"GRAB",
-        //"FILE",
+        "MAKE",
+        "GRAB",
+        "FILE",
         //"SEEK",
-        //"DROP",
-        //"WIPE",
+        "DROP",
+        "WIPE",
         "NOOP",
         "NOTE",
         "RAND",
@@ -205,9 +205,20 @@ struct instruction : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct cpu_file : serialisable
+{
+    std::string name;
+    std::vector<register_value> data;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct cpu_state : serialisable, owned
 {
     cpu_state();
+
+    std::vector<cpu_file> files;
+    int held_file = -1;
 
     std::vector<register_value> register_states;
     std::vector<instruction> inst;

@@ -48,9 +48,17 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(pc);
     DO_SERIALISE(ports);
     DO_SERIALISE(last_error);
+    DO_SERIALISE(files);
+    DO_SERIALISE(held_file);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
+}
+
+void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(name);
+    DO_SERIALISE(data);
 }
 
 bool all_numeric(const std::string& str)
@@ -391,8 +399,8 @@ register_value& restrict_all(register_value& in)
 
 #define R(x) restrict_r(x).decode(*this) ///register only
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
-#define RNS(x) restrict_rnls(x).decode(*this) ///register or number or symbol
-#define RNLS(x) restrict_rns(x).decode(*this) ///register or number or symbol
+#define RNS(x) restrict_rns(x).decode(*this) ///register or number or symbol
+#define RNLS(x) restrict_rnls(x).decode(*this) ///register or number or symbol
 #define RLS(x) restrict_rls(x).decode(*this)
 #define RS(x) restrict_rs(x).decode(*this)
 #define E(x) x.decode(*this) ///everything
@@ -525,6 +533,42 @@ void cpu_state::step()
         ///get name of area
         throw std::runtime_error("Unimplemented HOST");
         break;
+    case MAKE:
+        if(held_file != -1)
+            throw std::runtime_error("Already holding file " + files[held_file].name);
+
+        if(next.num_args() == 0)
+        {
+            std::string name = std::to_string(get_next_persistent_id());
+
+            cpu_file fle;
+            fle.name = name;
+
+            files.push_back(fle);
+
+            held_file = (int)files.size() - 1;
+        }
+        else if(next.num_args() == 1)
+        {
+            std::string name = RNLS(next[0]).as_string();
+
+            for(auto& i : files)
+            {
+                if(i.name == name)
+                    throw std::runtime_error("Duplicate file name " + name);
+            }
+
+            cpu_file fle;
+            fle.name = name;
+
+            files.push_back(fle);
+
+            held_file = (int)files.size() - 1;
+        }
+        else
+        {
+            throw std::runtime_error("MAKE takes 0 or 1 args");
+        }
     case NOOP:
         break;
     case NOTE:
