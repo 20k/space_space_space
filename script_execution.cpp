@@ -1014,6 +1014,28 @@ void cpu_state::set_program(std::string str)
     }
 }
 
+std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename)
+{
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
+        {
+            if(held_file == i)
+                return std::nullopt;
+
+            return files[i];
+        }
+    }
+
+    cpu_file fle;
+    fle.name.set_label(filename);
+
+    ///cannot invalidate held file integer
+    files.push_back(fle);
+
+    return &files.back();
+}
+
 void cpu_tests()
 {
     assert(instructions::rnames.size() == instructions::COUNT);
