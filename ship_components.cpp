@@ -4376,6 +4376,36 @@ void unblock_cpu_hardware(ship& s, hardware::type type)
     }
 }
 
+/*void on_enter_warp(ship& s, playspace_manager& play, playspace* left)
+{
+
+}
+
+void on_leave_warp(ship& s, playspace_manager& play, playspace* arrive)
+{
+
+}
+
+void on_enter_sspace(ship& s, playspace_manager& play, playspace* space)
+{
+
+}
+
+void on_leave_sspace(ship& s, playspace_manager& play)
+{
+
+}
+
+void on_enter_room(ship& s, playspace_manager& play, playspace* space, room* r)
+{
+
+}
+
+void on_leave_room(ship& s, playspace_manager& play)
+{
+
+}*/
+
 void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, bool disruptive = true)
 {
     s.travelling_to_poi = false;
@@ -4419,6 +4449,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
         }
     }
 
+    //on_enter_room(s, play, space, r);
     unblock_cpu_hardware(s, hardware::S_DRIVE);
 }
 
@@ -4442,6 +4473,7 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
     if(s.room_type == space_type::REAL_SPACE)
     {
         play.exit_room(&s);
+        //on_leave_room(s, play);
     }
 
     float drop_range = 10;
@@ -4477,12 +4509,20 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
         if(dest)
         {
             play.enter_room(&s, dest.value().second);
+
+            //on_leave_sspace(s, play);
+            //on_enter_room(s, play, dest.value().first, dest.value().second);
         }
         else
         {
-            room* new_poi = dest.value().first->make_room(s.r.position, 5);
+            auto [nplay, r] = play.get_location_for(&s);
+
+            room* new_poi = nplay->make_room(s.r.position, 5);
 
             play.enter_room(&s, new_poi);
+
+            //on_leave_sspace(s, nplay);
+            //on_enter_room(s, play, nplay, new_poi);
         }
     }
 }
@@ -4529,7 +4569,18 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
 
             if(id != -1)
             {
-                cpu.register_states[(int)registers::TEST].set_int(0);
+                int success = 0;
+
+                if(play.start_realspace_travel(s, id))
+                {
+                    success = 1;
+                }
+                else
+                {
+                    unblock_cpu_hardware(s, hardware::T_DRIVE);
+                }
+
+                cpu.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
@@ -4581,6 +4632,11 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
 
         cpu.waiting_for_hardware_feedback = false;
     }
+}
+
+void ship_cpu_pathfinding(ship& s, playspace_manager& play, playspace* space, room* r)
+{
+
 }
 
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)

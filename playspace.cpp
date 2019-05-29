@@ -910,3 +910,39 @@ bool playspace_manager::start_room_travel(ship& s, size_t pid)
     return false;
 }
 
+bool playspace_manager::start_realspace_travel(ship& s, size_t pid)
+{
+    auto [play, r] = get_location_for(&s);
+
+    if(play == nullptr || r == nullptr)
+        return false;
+
+    std::optional<entity*> e = r->entity_manage->fetch(pid);
+
+    ///check that its in the same room as me
+    if(!e.has_value())
+        return false;
+
+    bool in_sensor_range = false;
+
+    for(auto& i : s.last_sample.renderables)
+    {
+        if(i.uid == pid)
+        {
+            in_sensor_range = true;
+            break;
+        }
+    }
+
+    if(!in_sensor_range)
+        return false;
+
+    s.realspace_destination = e.value()->r.position;
+    s.realspace_pid_target = pid;
+    s.travelling_in_realspace = true;
+
+    bool can_fly = s.get_max_velocity_thrust() > 0;
+
+    return can_fly;
+}
+

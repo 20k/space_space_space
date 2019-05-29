@@ -755,6 +755,9 @@ struct ship : heatable_entity
     size_t destination_poi_pid = -1;
     bool travelling_to_poi = false;
     vec2f destination_poi_position;
+    bool travelling_in_realspace = false;
+    vec2f realspace_destination;
+    size_t realspace_pid_target = -1;
 
     std::optional<component*> get_component_from_id(uint64_t id);
 
@@ -848,6 +851,9 @@ struct ship : heatable_entity
         DO_SERIALISE(room_type);
         DO_SERIALISE(last_room_type);
         DO_SERIALISE(current_room_pid);
+        DO_SERIALISE(travelling_in_realspace);
+        DO_SERIALISE(realspace_destination);
+        DO_SERIALISE(realspace_pid_target);
     }
 
     virtual void pre_collide(entity& other) override;

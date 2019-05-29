@@ -161,6 +161,7 @@ struct playspace_manager : serialisable
 
     bool start_warp_travel(ship& s, size_t pid);
     bool start_room_travel(ship& s, size_t pid);
+    bool start_realspace_travel(ship& s, size_t pid);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED
