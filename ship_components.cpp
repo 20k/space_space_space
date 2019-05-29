@@ -4527,7 +4527,12 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
     }
 }
 
-void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r)
+void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, playspace* space, room* r)
+{
+
+}
+
+void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
     for(component& c : s.components)
     {
@@ -4538,6 +4543,8 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
             continue;
 
         cpu_state& cpu = c.cpu_core;
+
+        dump_radar_data_into_cpu(cpu, s, play, space, r);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())
@@ -4760,7 +4767,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 {
     playspace_resetter dummy(*this);
 
-    check_cpu_rules(*this, play, space, r);
+    update_cpu_rules_and_hardware(*this, play, space, r);
 
     if(travelling_in_realspace)
     {
