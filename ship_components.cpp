@@ -4529,22 +4529,6 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 
 void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r)
 {
-    /*if(s.last_room_type != s.room_type)
-    {
-        ///was real space, now sspace, dont unblock s_drive
-        if(s.last_room_type == space_type::REAL_SPACE)
-        {
-            unblock_cpu_hardware(s, hardware::T_DRIVE);
-            unblock_cpu_hardware(s, hardware::W_DRIVE);
-        }
-        else ///was sspace, now realspace. unblock everything
-        {
-            unblock_cpu_hardware(s, hardware::T_DRIVE);
-            unblock_cpu_hardware(s, hardware::W_DRIVE);
-            unblock_cpu_hardware(s, hardware::S_DRIVE);
-        }
-    }*/
-
     for(component& c : s.components)
     {
         if(!c.has_tag(tag_info::TAG_CPU))
@@ -4678,6 +4662,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
     if(move_warp && space && has_w_power && r != nullptr)
     {
         unblock_cpu_hardware(*this, hardware::W_DRIVE);
+        unblock_cpu_hardware(*this, hardware::T_DRIVE);
 
         std::optional<playspace*> dest = play.get_playspace_from_id(warp_to_pid);
 
