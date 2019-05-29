@@ -4,6 +4,15 @@
 #include <networking/serialisable.hpp>
 #include <sstream>
 
+void strip_whitespace(std::string& in)
+{
+    while(in.size() > 0 && isspace(in[0]))
+        in.erase(in.begin());
+
+    while(in.size() > 0 && isspace(in.back()))
+        in.pop_back();
+}
+
 inline
 std::vector<std::string>& split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
@@ -160,8 +169,41 @@ void register_value::make(const std::string& str)
             return;
         }
 
+        if(str.front() == '[' && str.back() == ']')
+        {
+            std::string stripped = str;
+            stripped.erase(stripped.begin());
+            stripped.pop_back();
+
+            for(int kk=0; kk < (int)stripped.size(); kk++)
+            {
+                if(isspace(stripped[kk]))
+                {
+                    stripped.erase(stripped.begin() + kk);
+                    kk--;
+                    continue;
+                }
+            }
+
+            try
+            {
+                int val = std::stoi(stripped);
+
+                set_address(val);
+            }
+            catch(...)
+            {
+                throw std::runtime_error("Invalid integer address " + str);
+            }
+
+            return;
+        }
+
         if(str.front() == '\"' && str.back() != '\"')
             throw std::runtime_error("String not terminated");
+
+        if(str.front() == '[' && str.back() != ']')
+            throw std::runtime_error("Unterminated address, missing ]");
 
         set_label(str);
     }
@@ -277,6 +319,9 @@ std::string get_next(const std::string& in, int& offset)
 
     std::string ret;
     bool in_string = false;
+    bool in_addr = false;
+
+    bool was_addr = false;
 
     for(; offset < (int)in.size(); offset++)
     {
@@ -287,13 +332,29 @@ std::string get_next(const std::string& in, int& offset)
             in_string = !in_string;
         }
 
-        if(next == ' ' && !in_string)
+        if(next == '[')
+        {
+            in_addr = true;
+            was_addr = true;
+        }
+
+        if(next == ']')
+        {
+            in_addr = false;
+        }
+
+        if(next == ' ' && !in_string && !in_addr)
         {
             offset++;
             return ret;
         }
 
         ret += next;
+    }
+
+    if(was_addr)
+    {
+        strip_whitespace(ret);
     }
 
     return ret;
