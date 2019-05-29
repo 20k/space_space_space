@@ -81,6 +81,26 @@ struct register_value : serialisable
         which = 3;
     }
 
+    bool operator==(const register_value& second)
+    {
+        if(which != second.which)
+            return false;
+
+        if(is_reg())
+            return reg == second.reg;
+
+        if(is_int())
+            return value == second.value;
+
+        if(is_symbol())
+            return symbol == second.symbol;
+
+        if(is_label())
+            return label == second.label;
+
+        return false;
+    }
+
     register_value& decode(cpu_state& state);
 
     SERIALISE_SIGNATURE();
@@ -207,7 +227,7 @@ struct instruction : serialisable
 
 struct cpu_file : serialisable
 {
-    std::string name;
+    register_value name;
     std::vector<register_value> data;
 
     SERIALISE_SIGNATURE();

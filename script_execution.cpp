@@ -535,14 +535,12 @@ void cpu_state::step()
         break;
     case MAKE:
         if(held_file != -1)
-            throw std::runtime_error("Already holding file " + files[held_file].name);
+            throw std::runtime_error("Already holding file " + files[held_file].name.as_string());
 
         if(next.num_args() == 0)
         {
-            std::string name = std::to_string(get_next_persistent_id());
-
             cpu_file fle;
-            fle.name = name;
+            fle.name.set_int(get_next_persistent_id());
 
             files.push_back(fle);
 
@@ -550,12 +548,12 @@ void cpu_state::step()
         }
         else if(next.num_args() == 1)
         {
-            std::string name = RNLS(next[0]).as_string();
+            register_value& name = RNLS(next[0]);
 
             for(auto& i : files)
             {
                 if(i.name == name)
-                    throw std::runtime_error("Duplicate file name " + name);
+                    throw std::runtime_error("Duplicate file name " + name.as_string());
             }
 
             cpu_file fle;
@@ -569,6 +567,47 @@ void cpu_state::step()
         {
             throw std::runtime_error("MAKE takes 0 or 1 args");
         }
+        break;
+    case GRAB:
+    {
+        if(held_file != -1)
+            throw std::runtime_error("Already holding file " + files[held_file].name.as_string());
+
+        register_value& to_grab = RNLS(next[0]);
+
+        for(int kk=0; kk < (int)files.size(); kk++)
+        {
+            if(files[kk].name == to_grab)
+            {
+                held_file = kk;
+                break;
+            }
+        }
+
+        if(held_file == -1)
+            throw std::runtime_error("No file " + to_grab.as_string());
+
+        break;
+    }
+    case instructions::FILE:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file");
+
+        R(next[0]) = files[held_file].name;
+        break;
+
+    case DROP:
+        held_file = -1;
+        break;
+
+    case WIPE:
+        if(held_file == -1)
+            throw std::runtime_error("No file held");
+
+        files.erase(files.begin() + held_file);
+
+        break;
+
     case NOOP:
         break;
     case NOTE:
