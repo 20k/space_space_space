@@ -129,7 +129,7 @@ struct playspace : serialisable, owned
 
     std::vector<room*> all_rooms();
 
-    room* make_room(vec2f where, float entity_rad);
+    room* make_room(vec2f where, float entity_rad, poi_type::type ptype);
     void delete_room(room* r);
 
     SERIALISE_SIGNATURE();
@@ -153,6 +153,7 @@ struct client_poi_data : serialisable
     vec2f position;
     size_t poi_pid = 0;
     std::string type;
+    int offset = 0;
 
     SERIALISE_SIGNATURE();
 };

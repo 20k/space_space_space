@@ -89,6 +89,7 @@ void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, se
     DO_SERIALISE(position);
     DO_SERIALISE(poi_pid);
     DO_SERIALISE(type);
+    DO_SERIALISE(offset);
 }
 
 alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
@@ -208,10 +209,22 @@ std::vector<room*> playspace::all_rooms()
     return r1;
 }
 
-room* playspace::make_room(vec2f where, float entity_rad)
+room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
 {
     room* r = new room;
     r->position = where;
+    r->ptype = ptype;
+
+    std::map<poi_type::type, int> counts;
+
+    auto all_room = all_rooms();
+
+    for(room* old : all_room)
+    {
+        counts[old->ptype]++;
+    }
+
+    r->poi_offset = counts[ptype];
 
     pending_rooms.push_back(r);
 
@@ -346,7 +359,7 @@ void playspace::init_default(int seed)
         {
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
 
-            room* test_poi = make_room({pos.x(), pos.y()}, dim * ROOM_POI_SCALE);
+            room* test_poi = make_room({pos.x(), pos.y()}, dim * ROOM_POI_SCALE, poi_type::ASTEROID_BELT);
 
             make_asteroid_poi(rng, test_poi, dim, 80);
         }
@@ -726,7 +739,8 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
             poi.name = r->name;
             poi.position = r->position;
             poi.poi_pid = r->_pid;
-            //poi.type = r->type;
+            poi.type = poi_type::rnames[(int)r->ptype];
+            poi.offset = r->poi_offset;
 
             ret.pois.push_back(poi);
         }

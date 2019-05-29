@@ -1565,6 +1565,8 @@ int main()
             std::vector<std::string> names{"Name"};
             std::vector<std::string> positions{"Position"};
             std::vector<std::string> distances{"Distance"};
+            std::vector<std::string> types{"Type"};
+            std::vector<std::string> offsets{"Offset"};
             std::vector<std::string> pids{"ID"};
 
             ImGui::Begin("Points of Interest", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -1580,6 +1582,8 @@ int main()
                 names.push_back(lab.name);
                 positions.push_back(spos);
                 distances.push_back(dist);
+                types.push_back(lab.type);
+                offsets.push_back(std::to_string(lab.offset));
                 pids.push_back(std::to_string(model.labels[i].poi_pid));
             }
 
@@ -1587,7 +1591,7 @@ int main()
             {
                 int real_idx = i - 1;
 
-                std::string rstr = format(names[i], names) + " | " + format(positions[i], positions) + " | " + format(distances[i], distances) + " | " + format(pids[i], pids);
+                std::string rstr = format(names[i], names) + " | " + format(types[i], types) + " | " + format(offsets[i], offsets) + " | " + format(positions[i], positions) + " | " + format(distances[i], distances) + " | " + format(pids[i], pids);
 
                 ImGui::Text(rstr.c_str());
 
@@ -1658,7 +1662,7 @@ int main()
 
                 ImGui::SetNextWindowPos(ImVec2(sspace.x(), sspace.y()));
 
-                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground;
+                ImGuiWindowFlags flags = ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoBackground|ImGuiWindowFlags_NoFocusOnAppearing|ImGuiWindowFlags_NoBringToFrontOnFocus;
 
                 ImGui::Begin(("##" + std::to_string(i)).c_str(), nullptr, flags);
 

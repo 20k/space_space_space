@@ -4435,7 +4435,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
             }
         }
 
-        room* new_poi = space->make_room(s.r.position, 5);
+        room* new_poi = space->make_room(s.r.position, 5, poi_type::DEAD_SPACE);
 
         play.enter_room(&s, new_poi);
 
@@ -4517,7 +4517,7 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
         {
             auto [nplay, r] = play.get_location_for(&s);
 
-            room* new_poi = nplay->make_room(s.r.position, 5);
+            room* new_poi = nplay->make_room(s.r.position, 5, poi_type::DEAD_SPACE);
 
             play.enter_room(&s, new_poi);
 
@@ -4779,7 +4779,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         space->rem(this);
         dest.value()->add(this);
 
-        room* nr = dest.value()->make_room(this->r.position, 5);
+        room* nr = dest.value()->make_room(this->r.position, 5, poi_type::DEAD_SPACE);
         play.enter_room(this, nr);
         travelling_in_realspace = false;
 
