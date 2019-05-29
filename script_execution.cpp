@@ -197,6 +197,11 @@ std::string register_value::as_string()
         return label;
     }
 
+    if(is_address())
+    {
+        return "[" + std::to_string(address) + "]";
+    }
+
     throw std::runtime_error("Bad register val?");
 }
 
@@ -205,6 +210,22 @@ register_value& register_value::decode(cpu_state& state)
     if(is_reg())
     {
         return state.fetch(reg);
+    }
+
+    if(is_address())
+    {
+        if(state.held_file == -1)
+            throw std::runtime_error("No file held in [address] decode " + as_string());
+
+        cpu_file& fle = state.files[state.held_file];
+
+        if(address < 0)
+            throw std::runtime_error("Address < 0 " + as_string());
+
+        if(address >= (int)fle.data.size())
+            throw std::runtime_error("Address out of bounds " + as_string() + " in file " + fle.name.as_string());
+
+        return fle.data[address];
     }
 
     return *this;
@@ -322,8 +343,8 @@ cpu_state::cpu_state()
 
 register_value& restrict_r(register_value& in)
 {
-    if(!in.is_reg())
-        throw std::runtime_error("Expected register, got " + in.as_string());
+    if(!in.is_reg() && !in.is_address())
+        throw std::runtime_error("Expected register or address, got " + in.as_string());
 
     return in;
 }
@@ -338,40 +359,40 @@ register_value& restrict_n(register_value& in)
 
 register_value& restrict_rn(register_value& in)
 {
-    if(!in.is_reg() && !in.is_int())
-        throw std::runtime_error("Expected register, or integer, got " + in.as_string());
+    if(!in.is_reg() && !in.is_address() && !in.is_int())
+        throw std::runtime_error("Expected register, address, or integer, got " + in.as_string());
 
     return in;
 }
 
 register_value& restrict_rns(register_value& in)
 {
-    if(!in.is_reg() && !in.is_int() && !in.is_symbol())
-        throw std::runtime_error("Expected register, integer, or symbol, got " + in.as_string());
+    if(!in.is_reg() && !in.is_address() && !in.is_int() && !in.is_symbol())
+        throw std::runtime_error("Expected register, address, integer, or symbol, got " + in.as_string());
 
     return in;
 }
 
 register_value& restrict_rnls(register_value& in)
 {
-    if(!in.is_reg() && !in.is_int() && !in.is_symbol() && !in.is_label())
-        throw std::runtime_error("Expected register, integer, symbol, or label got " + in.as_string());
+    if(!in.is_reg() && !in.is_address() && !in.is_int() && !in.is_symbol() && !in.is_label())
+        throw std::runtime_error("Expected register, address, integer, symbol, or label got " + in.as_string());
 
     return in;
 }
 
 register_value& restrict_rls(register_value& in)
 {
-    if(!in.is_reg() && !in.is_label() && !in.is_symbol())
-        throw std::runtime_error("Expected register, label, or symbol, got " + in.as_string());
+    if(!in.is_reg() && !in.is_address() && !in.is_label() && !in.is_symbol())
+        throw std::runtime_error("Expected register, address, label, or symbol, got " + in.as_string());
 
     return in;
 }
 
 register_value& restrict_rs(register_value& in)
 {
-    if(!in.is_reg() && !in.is_symbol())
-        throw std::runtime_error("Expected register, or symbol, got " + in.as_string());
+    if(!in.is_reg() && !in.is_address() && !in.is_symbol())
+        throw std::runtime_error("Expected register, address, or symbol, got " + in.as_string());
 
     return in;
 }
@@ -409,14 +430,56 @@ register_value& restrict_all(register_value& in)
     return in;
 }
 
+register_value& restricta(register_value& in, const std::string& types)
+{
+    std::map<char, std::string> rs
+    {
+    {'R', "register"},
+    {'L', "label"},
+    {'A', "address"},
+    {'N', "integer"},
+    {'S', "symbol"},
+    };
+
+    bool should_throw = false;
+
+    if(in.is_reg() && types.find('R') == std::string::npos)
+        should_throw = true;
+    if(in.is_label() && types.find('L') == std::string::npos)
+        should_throw = true;
+    if(in.is_address() && types.find('A') == std::string::npos)
+        should_throw = true;
+    if(in.is_int() && types.find('N') == std::string::npos)
+        should_throw = true;
+    if(in.is_symbol() && types.find('S') == std::string::npos)
+        should_throw = true;
+
+    if(should_throw)
+    {
+        std::string err = "Expected one of: ";
+
+        for(auto i : types)
+        {
+            err += rs[i];
+        }
+
+        err += ", got " + in.as_string();
+    }
+
+    return in;
+}
+
+#define RA(x, y) restricta(x, #y)
+
 #define R(x) restrict_r(x).decode(*this) ///register only
-#define RN(x) restrict_rn(x).decode(*this) ///register or number
-#define RNS(x) restrict_rns(x).decode(*this) ///register or number or symbol
-#define RNLS(x) restrict_rnls(x).decode(*this) ///register or number or symbol
-#define RLS(x) restrict_rls(x).decode(*this)
-#define RS(x) restrict_rs(x).decode(*this)
+#define RN(x) RA(restrict_rn(x).decode(*this), N) ///register or number
+#define RNS(x) RA(restrict_rns(x).decode(*this), NS) ///register or number or symbol
+#define RNLS(x) RA(restrict_rnls(x).decode(*this), NLS) ///register or number or symbol
+#define RLS(x) RA(restrict_rls(x).decode(*this), LS)
+#define RS(x) RA(restrict_rs(x).decode(*this), S)
 #define E(x) x.decode(*this) ///everything
 #define L(x) restrict_l(x).decode(*this)
+
 
 #define SYM(x) restrict_s(x)
 
@@ -532,7 +595,7 @@ void cpu_state::step()
         break;
 
     case TEST:
-        itest(RN(next[0]), SYM(next[1]), RN(next[2]), fetch(registers::TEST));
+        itest(RNS(next[0]), SYM(next[1]), RNS(next[2]), fetch(registers::TEST));
         break;
     case HALT:
         throw std::runtime_error("Received HALT");

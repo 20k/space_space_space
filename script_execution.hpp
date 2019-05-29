@@ -31,6 +31,7 @@ struct register_value : serialisable
 {
     registers::type reg = registers::COUNT;
     int value = 0;
+    int address = 0;
     std::string symbol;
     std::string label;
 
@@ -59,6 +60,11 @@ struct register_value : serialisable
         return which == 3;
     }
 
+    bool is_address() const
+    {
+        return which == 4;
+    }
+
     void set_reg(registers::type type)
     {
         reg = type;
@@ -83,6 +89,11 @@ struct register_value : serialisable
         which = 3;
     }
 
+    void set_address(int addr)
+    {
+        address = addr;
+    }
+
     bool operator==(const register_value& second)
     {
         if(which != second.which)
@@ -99,6 +110,9 @@ struct register_value : serialisable
 
         if(is_label())
             return label == second.label;
+
+        if(is_address())
+            return address == second.address;
 
         return false;
     }
