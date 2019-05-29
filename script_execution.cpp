@@ -670,11 +670,6 @@ void cpu_state::step()
                 }
             }
 
-            if(next_size == (int)cur.data.size())
-            {
-
-            }
-
             if(next_size < (int)cur.data.size())
             {
                 cur.data.resize(next_size);
