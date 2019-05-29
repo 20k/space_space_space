@@ -319,7 +319,7 @@ register_value& restrict_n(register_value& in)
 register_value& restrict_rn(register_value& in)
 {
     if(!in.is_reg() && !in.is_int())
-        throw std::runtime_error("Expected register or integer, got " + in.as_string());
+        throw std::runtime_error("Expected register, or integer, got " + in.as_string());
 
     return in;
 }
@@ -327,7 +327,15 @@ register_value& restrict_rn(register_value& in)
 register_value& restrict_rns(register_value& in)
 {
     if(!in.is_reg() && !in.is_int() && !in.is_symbol())
-        throw std::runtime_error("Expected register, integer or symbol, got " + in.as_string());
+        throw std::runtime_error("Expected register, integer, or symbol, got " + in.as_string());
+
+    return in;
+}
+
+register_value& restrict_rnls(register_value& in)
+{
+    if(!in.is_reg() && !in.is_int() && !in.is_symbol() && !in.is_label())
+        throw std::runtime_error("Expected register, integer, symbol, or label got " + in.as_string());
 
     return in;
 }
@@ -335,7 +343,7 @@ register_value& restrict_rns(register_value& in)
 register_value& restrict_rls(register_value& in)
 {
     if(!in.is_reg() && !in.is_label() && !in.is_symbol())
-        throw std::runtime_error("Expected register, label or symbol, got " + in.as_string());
+        throw std::runtime_error("Expected register, label, or symbol, got " + in.as_string());
 
     return in;
 }
@@ -343,7 +351,7 @@ register_value& restrict_rls(register_value& in)
 register_value& restrict_rs(register_value& in)
 {
     if(!in.is_reg() && !in.is_symbol())
-        throw std::runtime_error("Expected register or symbol, got " + in.as_string());
+        throw std::runtime_error("Expected register, or symbol, got " + in.as_string());
 
     return in;
 }
@@ -383,7 +391,8 @@ register_value& restrict_all(register_value& in)
 
 #define R(x) restrict_r(x).decode(*this) ///register only
 #define RN(x) restrict_rn(x).decode(*this) ///register or number
-#define RNS(x) restrict_rns(x).decode(*this) ///register or number or symbol
+#define RNS(x) restrict_rnls(x).decode(*this) ///register or number or symbol
+#define RNLS(x) restrict_rns(x).decode(*this) ///register or number or symbol
 #define RLS(x) restrict_rls(x).decode(*this)
 #define RS(x) restrict_rs(x).decode(*this)
 #define E(x) x.decode(*this) ///everything
@@ -535,12 +544,11 @@ void cpu_state::step()
     case DATA:
         throw std::runtime_error("Unimpl");
     case WARP:
-        ports[(int)hardware::W_DRIVE] = RNS(next[0]);
+        ports[(int)hardware::W_DRIVE] = RNLS(next[0]);
         blocking_status[(int)hardware::W_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;
     case SLIP:
-
         if(next.num_args() == 1)
         {
             ports[(int)hardware::S_DRIVE] = RNS(next[0]);

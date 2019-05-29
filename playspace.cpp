@@ -904,6 +904,17 @@ std::optional<room*> playspace_manager::get_room_from_symbol(playspace* play, co
     return std::nullopt;
 }
 
+std::optional<playspace*> playspace_manager::get_playspace_from_name(const std::string& name)
+{
+    for(playspace* p : spaces)
+    {
+        if(p->name == name)
+            return p;
+    }
+
+    return std::nullopt;
+}
+
 bool playspace_manager::start_warp_travel(ship& s, size_t pid)
 {
     std::optional sys_opt = get_playspace_from_id(pid);

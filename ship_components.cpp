@@ -4633,6 +4633,28 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
             }
         }
 
+        if(cpu.ports[hardware::W_DRIVE].is_label() || cpu.ports[hardware::W_DRIVE].is_symbol())
+        {
+            std::string str = cpu.ports[hardware::W_DRIVE].is_label() ? cpu.ports[hardware::W_DRIVE].label : cpu.ports[hardware::W_DRIVE].symbol;
+
+            int success = 0;
+
+            if(auto sp_opt = play.get_playspace_from_name(str); sp_opt.has_value())
+            {
+                if(play.start_warp_travel(s, sp_opt.value()->_pid))
+                {
+                    success = 1;
+                }
+            }
+
+            if(!success)
+            {
+                unblock_cpu_hardware(s, hardware::W_DRIVE);
+            }
+
+            cpu.register_states[(int)registers::TEST].set_int(success);
+        }
+
         cpu.ports[hardware::T_DRIVE].set_int(-1);
         cpu.ports[hardware::S_DRIVE].set_int(-1);
         cpu.ports[hardware::W_DRIVE].set_int(-1);
