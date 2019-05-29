@@ -4623,13 +4623,11 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
     std::optional<entity*> target = r->entity_manage->fetch(s.realspace_pid_target);
 
     vec2f dest = s.realspace_destination;
-    vec2f velocity;
 
     if(target)
     {
         dest = target.value()->r.position;
         s.realspace_destination = dest;
-        velocity = target.value()->velocity;
     }
 
     vec2f start_pos = s.r.position;
@@ -4655,16 +4653,16 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         return;
     }
 
-    float search_distance = 80 + s.velocity.length() * 5;
+    float search_distance = 50;
     vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
 
-    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 5}); coll.has_value())
+    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && coll.value()->_pid != s.realspace_pid_target)
     {
         vec2f my_travel_direction = s.velocity;
         vec2f my_position = s.r.position;
 
-        vec2f their_travel_direction = velocity;
-        vec2f their_position = dest;
+        vec2f their_travel_direction = coll.value()->velocity;
+        vec2f their_position = coll.value()->r.position;
 
         ///counterclockwise
         vec2f perpendicular_direction = perpendicular((their_position - my_position).norm());

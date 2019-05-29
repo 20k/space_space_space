@@ -209,7 +209,7 @@ struct entity_manager : serialisable
     void render(camera& cam, sf::RenderWindow& window);
     void render_layer(camera& cam, sf::RenderWindow& window, int layer);
 
-    std::optional<entity*> collides_with_any(vec2f centre, vec2f dim);
+    std::optional<entity*> collides_with_any(vec2f centre, vec2f dim, float angle);
 
     void force_spawn();
 
