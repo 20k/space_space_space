@@ -4618,9 +4618,31 @@ void check_cpu_rules(ship& s, playspace_manager& play, playspace* space, room* r
     }
 }
 
-void ship_cpu_pathfinding(ship& s, playspace_manager& play, playspace* space, room* r)
+void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspace* space, room* r)
 {
+    std::optional<entity*> target = r->entity_manage->fetch(s.realspace_pid_target);
 
+    vec2f dest = s.realspace_destination;
+
+    if(target)
+    {
+        dest = target.value()->r.position;
+        s.realspace_destination = dest;
+    }
+
+    vec2f start_pos = s.r.position;
+
+    vec2f to_dest = dest - start_pos;
+
+    if(to_dest.length() < 50)
+    {
+        unblock_cpu_hardware(s, hardware::T_DRIVE);
+        s.travelling_in_realspace = false;
+        return;
+    }
+
+    s.apply_force(to_dest.norm().rot(-s.r.rotation) * dt_s);
+    s.set_thrusters_active(1);
 }
 
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)
@@ -4629,10 +4651,16 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 
     check_cpu_rules(*this, play, space, r);
 
+    if(travelling_in_realspace)
+    {
+        ship_cpu_pathfinding(dt_s, *this, play, space, r);
+    }
+
     last_room_type = room_type;
 
     if(r == nullptr)
     {
+        travelling_in_realspace = false;
         current_room_pid = -1;
     }
     else
@@ -4642,12 +4670,14 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 
     if(r == nullptr && !travelling_to_poi)
     {
+        travelling_in_realspace = false;
         ship_drop_to(*this, play, space, nullptr, false);
         return;
     }
 
     if(!has_s_power && r == nullptr)
     {
+        travelling_in_realspace = false;
         ///NEW ROOM
         ship_drop_to(*this, play, space, nullptr, true);
         return;
@@ -4655,6 +4685,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 
     if(travelling_to_poi)
     {
+        travelling_in_realspace = false;
         handle_fsd_movement(dt_s, play, *this);
         return;
     }
@@ -4684,6 +4715,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
 
         room* nr = dest.value()->make_room(this->r.position, 5);
         play.enter_room(this, nr);
+        travelling_in_realspace = false;
 
         return;
     }

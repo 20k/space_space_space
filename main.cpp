@@ -778,7 +778,8 @@ void server_thread(std::atomic_bool& should_term)
 
                         thruster_active_percent = clamp(thruster_active_percent, 0, 1);
 
-                        s->set_thrusters_active(thruster_active_percent);
+                        if(!s->travelling_in_realspace)
+                            s->set_thrusters_active(thruster_active_percent);
                     }
 
                     if(read_data.fired.size() > 0)

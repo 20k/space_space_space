@@ -886,6 +886,8 @@ bool playspace_manager::start_warp_travel(ship& s, size_t pid)
             s.move_warp = true;
             s.warp_to_pid = pid;
 
+            s.travelling_in_realspace = false;
+
             return true;
         }
     }
@@ -904,6 +906,8 @@ bool playspace_manager::start_room_travel(ship& s, size_t pid)
         s.travelling_to_poi = true;
         s.destination_poi_position = room_opt.value().second->position;
 
+        s.travelling_in_realspace = false;
+
         return true;
     }
 
@@ -912,6 +916,12 @@ bool playspace_manager::start_room_travel(ship& s, size_t pid)
 
 bool playspace_manager::start_realspace_travel(ship& s, size_t pid)
 {
+    if(s.travelling_to_poi)
+        return false;
+
+    if(s.move_warp)
+        return false;
+
     auto [play, r] = get_location_for(&s);
 
     if(play == nullptr || r == nullptr)
