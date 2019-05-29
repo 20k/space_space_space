@@ -32,6 +32,37 @@ namespace space_type
     };
 }
 
+namespace poi_type
+{
+    enum type
+    {
+        UNKNOWN = 0,
+        SUN = 1,
+        PLANET = 2,
+        DEAD_SPACE = 3,
+        ASTEROID_BELT = 4,
+        U_5 = 5,
+        U_6 = 6,
+        U_7 = 7,
+        U_8 = 8,
+        U_9 = 9,
+    };
+
+    static inline std::vector<std::string> rnames
+    {
+        "UNK",
+        "SUN",
+        "PLN",
+        "DED",
+        "AST",
+        "UN5",
+        "UN6",
+        "UN7",
+        "UN8",
+        "UN9",
+    };
+}
+
 #define ROOM_POI_SCALE 0.01f
 
 ///aka poi
@@ -39,6 +70,9 @@ struct room : serialisable, owned
 {
     size_t friendly_id = -1;
     room_type::type type = room_type::POI;
+
+    poi_type::type ptype = poi_type::DEAD_SPACE;
+    int poi_offset = 0; ///idx offset
 
     std::string name;
     vec2f position;

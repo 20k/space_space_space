@@ -79,6 +79,8 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other
     DO_SERIALISE(name);
     DO_SERIALISE(position);
     DO_SERIALISE(entity_manage);
+    DO_SERIALISE(ptype);
+    DO_SERIALISE(poi_offset);
 }
 
 void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
