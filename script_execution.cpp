@@ -439,6 +439,8 @@ cpu_state::cpu_state()
 
         ports[i] = val;
     }
+
+    update_length_register();
 }
 
 register_value& restrict_r(register_value& in)
