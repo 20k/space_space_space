@@ -378,7 +378,7 @@ void playspace::init_default(int seed)
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
 
-    field->sun_id = sun->id;
+    field->sun_id = sun->_pid;
 }
 
 void playspace::add(entity* e)

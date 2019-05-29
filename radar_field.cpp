@@ -88,7 +88,7 @@ void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissi
 
     if(ticks_between_emissions != 1)
     {
-        if((parent->iteration % ticks_between_emissions) != (id % ticks_between_emissions))
+        if((parent->iteration % ticks_between_emissions) != (_pid % ticks_between_emissions))
             return;
     }
 
@@ -151,7 +151,7 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
 void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en)
 {
     freq.id = alt_frequency_packet::gid++;
-    freq.emitted_by = en.id;
+    freq.emitted_by = en._pid;
 
     freq.cross_dim = en.r.approx_dim;
     freq.cross_angle = en.r.rotation;
@@ -205,9 +205,9 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
 {
     #ifndef REVERSE_IGNORE
-    ignore_map[packet_id][en.id].restart();
+    ignore_map[packet_id][en._pid].restart();
     #else
-    ignore_map[en.id][packet_id].restart();
+    ignore_map[en._pid][packet_id].restart();
     #endif // REVERSE_IGNORE
 
     //en.ignore_packets[packet_id].restart();
@@ -243,10 +243,10 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
     if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
     {
         #ifndef REVERSE_IGNORE
-        if(ignore_map[packet.id][collide.id].should_ignore())
+        if(ignore_map[packet.id][collide._pid].should_ignore())
             return std::nullopt;
         #else
-        if(ignore_map[collide.id][packet.id].should_ignore())
+        if(ignore_map[collide._pid][packet.id].should_ignore())
             return std::nullopt;
         #endif
 
@@ -323,7 +323,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.precalculated_start_angle = (collide.r.position - reflect.origin).norm();
         reflect.restrict_angle = my_fraction * 2 * M_PI;
         //reflect.emitted_by = -1;
-        reflect.reflected_by = collide.id;
+        reflect.reflected_by = collide._pid;
         //reflect.prev_reflected_by = packet.reflected_by;
         reflect.reflected_position = collide.r.position;
         //reflect.last_reflected_position = packet.last_reflected_position;
@@ -1188,14 +1188,14 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         return sam;
     }*/
 
-    sample_time[en.id].restart();
+    sample_time[en._pid].restart();
 
     alt_radar_sample s;
     s.location = pos;
 
     ///need to sum packets first, then iterate them
     ///need to sum packets with the same emitted id and frequency
-    random_constants rconst = get_random_constants_for(en.id);
+    random_constants rconst = get_random_constants_for(en._pid);
 
     /*std::vector<alt_frequency_packet> merged;
 
@@ -1246,7 +1246,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         if(it_packet != ignore_map.end())
         {
             #ifndef REVERSE_IGNORE
-            auto it_collide = it_packet->second.find(en.id);
+            auto it_collide = it_packet->second.find(en._pid);
             #else
             auto it_collide = it_packet->second.find(packet.id);
             #endif
@@ -1318,7 +1318,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     for(alt_frequency_packet& packet : post_intensity_calculate)
     {
-        if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
+        if(packet.emitted_by == en._pid && packet.reflected_by == (uint32_t)-1)
             continue;
 
         ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
@@ -1359,7 +1359,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         float uncertainty = intensity / BEST_UNCERTAINTY;
         uncertainty = 1 - clamp(uncertainty, 0, 1);
 
-        uint32_t uid = en.id;
+        uint32_t uid = en._pid;
 
         #if 1
         #define RECT
@@ -1445,7 +1445,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         for(alt_frequency_packet& packet : post_intensity_calculate)
         {
-            if(packet.emitted_by == en.id && packet.reflected_by == (uint32_t)-1)
+            if(packet.emitted_by == en._pid && packet.reflected_by == (uint32_t)-1)
                 continue;
 
             float intensity = packet.intensity * radar_mult;
@@ -1477,12 +1477,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             play.velocity = en.velocity;
             play.r.render_layer = space;
 
-            renderables[en.id] = play;
+            renderables[en._pid] = play;
         }
 
         for(uint32_t id : low_detail_entities)
         {
-            if(id != en.id)
+            if(id != en._pid)
             {
                 client_renderable rs;
                 entity* found = nullptr;
@@ -1544,7 +1544,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         for(uint32_t id : high_detail_entities)
         {
-            if(id != en.id)
+            if(id != en._pid)
             {
                 client_renderable rs;
                 entity* found = nullptr;
@@ -1599,7 +1599,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     }*/
 
     s.fresh = true;
-    cached_samples[en.id] = s;
+    cached_samples[en._pid] = s;
 
     return s;
 }

@@ -6,13 +6,13 @@ bool collides(entity& e1, entity& e2)
 {
     for(auto& i : e1.phys_ignore)
     {
-        if(i == e2.id)
+        if(i == e2._pid)
             return false;
     }
 
     for(auto& i : e2.phys_ignore)
     {
-        if(i == e1.id)
+        if(i == e1._pid)
             return false;
     }
 
@@ -714,7 +714,7 @@ void entity_manager::tick(double dt_s)
             if(!e1->collides)
                 continue;
 
-            auto id = e1->id;
+            auto id = e1->_pid;
             auto ticks_between_collisions = e1->ticks_between_collisions;
 
             if(ticks_between_collisions > 1)

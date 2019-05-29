@@ -200,6 +200,16 @@ struct poi_travel_info : serialisable
     }
 };
 
+struct client_room_object_data : serialisable
+{
+    std::string name;
+    vec2f position;
+    size_t pid = 0;
+    std::string type;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct client_input : serialisable
 {
     vec2f direction = {0,0};
@@ -212,6 +222,7 @@ struct client_input : serialisable
     bool to_fsd_space = false;
     warp_info warp;
     poi_travel_info travel;
+    std::vector<client_room_object_data> room_objects;
 
     SERIALISE_SIGNATURE()
     {
@@ -225,6 +236,7 @@ struct client_input : serialisable
         DO_SERIALISE(to_fsd_space);
         DO_SERIALISE(warp);
         DO_SERIALISE(travel);
+        DO_SERIALISE(room_objects);
     }
 };
 

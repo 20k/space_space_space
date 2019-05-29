@@ -61,9 +61,8 @@ struct client_renderable : serialisable
     void insert(float dist, float angle, vec4f col);
 };
 
-struct entity : virtual serialisable
+struct entity : serialisable, owned
 {
-    size_t id = 0;
     bool cleanup = false;
     int cleanup_rounds = 0;
     bool collides = true;
@@ -157,7 +156,6 @@ struct entity_manager : serialisable
 
         to_spawn.push_back(e);
         e->parent = this;
-        e->id = gid++;
 
         return e;
     }
@@ -169,7 +167,7 @@ struct entity_manager : serialisable
 
         to_spawn.push_back(e);
         e->parent = this;
-        e->id = gid++;
+        e->_pid = get_next_persistent_id();
 
         return e;
     }
@@ -197,7 +195,7 @@ struct entity_manager : serialisable
     {
         for(entity* e : entities)
         {
-            if(e->id == id)
+            if(e->_pid == id)
                 return e;
         }
 

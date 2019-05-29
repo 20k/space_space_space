@@ -705,7 +705,7 @@ struct playspace_manager;
 struct playspace;
 struct room;
 
-struct ship : heatable_entity, owned
+struct ship : heatable_entity
 {
     size_t network_owner = 0;
     float my_size = 0;

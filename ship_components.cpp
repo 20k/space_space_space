@@ -1553,7 +1553,7 @@ void ship::tick_missile_behaviour(double dt_s)
         if(i.frequency != homing_frequency)
             continue;
 
-        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+        if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
             continue;
 
         if(i.id_e == radar.get_sun_id() && i.id_r == -1)
@@ -1571,7 +1571,7 @@ void ship::tick_missile_behaviour(double dt_s)
         if(i.frequency != homing_frequency)
             continue;
 
-        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+        if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
             continue;
 
         if(i.id_e == radar.get_sun_id() && i.id_r == -1)
@@ -1589,7 +1589,7 @@ void ship::tick_missile_behaviour(double dt_s)
         if(i.frequency != homing_frequency)
             continue;
 
-        if((i.id_e == id || i.id_e == spawned_by || i.id_r == id || i.id_r == spawned_by) && !activated)
+        if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
             continue;
 
         if(i.id_e == radar.get_sun_id() && i.id_r == -1)
@@ -1991,7 +1991,7 @@ void ship::tick(double dt_s)
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
                         l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
-                        l->phys_ignore.push_back(id);
+                        l->phys_ignore.push_back(_pid);
 
                         l->damage = c.get_activate_fixed(component_info::LASER).capacity;
                     }
@@ -2012,7 +2012,7 @@ void ship::tick(double dt_s)
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
                         l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
-                        l->phys_ignore.push_back(id);
+                        l->phys_ignore.push_back(_pid);
 
                         l->parent_ship = this;
                         l->parent_component = c._pid;
@@ -2047,13 +2047,13 @@ void ship::tick(double dt_s)
                         //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
                         spawned->velocity = velocity + ship_vector.norm() * 50;
                         //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
-                        spawned->phys_ignore.push_back(id);
+                        spawned->phys_ignore.push_back(_pid);
                         //spawned->fired_by = id;
 
                         spawned->r.init_rectangular({1, 0.2});
                         spawned->network_owner = network_owner;
                         spawned->spawn_clock.restart();
-                        spawned->spawned_by = id;
+                        spawned->spawned_by = _pid;
                         spawned->phys_drag = false;
                         spawned->current_radar_field = current_radar_field;
                     }
@@ -2128,9 +2128,9 @@ void ship::tick(double dt_s)
 
                         aoe->max_radius = radius;
                         aoe->damage = total_power;
-                        aoe->collided_with[id] = true;
+                        aoe->collided_with[_pid] = true;
                         aoe->r.position = r.position;
-                        aoe->emitted_by = id;
+                        aoe->emitted_by = _pid;
                         aoe->velocity = velocity;
                     }
                 }

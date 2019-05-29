@@ -1517,6 +1517,46 @@ int main()
             ImGui::End();
         }
 
+        if(my_ship && my_ship->room_type == space_type::REAL_SPACE)
+        {
+            ImGui::Begin("Local Objects");
+
+            std::vector<std::string> positions{"Position"};
+            std::vector<std::string> distances{"Distance"};
+            std::vector<std::string> pids{"ID"};
+            std::vector<int> old_index;
+
+            for(int i=0; i < (int)model.sample.renderables.size(); i++)
+            {
+                client_renderable& ren = model.sample.renderables[i].property.r;
+                uint32_t object_pid = model.sample.renderables[i].uid;
+
+                if(ren.render_layer != RENDER_LAYER_REALSPACE)
+                    continue;
+
+                std::string spos = to_string_with(ren.position.x(), 1) + " " + to_string_with(ren.position.y());
+
+                std::string dist = to_string_with((ren.position - ship_proxy->r.position).length(), 1);
+
+                positions.push_back(spos);
+                distances.push_back(dist);
+                pids.push_back(std::to_string(object_pid));
+                old_index.push_back(i);
+            }
+
+            for(int i=0; i < (int)positions.size(); i++)
+            {
+                std::string rstr = format(positions[i], positions) + " | " + format(distances[i], distances) + " | " + format(pids[i], pids);
+
+                ImGui::Text(rstr.c_str());
+
+                if(i == 0)
+                    continue;
+            }
+
+            ImGui::End();
+        }
+
         std::map<size_t, bool> highlighted_pois;
 
         {

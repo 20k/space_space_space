@@ -44,7 +44,7 @@ void aoe_damage::tick(double dt_s)
             radar.ignore(alt_frequency_packet::gid, *hen);
         }
 
-        radar.emit_raw(alt_pack, r.position, id, r);
+        radar.emit_raw(alt_pack, r.position, _pid, r);
 
         emitted = true;
     }
@@ -52,10 +52,10 @@ void aoe_damage::tick(double dt_s)
 
 void aoe_damage::on_collide(entity_manager& em, entity& other)
 {
-    if(collided_with[other.id])
+    if(collided_with[other._pid])
         return;
 
-    collided_with[other.id] = true;
+    collided_with[other._pid] = true;
 
     ship* s = dynamic_cast<ship*>(&other);
 
