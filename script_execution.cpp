@@ -603,7 +603,7 @@ register_value& restricta(register_value& in, const std::string& types)
     {'A', "address"},
     {'N', "integer"},
     {'S', "symbol"},
-    {'F', "EOF"},
+    {'Z', "EOF"},
     };
 
     bool should_throw = false;
@@ -618,7 +618,7 @@ register_value& restricta(register_value& in, const std::string& types)
         should_throw = true;
     if(in.is_symbol() && types.find('S') == std::string::npos)
         should_throw = true;
-    if(in.is_eof() && types.find('F') == std::string::npos)
+    if(in.is_eof() && types.find('Z') == std::string::npos)
         should_throw = true;
 
     if(should_throw)
@@ -627,10 +627,12 @@ register_value& restricta(register_value& in, const std::string& types)
 
         for(auto i : types)
         {
-            err += rs[i];
+            err += rs[i] + ", ";
         }
 
-        err += ", got " + in.as_string();
+        err += "got " + in.as_string();
+
+        throw std::runtime_error(err);
     }
 
     return in;
@@ -1270,6 +1272,8 @@ void cpu_tests()
         TEST EOF
         WIPE*/
 
+        printf("EOF TESTS\n");
+
         test.add_line("MAKE 1234");
         test.add_line("TEST EOF");
         test.add_line("RSIZ 1");
@@ -1292,6 +1296,8 @@ void cpu_tests()
         test.step(); //test
 
         assert(test.register_states[(int)registers::TEST].value == 1);
+
+        test.debug_state();
     }
 
     //exit(0);
