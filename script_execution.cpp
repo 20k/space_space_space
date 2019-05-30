@@ -260,7 +260,19 @@ bool cpu_file::ensure_eof()
 
         data.push_back(fake);
 
+        if(file_pointer >= (int)data.size())
+        {
+            ///resets to EOF
+            file_pointer = len();
+        }
+
         return true;
+    }
+
+    if(file_pointer >= (int)data.size())
+    {
+        ///resets to EOF
+        file_pointer = len();
     }
 
     return false;
@@ -1077,7 +1089,7 @@ register_value& cpu_state::fetch(registers::type type)
             throw std::runtime_error("No file held");
 
         if(files[held_file].file_pointer >= (int)files[held_file].data.size())
-            throw std::runtime_error("Invalid file pointer");
+            throw std::runtime_error("Invalid file pointer " + std::to_string(files[held_file].file_pointer));
 
         int& fp = files[held_file].file_pointer;
 
