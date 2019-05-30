@@ -83,12 +83,15 @@ void code_editor::render(cpu_state& cpu)
                 test_data.push_back(0);
             }
         }
+
+        file_edit.render(fle);
     }
 
     if(test_data.size() == 0)
         test_data.resize(1);
 
     mem_edit.DrawWindow("MemEdit", &test_data[0], test_data.size());
+
 
     ImGui::EndChild();
 
