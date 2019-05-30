@@ -2816,7 +2816,7 @@ void ship::handle_heat(double dt_s)
             c.add_heat_to_me(htr_1);
             uniform_remove_stored_heat(hs, htr_2);*/
 
-            heat_transfer(heat_coeff * c.get_operating_efficiency() / heat_sinks.size(), dt_s, c, hs, -1);
+            heat_transfer(d.recharge * heat_coeff * c.get_operating_efficiency() / heat_sinks.size(), dt_s, c, hs, -1);
         }
 
         float heat_transfer_rate = c.get_my_temperature() * heat_coeff * dt_s * d.recharge * c.get_operating_efficiency();
