@@ -904,7 +904,7 @@ void cpu_state::step()
             }
         }
 
-        itest(RNS(next[0]), SYM(next[1]), RNS(next[2]), fetch(registers::TEST));
+        itest(RNLS(next[0]), SYM(next[1]), RNLS(next[2]), fetch(registers::TEST));
         break;
     case HALT:
         throw std::runtime_error("Received HALT");
