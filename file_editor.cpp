@@ -127,6 +127,9 @@ void file_editor::render(cpu_file& file)
 
     int mem_size = file.len();
 
+    DataEditingAddr = file.file_pointer;
+    DataPreviewAddr = file.file_pointer;
+
     size_t base_display_addr = 0;
 
 
@@ -216,11 +219,12 @@ void file_editor::render(cpu_file& file)
             // Draw highlight
             bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
             bool is_highlight_from_user_func = false;
-            bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
+            //bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + 1);
+            bool is_highlight_from_preview = (addr == DataPreviewAddr);
             if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
             {
                 ImVec2 pos = ImGui::GetCursorScreenPos();
-                float highlight_width = s.GlyphWidth * 2;
+                float highlight_width = s.GlyphWidth * data_render_width - s.GlyphWidth/2;
                 bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || false);
                 if (is_next_byte_highlighted || (n + 1 == Cols))
                 {
