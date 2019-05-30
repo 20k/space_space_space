@@ -3,6 +3,8 @@
 #include <imgui/imgui.h>
 #include <stdio.h>      // sprintf, scanf
 #include <stdint.h>     // uint8_t, etc.
+#include <sstream>
+#include <iomanip>
 
 #define _PRISizeT   "z"
 #define ImSnprintf  snprintf
@@ -45,9 +47,47 @@ void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display
     s.WindowWidth = s.PosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + s.GlyphWidth;
 }
 
-std::string address_to_str(int in)
+std::string int_to_hex(int val, int width = 2)
 {
-    return std::to_string(in);
+    std::stringstream stream;
+    stream << std::setfill('0') << std::setw(width) << std::hex << val;
+    return stream.str();
+}
+
+std::string address_to_str(int in, int width = 3)
+{
+    return int_to_hex(in, width);
+}
+
+std::string format_reg(register_value& reg)
+{
+    if(reg.is_int())
+    {
+        uint8_t b = reg.value;
+
+        /*if (b == 0 && OptGreyOutZeroes)
+            ImGui::TextDisabled("00 ");
+        else
+            ImGui::Text(format_byte_space, b);*/
+
+        return int_to_hex(b);
+    }
+
+    if(reg.is_symbol())
+    {
+        return "\"\"";
+
+        //ImGui::Text("\"\" ");
+        //ImGui::Text(val.symbol.c_str());
+    }
+
+    if(reg.is_label())
+    {
+        return "@@";
+        //ImGui::Text("@@");
+    }
+
+    return "ERR";
 }
 
 ///should clip long strings optionally, display full on hover
@@ -66,9 +106,14 @@ void file_editor::render(cpu_file& file)
 
     ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
 
-    std::string cvals = "FP: " + address_to_str(file.file_pointer) + ": " + file.data[file.file_pointer].as_string();
+    ImGui::Text(address_to_str(file.file_pointer, s.AddrDigitsCount).c_str());
 
-    ImGui::Text(cvals.c_str());
+    float byte_pos_x = s.PosHexStart + s.HexCellWidth * 0;
+    if (OptMidColsCount > 0)
+        byte_pos_x += (float)(0 / OptMidColsCount) * s.SpacingBetweenMidCols;
+    ImGui::SameLine(byte_pos_x);
+
+    ImGui::Text(format_reg(file.data[file.file_pointer]).c_str());
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -184,7 +229,7 @@ void file_editor::render(cpu_file& file)
                 }
                 #endif // 0
 
-                if(val.is_int())
+                /*if(val.is_int())
                 {
                     uint8_t b = val.value;
 
@@ -203,11 +248,15 @@ void file_editor::render(cpu_file& file)
                 if(val.is_label())
                 {
                     ImGui::Text("@@");
-                }
+                }*/
+
+                std::string vstr = format_reg(val);
+
+                ImGui::Text(vstr.c_str());
 
                 if(ImGui::IsItemHovered())
                 {
-                    std::string str = address_to_str(addr) + ": " + val.as_string();
+                    std::string str = address_to_str(addr, s.AddrDigitsCount) + ": " + val.as_string();
 
                     ImGui::SetTooltip(str.c_str());
                 }
