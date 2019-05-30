@@ -4474,6 +4474,7 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
     {
         play.exit_room(&s);
         //on_leave_room(s, play);
+        return;
     }
 
     float drop_range = 10;
@@ -4486,7 +4487,7 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
     vec2f destination_vector = (position - my_pos).norm();
 
     ///yeah so uh this obviously isn't great
-    float speed = std::max(s.get_net_resources(1, s.last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / s.mass, 0.);
+    float speed = std::max(s.get_net_resources(1, s.last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / s.get_mass(), 0.);
 
     vec2f translate = destination_vector * dt_s * speed;
 
