@@ -561,6 +561,9 @@ cpu_state::cpu_state()
     }
 
     update_length_register();
+
+    files.push_back(get_master_virtual_file());
+    update_master_virtual_file();
 }
 
 register_value& restrict_r(register_value& in)
@@ -740,6 +743,41 @@ bool should_skip(cpu_state& s)
     return next.type == instructions::NOTE || next.type == instructions::MARK;
 }
 
+cpu_file cpu_state::get_master_virtual_file()
+{
+    cpu_file fle;
+
+    fle.data.clear();
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        register_value fname = files[i].name;
+
+        fle.data.push_back(fname);
+    }
+
+    fle.name.set_label("FILES");
+
+    fle.ensure_eof();
+
+    return fle;
+}
+
+void cpu_state::update_master_virtual_file()
+{
+    register_value val;
+    val.set_label("FILES");
+
+    for(auto& i : files)
+    {
+        if(i.name == val)
+        {
+            i = get_master_virtual_file();
+            return;
+        }
+    }
+}
+
 bool cpu_state::any_blocked()
 {
     for(int i=0; i < (int)blocking_status.size(); i++)
@@ -897,8 +935,12 @@ void cpu_state::step()
         {
             register_value& name = RNLS(next[0]);
 
+            std::cout << "MAKE " << name.as_string() << std::endl;
+
             for(auto& i : files)
             {
+                std::cout << "I NAME " << i.name.as_string() << std::endl;
+
                 if(i.name == name)
                     throw std::runtime_error("Duplicate file name [MAKE] " + name.as_string());
             }
@@ -943,6 +985,11 @@ void cpu_state::step()
             throw std::runtime_error("Already holding file " + files[held_file].name.as_string());
 
         register_value& to_grab = RNLS(next[0]);
+
+        if(to_grab.is_label() && to_grab.label == "FILES")
+        {
+            update_master_virtual_file();
+        }
 
         for(int kk=0; kk < (int)files.size(); kk++)
         {
