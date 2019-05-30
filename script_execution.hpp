@@ -333,6 +333,8 @@ struct cpu_state : serialisable, owned
     void reset();
     void reset_rpc();
 
+    void drop_file();
+
     void upload_program_rpc(std::string str);
 
     void update_length_register();

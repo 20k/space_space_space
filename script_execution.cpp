@@ -1064,7 +1064,7 @@ void cpu_state::step()
         break;
 
     case DROP:
-        held_file = -1;
+        drop_file();
         update_length_register();
         break;
 
@@ -1073,8 +1073,7 @@ void cpu_state::step()
             throw std::runtime_error("Not holding file [WIPE]");
 
         files.erase(files.begin() + held_file);
-        held_file = -1;
-
+        drop_file();
         update_length_register();
         break;
 
@@ -1176,6 +1175,15 @@ void cpu_state::reset()
 void cpu_state::reset_rpc()
 {
     rpc("reset", *this);
+}
+
+void cpu_state::drop_file()
+{
+    if(held_file == -1)
+        throw std::runtime_error("BAD DROP FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
+
+    files[held_file].file_pointer = 0;
+    held_file = -1;
 }
 
 void cpu_state::update_length_register()
