@@ -65,6 +65,7 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
+    DO_RPC(reset);
 }
 
 void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -1045,6 +1046,20 @@ void cpu_state::inc_pc_rpc()
 void cpu_state::upload_program_rpc(std::string str)
 {
     rpc("set_program", *this, str);
+}
+
+void cpu_state::reset()
+{
+    auto instr_backup = inst;
+
+    *this = cpu_state();
+
+    inst = instr_backup;
+}
+
+void cpu_state::reset_rpc()
+{
+    rpc("reset", *this);
 }
 
 void cpu_state::update_length_register()

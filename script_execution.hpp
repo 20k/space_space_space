@@ -325,6 +325,9 @@ struct cpu_state : serialisable, owned
     void inc_pc();
     void inc_pc_rpc();
 
+    void reset();
+    void reset_rpc();
+
     void upload_program_rpc(std::string str);
 
     void update_length_register();

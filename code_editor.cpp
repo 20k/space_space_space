@@ -13,7 +13,7 @@ void code_editor::render(cpu_state& cpu)
     if(cpu.inst.size() == 0)
         pc_loop = 0;
 
-    if(pc_loop > cpu.inst.size())
+    if(pc_loop > (int)cpu.inst.size())
         pc_loop %= (int)cpu.inst.size();
 
     text_edit.SetBreakpoints({pc_loop});
@@ -47,6 +47,11 @@ void code_editor::render(cpu_state& cpu)
     if(ImGuiX::SimpleButton("(Upload)"))
     {
         cpu.upload_program_rpc(text_edit.GetText());
+    }
+
+    if(ImGuiX::SimpleButton("(Reset)"))
+    {
+        cpu.reset_rpc();
     }
 
     ImGui::TextWrapped(cpu.last_error.c_str());
