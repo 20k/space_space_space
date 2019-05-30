@@ -14,6 +14,17 @@ void strip_whitespace(std::string& in)
         in.pop_back();
 }
 
+bool all_whitespace(const std::string& in)
+{
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        if(!isspace(in[i]))
+            return false;
+    }
+
+    return true;
+}
+
 inline
 std::vector<std::string>& split(const std::string &s, char delim, std::vector<std::string> &elems)
 {
@@ -405,8 +416,30 @@ instructions::type instructions::fetch(const std::string& name)
 
 void instruction::make(const std::vector<std::string>& raw)
 {
+    //if(raw.size() == 0)
+    //    throw std::runtime_error("Bad instr");
+
     if(raw.size() == 0)
-        throw std::runtime_error("Bad instr");
+    {
+        type = instructions::NOTE;
+        return;
+    }
+
+    bool all_space = true;
+
+    for(auto& i : raw)
+    {
+        if(!all_whitespace(i))
+        {
+            all_space = false;
+        }
+    }
+
+    if(all_space)
+    {
+        type = instructions::NOTE;
+        return;
+    }
 
     instructions::type found = instructions::fetch(raw[0]);
 
