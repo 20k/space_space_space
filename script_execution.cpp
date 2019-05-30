@@ -459,7 +459,7 @@ void instruction::make(const std::vector<std::string>& raw)
     }
 }
 
-std::string get_next(const std::string& in, int& offset)
+std::string get_next(const std::string& in, int& offset, bool& hit_comment)
 {
     if(offset >= (int)in.size())
         return "";
@@ -490,6 +490,13 @@ std::string get_next(const std::string& in, int& offset)
             in_addr = false;
         }
 
+        if(next == ';' && !in_string && !in_addr)
+        {
+            hit_comment = true;
+            offset++;
+            return ret;
+        }
+
         if(next == ' ' && !in_string && !in_addr)
         {
             offset++;
@@ -515,12 +522,17 @@ void instruction::make(const std::string& str)
 
     while(1)
     {
-        auto it = get_next(str, offset);
+        bool hit_comment = false;
+
+        auto it = get_next(str, offset, hit_comment);
 
         if(it == "")
             break;
 
         vc.push_back(it);
+
+        if(hit_comment)
+            break;
     }
 
     make(vc);
