@@ -1180,5 +1180,40 @@ void cpu_tests()
         //test.step();
     }
 
+    {
+        cpu_state test;
+
+        /*MAKE 1234
+        TEST EOF
+        RSIZ 1
+        TEST EOF
+        COPY F X0
+        TEST EOF
+        WIPE*/
+
+        test.add_line("MAKE 1234");
+        test.add_line("TEST EOF");
+        test.add_line("RSIZ 1");
+        test.add_line("TEST EOF");
+        test.add_line("COPY F X0");
+        test.add_line("TEST EOF");
+        test.add_line("WIPE");
+
+        test.step(); //make
+        test.step(); //eof
+
+        assert(test.register_states[(int)registers::TEST].value == 1);
+
+        test.step(); //rsiz
+        test.step(); //test
+
+        assert(test.register_states[(int)registers::TEST].value == 0);
+
+        test.step(); //copy
+        test.step(); //test
+
+        assert(test.register_states[(int)registers::TEST].value == 1);
+    }
+
     //exit(0);
 }
