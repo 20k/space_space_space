@@ -413,6 +413,19 @@ void server_thread(std::atomic_bool& should_term)
 
     test_ship2->r.position = {600, 400};*/
 
+    {
+        entity_manager entities;
+
+        ship* ts2 = entities.make_new<ship>(*test_ship);
+        ts2->new_network_copy();
+        ts2->network_owner = 1;
+        ts2->r.network_owner = 1;
+
+        sys_1->add(ts2);
+
+        ts2->r.position = {600, 400};
+    }
+
     std::minstd_rand rng;
     rng.seed(0);
 
