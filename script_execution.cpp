@@ -55,6 +55,7 @@ void register_value::serialise(serialise_context& ctx, nlohmann::json& data, sel
     DO_SERIALISE(label);
     DO_SERIALISE(address);
     DO_SERIALISE(reg_address);
+    DO_SERIALISE(file_eof);
     DO_SERIALISE(which);
 }
 
@@ -69,8 +70,9 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(register_states);
     DO_SERIALISE(inst);
     DO_SERIALISE(pc);
-    DO_SERIALISE(ports);
+    DO_SERIALISE(free_running);
     DO_SERIALISE(last_error);
+    DO_SERIALISE(ports);
     DO_SERIALISE(files);
     DO_SERIALISE(held_file);
 
