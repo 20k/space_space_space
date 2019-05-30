@@ -392,6 +392,7 @@ void playspace::init_default(int seed)
     sun->r.position = {0, 0}; ///realspace
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
+    sun->collides = false;
 
     field->sun_id = sun->_pid;
 }
