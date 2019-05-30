@@ -975,7 +975,7 @@ void cpu_state::step()
             int off = RN(next[0]).value;
 
             files[held_file].file_pointer += off;
-            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, files[held_file].len_with_eof());
+            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, files[held_file].len());
         }
 
         break;
@@ -985,7 +985,7 @@ void cpu_state::step()
         if(held_file == -1)
             throw std::runtime_error("Not holding file [VOID]");
 
-        if(files[held_file].file_pointer < (int)files[held_file].data.size())
+        if(files[held_file].file_pointer < (int)files[held_file].len())
         {
             files[held_file].data.erase(files[held_file].data.begin() + files[held_file].file_pointer);
         }
