@@ -1084,10 +1084,12 @@ int main()
 
     std::atomic_bool term{0};
 
+    #ifndef CLIENT_ONLY
     #define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread, std::ref(term)).detach();
     #endif // WITH_SERVER
+    #endif // CLIENT_ONLY
 
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
@@ -1140,8 +1142,11 @@ int main()
     //assert(font != nullptr);
 
     connection conn;
+    #ifndef CLIENT_ONLY
     conn.connect("192.168.0.54", 11000);
-    //conn.connect("77.97.17.179", 11000);
+    #else
+    conn.connect("77.97.17.179", 11000);
+    #endif // CLIENT_ONLY
 
     data_model<ship> model;
     client_entities renderables;
