@@ -4549,9 +4549,10 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     int max_objects = 255;
 
     fle.data.resize(max_radar_data + max_connected_systems + max_pois + max_objects);
+    fle.ensure_eof();
     cpu.update_length_register();
 
-    for(int i=0; i < (int)fle.data.size(); i++)
+    for(int i=0; i < (int)fle.len(); i++)
     {
         fle.data[i].set_int(0);
     }
@@ -4602,9 +4603,6 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         std::string type = poi_type::rnames[(int)pois[i]->ptype];
         //std::string name = pois[i]->name;
         int offset = pois[i]->poi_offset;
-
-        if(i * 3 + 2 > max_pois)
-            break;
 
         fle.data[base + i * 3 + 0].set_int(pid);
         fle.data[base + i * 3 + 1].set_symbol(type);
