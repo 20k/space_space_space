@@ -704,7 +704,7 @@ void cpu_state::step()
             if(next[0].label == "EOF")
             {
                 fetch(registers::TEST).set_int(files[held_file].file_pointer == (int)files[held_file].data.size());
-                return;
+                break;
             }
             else
             {
