@@ -776,6 +776,10 @@ void cpu_state::update_master_virtual_file()
             return;
         }
     }
+
+    ///file not present
+    files.push_back(get_master_virtual_file());
+    update_master_virtual_file();
 }
 
 bool cpu_state::any_blocked()
@@ -935,12 +939,8 @@ void cpu_state::step()
         {
             register_value& name = RNLS(next[0]);
 
-            std::cout << "MAKE " << name.as_string() << std::endl;
-
             for(auto& i : files)
             {
-                std::cout << "I NAME " << i.name.as_string() << std::endl;
-
                 if(i.name == name)
                     throw std::runtime_error("Duplicate file name [MAKE] " + name.as_string());
             }
@@ -958,6 +958,28 @@ void cpu_state::step()
             throw std::runtime_error("MAKE takes 0 or 1 args");
         }
         break;
+    case RNAM:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file [RNAM]");
+
+        {
+
+            register_value& name = E(next[0]);
+
+            for(auto& i : files)
+            {
+                if(i.name == name)
+                    throw std::runtime_error("Duplicate file name [RNAM] " + name.as_string());
+            }
+
+            files[held_file].name = name;
+
+            ///incase we rename the master virtual file
+            update_master_virtual_file();
+        }
+
+        break;
+
     case RSIZ:
         if(held_file == -1)
             throw std::runtime_error("Not holding file [RSIZ]");
