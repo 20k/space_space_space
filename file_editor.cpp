@@ -132,11 +132,8 @@ void file_editor::render(cpu_file& file)
 
     size_t base_display_addr = 0;
 
-
-    int data_render_width = 5;
-
     Sizes s;
-    CalcSizes(*this, s, mem_size, 0, data_render_width + 0.5);
+    CalcSizes(*this, s, mem_size, 0, DataRenderWidth + 0.5);
 
     float footer_height = 0;
 
@@ -149,7 +146,7 @@ void file_editor::render(cpu_file& file)
         byte_pos_x += (float)(0 / OptMidColsCount) * s.SpacingBetweenMidCols;
     ImGui::SameLine(byte_pos_x);
 
-    ImGui::Text(format_reg(file.data[file.file_pointer], data_render_width, true).c_str());
+    ImGui::Text(format_reg(file.data[file.file_pointer], DataRenderWidth, true).c_str());
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -224,7 +221,7 @@ void file_editor::render(cpu_file& file)
             if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
             {
                 ImVec2 pos = ImGui::GetCursorScreenPos();
-                float highlight_width = s.GlyphWidth * data_render_width - s.GlyphWidth/2;
+                float highlight_width = s.GlyphWidth * DataRenderWidth - s.GlyphWidth/2;
                 bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || false);
                 if (is_next_byte_highlighted || (n + 1 == Cols))
                 {
@@ -287,7 +284,7 @@ void file_editor::render(cpu_file& file)
                     ImGui::Text("@@");
                 }*/
 
-                std::string vstr = format_reg(val, data_render_width);
+                std::string vstr = format_reg(val, DataRenderWidth);
 
                 ImGui::Text(vstr.c_str());
 

@@ -33,6 +33,8 @@ struct file_editor
     size_t          HighlightMin, HighlightMax;
     int             PreviewEndianess;
 
+    int             DataRenderWidth = 5;
+
     file_editor()
     {
         // Settings
