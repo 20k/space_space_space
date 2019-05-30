@@ -71,6 +71,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
 {
     DO_SERIALISE(name);
     DO_SERIALISE(data);
+    DO_SERIALISE(file_pointer);
 }
 
 bool all_numeric(const std::string& str)
@@ -695,6 +696,22 @@ void cpu_state::step()
         break;
 
     case TEST:
+        if(next.num_args() == 1 && next[0].is_label())
+        {
+            if(held_file == -1)
+                throw std::runtime_error("Not holding file [TEST EOF]");
+
+            if(next[0].label == "EOF")
+            {
+                fetch(registers::TEST).set_int(files[held_file].file_pointer == (int)files[held_file].data.size());
+                return;
+            }
+            else
+            {
+                throw std::runtime_error("TEST expects TEST VAL OP VAL or TEST EOF");
+            }
+        }
+
         itest(RNS(next[0]), SYM(next[1]), RNS(next[2]), fetch(registers::TEST));
         break;
     case HALT:
@@ -809,6 +826,31 @@ void cpu_state::step()
 
         R(next[0]) = files[held_file].name;
         update_length_register();
+        break;
+
+    case SEEK:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file [SEEK]");
+
+        {
+            int off = RN(next[0]).value;
+
+            files[held_file].file_pointer += off;
+            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, (int)files[held_file].data.size());
+        }
+
+        break;
+
+
+    case VOID_FUCK_WINAPI:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file [VOID]");
+
+        if(files[held_file].file_pointer < (int)files[held_file].data.size())
+        {
+            files[held_file].data.erase(files[held_file].data.begin() + files[held_file].file_pointer);
+        }
+
         break;
 
     case DROP:
@@ -947,6 +989,23 @@ register_value& cpu_state::fetch(registers::type type)
 {
     if((int)type < 0 || (int)type >= register_states.size())
         throw std::runtime_error("No such register " + std::to_string((int)type));
+
+    if(type == registers::FILE)
+    {
+        if(held_file == -1)
+            throw std::runtime_error("No file held");
+
+        if(files[held_file].file_pointer >= files[held_file].data.size())
+            throw std::runtime_error("Invalid file pointer");
+
+        int& fp = files[held_file].file_pointer;
+
+        register_value& next = files[held_file].data[fp];
+
+        fp++;
+
+        return next;
+    }
 
     return register_states[(int)type];
 }

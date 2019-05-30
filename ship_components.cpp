@@ -4575,17 +4575,63 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
     std::vector<playspace*> connected = play.get_connected_systems_for(&s);
 
-    fle.data[base + 0].set_int(connected.size());
+    fle.data[base].set_int(connected.size());
 
     base++;
 
-    for(int i=0; i < (int)connected.size(); i++)
+    for(int i=0; i < (int)connected.size() && i < max_connected_systems/2; i++)
     {
         size_t pid = connected[i]->_pid;
         std::string name = connected[i]->name;
 
         fle.data[base + i*2 + 0].set_int(pid);
         fle.data[base + i*2 + 1].set_symbol(name);
+    }
+
+    base += max_connected_systems;
+
+    std::vector<room*> pois = space->all_rooms();
+
+    fle.data[base].set_int(pois.size());
+
+    base++;
+
+    for(int i=0; i < (int)pois.size() && i < max_pois/3; i++)
+    {
+        size_t pid = pois[i]->_pid;
+        std::string type = poi_type::rnames[(int)pois[i]->ptype];
+        //std::string name = pois[i]->name;
+        int offset = pois[i]->poi_offset;
+
+        if(i * 3 + 2 > max_pois)
+            break;
+
+        fle.data[base + i * 3 + 0].set_int(pid);
+        fle.data[base + i * 3 + 1].set_symbol(type);
+        fle.data[base + i * 3 + 2].set_int(offset);
+    }
+
+    base += max_pois;
+
+    fle.data[base].set_int(s.last_sample.renderables.size());
+
+    base++;
+
+    for(int i=0; i < (int)s.last_sample.renderables.size() && i < max_objects/4; i++)
+    {
+        size_t pid = s.last_sample.renderables[i].uid;
+        common_renderable& comm = s.last_sample.renderables[i].property;
+        client_renderable& cren = comm.r;
+
+        int x = round(cren.position.x());
+        int y = round(cren.position.y());
+
+        int idist = (int)(cren.position - s.r.position).length();
+
+        fle.data[base + i * 4 + 0].set_int(pid);
+        fle.data[base + i * 4 + 1].set_int(x);
+        fle.data[base + i * 4 + 2].set_int(y);
+        fle.data[base + i * 4 + 3].set_int(idist);
     }
 }
 

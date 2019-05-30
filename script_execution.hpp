@@ -14,6 +14,7 @@ namespace registers
         TEST,
         GENERAL_PURPOSE0,
         FILE_LENGTH,
+        FILE,
         COUNT,
     };
 
@@ -22,6 +23,7 @@ namespace registers
         "T",
         "X0",
         "L",
+        "F",
     };
 }
 
@@ -159,12 +161,12 @@ namespace instructions
         //LINK,
         HOST,
         //MODE,
-        //VOID_FUCK_WINAPI,
+        VOID_FUCK_WINAPI,
         MAKE,
         RSIZ,
         GRAB,
         FILE,
-        //SEEK,
+        SEEK,
         DROP,
         WIPE,
         NOOP,
@@ -201,12 +203,12 @@ namespace instructions
         //"LINK",
         "HOST",
         //"MODE",
-        //"VOID",
+        "VOID",
         "MAKE",
         "RSIZ",
         "GRAB",
         "FILE",
-        //"SEEK",
+        "SEEK",
         "DROP",
         "WIPE",
         "NOOP",
@@ -258,6 +260,7 @@ struct cpu_file : serialisable
 {
     register_value name;
     std::vector<register_value> data;
+    int file_pointer = 0;
 
     SERIALISE_SIGNATURE();
 };
