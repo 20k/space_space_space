@@ -40,6 +40,8 @@ struct register_value : serialisable
 
     int which = -1;
 
+    bool file_eof = false;
+
     void make(const std::string& str);
     std::string as_string();
 
@@ -66,6 +68,11 @@ struct register_value : serialisable
     bool is_address() const
     {
         return which == 4 || which == 5;
+    }
+
+    bool is_eof()
+    {
+        return which == 6;
     }
 
     void set_reg(registers::type type)
@@ -104,6 +111,12 @@ struct register_value : serialisable
         which = 5;
     }
 
+    void set_eof()
+    {
+        file_eof = true;
+        which = 6;
+    }
+
     bool operator==(const register_value& second)
     {
         if(which != second.which)
@@ -126,6 +139,9 @@ struct register_value : serialisable
 
         if(which == 5)
             return reg_address == second.reg_address;
+
+        if(which == 6)
+            return file_eof == second.file_eof;
 
         return false;
     }
@@ -261,6 +277,14 @@ struct cpu_file : serialisable
     register_value name;
     std::vector<register_value> data;
     int file_pointer = 0;
+
+    cpu_file();
+
+    int len();
+    int len_with_eof();
+    bool ensure_eof(); ///true on eof update
+
+    void set_size(int next);
 
     SERIALISE_SIGNATURE();
 };

@@ -236,6 +236,64 @@ register_value& instruction::fetch(int idx)
     return args[idx];
 }
 
+cpu_file::cpu_file()
+{
+    ensure_eof();
+}
+
+int cpu_file::len()
+{
+    return (int)data.size() - 1;
+}
+
+int cpu_file::len_with_eof()
+{
+    return data.size();
+}
+
+bool cpu_file::ensure_eof()
+{
+    if((int)data.size() == 0 || !data.back().is_eof())
+    {
+        register_value fake;
+        fake.set_eof();
+
+        data.push_back(fake);
+
+        return true;
+    }
+
+    return false;
+}
+
+void cpu_file::set_size(int next_size)
+{
+    if(next_size == len())
+        return;
+
+    ///pop eof
+    data.pop_back();
+
+    if(next_size > (int)data.size())
+    {
+        for(int kk=0; kk < (int)next_size; kk++)
+        {
+            register_value next;
+            next.set_int(0);
+
+            data.push_back(next);
+        }
+    }
+
+    if(next_size < (int)data.size())
+    {
+        data.resize(next_size);
+    }
+
+    ///push eof
+    ensure_eof();
+}
+
 std::string register_value::as_string()
 {
     if(is_reg())
@@ -266,6 +324,11 @@ std::string register_value::as_string()
     if(which == 5)
     {
         return "[" + registers::rnames[(int)reg_address] + "]";
+    }
+
+    if(is_eof())
+    {
+        return "EOF";
     }
 
     throw std::runtime_error("Bad register val?");
@@ -540,6 +603,7 @@ register_value& restricta(register_value& in, const std::string& types)
     {'A', "address"},
     {'N', "integer"},
     {'S', "symbol"},
+    {'F', "EOF"},
     };
 
     bool should_throw = false;
@@ -553,6 +617,8 @@ register_value& restricta(register_value& in, const std::string& types)
     if(in.is_int() && types.find('N') == std::string::npos)
         should_throw = true;
     if(in.is_symbol() && types.find('S') == std::string::npos)
+        should_throw = true;
+    if(in.is_eof() && types.find('F') == std::string::npos)
         should_throw = true;
 
     if(should_throw)
@@ -578,7 +644,7 @@ register_value& restricta(register_value& in, const std::string& types)
 #define RNLS(x) RA(restrict_rnls(x).decode(*this), NLS) ///register or number or symbol
 #define RLS(x) RA(restrict_rls(x).decode(*this), LS)
 #define RS(x) RA(restrict_rs(x).decode(*this), S)
-#define E(x) x.decode(*this) ///everything
+#define E(x) RA(RA(x, RLANS).decode(*this), RLANS) ///everything, except file pointer
 #define L(x) restrict_l(x).decode(*this)
 
 
@@ -625,6 +691,27 @@ bool cpu_state::any_blocked()
     return false;
 }
 
+struct eof_helper
+{
+    cpu_state& st;
+
+    eof_helper(cpu_state& in) : st(in)
+    {
+
+    }
+
+    ~eof_helper()
+    {
+        if(st.held_file != -1)
+        {
+            if(st.files[st.held_file].ensure_eof())
+            {
+                st.update_length_register();
+            }
+        }
+    }
+};
+
 void cpu_state::step()
 {
     if(waiting_for_hardware_feedback)
@@ -646,6 +733,9 @@ void cpu_state::step()
         throw std::runtime_error("Bad instruction at runtime?");
 
     //std::cout << "NEXT " << instructions::rnames[(int)next.type] << std::endl;
+
+    ///ensure that whatever happens, our file has an eof at the end
+    eof_helper eof_help(*this);
 
     switch(next.type)
     {
@@ -703,7 +793,11 @@ void cpu_state::step()
 
             if(next[0].label == "EOF")
             {
-                fetch(registers::TEST).set_int(files[held_file].file_pointer == (int)files[held_file].data.size());
+                cpu_file& held = files[held_file];
+
+                int fptr = held.file_pointer;
+
+                fetch(registers::TEST).set_int(held.data[fptr].is_eof());
                 break;
             }
             else
@@ -776,21 +870,7 @@ void cpu_state::step()
             if(next_size < 0)
                 throw std::runtime_error("[RSIZ] argument must be >= 0");
 
-            if(next_size > (int)cur.data.size())
-            {
-                for(int kk=0; kk < (int)next_size; kk++)
-                {
-                    register_value next;
-                    next.set_int(0);
-
-                    cur.data.push_back(next);
-                }
-            }
-
-            if(next_size < (int)cur.data.size())
-            {
-                cur.data.resize(next_size);
-            }
+            cur.set_size(next_size);
 
             update_length_register();
         }
@@ -825,7 +905,6 @@ void cpu_state::step()
             throw std::runtime_error("Not holding file [FILE]");
 
         R(next[0]) = files[held_file].name;
-        update_length_register();
         break;
 
     case SEEK:
@@ -836,7 +915,7 @@ void cpu_state::step()
             int off = RN(next[0]).value;
 
             files[held_file].file_pointer += off;
-            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, (int)files[held_file].data.size());
+            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, files[held_file].len_with_eof());
         }
 
         break;
@@ -960,7 +1039,7 @@ void cpu_state::update_length_register()
 
     if(held_file != -1)
     {
-        len = files[held_file].data.size();
+        len = files[held_file].len();
     }
 
     register_states[(int)registers::FILE_LENGTH].set_int(len);
@@ -987,7 +1066,7 @@ void cpu_state::debug_state()
 
 register_value& cpu_state::fetch(registers::type type)
 {
-    if((int)type < 0 || (int)type >= register_states.size())
+    if((int)type < 0 || (int)type >= (int)register_states.size())
         throw std::runtime_error("No such register " + std::to_string((int)type));
 
     if(type == registers::FILE)
@@ -995,7 +1074,7 @@ register_value& cpu_state::fetch(registers::type type)
         if(held_file == -1)
             throw std::runtime_error("No file held");
 
-        if(files[held_file].file_pointer >= files[held_file].data.size())
+        if(files[held_file].file_pointer >= (int)files[held_file].data.size())
             throw std::runtime_error("Invalid file pointer");
 
         int& fp = files[held_file].file_pointer;
