@@ -23,7 +23,7 @@ struct Sizes
     float   WindowWidth;
 };
 
-void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display_addr)
+void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display_addr, float render_width = 5.5)
 {
     ImGuiStyle& style = ImGui::GetStyle();
     s.AddrDigitsCount = edit.OptAddrDigitsCount;
@@ -32,7 +32,7 @@ void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display
             s.AddrDigitsCount++;
     s.LineHeight = ImGui::GetTextLineHeight();
     s.GlyphWidth = ImGui::CalcTextSize("F").x + 1;                  // We assume the font is mono-space
-    s.HexCellWidth = (float)(int)(s.GlyphWidth * 2.5f);             // "FF " we include trailing space in the width to easily catch clicks everywhere
+    s.HexCellWidth = (float)(int)(s.GlyphWidth * render_width);     // "FF " we include trailing space in the width to easily catch clicks everywhere
     s.SpacingBetweenMidCols = (float)(int)(s.HexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
     s.PosHexStart = (s.AddrDigitsCount + 2) * s.GlyphWidth;
     s.PosHexEnd = s.PosHexStart + (s.HexCellWidth * edit.Cols);
@@ -59,23 +59,53 @@ std::string address_to_str(int in, int width = 3)
     return int_to_hex(in, width);
 }
 
-std::string format_reg(register_value& reg)
+std::string get_fixed_string(std::string in, int width)
 {
+    if((int)in.size() <= width)
+        return in;
+
+    in.resize(width);
+
+    for(int i=width-2; i < width; i++)
+    {
+        in[i] = '.';
+    }
+
+    return in;
+}
+
+std::string format_reg(register_value& reg, int width, bool full = false)
+{
+    if(full)
+        return reg.as_string();
+
     if(reg.is_int())
     {
-        uint8_t b = reg.value;
+        int32_t b = reg.value;
 
         /*if (b == 0 && OptGreyOutZeroes)
             ImGui::TextDisabled("00 ");
         else
             ImGui::Text(format_byte_space, b);*/
 
-        return int_to_hex(b);
+        int32_t max_val = pow(2, (4 * width) - 1);
+
+        if(b > max_val)
+            return "2BIG!";
+
+        if(b < -max_val)
+            return "2SML!";
+
+        return int_to_hex(b, width);
     }
 
     if(reg.is_symbol())
     {
-        return "\"\"";
+        //return reg.symbol;
+
+        return get_fixed_string(reg.symbol, width);
+
+        //return "\"\"";
 
         //ImGui::Text("\"\" ");
         //ImGui::Text(val.symbol.c_str());
@@ -83,7 +113,7 @@ std::string format_reg(register_value& reg)
 
     if(reg.is_label())
     {
-        return "@@";
+        return get_fixed_string(reg.label, width);
         //ImGui::Text("@@");
     }
 
@@ -99,8 +129,11 @@ void file_editor::render(cpu_file& file)
 
     size_t base_display_addr = 0;
 
+
+    int data_render_width = 5;
+
     Sizes s;
-    CalcSizes(*this, s, mem_size, 0);
+    CalcSizes(*this, s, mem_size, 0, data_render_width + 0.5);
 
     float footer_height = 0;
 
@@ -113,7 +146,7 @@ void file_editor::render(cpu_file& file)
         byte_pos_x += (float)(0 / OptMidColsCount) * s.SpacingBetweenMidCols;
     ImGui::SameLine(byte_pos_x);
 
-    ImGui::Text(format_reg(file.data[file.file_pointer]).c_str());
+    ImGui::Text(format_reg(file.data[file.file_pointer], data_render_width, true).c_str());
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -250,7 +283,7 @@ void file_editor::render(cpu_file& file)
                     ImGui::Text("@@");
                 }*/
 
-                std::string vstr = format_reg(val);
+                std::string vstr = format_reg(val, data_render_width);
 
                 ImGui::Text(vstr.c_str());
 
