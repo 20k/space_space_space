@@ -132,6 +132,8 @@ alt_frequency_packet transform_space(const alt_frequency_packet& in, room& r, al
 
 void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
 {
+    bool sort_sun = false;
+
     for(const alt_frequency_packet& pack : pack)
     {
         if(me.imported_waves.find(pack.id) != me.imported_waves.end())
@@ -148,7 +150,10 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
         me.imported_waves[pack.id] = true;
 
         if(pack.emitted_by == theirs.sun_id && pack.reflected_by == -1)
+        {
             me.field->sun_packets.push_back(fixed_pack);
+            sort_sun = true;
+        }
         else
             me.field->packets.push_back(fixed_pack);
 
@@ -175,6 +180,14 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
             me.field->ignore_map[pack.id] = f_ignore->second;
         }
     }
+
+    /*if(sort_sun)
+    {
+        std::sort(me.field->sun_packets.begin(), me.field->sun_packets.end(), [](auto& p1, auto& p2)
+                  {
+                    return p1.start_iteration < p2.start_iteration;
+                  });
+    }*/
 }
 
 void room::import_radio_waves_from(alt_radar_field& theirs)
@@ -315,6 +328,8 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
         r->field->sun_position = r->get_in_local(play_sun->r.position);
     }
 
+    r->field->iteration_count = field->iteration_count;
+
     r->name = "Dead Space";
     return r;
 }
@@ -403,6 +418,19 @@ void playspace::init_default(int seed)
     for(int i=0; i < 10000; i++)
         rng();
 
+    float intensity = STANDARD_SUN_HEAT_INTENSITY;
+
+    asteroid* sun = entity_manage->make_new<asteroid>(field);
+    sun->init(3, 4);
+    sun->r.position = {0, 0}; ///realspace
+    sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
+    sun->reflectivity = 0;
+    sun->collides = false;
+
+    field->sun_id = sun->_pid;
+    field->sun_position = sun->r.position;
+    play_sun = sun;
+
     int real_belts = 3;
 
     float min_rad = 100;
@@ -446,19 +474,6 @@ void playspace::init_default(int seed)
             a->r.position = pos;
         }
     }
-
-    float intensity = STANDARD_SUN_HEAT_INTENSITY;
-
-    asteroid* sun = entity_manage->make_new<asteroid>(field);
-    sun->init(3, 4);
-    sun->r.position = {0, 0}; ///realspace
-    sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
-    sun->reflectivity = 0;
-    sun->collides = false;
-
-    field->sun_id = sun->_pid;
-    field->sun_position = sun->r.position;
-    play_sun = sun;
 }
 
 void playspace::add(entity* e)

@@ -179,9 +179,6 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
 
 bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 {
-    if(packet.force_cleanup)
-        return true;
-
     float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * packet.scale * space_scaling;
 
     float dist_min = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
@@ -529,6 +526,11 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
 
+        std::sort(sun_packets.begin(), sun_packets.end(), [](auto& p1, auto& p2)
+                  {
+                    return p1.start_iteration < p2.start_iteration;
+                  });
+
         int cidx = 0;
 
         ///you know i might be able to binary search through this...
@@ -546,9 +548,26 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         //for(alt_frequency_packet& packet : sun_packets)
 
+        ///0 is furthest, end is closest packet
+
+        #if 1
         for(int i=0; i < (int)sun_packets.size();)
         {
             alt_frequency_packet& packet = sun_packets[i];
+
+            if(i > 0)
+            {
+                if(sun_packets[i].start_iteration <= sun_packets[i-1].start_iteration)
+                {
+                    std::cout << "WTF " << sun_packets[i].start_iteration << " SEC " << sun_packets[i-1].start_iteration << std::endl;
+                    continue;
+                }
+
+                //assert(sun_packets[i].start_iteration > sun_packets[i-1].start_iteration);
+            }
+
+            //i++;
+            //continue;
 
             if(cidx >= sorted_entities.size())
                 break;
@@ -575,8 +594,24 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             float len_sq = relative_pos.squared_length();
 
             ///miss, they're further away than us
-            if(len_sq >= next_radius*next_radius)
+            if(len_sq > next_radius*next_radius)
             {
+                ///0 is furthest away
+                ///that said... floating point might be a problem
+
+                if(i != 0)
+                {
+
+                    float last_cur = (iteration_count - sun_packets[i - 1].start_iteration) * speed_of_light_per_tick;
+                    float last_next = last_cur + speed_of_light_per_tick;
+
+                    std::cout << "PACK ORIGIN " << packet.origin << " real " << sun_position << std::endl;
+
+                    std::cout << "i " << i << " mine " << next_radius << " last " << last_cur << " last next " << last_next << " len " << sqrtf(len_sq) << " CIDX " << cidx << std::endl;
+                }
+
+                assert(i == 0);
+
                 cidx++;
 
                 if(cidx >= sorted_entities.size())
@@ -611,6 +646,29 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             ///check next entity
             cidx++;
         }
+        #endif // 0
+
+        //std::cout << "considered " << cidx << " of " << sorted_entities.size() << std::endl;
+
+        /*float start_rad = 0;
+        float end_rad = 0;
+
+        if(packets)
+
+        for(entity* collide : em.entities)
+        {
+            if(!collide->is_heat)
+                continue;
+
+            if(!collide->is_collided_with)
+                continue;
+
+            heatable_entity* en = static_cast<heatable_entity*>(collide);
+
+            float distance_to_sun = (en->r.position - sun_position).length();
+
+            float
+        }*/
     }
 
     for(alt_frequency_packet& packet : packets)
