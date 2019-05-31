@@ -180,11 +180,11 @@ void server_thread(std::atomic_bool& should_term)
 
     sys_1->position = {100, 0};
 
-    /*playspace* sys_2 = playspace_manage.make_new();
+    playspace* sys_2 = playspace_manage.make_new();
     sys_2->init_default(10000);
     sys_2->name = "A-C";
 
-    playspace_connect(sys_1, sys_2);*/
+    playspace_connect(sys_1, sys_2);
 
 
     //entity_manager entities;
@@ -521,6 +521,8 @@ void server_thread(std::atomic_bool& should_term)
 
     while(1)
     {
+        sf::Clock whole_frametime;
+
         sf::Clock tickclock;
 
         double used_frametime_dt = clamp(frametime_dt, 14 / 1000., 18 / 1000.);
@@ -1044,6 +1046,8 @@ void server_thread(std::atomic_bool& should_term)
         debug.clear();
 
         #endif // SERVER_VIEW
+
+        std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         //std::cout << "FULL FRAME " << tickclock.restart().asMicroseconds()/1000. << std::endl;
 
