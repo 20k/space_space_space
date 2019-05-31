@@ -925,6 +925,11 @@ float alt_radar_field::get_intensity_at(vec2f pos)
         total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
     }
 
+    for(alt_frequency_packet& packet : sun_packets)
+    {
+        total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
+    }
+
     return total_intensity;
 }
 
@@ -933,6 +938,14 @@ float alt_radar_field::get_refl_intensity_at(vec2f pos)
     float total_intensity = 0;
 
     for(alt_frequency_packet& packet : packets)
+    {
+        if(packet.reflected_by == (uint32_t)-1)
+            continue;
+
+        total_intensity += get_intensity_at_of(pos, packet, subtractive_packets);
+    }
+
+    for(alt_frequency_packet& packet : sun_packets)
     {
         if(packet.reflected_by == (uint32_t)-1)
             continue;

@@ -162,7 +162,7 @@ void server_thread(std::atomic_bool& should_term)
 
     cpu_tests();
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -558,7 +558,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        //#define CCC
+        #define CCC
         #ifdef CCC
         cam.position.x() += key.isKeyPressed(sf::Keyboard::Numpad6)*10;
         cam.position.x() -= key.isKeyPressed(sf::Keyboard::Numpad4)*10;
