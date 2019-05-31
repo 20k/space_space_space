@@ -34,7 +34,7 @@ void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display
     s.GlyphWidth = ImGui::CalcTextSize("F").x + 1;                  // We assume the font is mono-space
     s.HexCellWidth = (float)(int)(s.GlyphWidth * render_width);     // "FF " we include trailing space in the width to easily catch clicks everywhere
     s.SpacingBetweenMidCols = (float)(int)(s.HexCellWidth * 0.25f); // Every OptMidColsCount columns we add a bit of extra spacing
-    s.PosHexStart = (s.AddrDigitsCount + 2) * s.GlyphWidth;
+    s.PosHexStart = (s.AddrDigitsCount + 2 + 2) * s.GlyphWidth;
     s.PosHexEnd = s.PosHexStart + (s.HexCellWidth * edit.Cols);
     s.PosAsciiStart = s.PosAsciiEnd = s.PosHexEnd;
     if (edit.OptShowAscii)
@@ -56,7 +56,7 @@ std::string int_to_hex(int val, int width = 2)
 
 std::string address_to_str(int in, int width = 3)
 {
-    return int_to_hex(in, width);
+    return "0x" + int_to_hex(in, width);
 }
 
 std::string get_fixed_string(std::string in, int width)
@@ -74,8 +74,10 @@ std::string get_fixed_string(std::string in, int width)
     return in;
 }
 
-std::string format_reg(register_value& reg, int width, bool full = false)
+std::string format_reg(register_value& reg, int width, bool full, bool& gray_leading_0)
 {
+    gray_leading_0 = reg.is_int();
+
     if(full)
         return reg.as_string();
 
@@ -120,10 +122,73 @@ std::string format_reg(register_value& reg, int width, bool full = false)
     return "ERR";
 }
 
+bool all_zero(const std::string& in)
+{
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        if(in[i] != '0')
+            return false;
+    }
+
+    return true;
+}
+
+void render_reg(register_value& reg, int width, bool full = false)
+{
+    bool gray_leading = false;
+    std::string vstr = format_reg(reg, width, full, gray_leading);
+
+    if(gray_leading)
+    {
+        std::string gray_part = "";
+        std::string real_part = "";
+
+        bool in_gray = true;
+
+        for(auto& i : vstr)
+        {
+            if(i != '0')
+                in_gray = false;
+
+            if(in_gray)
+            {
+                gray_part += i;
+            }
+            else
+            {
+                real_part += i;
+            }
+        }
+
+        ImGui::BeginGroup();
+
+        ImGui::TextDisabled(gray_part.c_str());
+
+        ImGui::SameLine(0, 0);
+
+        ImGui::Text(real_part.c_str());
+
+        ImGui::EndGroup();
+    }
+    else
+    {
+        if(all_zero(vstr))
+        {
+            ImGui::TextDisabled(vstr.c_str());
+        }
+        else
+        {
+            ImGui::Text(vstr.c_str());
+        }
+    }
+}
+
 ///should clip long strings optionally, display full on hover
 void file_editor::render(cpu_file& file)
 {
     std::vector<register_value>& vals = file.data;
+
+    HighlightColor = IM_COL32(70, 70, 255, 70);
 
     int mem_size = file.len();
 
@@ -139,6 +204,10 @@ void file_editor::render(cpu_file& file)
 
     ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
 
+    std::string name_str = file.name.as_string();
+
+    ImGui::Text(name_str.c_str());
+
     ImGui::Text(address_to_str(file.file_pointer, s.AddrDigitsCount).c_str());
 
     float byte_pos_x = s.PosHexStart + s.HexCellWidth * 0;
@@ -146,7 +215,7 @@ void file_editor::render(cpu_file& file)
         byte_pos_x += (float)(0 / OptMidColsCount) * s.SpacingBetweenMidCols;
     ImGui::SameLine(byte_pos_x);
 
-    ImGui::Text(format_reg(file.data[file.file_pointer], DataRenderWidth, true).c_str());
+    render_reg(file.data[file.file_pointer], DataRenderWidth, true);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -194,7 +263,7 @@ void file_editor::render(cpu_file& file)
     const ImU32 color_text = ImGui::GetColorU32(ImGuiCol_Text);
     const ImU32 color_disabled = OptGreyOutZeroes ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : color_text;
 
-    const char* format_address = OptUpperCaseHex ? "%0*" _PRISizeT "X: " : "%0*" _PRISizeT "x: ";
+    const char* format_address = OptUpperCaseHex ? "0x%0*" _PRISizeT "X: " : "0x%0*" _PRISizeT "x: ";
     const char* format_data = OptUpperCaseHex ? "%0*" _PRISizeT "X" : "%0*" _PRISizeT "x";
     const char* format_range = OptUpperCaseHex ? "Range %0*" _PRISizeT "X..%0*" _PRISizeT "X" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x";
     const char* format_byte = OptUpperCaseHex ? "%02X" : "%02x";
@@ -284,9 +353,7 @@ void file_editor::render(cpu_file& file)
                     ImGui::Text("@@");
                 }*/
 
-                std::string vstr = format_reg(val, DataRenderWidth);
-
-                ImGui::Text(vstr.c_str());
+                render_reg(val, DataRenderWidth);
 
                 if(ImGui::IsItemHovered())
                 {
