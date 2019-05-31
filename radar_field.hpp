@@ -309,6 +309,7 @@ struct alt_radar_field
 
     uint64_t get_sun_id();
     uint64_t sun_id = -1;
+    vec2f sun_position;
     int space = 0;
 };
 

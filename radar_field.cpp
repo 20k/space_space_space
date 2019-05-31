@@ -503,6 +503,30 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     ///6000 packets
     ///only 200 ever hit anything
 
+    /*std::optional<entity*> opt_sun_en = em.fetch(sun_id);
+
+    if(opt_sun_en.has_value())
+    {
+        entity* sun_en = opt_sun_en.value();
+
+        auto sorted_entities = em.entities;
+
+        std::sort(sorted_entities.begin(), sorted_entities.end(), [](entity* e1, entity* e2)
+        {
+            return (e1->r.position - sun_en->r.position)
+        });
+    }*/
+
+    if(sun_id != -1)
+    {
+        auto sorted_entities = em.entities;
+
+        std::sort(sorted_entities.begin(), sorted_entities.end(), [&](entity* e1, entity* e2)
+        {
+            return (e1->r.position - sun_position).squared_length() < (e2->r.position - sun_position).squared_length();
+        });
+    }
+
     for(alt_frequency_packet& packet : packets)
     {
         //aggregates.get_collideables(*this, packet, coll_out);

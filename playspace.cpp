@@ -258,7 +258,13 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
 
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
-    r->field->sun_id = field->sun_id;
+
+    if(play_sun)
+    {
+        r->field->sun_id = field->sun_id;
+        r->field->sun_position = r->get_in_local(play_sun->r.position);
+    }
+
     r->name = "Dead Space";
     return r;
 }
@@ -401,6 +407,8 @@ void playspace::init_default(int seed)
     sun->collides = false;
 
     field->sun_id = sun->_pid;
+    field->sun_position = sun->r.position;
+    play_sun = sun;
 }
 
 void playspace::add(entity* e)
