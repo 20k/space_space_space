@@ -520,14 +520,97 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         });
     }*/
 
-    if(sun_id != -1)
+    if(sun_id != -1 && em.entities.size() > 0)
     {
         auto sorted_entities = em.entities;
 
         std::sort(sorted_entities.begin(), sorted_entities.end(), [&](entity* e1, entity* e2)
         {
-            return (e1->r.position - sun_position).squared_length() < (e2->r.position - sun_position).squared_length();
+            return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
+
+        int cidx = 0;
+
+        ///you know i might be able to binary search through this...
+        ///implement the simple 1 pass system first then investigate
+        ///would make performance independent of sun packets
+
+        ///so sun packets
+        ///the earliest sun packet is the oldest
+        ///the last sun packet is the youngers
+        ///so entities are sorted from furthest away to closest
+        ///if the furthest entity is further than the current packet, keep decrementing entities until we hit one
+        ///if the entity is within the current packet, increment the entity counter (TODO MAKE SURE THAT TWO PACKETS CANT HIT IN ONE TICK)
+        ///and abort if entity counter >= sorted_entities.size()
+        ///if the entity is closer than the current packet, skip to the next packet
+
+        //for(alt_frequency_packet& packet : sun_packets)
+
+        for(int i=0; i < (int)sun_packets.size();)
+        {
+            alt_frequency_packet& packet = sun_packets[i];
+
+            if(cidx >= sorted_entities.size())
+                break;
+
+            entity* collide = sorted_entities[cidx];
+
+            if(!collide->is_heat)
+            {
+                cidx++;
+                continue;
+            }
+
+            if(!collide->is_collided_with)
+            {
+                cidx++;
+                continue;
+            }
+
+            float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+            float next_radius = current_radius + speed_of_light_per_tick;
+
+            vec2f relative_pos = collide->r.position - packet.origin;
+
+            float len_sq = relative_pos.squared_length();
+
+            ///miss, they're further away than us
+            if(len_sq >= next_radius*next_radius)
+            {
+                cidx++;
+
+                if(cidx >= sorted_entities.size())
+                    break;
+
+                continue;
+            }
+
+            ///miss, they're closer than us
+            if(len_sq < current_radius*current_radius)
+            {
+                i++;
+                continue;
+            }
+
+            heatable_entity* en = static_cast<heatable_entity*>(collide);
+
+            ///rough hit
+            std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
+
+            if(reflected)
+            {
+                reflect_info inf = reflected.value();
+
+                if(inf.collide)
+                    next_subtractive[packet.id].push_back(inf.collide.value());
+
+                if(inf.reflect)
+                    speculative_packets.push_back(inf.reflect.value());
+            }
+
+            ///check next entity
+            cidx++;
+        }
     }
 
     for(alt_frequency_packet& packet : packets)
