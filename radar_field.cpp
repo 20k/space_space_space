@@ -780,6 +780,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     speculative_packets.clear();
 
     clean_old_packets(*this, packets, subtractive_packets);
+    clean_old_packets(*this, sun_packets, subtractive_packets);
 
     //std::cout << "ipackets " << icollide << std::endl;
 
@@ -1386,6 +1387,53 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         post_intensity_calculate.push_back(packet);
     }
+
+    for(alt_frequency_packet packet : sun_packets)
+    {
+        float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
+
+        if(intensity <= SUPER_LOW_DETAIL)
+            continue;
+
+        #ifndef REVERSE_IGNORE
+        auto it_packet = ignore_map.find(packet.id);
+        #endif // REVERSE_IGNORE
+
+        if(it_packet != ignore_map.end())
+        {
+            #ifndef REVERSE_IGNORE
+            auto it_collide = it_packet->second.find(en._pid);
+            #else
+            auto it_collide = it_packet->second.find(packet.id);
+            #endif
+
+            //auto it_collide = en.ignore_packets.find(packet.id);
+
+            //if(it_collide != en.ignore_packets.end())
+            if(it_collide != it_packet->second.end())
+            {
+                if(it_collide->second.should_ignore())
+                {
+                    if(!packet.last_packet)
+                        continue;
+
+                    alt_frequency_packet lpacket = *packet.last_packet;
+                    lpacket.start_iteration = packet.start_iteration;
+                    lpacket.id = packet.id;
+
+                    packet = lpacket;
+
+                    intensity = get_intensity_at_of(pos, packet, subtractive_packets);
+                }
+            }
+        }
+
+        packet.intensity = intensity;
+
+        post_intensity_calculate.push_back(packet);
+    }
+
+
 
     /*{
         float dsum = 0;
