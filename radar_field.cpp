@@ -526,12 +526,14 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
 
-        std::sort(sun_packets.begin(), sun_packets.end(), [](auto& p1, auto& p2)
+        /*std::sort(sun_packets.begin(), sun_packets.end(), [](auto& p1, auto& p2)
                   {
                     return p1.start_iteration < p2.start_iteration;
-                  });
+                  });*/
 
         int cidx = 0;
+
+        sf::Clock sun_clock;
 
         ///you know i might be able to binary search through this...
         ///implement the simple 1 pass system first then investigate
@@ -647,6 +649,10 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             cidx++;
         }
         #endif // 0
+
+        double ms = sun_clock.getElapsedTime().asMicroseconds() / 1000.;
+
+        //std::cout << "sun clock " << ms << std::endl;
 
         //std::cout << "considered " << cidx << " of " << sorted_entities.size() << std::endl;
 
