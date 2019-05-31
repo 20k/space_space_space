@@ -4,6 +4,7 @@
 #include <networking/serialisable.hpp>
 #include <sstream>
 #include <string>
+#include "time.hpp"
 
 void strip_whitespace(std::string& in)
 {
@@ -1099,6 +1100,9 @@ void cpu_state::step()
         break;
     case RAND:
         CALL3(irandi, RN, RN, R);
+        break;
+    case TIME:
+        R(next[0]).set_int(get_time_ms());
         break;
     case AT_REP:
         throw std::runtime_error("Should never be executed [rep]");

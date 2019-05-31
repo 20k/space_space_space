@@ -276,7 +276,7 @@ struct alt_radar_field
     float space_scaling = 1;
 
     bool has_finite_bound = false;
-    float finite_bound = 0;
+    vec2f finite_bound;
     vec2f finite_centre;
 
     alt_radar_field(vec2f in);

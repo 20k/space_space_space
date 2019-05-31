@@ -94,6 +94,14 @@ struct aggregate
         br = pos + half_dim;
     }
 
+    void recalculate_bounds()
+    {
+        tl = pos - half_dim;
+        tr = pos + (vec2f){half_dim.x(), -half_dim.y()};
+        bl = pos + (vec2f){-half_dim.x(), half_dim.y()};
+        br = pos + half_dim;
+    }
+
     bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float restrict_angle, vec2f left_restrict, vec2f right_restrict)
     {
         //return true;

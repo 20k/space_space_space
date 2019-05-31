@@ -517,9 +517,11 @@ void room::tick(double dt_s)
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
     }
 
-    field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);
+    /*field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);*/
 
-    field->finite_bound = std::max(field->finite_bound, 100.f);
+    field->finite_bound = entity_manage->collision.half_dim;
+
+    field->finite_bound = std::max(field->finite_bound, (vec2f){30, 30});
 
     field->finite_centre = entity_manage->collision.pos;
 

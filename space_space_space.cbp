@@ -201,6 +201,8 @@
 		<Unit filename="ship_components.hpp" />
 		<Unit filename="stardust.cpp" />
 		<Unit filename="stardust.hpp" />
+		<Unit filename="time.cpp" />
+		<Unit filename="time.hpp" />
 		<Unit filename="ui_util.cpp" />
 		<Unit filename="ui_util.hpp" />
 		<Extensions>
