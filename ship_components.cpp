@@ -3793,6 +3793,13 @@ void ship::show_power()
 
             ImGui::PopItemWidth();
 
+            if(ImGui::IsItemHovered())
+            {
+                std::string hp_str = "HP: " + to_string_with(c.get_hp_frac() * 100, 1) + "%%";
+
+                ImGui::SetTooltip(hp_str.c_str());
+            }
+
             ImGui::PopStyleColor(1);
         }
 
