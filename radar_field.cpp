@@ -191,11 +191,6 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
         if(!aggs.intersects(packet.origin, dist_min, dist_max, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
             return true;
-
-        ///so packets form a circle around some origin
-        ///if the closest point from that packet's surface to the centre of this radar system is >= finite_bound, its dead
-        //if(point2circle_shortest_distance(packet.origin, dist_min, finite_centre) >= finite_bound && point2circle_shortest_distance(packet.origin, dist_max, finite_centre) >= finite_bound)
-        //    return true;
     }
 
     if(packet.start_iteration == iteration_count)
