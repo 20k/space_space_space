@@ -297,6 +297,9 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         if(packet.reflected_by != -1)
             reflect_percentage *= 0.5;
 
+        if(packet.emitted_by == sun_id)
+            reflect_percentage *= 0.5;
+
         #if 1
         if(packet.frequency == HEAT_FREQ)
         {
