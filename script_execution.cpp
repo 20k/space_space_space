@@ -66,16 +66,23 @@ void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t
     DO_SERIALISE(args);
 }
 
+void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(held_file);
+    DO_SERIALISE(register_states);
+    DO_SERIALISE(pc);
+}
+
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
-    DO_SERIALISE(register_states);
+    DO_SERIALISE(stash);
+    DO_SERIALISE(files);
     DO_SERIALISE(inst);
-    DO_SERIALISE(pc);
+    DO_SERIALISE(context);
+
     DO_SERIALISE(free_running);
     DO_SERIALISE(last_error);
     DO_SERIALISE(ports);
-    DO_SERIALISE(files);
-    DO_SERIALISE(held_file);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -370,16 +377,16 @@ register_value& register_value::decode(cpu_state& state)
 
     if(is_address())
     {
-        if(state.held_file == -1)
+        if(state.context.held_file == -1)
             throw std::runtime_error("No file held, caused by [address] " + as_string());
 
-        cpu_file& fle = state.files[state.held_file];
+        cpu_file& fle = state.files[state.context.held_file];
 
         int check_address = address;
 
         if(which == 5)
         {
-            register_value& nval = state.register_states[(int)reg_address];
+            register_value& nval = state.context.register_states[(int)reg_address];
 
             if(!nval.is_int())
             {
@@ -545,14 +552,14 @@ cpu_state::cpu_state()
 {
     ports.resize(hardware::COUNT);
     blocking_status.resize(hardware::COUNT);
-    register_states.resize(registers::COUNT);
+    context.register_states.resize(registers::COUNT);
 
     for(int i=0; i < registers::COUNT; i++)
     {
         register_value val;
         val.set_int(0);
 
-        register_states[i] = val;
+        context.register_states[i] = val;
     }
 
     for(int i=0; i < (int)hardware::COUNT; i++)
@@ -733,7 +740,7 @@ bool should_skip(cpu_state& s)
     if(s.inst.size() == 0)
         return false;
 
-    int npc = s.pc % (int)s.inst.size();
+    int npc = s.context.pc % (int)s.inst.size();
 
     if(npc < 0 || npc >= (int)s.inst.size())
         throw std::runtime_error("Bad pc somehow");
@@ -804,9 +811,9 @@ struct eof_helper
 
     ~eof_helper()
     {
-        if(st.held_file != -1)
+        if(st.context.held_file != -1)
         {
-            if(st.files[st.held_file].ensure_eof())
+            if(st.files[st.context.held_file].ensure_eof())
             {
                 st.update_length_register();
             }
@@ -834,14 +841,14 @@ void cpu_state::step()
     if(inst.size() == 0)
         return;
 
-    pc %= (int)inst.size();
+    context.pc %= (int)inst.size();
 
-    if(pc < 0 || pc >= (int)inst.size())
+    if(context.pc < 0 || context.pc >= (int)inst.size())
         throw std::runtime_error("Bad pc somehow");
 
     using namespace instructions;
 
-    instruction& next = inst[pc];
+    instruction& next = inst[context.pc];
 
     if(next.type == instructions::COUNT)
         throw std::runtime_error("Bad instruction at runtime?");
@@ -880,13 +887,13 @@ void cpu_state::step()
     case SWIZ:
         throw std::runtime_error("Unimplemented SWIZ");
     case JUMP:
-        pc = label_to_pc(L(next[0]).label) + 1;
+        context.pc = label_to_pc(L(next[0]).label) + 1;
         return;
         break;
     case TJMP:
         if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value != 0)
         {
-            pc = label_to_pc(L(next[0]).label) + 1;
+            context.pc = label_to_pc(L(next[0]).label) + 1;
             return;
         }
 
@@ -894,7 +901,7 @@ void cpu_state::step()
     case FJMP:
         if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value == 0)
         {
-            pc = label_to_pc(L(next[0]).label) + 1;
+            context.pc = label_to_pc(L(next[0]).label) + 1;
             return;
         }
 
@@ -903,12 +910,12 @@ void cpu_state::step()
     case TEST:
         if(next.num_args() == 1 && next[0].is_label())
         {
-            if(held_file == -1)
+            if(context.held_file == -1)
                 throw std::runtime_error("Not holding file [TEST EOF]");
 
             if(next[0].label == "EOF")
             {
-                cpu_file& held = files[held_file];
+                cpu_file& held = files[context.held_file];
 
                 int fptr = held.file_pointer;
 
@@ -935,8 +942,8 @@ void cpu_state::step()
         throw std::runtime_error("Unimplemented HOST");
         break;
     case MAKE:
-        if(held_file != -1)
-            throw std::runtime_error("Already holding file [MAKE] " + files[held_file].name.as_string());
+        if(context.held_file != -1)
+            throw std::runtime_error("Already holding file [MAKE] " + files[context.held_file].name.as_string());
 
         if(next.num_args() == 0)
         {
@@ -945,7 +952,7 @@ void cpu_state::step()
 
             files.push_back(fle);
 
-            held_file = (int)files.size() - 1;
+            context.held_file = (int)files.size() - 1;
             update_length_register();
         }
         else if(next.num_args() == 1)
@@ -963,7 +970,7 @@ void cpu_state::step()
 
             files.push_back(fle);
 
-            held_file = (int)files.size() - 1;
+            context.held_file = (int)files.size() - 1;
             update_length_register();
         }
         else
@@ -972,7 +979,7 @@ void cpu_state::step()
         }
         break;
     case RNAM:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [RNAM]");
 
         {
@@ -985,7 +992,7 @@ void cpu_state::step()
                     throw std::runtime_error("Duplicate file name [RNAM] " + name.as_string());
             }
 
-            files[held_file].name = name;
+            files[context.held_file].name = name;
 
             ///incase we rename the master virtual file
             update_master_virtual_file();
@@ -994,11 +1001,11 @@ void cpu_state::step()
         break;
 
     case RSIZ:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [RSIZ]");
 
         {
-            cpu_file& cur = files[held_file];
+            cpu_file& cur = files[context.held_file];
             int next_size = NUM(RN(next[0])).value;
 
             if(next_size > 1024 * 1024)
@@ -1016,8 +1023,8 @@ void cpu_state::step()
 
     case GRAB:
     {
-        if(held_file != -1)
-            throw std::runtime_error("Already holding file " + files[held_file].name.as_string());
+        if(context.held_file != -1)
+            throw std::runtime_error("Already holding file " + files[context.held_file].name.as_string());
 
         register_value& to_grab = RNLS(next[0]);
 
@@ -1030,12 +1037,12 @@ void cpu_state::step()
         {
             if(files[kk].name == to_grab)
             {
-                held_file = kk;
+                context.held_file = kk;
                 break;
             }
         }
 
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
 
         update_length_register();
@@ -1043,39 +1050,39 @@ void cpu_state::step()
         break;
     }
     case instructions::FILE:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [FILE]");
 
-        R(next[0]) = files[held_file].name;
+        R(next[0]) = files[context.held_file].name;
         break;
 
     case SEEK:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [SEEK]");
 
         {
             int off = RN(next[0]).value;
 
-            files[held_file].file_pointer += off;
-            files[held_file].file_pointer = clamp(files[held_file].file_pointer, 0, files[held_file].len());
+            files[context.held_file].file_pointer += off;
+            files[context.held_file].file_pointer = clamp(files[context.held_file].file_pointer, 0, files[context.held_file].len());
         }
 
         break;
 
 
     case VOID_FUCK_WINAPI:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [VOID]");
 
-        if(files[held_file].file_pointer < (int)files[held_file].len())
+        if(files[context.held_file].file_pointer < (int)files[context.held_file].len())
         {
-            files[held_file].data.erase(files[held_file].data.begin() + files[held_file].file_pointer);
+            files[context.held_file].data.erase(files[context.held_file].data.begin() + files[context.held_file].file_pointer);
         }
 
         break;
 
     case DROP:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [DROP]");
 
         drop_file();
@@ -1083,10 +1090,10 @@ void cpu_state::step()
         break;
 
     case WIPE:
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("Not holding file [WIPE]");
 
-        files.erase(files.begin() + held_file);
+        files.erase(files.begin() + context.held_file);
         drop_file();
         update_length_register();
         break;
@@ -1110,6 +1117,14 @@ void cpu_state::step()
         throw std::runtime_error("Should never be executed [end]");
     case AT_N_M:
         throw std::runtime_error("Should never be executed [n_m]");
+    case AT_DEF:
+        ///need to stash registers
+
+        {
+
+        }
+
+        break;
     case DATA:
         throw std::runtime_error("Unimpl");
     case WARP:
@@ -1143,13 +1158,13 @@ void cpu_state::step()
         throw std::runtime_error("Unreachable?");
     }
 
-    pc++;
+    context.pc++;
 
     int num_skip = 0;
 
     while(should_skip(*this) && num_skip < (int)inst.size())
     {
-        pc++;
+        context.pc++;
 
         num_skip++;
     }
@@ -1196,50 +1211,50 @@ void cpu_state::reset_rpc()
 
 void cpu_state::drop_file()
 {
-    if(held_file == -1)
+    if(context.held_file == -1)
         throw std::runtime_error("BAD DROP FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
 
-    files[held_file].file_pointer = 0;
-    held_file = -1;
+    files[context.held_file].file_pointer = 0;
+    context.held_file = -1;
 }
 
 void cpu_state::update_length_register()
 {
     int len = -1;
 
-    if(held_file != -1)
+    if(context.held_file != -1)
     {
-        len = files[held_file].len();
+        len = files[context.held_file].len();
     }
 
-    register_states[(int)registers::FILE_LENGTH].set_int(len);
+    context.register_states[(int)registers::FILE_LENGTH].set_int(len);
 }
 
 void cpu_state::update_f_register()
 {
-    if(held_file == -1)
+    if(context.held_file == -1)
     {
-        register_states[(int)registers::FILE].set_int(0);
+        context.register_states[(int)registers::FILE].set_int(0);
     }
     else
     {
-        if(files[held_file].file_pointer >= (int)files[held_file].data.size())
-            register_states[(int)registers::FILE].set_eof();
+        if(files[context.held_file].file_pointer >= (int)files[context.held_file].data.size())
+            context.register_states[(int)registers::FILE].set_eof();
         else
-            register_states[(int)registers::FILE] = files[held_file].data[files[held_file].file_pointer];
+            context.register_states[(int)registers::FILE] = files[context.held_file].data[files[context.held_file].file_pointer];
     }
 
 }
 
 void cpu_state::debug_state()
 {
-    printf("PC %i\n", pc);
+    printf("PC %i\n", context.pc);
 
     //for(auto& i : register_states)
-    for(int i=0; i < (int)register_states.size(); i++)
+    for(int i=0; i < (int)context.register_states.size(); i++)
     {
         std::string name = registers::rnames[i];
-        std::string val = register_states[i].as_string();
+        std::string val = context.register_states[i].as_string();
 
         printf("%s: %s\n", name.c_str(), val.c_str());
     }
@@ -1252,27 +1267,27 @@ void cpu_state::debug_state()
 
 register_value& cpu_state::fetch(registers::type type)
 {
-    if((int)type < 0 || (int)type >= (int)register_states.size())
+    if((int)type < 0 || (int)type >= (int)context.register_states.size())
         throw std::runtime_error("No such register " + std::to_string((int)type));
 
     if(type == registers::FILE)
     {
-        if(held_file == -1)
+        if(context.held_file == -1)
             throw std::runtime_error("No file held");
 
-        if(files[held_file].file_pointer >= (int)files[held_file].data.size())
-            throw std::runtime_error("Invalid file pointer " + std::to_string(files[held_file].file_pointer));
+        if(files[context.held_file].file_pointer >= (int)files[context.held_file].data.size())
+            throw std::runtime_error("Invalid file pointer " + std::to_string(files[context.held_file].file_pointer));
 
-        int& fp = files[held_file].file_pointer;
+        int& fp = files[context.held_file].file_pointer;
 
-        register_value& next = files[held_file].data[fp];
+        register_value& next = files[context.held_file].data[fp];
 
         fp++;
 
         return next;
     }
 
-    return register_states[(int)type];
+    return context.register_states[(int)type];
 }
 
 void cpu_state::add(const std::vector<std::string>& raw)
@@ -1342,7 +1357,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
     {
         if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
         {
-            if(held_file == i)
+            if(context.held_file == i)
                 return std::nullopt;
 
             return &files[i];
@@ -1469,17 +1484,17 @@ void cpu_tests()
         test.step(); //make
         test.step(); //eof
 
-        assert(test.register_states[(int)registers::TEST].value == 1);
+        assert(test.context.register_states[(int)registers::TEST].value == 1);
 
         test.step(); //rsiz
         test.step(); //test
 
-        assert(test.register_states[(int)registers::TEST].value == 0);
+        assert(test.context.register_states[(int)registers::TEST].value == 0);
 
         test.step(); //copy
         test.step(); //test
 
-        assert(test.register_states[(int)registers::TEST].value == 1);
+        assert(test.context.register_states[(int)registers::TEST].value == 1);
 
         test.debug_state();
     }

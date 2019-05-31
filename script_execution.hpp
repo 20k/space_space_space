@@ -193,6 +193,7 @@ namespace instructions
         AT_REP,
         AT_END,
         AT_N_M,
+        AT_DEF,
         //WAIT,
         DATA,
         WARP,
@@ -237,6 +238,7 @@ namespace instructions
         "@REP",
         "@END",
         "@@@@",
+        "@DEF",
         "DATA",
         "WARP",
         "SLIP",
@@ -293,16 +295,34 @@ struct cpu_file : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct cpu_stash : serialisable
+{
+    int held_file = -1;
+
+    std::vector<register_value> register_states;
+    int pc = 0;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct cpu_state : serialisable, owned
 {
     cpu_state();
 
+    std::vector<cpu_stash> stash;
     std::vector<cpu_file> files;
+
+    /*std::vector<cpu_file> files;
     int held_file = -1;
 
     std::vector<register_value> register_states;
     std::vector<instruction> inst;
-    int pc = 0; ///instruction to be executed next
+    int pc = 0; ///instruction to be executed next*/
+
+    std::vector<instruction> inst;
+
+    cpu_stash context;
+
     bool free_running = false;
     std::string last_error;
 

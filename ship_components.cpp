@@ -4702,7 +4702,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                     unblock_cpu_hardware(s, hardware::T_DRIVE);
                 }
 
-                cpu.register_states[(int)registers::TEST].set_int(success);
+                cpu.context.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
@@ -4723,7 +4723,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                     unblock_cpu_hardware(s, hardware::S_DRIVE);
                 }
 
-                cpu.register_states[(int)registers::TEST].set_int(success);
+                cpu.context.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
@@ -4746,7 +4746,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                 unblock_cpu_hardware(s, hardware::S_DRIVE);
             }
 
-            cpu.register_states[(int)registers::TEST].set_int(success);
+            cpu.context.register_states[(int)registers::TEST].set_int(success);
         }
 
 
@@ -4767,7 +4767,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                     unblock_cpu_hardware(s, hardware::W_DRIVE);
                 }
 
-                cpu.register_states[(int)registers::TEST].set_int(success);
+                cpu.context.register_states[(int)registers::TEST].set_int(success);
             }
         }
 
@@ -4790,7 +4790,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                 unblock_cpu_hardware(s, hardware::W_DRIVE);
             }
 
-            cpu.register_states[(int)registers::TEST].set_int(success);
+            cpu.context.register_states[(int)registers::TEST].set_int(success);
         }
 
         cpu.ports[hardware::T_DRIVE].set_int(-1);

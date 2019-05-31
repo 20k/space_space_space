@@ -8,7 +8,7 @@ void code_editor::render(cpu_state& cpu)
 {
     ImGui::Begin("Code Editor");
 
-    int pc_loop = cpu.pc + 1;
+    int pc_loop = cpu.context.pc + 1;
 
     if(cpu.inst.size() == 0)
         pc_loop = 0;
@@ -28,7 +28,7 @@ void code_editor::render(cpu_state& cpu)
     {
         std::string name = registers::rnames[i];
 
-        register_value& val = cpu.register_states[i];
+        register_value& val = cpu.context.register_states[i];
 
         std::string extra = val.as_string();
 
@@ -70,9 +70,9 @@ void code_editor::render(cpu_state& cpu)
 
     if(show_file)
     {
-        if(cpu.held_file != -1 && cpu.held_file >= 0 && cpu.held_file < (int)cpu.files.size())
+        if(cpu.context.held_file != -1 && cpu.context.held_file >= 0 && cpu.context.held_file < (int)cpu.files.size())
         {
-            cpu_file& fle = cpu.files[cpu.held_file];
+            cpu_file& fle = cpu.files[cpu.context.held_file];
 
             //ImGui::Begin((fle.name.as_string() + "###Files").c_str());
 
