@@ -1088,18 +1088,18 @@ int main()
 
     std::atomic_bool term{0};
 
+    #ifndef SERVER_ONLY
     #ifndef CLIENT_ONLY
     #define WITH_SERVER
     #ifdef WITH_SERVER
     std::thread(server_thread, std::ref(term)).detach();
     #endif // WITH_SERVER
     #endif // CLIENT_ONLY
+    #endif // SERVER_ONLY
 
     #ifdef SERVER_ONLY
-    while(1)
-    {
-        Sleep(1000);
-    }
+    server_thread(term);
+    exit(0);
     #endif // SERVER_ONLY
 
     sf::ContextSettings sett;
