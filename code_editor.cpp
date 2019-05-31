@@ -68,11 +68,22 @@ void code_editor::render(cpu_state& cpu)
     ///editor is not too long so should be pretty easy to retrofit
     std::vector<char> test_data;
 
-    if(cpu.held_file != -1 && cpu.held_file >= 0 && cpu.held_file < (int)cpu.files.size() && show_file)
+    if(show_file)
     {
-        cpu_file& fle = cpu.files[cpu.held_file];
+        if(cpu.held_file != -1 && cpu.held_file >= 0 && cpu.held_file < (int)cpu.files.size())
+        {
+            cpu_file& fle = cpu.files[cpu.held_file];
 
-        file_edit.render(fle);
+            ImGui::Begin((fle.name.as_string() + "###Files").c_str());
+
+            file_edit.render(fle);
+        }
+        else
+        {
+            ImGui::Begin("Files###Files");
+        }
+
+        ImGui::End();
     }
 
     ImGui::EndChild();
