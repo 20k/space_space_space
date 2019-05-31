@@ -22,21 +22,21 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::SHIELDS] = make_default("Shields", "SHLD");
     ret[component_type::LASER] = make_default("Laser", "LAS");
     ret[component_type::SENSOR] = make_default("Sensors", "SENS");
-    ret[component_type::COMMS] = make_default("Communications", "COMM");
+    //ret[component_type::COMMS] = make_default("Comms", "COMM");
     ret[component_type::ARMOUR] = make_default("Armour", "ARMR");
-    ret[component_type::LIFE_SUPPORT] = make_default("Life Support", "LS");
+    //ret[component_type::LIFE_SUPPORT] = make_default("Life Support", "LS");
     ret[component_type::RADIATOR] = make_default("Radiator", "RAD");
-    ret[component_type::POWER_GENERATOR] = make_default("Power Generator", "PWR");
-    ret[component_type::CREW] = make_default("Crew", "CRW");
-    ret[component_type::MISSILE_CORE] = make_default("Missile Core", "MCRE");
-    ret[component_type::DESTRUCT] = make_default("Self Destruct", "SDST");
+    ret[component_type::POWER_GENERATOR] = make_default("Power", "PWR");
+    //ret[component_type::CREW] = make_default("Crew", "CRW");
+    ret[component_type::MISSILE_CORE] = make_default("Missile AI", "MCRE");
+    ret[component_type::DESTRUCT] = make_default("Destruct", "SDST");
     ret[component_type::CARGO_STORAGE] = make_default("Cargo", "CRG");
-    ret[component_type::STORAGE_TANK] = make_default("Storage Tank", "STNK");
-    ret[component_type::STORAGE_TANK_HS] = make_default("Storage Tank HS", "STNKH");
+    ret[component_type::STORAGE_TANK] = make_default("Tank", "STNK");
+    ret[component_type::STORAGE_TANK_HS] = make_default("Tank HS", "STNKH");
     ret[component_type::HEAT_BLOCK] = make_default("Heat Block", "HBLK");
     ret[component_type::MATERIAL] = make_default("Material", "MAT", true);
-    ret[component_type::COMPONENT_LAUNCHER] = make_default("Component Launcher", "CLNCH");
-    ret[component_type::MINING_LASER] = make_default("Mining Laser", "MLAS");
+    ret[component_type::COMPONENT_LAUNCHER] = make_default("Launcher", "CLNCH");
+    ret[component_type::MINING_LASER] = make_default("M-Laser", "MLAS");
     ret[component_type::REFINERY] = make_default("Refinery", "REF");
     ret[component_type::FACTORY] = make_default("Factory", "FAC");
     ret[component_type::RADAR] = make_default("Radar", "RAD");
@@ -65,12 +65,12 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::SHIELDS].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::LASER].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::SENSOR].add_composition_ratio({material_info::COPPER}, {1});
-    ret[component_type::COMMS].add_composition_ratio({material_info::COPPER}, {1});
+    //ret[component_type::COMMS].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::ARMOUR].add_composition_ratio({material_info::IRON}, {1});
-    ret[component_type::LIFE_SUPPORT].add_composition_ratio({material_info::COPPER}, {1});
+    //ret[component_type::LIFE_SUPPORT].add_composition_ratio({material_info::COPPER}, {1});
     ret[component_type::RADIATOR].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::POWER_GENERATOR].add_composition_ratio({material_info::COPPER}, {1});
-    ret[component_type::CREW].add_composition_ratio({material_info::IRON}, {1});
+    //ret[component_type::CREW].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::MISSILE_CORE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::DESTRUCT].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::CARGO_STORAGE].add_composition_ratio({material_info::IRON}, {1});
@@ -177,7 +177,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.base_volume = 0.5;
     }
 
-    {
+    /*{
         component_fixed_properties& p = ret[component_type::COMMS];
 
         p.add(component_info::POWER, -1);
@@ -186,21 +186,21 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 0.5;
-    }
+    }*/
 
     {
         component_fixed_properties& p = ret[component_type::ARMOUR];
 
         p.add(component_info::ARMOUR, 0.01, 5);
         p.add(component_info::POWER, -0.2);
-        p.add(component_info::HP, 0, 1);
+        p.add(component_info::HP, 0.1, 1);
         p.set_no_drain_on_full_production();
-        p.set_heat(0.2); ///5 armour modules emit as much heat as 1 regular
+        p.set_heat(1); ///5 armour modules emit as much heat as 1 regular
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 5;
     }
 
-    {
+    /*{
         component_fixed_properties& p = ret[component_type::LIFE_SUPPORT];
 
         p.add(component_info::POWER, -1);
@@ -210,7 +210,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(2);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
-    }
+    }*/
 
     {
         component_fixed_properties& p = ret[component_type::RADIATOR];
@@ -233,7 +233,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.base_volume = 1.5;
     }
 
-    {
+    /*{
         component_fixed_properties& p = ret[component_type::CREW];
 
         p.add(component_info::HP, 0.1, 1);
@@ -244,15 +244,15 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::NO_ACTIVATION;
         p.base_volume = 1;
-    }
+    }*/
 
     {
         component_fixed_properties& p = ret[component_type::MISSILE_CORE];
 
         p.add(component_info::HP, 0.0, 1);
         ///hacky until we have the concept of control instead
-        p.add(component_info::CREW, 0.01, 1);
-        p.add(component_info::CREW, -0.01);
+        //p.add(component_info::CREW, 0.01, 1);
+        //p.add(component_info::CREW, -0.01);
         p.add(component_info::POWER, -1);
         p.add(tag_info::TAG_MISSILE_BEHAVIOUR);
         p.set_heat(1);

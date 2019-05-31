@@ -276,6 +276,7 @@ void ImGuiX::PlotMultiEx(
 
 bool ImGuiX::SliderFloat(const std::string& label, float* v, float v_min, float v_max, std::string display_format)
 {
+    //bool ret = ImGui::VSliderFloat(label.c_str(), ImVec2(20, 40), v, v_min, v_max, display_format.c_str());
     bool ret = ImGui::SliderFloat(label.c_str(), v, v_min, v_max, display_format.c_str());
 
     if(v_min == 0)
