@@ -252,7 +252,7 @@ struct heatable_entity : entity, heatable
 
 struct alt_radar_field
 {
-    uint32_t iteration_count = 0;
+    uint32_t iteration_count = 5000;
 
     vec2f target_dim;
 

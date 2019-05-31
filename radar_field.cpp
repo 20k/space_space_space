@@ -480,6 +480,10 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
 
+        std::sort(sun_packets.begin(), sun_packets.end(), [](alt_frequency_packet& p1, alt_frequency_packet& p2)
+        {
+            return p1.start_iteration < p2.start_iteration;
+        });
 
         int cidx = 0;
 
@@ -500,7 +504,15 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         ///0 is furthest, end is closest packet
 
-        bool already_collided = false;
+        std::vector<int> already_collided;
+        already_collided.resize(sun_packets.size());
+
+        std::set<int> mega_start_its;
+
+        for(auto& i : mega_reflective_packets)
+        {
+            mega_start_its.insert(i.start_iteration);
+        }
 
         #if 1
         for(int i=0; i < (int)sun_packets.size();)
@@ -567,7 +579,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             ///miss, they're closer than us
             if(len_sq < current_radius*current_radius)
             {
-                already_collided = false;
                 i++;
                 continue;
             }
@@ -584,16 +595,31 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                 if(inf.collide)
                     next_subtractive[packet.id].push_back(inf.collide.value());
 
-                if(inf.reflect && !already_collided)
+                if(inf.reflect)
                 {
                     alt_frequency_packet& to_reflect = inf.reflect.value();
 
-                    if(!already_collided)
-                    {
-                        already_collided = true;
+                    float old_length = (collide->r.position - packet.origin).length();
+                    float new_length = (absolute_position - sun_position).length();
 
+                    ///new_length + sol * (tick_diff) = old_length
+                    ///new_length - old_length = sol * (tick_diff)
+                    ///tick_diff = (new_length - old_length) / sol
+
+                    float diff_length = new_length - old_length;
+
+                    float extra_ticks = diff_length / speed_of_light_per_tick;
+                    int real_extra_ticks = ceil(extra_ticks);
+
+                    int real_start_tick = packet.start_iteration - real_extra_ticks;
+
+                    if(mega_start_its.find(real_start_tick) == mega_start_its.end())
+                    {
                         to_reflect.origin = (absolute_position - sun_position) + absolute_position;
+                        to_reflect.start_iteration = real_start_tick;
+
                         next_mega_reflect.push_back(to_reflect);
+                        mega_start_its.insert(to_reflect.start_iteration);
                     }
                     else
                     {
@@ -623,7 +649,16 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         //std::cout << "sun clock " << ms << std::endl;
 
+        //std::cout << "MEGA REFLECTIVE " << mega_reflective_packets.size() << std::endl;
+
         ///no guarantee that two different packets don't exist with the same start iteration
+
+        ///ok so, lots of reflections will have the same start iterations
+        ///because they'll hit asteroids at different times
+        ///additionally, need to adjust packet iteration count because the origin is wrong
+        ///and the small details do matter
+        ///so basically need to handle adjusting packet iterations, and then need to handle
+        ///multiple packets overlapping (use big vector to check if we've evaluated a packet already?)
         for(int i=0; i < (int)mega_reflective_packets.size();)
         {
             alt_frequency_packet& packet = mega_reflective_packets[i];
