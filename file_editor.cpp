@@ -242,6 +242,8 @@ void file_editor::render(cpu_file& file)
 
     render_reg(file.data[file.file_pointer], DataRenderWidth, true, isHex);
 
+    ImGui::Separator();
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
