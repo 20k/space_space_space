@@ -1195,10 +1195,29 @@ void cpu_state::step()
 
         break;
     case CALL:
-        stash.push_back(context);
-        context = cpu_stash();
-        context.pc = get_custom_instr_pc(L(next[0]).label) + 1;
-        update_length_register();
+        {
+            std::string name = L(next[0]).label;
+
+            for(custom_instruction& cst : custom)
+            {
+                if(cst.name == name)
+                {
+                    int my_args = next.num_args();
+
+                    if(my_args - 1 != (int)cst.args.size())
+                    {
+                        throw std::runtime_error("Instruction " + name + " expects " + std::to_string(cst.args.size()) + " args, got " + std::to_string(my_args - 1));
+                    }
+                }
+            }
+
+            stash.push_back(context);
+            context = cpu_stash();
+            context.pc = get_custom_instr_pc(name) + 1;
+
+            update_length_register();
+        }
+
         return;
         break;
     case DATA:

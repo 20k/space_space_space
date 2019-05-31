@@ -304,6 +304,8 @@ struct cpu_stash : serialisable
     std::vector<register_value> register_states;
     int pc = 0;
 
+    std::vector<register_value*> called_with;
+
     cpu_stash();
 
     SERIALISE_SIGNATURE();
