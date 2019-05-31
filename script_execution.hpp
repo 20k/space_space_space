@@ -338,6 +338,7 @@ struct cpu_state : serialisable, owned
     void upload_program_rpc(std::string str);
 
     void update_length_register();
+    void update_f_register();
 
     std::optional<cpu_file*> get_create_capability_file(const std::string& filename);
 };

@@ -799,10 +799,7 @@ struct eof_helper
 {
     cpu_state& st;
 
-    eof_helper(cpu_state& in) : st(in)
-    {
-
-    }
+    eof_helper(cpu_state& in) : st(in) {}
 
     ~eof_helper()
     {
@@ -813,6 +810,18 @@ struct eof_helper
                 st.update_length_register();
             }
         }
+    }
+};
+
+struct f_register_helper
+{
+    cpu_state& st;
+
+    f_register_helper(cpu_state& in) : st(in) {}
+
+    ~f_register_helper()
+    {
+        st.update_f_register();
     }
 };
 
@@ -840,6 +849,7 @@ void cpu_state::step()
 
     ///ensure that whatever happens, our file has an eof at the end
     eof_helper eof_help(*this);
+    f_register_helper f_help(*this);
 
     switch(next.type)
     {
@@ -1064,6 +1074,9 @@ void cpu_state::step()
         break;
 
     case DROP:
+        if(held_file == -1)
+            throw std::runtime_error("Not holding file [DROP]");
+
         drop_file();
         update_length_register();
         break;
@@ -1196,6 +1209,22 @@ void cpu_state::update_length_register()
     }
 
     register_states[(int)registers::FILE_LENGTH].set_int(len);
+}
+
+void cpu_state::update_f_register()
+{
+    if(held_file == -1)
+    {
+        register_states[(int)registers::FILE].set_int(0);
+    }
+    else
+    {
+        if(files[held_file].file_pointer >= (int)files[held_file].data.size())
+            register_states[(int)registers::FILE].set_eof();
+        else
+            register_states[(int)registers::FILE] = files[held_file].data[files[held_file].file_pointer];
+    }
+
 }
 
 void cpu_state::debug_state()
