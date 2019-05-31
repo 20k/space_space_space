@@ -74,16 +74,16 @@ void code_editor::render(cpu_state& cpu)
         {
             cpu_file& fle = cpu.files[cpu.held_file];
 
-            ImGui::Begin((fle.name.as_string() + "###Files").c_str());
+            //ImGui::Begin((fle.name.as_string() + "###Files").c_str());
 
             file_edit.render(fle);
         }
         else
         {
-            ImGui::Begin("Files###Files");
+            //ImGui::Begin("Files###Files");
         }
 
-        ImGui::End();
+        //ImGui::End();
     }
 
     ImGui::EndChild();

@@ -227,7 +227,7 @@ void file_editor::render(cpu_file& file)
 
     float footer_height = 0;
 
-    ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove);
+    ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false);
 
     std::string name_str = file.name.as_string();
 
