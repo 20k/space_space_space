@@ -1722,12 +1722,17 @@ int main()
 
                 vec2f to_poi = lab.position - ship_current_position;
 
-                client_renderable ren;
-                ren.init_rectangular({(to_poi.length()/4) * 0.9, 1});
-                ren.rotation = to_poi.angle();
+                float to_len = to_poi.length()/4 - 13;
 
-                ren.position = (to_poi / 2.f) + ship_current_position;
-                ren.render(cam, window);
+                if(to_len > 0)
+                {
+                    client_renderable ren;
+                    ren.init_rectangular({to_len, 1});
+                    ren.rotation = to_poi.angle();
+
+                    ren.position = (to_poi / 2.f) + ship_current_position;
+                    ren.render(cam, window);
+                }
             }
         }
 
