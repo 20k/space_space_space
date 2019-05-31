@@ -98,7 +98,7 @@ void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, se
     DO_SERIALISE(offset);
 }
 
-alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
+alt_frequency_packet transform_space(const alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
 {
     alt_frequency_packet ret = in;
 
@@ -130,13 +130,63 @@ alt_frequency_packet transform_space(alt_frequency_packet& in, room& r, alt_rada
     return ret;
 }
 
+void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
+{
+    for(const alt_frequency_packet& pack : pack)
+    {
+        if(me.imported_waves.find(pack.id) != me.imported_waves.end())
+            continue;
+
+        alt_frequency_packet fixed_pack = transform_space(pack, me, theirs);
+
+        float current_radius = (me.field->iteration_count - fixed_pack.start_iteration) * me.field->speed_of_light_per_tick;
+        float next_radius = current_radius + me.field->speed_of_light_per_tick;
+
+        if(!me.entity_manage->collision.intersects(fixed_pack.origin, current_radius, next_radius, fixed_pack.precalculated_start_angle, fixed_pack.restrict_angle, fixed_pack.left_restrict, fixed_pack.right_restrict))
+            continue;
+
+        me.imported_waves[pack.id] = true;
+
+        if(pack.emitted_by == theirs.sun_id && pack.reflected_by == -1)
+            me.field->sun_packets.push_back(fixed_pack);
+        else
+            me.field->packets.push_back(fixed_pack);
+
+        //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
+
+        auto subtr_it = theirs.subtractive_packets.find(pack.id);
+
+        if(subtr_it != theirs.subtractive_packets.end())
+        {
+            auto vec = subtr_it->second;
+
+            for(auto& i : vec)
+            {
+                i = transform_space(i, me, theirs);
+            }
+
+            me.field->subtractive_packets[pack.id] = vec;
+        }
+
+        auto f_ignore = theirs.ignore_map.find(pack.id);
+
+        if(f_ignore != theirs.ignore_map.end())
+        {
+            me.field->ignore_map[pack.id] = f_ignore->second;
+        }
+    }
+}
+
 void room::import_radio_waves_from(alt_radar_field& theirs)
 {
     //sf::Clock clk;
 
     float lrad = entity_manage->collision.half_dim.largest_elem();
 
-    for(alt_frequency_packet& pack : theirs.packets)
+    import_radio_raw(*this, theirs.packets, theirs);
+    import_radio_raw(*this, theirs.sun_packets, theirs);
+
+    /*for(alt_frequency_packet& pack : theirs.packets)
     {
         if(imported_waves.find(pack.id) != imported_waves.end())
             continue;
@@ -174,7 +224,7 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
         {
             field->ignore_map[pack.id] = f_ignore->second;
         }
-    }
+    }*/
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }

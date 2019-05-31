@@ -114,21 +114,24 @@ alt_radar_field::alt_radar_field(vec2f in)
     target_dim = in;
 }
 
-void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
+/*void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
     freq.id = alt_frequency_packet::gid++;
     freq.start_iteration = iteration_count;
 
     packets.push_back(freq);
-}
+}*/
 
 void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
     freq.start_iteration = iteration_count;
 
-    packets.push_back(freq);
+    if(freq.emitted_by == sun_id && freq.reflected_by == -1)
+        sun_packets.push_back(freq);
+    else
+        packets.push_back(freq);
 }
 
 /*void alt_radar_field::add_simple_collideable(heatable_entity* en)

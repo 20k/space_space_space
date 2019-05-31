@@ -260,6 +260,7 @@ struct alt_radar_field
 
     double time_between_ticks_s = 16/1000.;
 
+    std::vector<alt_frequency_packet> sun_packets;
     std::vector<alt_frequency_packet> packets;
     //std::vector<alt_frequency_packet> subtractive_packets;
     std::map<uint32_t, std::vector<alt_frequency_packet>> subtractive_packets;
@@ -286,7 +287,7 @@ struct alt_radar_field
     std::optional<reflect_info>
     test_reflect_from(const alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive);
 
-    void add_packet(alt_frequency_packet freq, vec2f pos);
+    //void add_packet(alt_frequency_packet freq, vec2f pos);
     void add_packet_raw(alt_frequency_packet freq, vec2f pos);
     //void add_simple_collideable(heatable_entity* en);
 
