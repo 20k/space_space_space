@@ -34,6 +34,7 @@ struct file_editor
     int             PreviewEndianess;
 
     int             DataRenderWidth = 5;
+    bool            isHex = true;
 
     file_editor()
     {

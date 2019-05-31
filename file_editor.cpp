@@ -54,9 +54,19 @@ std::string int_to_hex(int val, int width = 2)
     return stream.str();
 }
 
-std::string address_to_str(int in, int width = 3)
+std::string int_to_str(int val, int width = 2)
 {
-    return "0x" + int_to_hex(in, width);
+    std::stringstream stream;
+    stream << std::setfill('0') << std::setw(width) << val;
+    return stream.str();
+}
+
+std::string address_to_str(int in, int width, bool is_hex)
+{
+    if(is_hex)
+        return "0x" + int_to_hex(in, width);
+    else
+        return int_to_str(in, width);
 }
 
 std::string get_fixed_string(std::string in, int width)
@@ -74,7 +84,7 @@ std::string get_fixed_string(std::string in, int width)
     return in;
 }
 
-std::string format_reg(register_value& reg, int width, bool full, bool& gray_leading_0)
+std::string format_reg(register_value& reg, int width, bool full, bool& gray_leading_0, bool is_hex)
 {
     gray_leading_0 = reg.is_int();
 
@@ -90,15 +100,30 @@ std::string format_reg(register_value& reg, int width, bool full, bool& gray_lea
         else
             ImGui::Text(format_byte_space, b);*/
 
-        int32_t max_val = pow(2, (4 * width) - 1);
+        if(is_hex)
+        {
+            int32_t max_val = pow(2, (4 * width) - 1);
 
-        if(b > max_val)
-            return "2BIG!";
+            if(b > max_val)
+                return "2BIG!";
 
-        if(b < -max_val)
-            return "2SML!";
+            if(b < -max_val)
+                return "2SML!";
 
-        return int_to_hex(b, width);
+            return int_to_hex(b, width);
+        }
+        else
+        {
+            int32_t max_val = pow(10, width) - 1;
+
+            if(b > max_val)
+                return "2BIG!";
+
+            if(b < -max_val)
+                return "2SML!";
+
+            return int_to_str(b, width);
+        }
     }
 
     if(reg.is_symbol())
@@ -133,10 +158,10 @@ bool all_zero(const std::string& in)
     return true;
 }
 
-void render_reg(register_value& reg, int width, bool full = false)
+void render_reg(register_value& reg, int width, bool full, bool is_hex)
 {
     bool gray_leading = false;
-    std::string vstr = format_reg(reg, width, full, gray_leading);
+    std::string vstr = format_reg(reg, width, full, gray_leading, is_hex);
 
     if(gray_leading)
     {
@@ -208,14 +233,14 @@ void file_editor::render(cpu_file& file)
 
     ImGui::Text(name_str.c_str());
 
-    ImGui::Text(address_to_str(file.file_pointer, s.AddrDigitsCount).c_str());
+    ImGui::Text(address_to_str(file.file_pointer, s.AddrDigitsCount, isHex).c_str());
 
     float byte_pos_x = s.PosHexStart + s.HexCellWidth * 0;
     if (OptMidColsCount > 0)
         byte_pos_x += (float)(0 / OptMidColsCount) * s.SpacingBetweenMidCols;
     ImGui::SameLine(byte_pos_x);
 
-    render_reg(file.data[file.file_pointer], DataRenderWidth, true);
+    render_reg(file.data[file.file_pointer], DataRenderWidth, true, isHex);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -272,7 +297,11 @@ void file_editor::render(cpu_file& file)
     for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
     {
         size_t addr = (size_t)(line_i * Cols);
-        ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr + addr);
+        //ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr + addr);
+
+        std::string address_str = address_to_str(base_display_addr + addr, s.AddrDigitsCount, isHex);
+
+        ImGui::Text(address_str.c_str());
 
         // Draw Hexadecimal
         for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
@@ -353,11 +382,11 @@ void file_editor::render(cpu_file& file)
                     ImGui::Text("@@");
                 }*/
 
-                render_reg(val, DataRenderWidth);
+                render_reg(val, DataRenderWidth, false, isHex);
 
                 if(ImGui::IsItemHovered())
                 {
-                    std::string str = address_to_str(addr, s.AddrDigitsCount) + ": " + val.as_string();
+                    std::string str = address_to_str(addr, s.AddrDigitsCount, isHex) + ": " + val.as_string();
 
                     ImGui::SetTooltip(str.c_str());
                 }
@@ -372,5 +401,10 @@ void file_editor::render(cpu_file& file)
     }
     clipper.End();
     ImGui::PopStyleVar(2);
+
+    ImGui::Separator();
+
+    ImGui::Checkbox("Hex?", &isHex);
+
     ImGui::EndChild();
 }
