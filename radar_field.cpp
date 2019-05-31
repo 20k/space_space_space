@@ -469,25 +469,36 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     ///6000 packets
     ///only 200 ever hit anything
 
+    #ifdef MEGA
     std::vector<alt_frequency_packet> next_mega_reflect;
+    #endif // MEGA
 
+    #ifdef MEGA
     if(sun_id != -1 && em.entities.size() > 0 && use_super_reflection)
+    #else
+    if(sun_id != -1 && em.entities.size() > 0 && sun_packets.size() > 0 && false)
+    #endif // MEGA
     {
+        sf::Clock sun_clock;
+
+        #ifdef MEGA
         auto sorted_entities = em.entities;
 
         std::sort(sorted_entities.begin(), sorted_entities.end(), [&](entity* e1, entity* e2)
         {
             return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
+        #endif // MEGA
 
-        std::sort(sun_packets.begin(), sun_packets.end(), [](alt_frequency_packet& p1, alt_frequency_packet& p2)
+        if(use_super_reflection)
         {
-            return p1.start_iteration < p2.start_iteration;
-        });
+            std::sort(sun_packets.begin(), sun_packets.end(), [](alt_frequency_packet& p1, alt_frequency_packet& p2)
+            {
+                return p1.start_iteration < p2.start_iteration;
+            });
+        }
 
         int cidx = 0;
-
-        sf::Clock sun_clock;
 
         ///you know i might be able to binary search through this...
         ///implement the simple 1 pass system first then investigate
@@ -504,6 +515,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         ///0 is furthest, end is closest packet
 
+        #ifdef MEGA
         std::vector<int> already_collided;
         already_collided.resize(sun_packets.size());
 
@@ -513,8 +525,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         {
             mega_start_its.insert(i.start_iteration);
         }
+        #endif // MEGA
 
-        #if 1
+        #if 0
         for(int i=0; i < (int)sun_packets.size();)
         {
             alt_frequency_packet& packet = sun_packets[i];
@@ -613,6 +626,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                     int real_start_tick = packet.start_iteration - real_extra_ticks;
 
+                    #ifdef MEGA
                     if(mega_start_its.find(real_start_tick) == mega_start_its.end())
                     {
                         to_reflect.origin = (absolute_position - sun_position) + absolute_position;
@@ -622,6 +636,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                         mega_start_its.insert(to_reflect.start_iteration);
                     }
                     else
+                    #endif // MEGA
                     {
                         speculative_packets.push_back(to_reflect);
                     }
@@ -633,10 +648,89 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
         #endif // 0
 
-        cidx = 0;
+        sf::Clock rclock;
+
+        alt_frequency_packet& first = sun_packets.front();
+        alt_frequency_packet& last = sun_packets.back();
+
+        float maximum_dist = (iteration_count - first.start_iteration) * speed_of_light_per_tick + speed_of_light_per_tick;
+        float minimum_dist = (iteration_count - last.start_iteration) * speed_of_light_per_tick;
+
+        int furthest_iterator = first.start_iteration;
+        int closest_iterator = last.start_iteration;
+
+        ///big number
+        int furthest_iterator_travelled = iteration_count - first.start_iteration;
+        ///small number
+        int closest_iterator_travelled = iteration_count - last.start_iteration;
+
+        ///pretend its perfect for the moment
+        for(entity* e : em.entities)
+        {
+             if(!e->is_heat)
+                continue;
+
+            if(!e->is_collided_with)
+                continue;
+
+            heatable_entity* en = static_cast<heatable_entity*>(e);
+
+            float len_sq = (e->r.position - sun_position).squared_length();
+
+            if(len_sq < minimum_dist * minimum_dist)
+                continue;
+
+            if(len_sq >= maximum_dist * maximum_dist)
+                continue;
+
+            float len = sqrtf(len_sq);
+
+            ///for something to collide must in this range
+            ///could probably use this to speed up other stuff
+            int approx_travelled_iterator_close = floor(len / speed_of_light_per_tick);
+            int approx_travelled_iterator_far = floor((len + speed_of_light_per_tick) / speed_of_light_per_tick);
+
+            //int min_real_iterator = approx_iterator_close - closest_iterator;
+            //int max_real_iterator = 1 + approx_iterator_far - closest_iterator;
+
+            ///APPROXIMATE INDEX OF WHERE TO START LOOKING RELATIVE TO END
+            int min_real = -1 + approx_travelled_iterator_close - closest_iterator_travelled;
+            int max_real = 1 + approx_travelled_iterator_far - closest_iterator_travelled;
+
+            //std::cout << "min real " << min_real << " max real " << max_real << std::endl;
+
+            for(int kk=min_real; kk <= max_real; kk++)
+            {
+                int idx = (int)sun_packets.size() - 1 - kk;
+
+                if(idx < 0 || idx >= (int)sun_packets.size())
+                    continue;
+
+                alt_frequency_packet& pack = sun_packets[idx];
+
+                std::optional<reflect_info> reflected = test_reflect_from(pack, *en, subtractive_packets);
+
+                if(reflected)
+                {
+                    reflect_info inf = reflected.value();
+
+                    if(inf.collide)
+                        next_subtractive[pack.id].push_back(inf.collide.value());
+
+                    if(inf.reflect)
+                        speculative_packets.push_back(inf.reflect.value());
+                }
+            }
+        }
 
         double ms = sun_clock.getElapsedTime().asMicroseconds() / 1000.;
+        double ms2 = rclock.getElapsedTime().asMicroseconds() / 1000.;
 
+        //std::cout << "PMS " << ms << std::endl;
+        //std::cout << "PMS2 " << ms2 << std::endl;
+
+        #ifdef MEGA
+        cidx = 0;
         std::sort(sorted_entities.begin(), sorted_entities.end(), [&](entity* e1, entity* e2)
         {
             return (e1->r.position - absolute_position).squared_length() > (e2->r.position - absolute_position).squared_length();
@@ -750,10 +844,13 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             ///check next entity
             cidx++;
         }
+        #endif // MEGA
     }
 
+    #ifdef MEGA
     mega_reflective_packets.insert(mega_reflective_packets.end(), next_mega_reflect.begin(), next_mega_reflect.end());
     next_mega_reflect.clear();
+    #endif // MEGA
 
     for(alt_frequency_packet& packet : packets)
     {
@@ -918,7 +1015,10 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
     clean_old_packets(*this, packets, subtractive_packets);
     clean_old_packets(*this, sun_packets, subtractive_packets);
+
+    #ifdef MEGA
     clean_old_packets(*this, mega_reflective_packets, subtractive_packets);
+    #endif // MEGA
 
     //std::cout << "ipackets " << icollide << std::endl;
 

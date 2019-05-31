@@ -558,7 +558,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        //#define CCC
+        #define CCC
         #ifdef CCC
         #ifdef SERVER_VIEW
         cam.position.x() += key.isKeyPressed(sf::Keyboard::Numpad6)*10;
