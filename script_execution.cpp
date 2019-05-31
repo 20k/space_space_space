@@ -1037,6 +1037,12 @@ void cpu_state::step()
         {
             if(files[kk].name == to_grab)
             {
+                for(int st = 0; st < (int)stash.size(); st++)
+                {
+                    if(stash[st].held_file == kk)
+                        throw std::runtime_error("File already held by offset " + std::to_string(st) + " of " + std::to_string(stash.size()));
+                }
+
                 context.held_file = kk;
                 break;
             }
