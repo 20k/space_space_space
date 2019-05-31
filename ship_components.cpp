@@ -3782,9 +3782,9 @@ void ship::show_power()
 
             std::string str = "##t" + std::to_string(c._pid);
 
-            //ImGui::ProgressBar(hp/100, ImVec2(80, 20), name.c_str());
+            ImGuiX::ProgressBarPseudo(hp/100, ImVec2(80, 20), name);
 
-            ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
+            //ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
 
             ImGui::PopItemWidth();
 

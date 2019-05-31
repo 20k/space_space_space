@@ -22,6 +22,8 @@ namespace ImGuiX
 
     bool SliderFloat(const std::string& label, float* v, float v_min, float v_max, std::string display_format = "%.3f");
     bool VSliderFloat(const std::string& label, float* v, float v_min, float v_max, std::string display_format = "%.3f");
+
+    void ProgressBarPseudo(float fraction, const ImVec2& size_arg, const std::string& overlay);
 }
 
 #endif // IMGUIX_H_INCLUDED
