@@ -330,6 +330,9 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
 
     r->field->iteration_count = field->iteration_count;
 
+    r->field->use_super_reflection = true;
+    //r->field->absolute_position = where;
+
     r->name = "Dead Space";
     return r;
 }
@@ -546,6 +549,8 @@ void room::tick(double dt_s)
 
     field->finite_centre = entity_manage->collision.pos;
 
+    field->absolute_position = entity_manage->collision.pos;
+
     //std::cout << "FCENTRE " << field->finite_centre << " RAD " << field->finite_bound << std::endl;
 
     //std::cout << "finite bound " << field->finite_bound << std::endl;
@@ -562,6 +567,7 @@ void room::tick(double dt_s)
     }*/
 
     //std::cout << "fdnum " << field->packets.size() << std::endl;
+    //std::cout << "SUNnum " << field->sun_packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)

@@ -309,6 +309,8 @@ struct alt_radar_field
     uint64_t get_sun_id();
     uint64_t sun_id = -1;
     vec2f sun_position;
+    vec2f absolute_position;///we exist at {0,0} local? but poi can move effective centre even if the coordinate system remains
+    bool use_super_reflection = false;
     int space = 0;
 };
 
