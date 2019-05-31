@@ -15,6 +15,7 @@
 #include "playspace.hpp"
 #include "colours.hpp"
 #include "script_execution.hpp"
+#include "ui_util.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
@@ -3774,11 +3775,18 @@ void ship::show_power()
             ImVec4 ccol = im4_mix(default_slider_col, red_col, 1 - c.get_hp_frac());
 
             ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
-            ImVec4 rtext_col = im4_mix(ImGui::GetLinearStyleColorVec4(ImGuiCol_SliderGrab), red_col, 1 - c.get_hp_frac());
+            ImVec4 rtext_col = im4_mix(ImGui::GetStyleColorVec4(ImGuiCol_SliderGrab), red_col, 1 - c.get_hp_frac());
+
+            if((c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE) && c.activation_level > 0)
+            {
+                bool success = (c.base_id == component_type::S_DRIVE && has_s_power) || (c.base_id == component_type::W_DRIVE && has_w_power);
+
+                text_col = success ? colours::pastel_green : colours::pastel_red;
+            }
 
             ImGui::PushLinearStyleColor(ImGuiCol_Text, text_col);
-            //ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
 
+            //ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
             //text_col.w = 40. / 255.;
 
             rtext_col.w = 0.5;
@@ -3839,7 +3847,6 @@ void ship::show_power()
             ImGui::PopStyleColor(2);
         }
 
-        ImGui::SameLine();
 
         const component_fixed_properties& fixed_properties = c.get_fixed_props();
 
@@ -3847,6 +3854,8 @@ void ship::show_power()
         {
             if(fixed_properties.activation_type == component_info::SLIDER_ACTIVATION)
             {
+                ImGui::SameLine();
+
                 ImGui::PushItemWidth(80);
 
                 changed = ImGuiX::SliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
@@ -3856,6 +3865,8 @@ void ship::show_power()
 
             if(fixed_properties.activation_type == component_info::TOGGLE_ACTIVATION)
             {
+                ImGui::SameLine();
+
                 bool enabled = as_percentage == 100;
 
                 changed = ImGui::Checkbox(("##" + std::to_string(c._pid)).c_str(), &enabled);
@@ -3870,20 +3881,22 @@ void ship::show_power()
             }
         }
 
-        ImGui::SameLine();
+        //ImGui::SameLine();
 
         ///render name
         {
             if(c.has_tag(tag_info::TAG_FACTORY))
             {
-                if(ImGui::Button(name.c_str()))
+                ImGui::SameLine();
+
+                if(ImGuiX::SimpleButton("(Open)"))
                 {
                     c.factory_view_open = !c.factory_view_open;
                 }
             }
             else
             {
-                if((c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE) && c.activation_level > 0)
+                /*if((c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE) && c.activation_level > 0)
                 {
                     bool success = (c.base_id == component_type::S_DRIVE && has_s_power) || (c.base_id == component_type::W_DRIVE && has_w_power);
 
@@ -3893,7 +3906,7 @@ void ship::show_power()
                         ImGui::TextColored(colours::pastel_red, name.c_str());
                 }
                 else
-                    ImGui::Text(name.c_str());
+                    ImGui::Text(name.c_str());*/
             }
         }
         #endif // HORIZONTAL
