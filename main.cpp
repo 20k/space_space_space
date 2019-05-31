@@ -1095,6 +1095,13 @@ int main()
     #endif // WITH_SERVER
     #endif // CLIENT_ONLY
 
+    #ifdef SERVER_ONLY
+    while(1)
+    {
+        Sleep(1000);
+    }
+    #endif // SERVER_ONLY
+
     sf::ContextSettings sett;
     sett.antialiasingLevel = 8;
     sett.sRgbCapable = true;

@@ -60,6 +60,39 @@
 					<Add option="-s" />
 				</Linker>
 			</Target>
+			<Target title="ServerOnly">
+				<Option output="bin/ServerOnly/space_space_space" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ServerOnly/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O3" />
+					<Add option="-march=nehalem" />
+					<Add option="-ffast-math" />
+					<Add option="-DSERVER_ONLY" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="ServerOnlyProfile">
+				<Option output="bin/ServerOnlyProfile/space_space_space" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ServerOnlyProfile/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-Og" />
+					<Add option="-g" />
+					<Add option="-march=nehalem" />
+					<Add option="-ffast-math" />
+					<Add option="-DSERVER_ONLY" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wextra" />
