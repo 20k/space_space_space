@@ -500,6 +500,8 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         ///0 is furthest, end is closest packet
 
+        bool already_collided = false;
+
         #if 1
         for(int i=0; i < (int)sun_packets.size();)
         {
@@ -565,6 +567,131 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             ///miss, they're closer than us
             if(len_sq < current_radius*current_radius)
             {
+                already_collided = false;
+                i++;
+                continue;
+            }
+
+            heatable_entity* en = static_cast<heatable_entity*>(collide);
+
+            ///rough hit
+            std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
+
+            if(reflected)
+            {
+                reflect_info inf = reflected.value();
+
+                if(inf.collide)
+                    next_subtractive[packet.id].push_back(inf.collide.value());
+
+                if(inf.reflect && !already_collided)
+                {
+                    alt_frequency_packet& to_reflect = inf.reflect.value();
+
+                    if(!already_collided)
+                    {
+                        already_collided = true;
+
+                        to_reflect.origin = (absolute_position - sun_position) + absolute_position;
+                        next_mega_reflect.push_back(to_reflect);
+                    }
+                    else
+                    {
+                        speculative_packets.push_back(to_reflect);
+                    }
+                }
+            }
+
+            ///check next entity
+            cidx++;
+        }
+        #endif // 0
+
+        cidx = 0;
+
+        double ms = sun_clock.getElapsedTime().asMicroseconds() / 1000.;
+
+        std::sort(sorted_entities.begin(), sorted_entities.end(), [&](entity* e1, entity* e2)
+        {
+            return (e1->r.position - absolute_position).squared_length() > (e2->r.position - absolute_position).squared_length();
+        });
+
+        std::sort(mega_reflective_packets.begin(), mega_reflective_packets.end(), [](alt_frequency_packet& p1, alt_frequency_packet& p2)
+        {
+            return p1.start_iteration < p2.start_iteration;
+        });
+
+        //std::cout << "sun clock " << ms << std::endl;
+
+        ///no guarantee that two different packets don't exist with the same start iteration
+        for(int i=0; i < (int)mega_reflective_packets.size();)
+        {
+            alt_frequency_packet& packet = mega_reflective_packets[i];
+
+            if(i > 0)
+            {
+                if(mega_reflective_packets[i].start_iteration <= mega_reflective_packets[i-1].start_iteration)
+                {
+                    std::cout << "2WTF " << mega_reflective_packets[i].start_iteration << " SEC " << mega_reflective_packets[i-1].start_iteration << std::endl;
+                    continue;
+                }
+            }
+
+            if(cidx >= sorted_entities.size())
+                break;
+
+            entity* collide = sorted_entities[cidx];
+
+            if(!collide->is_heat)
+            {
+                cidx++;
+                continue;
+            }
+
+            if(!collide->is_collided_with)
+            {
+                cidx++;
+                continue;
+            }
+
+            float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
+            float next_radius = current_radius + speed_of_light_per_tick;
+
+            ///now
+            ///packet origin is actually
+            //vec2f hacky_packet_origin = (absolute_position - sun_position) + absolute_position;
+            vec2f relative_pos = collide->r.position - packet.origin;
+
+            float len_sq = relative_pos.squared_length();
+
+            ///miss, they're further away than us
+            if(len_sq > next_radius*next_radius)
+            {
+                /*if(i != 0)
+                {
+
+                    float last_cur = (iteration_count - sun_packets[i - 1].start_iteration) * speed_of_light_per_tick;
+                    float last_next = last_cur + speed_of_light_per_tick;
+
+                    std::cout << "PACK ORIGIN " << packet.origin << " real " << sun_position << std::endl;
+
+                    std::cout << "i " << i << " mine " << next_radius << " last " << last_cur << " last next " << last_next << " len " << sqrtf(len_sq) << " CIDX " << cidx << std::endl;
+                }*/
+
+                ///no longer a valid check because we no longer represent a contiguous space
+                //assert(i == 0);
+
+                cidx++;
+
+                if(cidx >= sorted_entities.size())
+                    break;
+
+                continue;
+            }
+
+            ///miss, they're closer than us
+            if(len_sq < current_radius*current_radius)
+            {
                 i++;
                 continue;
             }
@@ -582,24 +709,11 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                     next_subtractive[packet.id].push_back(inf.collide.value());
 
                 if(inf.reflect)
-                {
-                    alt_frequency_packet& to_reflect = inf.reflect.value();
-                    next_mega_reflect.push_back(to_reflect);
-                }
+                    speculative_packets.push_back(inf.reflect.value());
             }
 
             ///check next entity
             cidx++;
-        }
-        #endif // 0
-
-        double ms = sun_clock.getElapsedTime().asMicroseconds() / 1000.;
-
-        //std::cout << "sun clock " << ms << std::endl;
-
-        for(int i=0; i < (int)mega_reflective_packets.size(); i++)
-        {
-
         }
     }
 
@@ -692,11 +806,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                             heatable_entity* en = static_cast<heatable_entity*>(collide);
 
-                            //float reflect_percentage = en->reflectivity;
-
-                            //if(!ignore_map[packet.id][en->id].should_ignore())
-                            //    en->latent_heat += get_intensity_at_of(en->r.position, packet, subtractive_packets) * (1 - reflect_percentage);
-
                             std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
 
                             if(reflected)
@@ -774,6 +883,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
     clean_old_packets(*this, packets, subtractive_packets);
     clean_old_packets(*this, sun_packets, subtractive_packets);
+    clean_old_packets(*this, mega_reflective_packets, subtractive_packets);
 
     //std::cout << "ipackets " << icollide << std::endl;
 
