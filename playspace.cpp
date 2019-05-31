@@ -149,7 +149,7 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
 
         me.imported_waves[pack.id] = true;
 
-        if(pack.emitted_by == theirs.sun_id && pack.reflected_by == -1)
+        if(pack.emitted_by == theirs.sun_id && pack.reflected_by == -1 && me.field->use_super_reflection)
         {
             me.field->sun_packets.push_back(fixed_pack);
             sort_sun = true;

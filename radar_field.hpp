@@ -258,6 +258,7 @@ struct alt_radar_field
 
     double time_between_ticks_s = 16/1000.;
 
+    std::vector<alt_frequency_packet> mega_reflective_packets; ///i'm tired ok
     std::vector<alt_frequency_packet> sun_packets;
     std::vector<alt_frequency_packet> packets;
     //std::vector<alt_frequency_packet> subtractive_packets;

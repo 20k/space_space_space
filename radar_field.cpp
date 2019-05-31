@@ -128,7 +128,7 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
     freq.origin = pos;
     freq.start_iteration = iteration_count;
 
-    if(freq.emitted_by == sun_id && freq.reflected_by == -1)
+    if(freq.emitted_by == sun_id && freq.reflected_by == -1 && use_super_reflection)
         sun_packets.push_back(freq);
     else
         packets.push_back(freq);
@@ -459,40 +459,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     auto next_subtractive = decltype(subtractive_packets)();
 
     #if 1
-    /*profile_dumper build_time("btime");
-    all_aggregate<alt_collideable> aggregates = collect_aggregates(collideables, 100);
-    build_time.stop();*/
-
-
-
-    //profile_dumper build_time("btime");
-    //profile_dumper b2time("b2");
-    /*all_aggregates<alt_collideable> nsecond = collect_aggregates(collideables, 20);
-    //b2time.stop();
-
-    all_aggregates<aggregate<alt_collideable>> second_level;
-    nsecond.data.reserve(nsecond.data.size());
-
-    aggregate<alt_collideable> aggregates;
-
-    for(aggregate<alt_collideable>& to_process : nsecond.data)
-    {
-        all_aggregates<alt_collideable> subaggr = collect_aggregates(to_process.data, 10);
-
-        second_level.data.push_back(subaggr);
-    }*/
-
-    //build_time.stop();
-
-    /*profile_dumper build_time("btime");
-
-    aggregate<aggregate<alt_collideable>> aggregates = collect_aggregates(collideables, 100);
-    aggregate<aggregate<aggregate<alt_collideable>>> second_level = collect_aggregates(aggregates.data, 30);
-
-    build_time.stop();*/
-
-    //std::vector<alt_collideable> coll_out;
-
     //profile_dumper exec_time("etime");
 
     //int num_hit = 0;
@@ -503,21 +469,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     ///6000 packets
     ///only 200 ever hit anything
 
-    /*std::optional<entity*> opt_sun_en = em.fetch(sun_id);
+    std::vector<alt_frequency_packet> next_mega_reflect;
 
-    if(opt_sun_en.has_value())
-    {
-        entity* sun_en = opt_sun_en.value();
-
-        auto sorted_entities = em.entities;
-
-        std::sort(sorted_entities.begin(), sorted_entities.end(), [](entity* e1, entity* e2)
-        {
-            return (e1->r.position - sun_en->r.position)
-        });
-    }*/
-
-    if(sun_id != -1 && em.entities.size() > 0)
+    if(sun_id != -1 && em.entities.size() > 0 && use_super_reflection)
     {
         auto sorted_entities = em.entities;
 
@@ -526,10 +480,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             return (e1->r.position - sun_position).squared_length() > (e2->r.position - sun_position).squared_length();
         });
 
-        /*std::sort(sun_packets.begin(), sun_packets.end(), [](auto& p1, auto& p2)
-                  {
-                    return p1.start_iteration < p2.start_iteration;
-                  });*/
 
         int cidx = 0;
 
@@ -548,8 +498,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         ///and abort if entity counter >= sorted_entities.size()
         ///if the entity is closer than the current packet, skip to the next packet
 
-        //for(alt_frequency_packet& packet : sun_packets)
-
         ///0 is furthest, end is closest packet
 
         #if 1
@@ -564,12 +512,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                     std::cout << "WTF " << sun_packets[i].start_iteration << " SEC " << sun_packets[i-1].start_iteration << std::endl;
                     continue;
                 }
-
-                //assert(sun_packets[i].start_iteration > sun_packets[i-1].start_iteration);
             }
-
-            //i++;
-            //continue;
 
             if(cidx >= sorted_entities.size())
                 break;
@@ -598,9 +541,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             ///miss, they're further away than us
             if(len_sq > next_radius*next_radius)
             {
-                ///0 is furthest away
-                ///that said... floating point might be a problem
-
                 if(i != 0)
                 {
 
@@ -642,7 +582,10 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                     next_subtractive[packet.id].push_back(inf.collide.value());
 
                 if(inf.reflect)
-                    speculative_packets.push_back(inf.reflect.value());
+                {
+                    alt_frequency_packet& to_reflect = inf.reflect.value();
+                    next_mega_reflect.push_back(to_reflect);
+                }
             }
 
             ///check next entity
@@ -654,28 +597,14 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
         //std::cout << "sun clock " << ms << std::endl;
 
-        //std::cout << "considered " << cidx << " of " << sorted_entities.size() << std::endl;
-
-        /*float start_rad = 0;
-        float end_rad = 0;
-
-        if(packets)
-
-        for(entity* collide : em.entities)
+        for(int i=0; i < (int)mega_reflective_packets.size(); i++)
         {
-            if(!collide->is_heat)
-                continue;
 
-            if(!collide->is_collided_with)
-                continue;
-
-            heatable_entity* en = static_cast<heatable_entity*>(collide);
-
-            float distance_to_sun = (en->r.position - sun_position).length();
-
-            float
-        }*/
+        }
     }
+
+    mega_reflective_packets.insert(mega_reflective_packets.end(), next_mega_reflect.begin(), next_mega_reflect.end());
+    next_mega_reflect.clear();
 
     for(alt_frequency_packet& packet : packets)
     {
