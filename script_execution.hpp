@@ -194,6 +194,7 @@ namespace instructions
         AT_END,
         AT_N_M,
         AT_DEF,
+        CALL,
         //WAIT,
         DATA,
         WARP,
@@ -239,6 +240,7 @@ namespace instructions
         "@END",
         "@@@@",
         "@DEF",
+        "CALL", ///implementatin detail but someone could use it if they want
         "DATA",
         "WARP",
         "SLIP",
@@ -264,8 +266,8 @@ struct instruction : serialisable
     instructions::type type = instructions::COUNT;
     std::vector<register_value> args;
 
-    void make(const std::vector<std::string>& raw);
-    void make(const std::string& str);
+    void make(const std::vector<std::string>& raw, cpu_state& cpu);
+    void make(const std::string& str, cpu_state& cpu);
 
     int num_args();
     register_value& fetch(int idx);
@@ -302,7 +304,15 @@ struct cpu_stash : serialisable
     std::vector<register_value> register_states;
     int pc = 0;
 
+    cpu_stash();
+
     SERIALISE_SIGNATURE();
+};
+
+struct custom_instruction
+{
+    std::string name;
+    std::vector<register_value> args;
 };
 
 struct cpu_state : serialisable, owned
@@ -311,6 +321,7 @@ struct cpu_state : serialisable, owned
 
     std::vector<cpu_stash> stash;
     std::vector<cpu_file> files;
+    std::vector<custom_instruction> custom;
 
     /*std::vector<cpu_file> files;
     int held_file = -1;
@@ -344,6 +355,7 @@ struct cpu_state : serialisable, owned
     void add(const std::vector<std::string>& raw);
     void add_line(const std::string& str);
     int label_to_pc(const std::string& label);
+    int get_custom_instr_pc(const std::string& name);
 
     SERIALISE_SIGNATURE();
 

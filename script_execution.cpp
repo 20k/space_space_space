@@ -424,7 +424,7 @@ instructions::type instructions::fetch(const std::string& name)
     return instructions::COUNT;
 }
 
-void instruction::make(const std::vector<std::string>& raw)
+void instruction::make(const std::vector<std::string>& raw, cpu_state& cpu)
 {
     //if(raw.size() == 0)
     //    throw std::runtime_error("Bad instr");
@@ -455,6 +455,23 @@ void instruction::make(const std::vector<std::string>& raw)
 
     if(found == instructions::COUNT)
     {
+        for(custom_instruction& cinst : cpu.custom)
+        {
+            if(raw[0] == cinst.name)
+            {
+                type = instructions::CALL;
+
+                for(int i=0; i < (int)raw.size(); i++)
+                {
+                    register_value val;
+                    val.make(raw[i]);
+
+                    args.push_back(val);
+                    return;
+                }
+            }
+        }
+
         throw std::runtime_error("Bad instruction " + raw[0]);
     }
 
@@ -466,6 +483,25 @@ void instruction::make(const std::vector<std::string>& raw)
         val.make(raw[i]);
 
         args.push_back(val);
+    }
+
+    if(type == instructions::AT_DEF)
+    {
+        if(args.size() == 0)
+            throw std::runtime_error("@DEF <NAME> <ARGS...>");
+
+        if(!args[0].is_label())
+            throw std::runtime_error("@DEF NAME");
+
+        custom_instruction cust;
+        cust.name = args[0].label;
+
+        for(int i=1; i < (int)args.size(); i++)
+        {
+            cust.args.push_back(args[i]);
+        }
+
+        cpu.custom.push_back(cust);
     }
 }
 
@@ -524,7 +560,7 @@ std::string get_next(const std::string& in, int& offset, bool& hit_comment)
     return ret;
 }
 
-void instruction::make(const std::string& str)
+void instruction::make(const std::string& str, cpu_state& cpu)
 {
     int offset = 0;
 
@@ -545,22 +581,26 @@ void instruction::make(const std::string& str)
             break;
     }
 
-    make(vc);
+    make(vc, cpu);
 }
 
-cpu_state::cpu_state()
+cpu_stash::cpu_stash()
 {
-    ports.resize(hardware::COUNT);
-    blocking_status.resize(hardware::COUNT);
-    context.register_states.resize(registers::COUNT);
+    register_states.resize(registers::COUNT);
 
     for(int i=0; i < registers::COUNT; i++)
     {
         register_value val;
         val.set_int(0);
 
-        context.register_states[i] = val;
+        register_states[i] = val;
     }
+}
+
+cpu_state::cpu_state()
+{
+    ports.resize(hardware::COUNT);
+    blocking_status.resize(hardware::COUNT);
 
     for(int i=0; i < (int)hardware::COUNT; i++)
     {
@@ -1120,16 +1160,46 @@ void cpu_state::step()
     case AT_REP:
         throw std::runtime_error("Should never be executed [rep]");
     case AT_END:
-        throw std::runtime_error("Should never be executed [end]");
+        if(stash.size() == 0)
+            throw std::runtime_error("Not in a function! @END");
+        {
+            context = stash.back();
+            stash.pop_back();
+            update_length_register();
+        }
+        break;
     case AT_N_M:
         throw std::runtime_error("Should never be executed [n_m]");
     case AT_DEF:
-        ///need to stash registers
-
+        //throw std::runtime_error("Should never be execited [@def]");
         {
+            int defs = 1;
 
+            for(; context.pc < (int)inst.size(); context.pc++)
+            {
+                if(inst[context.pc].type == instructions::AT_DEF)
+                    defs++;
+
+                if(inst[context.pc].type == instructions::AT_END)
+                {
+                    defs--;
+
+                    if(defs == 0)
+                        break;
+                }
+            }
+
+            context.pc++;
+            return;
         }
 
+        break;
+    case CALL:
+        stash.push_back(context);
+        context = cpu_stash();
+        context.pc = get_custom_instr_pc(L(next[0]).label) + 1;
+        update_length_register();
+        return;
         break;
     case DATA:
         throw std::runtime_error("Unimpl");
@@ -1299,7 +1369,7 @@ register_value& cpu_state::fetch(registers::type type)
 void cpu_state::add(const std::vector<std::string>& raw)
 {
     instruction i1;
-    i1.make(raw);
+    i1.make(raw, *this);
 
     inst.push_back(i1);
 }
@@ -1307,7 +1377,7 @@ void cpu_state::add(const std::vector<std::string>& raw)
 void cpu_state::add_line(const std::string& str)
 {
     instruction i1;
-    i1.make(str);
+    i1.make(str, *this);
 
     inst.push_back(i1);
 }
@@ -1332,6 +1402,28 @@ int cpu_state::label_to_pc(const std::string& label)
     }
 
     throw std::runtime_error("Attempted to jump to non existent label: " + label);
+}
+
+int cpu_state::get_custom_instr_pc(const std::string& label)
+{
+    for(int i=0; i < (int)inst.size(); i++)
+    {
+        const instruction& instr = inst[i];
+
+        if(instr.type != instructions::AT_DEF)
+            continue;
+
+        if(instr.args.size() == 0)
+            continue;
+
+        if(!instr.args[0].is_label())
+            continue;
+
+        if(instr.args[0].label == label)
+            return i;
+    }
+
+    throw std::runtime_error("Attempted to jump to non existent custom instr: " + label);
 }
 
 void cpu_state::set_program(std::string str)
