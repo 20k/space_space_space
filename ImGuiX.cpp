@@ -311,13 +311,15 @@ bool ImGuiX::VSliderFloat(const std::string& label, float* v, float v_min, float
     return ret;
 }
 
-void ImGuiX::ProgressBarPseudo(float fraction, const ImVec2& size_arg, const std::string& overlay)
+void ImGuiX::ProgressBarPseudo(float fraction, const ImVec2& size_arg, const std::string& overlay, ImVec4 col)
 {
     using namespace ImGui;
 
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
+
+    ImU32 ucol = ImGui::ColorConvertFloat4ToU32(col);
 
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
@@ -328,12 +330,14 @@ void ImGuiX::ProgressBarPseudo(float fraction, const ImVec2& size_arg, const std
     if (!ItemAdd(bb, 0))
         return;
 
+
+
     // Render
     fraction = ImSaturate(fraction);
     RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
     const ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, 0), bb.Max.y);
-    RenderRectFilledRangeH(window->DrawList, bb, IM_COL32(255, 255, 255, 40), 0.0f, fraction, style.FrameRounding);
+    RenderRectFilledRangeH(window->DrawList, bb, ucol, 0.0f, fraction, style.FrameRounding);
 
     // Default displaying the fraction as percentage string, but user can override it
     /*char overlay_buf[32];

@@ -3774,21 +3774,26 @@ void ship::show_power()
             ImVec4 ccol = im4_mix(default_slider_col, red_col, 1 - c.get_hp_frac());
 
             ImVec4 text_col = im4_mix(ImVec4(1,1,1,1), red_col, 1 - c.get_hp_frac());
+            ImVec4 rtext_col = im4_mix(ImGui::GetLinearStyleColorVec4(ImGuiCol_SliderGrab), red_col, 1 - c.get_hp_frac());
 
             ImGui::PushLinearStyleColor(ImGuiCol_Text, text_col);
-            ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
+            //ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
+
+            //text_col.w = 40. / 255.;
+
+            rtext_col.w = 0.5;
 
             ImGui::PushItemWidth(80);
 
             std::string str = "##t" + std::to_string(c._pid);
 
-            ImGuiX::ProgressBarPseudo(hp/100, ImVec2(80, 20), name);
+            ImGuiX::ProgressBarPseudo(hp/100, ImVec2(80, 20), name, rtext_col);
 
             //ImGuiX::SliderFloat("##t" + std::to_string(c._pid), &hp, 0, 100, "%.0f%%");
 
             ImGui::PopItemWidth();
 
-            ImGui::PopStyleColor(2);
+            ImGui::PopStyleColor(1);
         }
 
         ImGui::SameLine();
