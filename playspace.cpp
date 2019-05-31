@@ -149,13 +149,7 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
 
         me.imported_waves[pack.id] = true;
 
-        if(pack.emitted_by == theirs.sun_id && pack.reflected_by == -1 && me.field->use_super_reflection)
-        {
-            me.field->sun_packets.push_back(fixed_pack);
-            sort_sun = true;
-        }
-        else
-            me.field->packets.push_back(fixed_pack);
+        me.field->packets.push_back(fixed_pack);
 
         //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
 
@@ -180,14 +174,6 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
             me.field->ignore_map[pack.id] = f_ignore->second;
         }
     }
-
-    /*if(sort_sun)
-    {
-        std::sort(me.field->sun_packets.begin(), me.field->sun_packets.end(), [](auto& p1, auto& p2)
-                  {
-                    return p1.start_iteration < p2.start_iteration;
-                  });
-    }*/
 }
 
 void room::import_radio_waves_from(alt_radar_field& theirs)
@@ -197,7 +183,6 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     float lrad = entity_manage->collision.half_dim.largest_elem();
 
     import_radio_raw(*this, theirs.packets, theirs);
-    import_radio_raw(*this, theirs.sun_packets, theirs);
 
     /*for(alt_frequency_packet& pack : theirs.packets)
     {
@@ -322,16 +307,7 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
 
-    if(play_sun)
-    {
-        r->field->sun_id = field->sun_id;
-        r->field->sun_position = r->get_in_local(play_sun->r.position);
-    }
-
     r->field->iteration_count = field->iteration_count;
-
-    r->field->use_super_reflection = true;
-    //r->field->absolute_position = where;
 
     r->name = "Dead Space";
     return r;
@@ -431,8 +407,6 @@ void playspace::init_default(int seed)
     sun->collides = false;
 
     field->sun_id = sun->_pid;
-    field->sun_position = sun->r.position;
-    play_sun = sun;
 
     int real_belts = 3;
 
@@ -549,8 +523,6 @@ void room::tick(double dt_s)
 
     field->finite_centre = entity_manage->collision.pos;
 
-    field->absolute_position = entity_manage->collision.pos;
-
     //std::cout << "FCENTRE " << field->finite_centre << " RAD " << field->finite_bound << std::endl;
 
     //std::cout << "finite bound " << field->finite_bound << std::endl;
@@ -567,7 +539,6 @@ void room::tick(double dt_s)
     }*/
 
     //std::cout << "fdnum " << field->packets.size() << std::endl;
-    //std::cout << "SUNnum " << field->sun_packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)

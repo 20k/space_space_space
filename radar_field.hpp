@@ -258,8 +258,6 @@ struct alt_radar_field
 
     double time_between_ticks_s = 16/1000.;
 
-    std::vector<alt_frequency_packet> mega_reflective_packets; ///i'm tired ok
-    std::vector<alt_frequency_packet> sun_packets;
     std::vector<alt_frequency_packet> packets;
     //std::vector<alt_frequency_packet> subtractive_packets;
     std::map<uint32_t, std::vector<alt_frequency_packet>> subtractive_packets;
@@ -309,9 +307,6 @@ struct alt_radar_field
 
     uint64_t get_sun_id();
     uint64_t sun_id = -1;
-    vec2f sun_position;
-    vec2f absolute_position;///we exist at {0,0} local? but poi can move effective centre even if the coordinate system remains
-    bool use_super_reflection = false;
     int space = 0;
 };
 

@@ -139,8 +139,6 @@ struct playspace : serialisable, owned
 
     void add(entity* e);
     void rem(entity* e);
-
-    entity* play_sun = nullptr;
 };
 
 void playspace_connect(playspace* p1, playspace* p2);
