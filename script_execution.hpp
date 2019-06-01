@@ -319,6 +319,8 @@ struct spair : serialisable
 struct cpu_xfer : serialisable
 {
     std::string from, to;
+    float fraction = 1;
+    bool is_fractiony = false;
 
     SERIALISE_SIGNATURE();
 };
@@ -365,7 +367,6 @@ struct cpu_state : serialisable, owned
     std::vector<int> blocking_status;
     bool waiting_for_hardware_feedback = false;
     bool tx_pending = false;
-    bool tx_result = false;
 
     std::string saved_program;
 

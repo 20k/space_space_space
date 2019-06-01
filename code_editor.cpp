@@ -18,7 +18,7 @@ void code_editor::render(cpu_state& cpu)
 
     text_edit.SetBreakpoints({pc_loop});
 
-    text_edit.Render("Code", ImVec2(200, 0));
+    text_edit.Render("Code", ImVec2(400, 0));
 
     ImGui::SameLine();
 

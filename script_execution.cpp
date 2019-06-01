@@ -90,6 +90,8 @@ void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
 {
     DO_SERIALISE(from);
     DO_SERIALISE(to);
+    DO_SERIALISE(fraction);
+    DO_SERIALISE(is_fractiony);
 }
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -107,7 +109,6 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(waiting_for_hardware_feedback);
     DO_SERIALISE(saved_program);
     DO_SERIALISE(tx_pending);
-    DO_SERIALISE(tx_result);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -881,7 +882,7 @@ struct f_register_helper
 
 void cpu_state::step()
 {
-    if(waiting_for_hardware_feedback)
+    if(waiting_for_hardware_feedback || tx_pending)
         return;
 
     if(inst.size() == 0)
@@ -1086,10 +1087,8 @@ void cpu_state::step()
             xf.to = E(next[0]).as_string();
             xfers.push_back(xf);
 
+            ///stalls
             tx_pending = true;
-            tx_result = false;
-
-            waiting_for_hardware_feedback = true;
         }
 
         break;

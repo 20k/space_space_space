@@ -4760,38 +4760,6 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         cpu_state& cpu = c.cpu_core;
 
-        if(cpu.tx_pending && cpu.waiting_for_hardware_feedback)
-        {
-            cpu.tx_pending = false;
-
-            for(cpu_xfer& xfer : cpu.xfers)
-            {
-                auto opt_ship = s.get_ship_id_by_directory(xfer.from);
-                auto opt_comp = s.get_component_id_by_directory(xfer.to);
-
-                if(opt_ship && opt_comp)
-                {
-                    owned* ocomp = find_by_id(s, opt_comp.value());
-
-                    if(ocomp)
-                    {
-                        component* c = dynamic_cast<component*>(ocomp);
-
-                        if(c)
-                        {
-                            pending_transfer trans;
-                            trans.pid_component = opt_comp.value();
-                            trans.pid_ship = opt_ship.value();
-
-                            c->transfers.push_back(trans);
-                        }
-                    }
-                }
-            }
-
-            cpu.xfers.clear();
-        }
-
         std::map<int, int> type_counts;
 
         check_update_components_in_hardware(s, cpu, play, space, r, type_counts);
@@ -5296,60 +5264,94 @@ void ship::on_collide(entity_manager& em, entity& other)
     }
 }
 
+bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_transfer& i)
+{
+    auto ship_opt = s.fetch_ship_by_id(i.pid_ship);
+    auto comp_opt = s.fetch_component_by_id(i.pid_component);
+
+    if(!ship_opt.has_value() || !comp_opt.has_value())
+        return false;
+
+    if(i.is_fractiony)
+    {
+        component& comp = comp_opt.value();
+        ship* s = ship_opt.value();
+
+        if(s->is_ship)
+            return false;
+
+        float free_space = comp.get_internal_volume() - comp.get_stored_volume();
+
+        float requested_volume = s->get_my_volume() * i.fraction;
+
+        if(free_space < requested_volume)
+        {
+            if(requested_volume < 0.0001)
+                return false;
+
+            float takeable_frac = free_space / s->get_my_volume();
+
+            i.fraction = clamp(takeable_frac, 0, 1);
+        }
+
+        if(i.fraction < 0.00001)
+            return false;
+
+        ship scopy = *s;
+
+        std::optional<ship> psplit = scopy.split_materially(i.fraction);
+
+        if(!psplit)
+            return false;
+
+        if(!comp_opt.value().can_store(psplit.value()))
+            return false;
+    }
+    else
+    {
+        if(!comp_opt.value().can_store(*ship_opt.value()))
+            return false;
+    }
+
+    xfers.push_back(i);
+
+    return true;
+}
+
 void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 {
     for(component& c : components)
     {
+        if(c.base_id == component_type::CPU)
+        {
+            for(cpu_xfer& cxfer : c.cpu_core.xfers)
+            {
+                pending_transfer equiv;
+
+                auto opt_ship = get_ship_id_by_directory(cxfer.from);
+                auto opt_comp = get_component_id_by_directory(cxfer.to);
+
+                if(opt_ship && opt_comp)
+                {
+                    pending_transfer equiv;
+                    equiv.pid_component = opt_comp.value();
+                    equiv.pid_ship = opt_ship.value();
+                    equiv.is_fractiony = cxfer.is_fractiony;
+                    equiv.fraction = cxfer.fraction;
+
+                    bool success = check_add_transfer(*this, xfers, equiv);
+
+                    c.cpu_core.context.register_states[(int)registers::TEST].set_int(success);
+                }
+            }
+
+            c.cpu_core.tx_pending = false;
+            c.cpu_core.xfers.clear();
+        }
+
         for(pending_transfer& i : c.transfers)
         {
-            auto ship_opt = fetch_ship_by_id(i.pid_ship);
-            auto comp_opt = fetch_component_by_id(i.pid_component);
-
-            if(!ship_opt.has_value() || !comp_opt.has_value())
-                continue;
-
-            if(i.is_fractiony)
-            {
-                component& comp = comp_opt.value();
-                ship* s = ship_opt.value();
-
-                if(s->is_ship)
-                    continue;
-
-                float free_space = comp.get_internal_volume() - comp.get_stored_volume();
-
-                float requested_volume = s->get_my_volume() * i.fraction;
-
-                if(free_space < requested_volume)
-                {
-                    if(requested_volume < 0.0001)
-                        continue;
-
-                    float takeable_frac = free_space / s->get_my_volume();
-
-                    i.fraction = clamp(takeable_frac, 0, 1);
-                }
-
-                if(i.fraction < 0.00001)
-                    continue;
-
-                ship scopy = *s;
-
-                std::optional<ship> psplit = scopy.split_materially(i.fraction);
-
-                if(!psplit)
-                    continue;
-
-                if(!comp_opt.value().can_store(psplit.value()))
-                    continue;
-            }
-            else
-            {
-                if(!comp_opt.value().can_store(*ship_opt.value()))
-                    continue;
-            }
-
-            xfers.push_back(i);
+            check_add_transfer(*this, xfers, i);
         }
 
         c.transfers.clear();
