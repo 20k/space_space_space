@@ -83,6 +83,9 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(free_running);
     DO_SERIALISE(last_error);
     DO_SERIALISE(ports);
+    DO_SERIALISE(blocking_status);
+    DO_SERIALISE(waiting_for_hardware_feedback);
+    DO_SERIALISE(saved_program);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -702,6 +705,9 @@ register_bundle check_environ(cpu_state& st, cpu_stash& stash, register_value& i
             register_value& their_value = stash.called_with[i].first;
             int stk = stash.called_with[i].second;
 
+            if(stk < 0 || stk >= (int)st.all_stash.size())
+                throw std::runtime_error("STK OUT OF BOUNDS, STACK OVERFLOW " + std::to_string(stk));
+
             cpu_stash& their_stash = st.all_stash[stk];
 
             return check_environ(st, their_stash, their_value);
@@ -1284,11 +1290,13 @@ void cpu_state::upload_program_rpc(std::string str)
 
 void cpu_state::reset()
 {
-    auto instr_backup = inst;
+    auto program_backup = saved_program;
 
     *this = cpu_state();
 
-    inst = instr_backup;
+    saved_program = program_backup;
+
+    set_program(saved_program);
 }
 
 void cpu_state::reset_rpc()
@@ -1441,8 +1449,12 @@ void cpu_state::set_program(std::string str)
 {
     try
     {
+        *this = cpu_state();
+
         if(str.size() > 10000)
             return;
+
+        saved_program = str;
 
         inst.clear();
 

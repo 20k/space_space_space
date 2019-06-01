@@ -346,6 +346,8 @@ struct cpu_state : serialisable, owned
     std::vector<int> blocking_status;
     bool waiting_for_hardware_feedback = false;
 
+    std::string saved_program;
+
     cpu_file get_master_virtual_file();
     void update_master_virtual_file();
 
