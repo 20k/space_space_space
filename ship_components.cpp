@@ -4176,7 +4176,7 @@ void ship::show_power()
     {
         if(c.has(component_info::SELF_DESTRUCT))
         {
-            if(ImGuiX::SimpleButton("(Destruct (There is no confirmation!))"))
+            if(ImGuiX::SimpleConfirmButton("(Destruct)"))
             {
                 rpc("set_use", c);
             }

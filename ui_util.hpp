@@ -27,6 +27,8 @@ namespace ImGuiX
 
     bool SimpleButton(const std::string& str);
     bool SimpleButtonColored(ImVec4 col, const std::string& str);
+
+    bool SimpleConfirmButton(const std::string& str);
 }
 
 #endif // UI_UTIL_HPP_INCLUDED

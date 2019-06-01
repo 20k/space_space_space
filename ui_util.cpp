@@ -1,5 +1,7 @@
 #include "ui_util.hpp"
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+#include <map>
 
 ImVec4 ImGuiX::GetStyleCol(ImGuiCol name)
 {
@@ -146,4 +148,41 @@ bool ImGuiX::SimpleButton(const std::string& str)
 bool ImGuiX::SimpleButtonColored(ImVec4 col, const std::string& str)
 {
     return OutlineHoverTextAuto(str, {col.x, col.y, col.z});
+}
+
+bool ImGuiX::SimpleConfirmButton(const std::string& str)
+{
+    ImGuiContext* g = ImGui::GetCurrentContext();
+    const ImGuiStyle& style = g->Style;
+    const ImGuiID id = ImGui::GetCurrentWindow()->GetID(str.c_str());
+
+    static thread_local std::map<ImGuiID, bool> local_state;
+
+    if(ImGuiX::SimpleButton(str))
+    {
+        local_state[id] = true;
+    }
+
+    if(local_state[id])
+    {
+        ImGui::SameLine();
+
+        if(ImGuiX::SimpleButton("(Confirm)"))
+        {
+            local_state[id] = false;
+
+            return true;
+        }
+
+        ImGui::SameLine();
+
+        if(ImGuiX::SimpleButton("(Cancel)"))
+        {
+            local_state[id] = false;
+
+            return false;
+        }
+    }
+
+    return false;
 }
