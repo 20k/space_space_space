@@ -55,6 +55,7 @@ void register_value::serialise(serialise_context& ctx, nlohmann::json& data, sel
     DO_SERIALISE(reg_address);
     DO_SERIALISE(file_eof);
     DO_SERIALISE(which);
+    DO_SERIALISE(help);
 }
 
 void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -749,7 +750,7 @@ register_bundle check_environ(cpu_state& st, cpu_stash& stash, register_value& i
 #define CHECK(x) check_environ(*this, context, x)
 #define DEC(x) x.decode(*this)
 
-#define R(x) DEC(RA(CHECK(x), R))
+#define R(x) DEC(RA(CHECK(x), RA))
 #define RN(x) RA(DEC(RA(CHECK(x), RN)), N)
 #define RNS(x) RA(DEC(RA(CHECK(x), RNS)), NS)
 #define RNLS(x) RA(DEC(RA(CHECK(x), RNLS)), NLS)

@@ -39,6 +39,8 @@ struct register_value : serialisable
     std::string symbol;
     std::string label;
 
+    std::string help;
+
     int which = -1;
 
     bool file_eof = false;

@@ -49,17 +49,54 @@ void CalcSizes(file_editor& edit, Sizes& s, size_t mem_size, size_t base_display
 
 std::string int_to_hex(int val, int width = 2)
 {
+    bool invert = false;
+
+    if(val < 0)
+    {
+        invert = true;
+        val = -val;
+    }
+
     std::stringstream stream;
     stream << std::setfill('0') << std::setw(width) << std::hex << val;
-    return stream.str();
+
+    std::string res = stream.str();
+
+    if(invert)
+    {
+        if(res.size() > 0)
+            res.erase(res.begin());
+
+        res = "-" + res;
+    }
+
+    return res;
 }
 
 std::string int_to_str(int val, int width = 2)
 {
+    bool invert = false;
+
+    if(val < 0)
+    {
+        invert = true;
+        val = -val;
+    }
+
     std::stringstream stream;
     stream << std::setfill('0') << std::setw(width) << val;
-    return stream.str();
-}
+
+    std::string res = stream.str();
+
+    if(invert)
+    {
+        if(res.size() > 0)
+            res.erase(res.begin());
+
+        res = "-" + res;
+    }
+
+    return res;}
 
 std::string address_to_str(int in, int width, bool is_hex)
 {
@@ -107,7 +144,7 @@ std::string format_reg(register_value& reg, int width, bool full, bool& gray_lea
             if(b > max_val)
                 return "2BIG!";
 
-            if(b < -max_val)
+            if(b < -max_val / 16)
                 return "2SML!";
 
             return int_to_hex(b, width);
@@ -119,7 +156,7 @@ std::string format_reg(register_value& reg, int width, bool full, bool& gray_lea
             if(b > max_val)
                 return "2BIG!";
 
-            if(b < -max_val)
+            if(b < -max_val / 10)
                 return "2SML!";
 
             return int_to_str(b, width);
@@ -389,6 +426,11 @@ void file_editor::render(cpu_file& file)
                 if(ImGui::IsItemHovered())
                 {
                     std::string str = address_to_str(addr, s.AddrDigitsCount, isHex) + ": " + val.as_string();
+
+                    if(val.help.size() > 0)
+                    {
+                        str += "\n" + val.help;
+                    }
 
                     ImGui::SetTooltip(str.c_str());
                 }

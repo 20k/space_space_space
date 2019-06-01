@@ -4607,11 +4607,19 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         }
 
         file[0].set_int(-1);
+        file[0].help = "Set Activation Level Hardware Mapped IO";
 
         file[1].set_int(c.activation_level * 100);
+        file[1].help = "Activation level %";
+
         file[2].set_int(c.get_hp_frac() * 100);
+        file[2].help = "HP %";
+
         file[3].set_int(c.get_operating_efficiency() * 100);
+        file[3].help = "Operating Efficiency %";
+
         file[4].set_int(c.get_fixed_props().get_heat_produced_at_full_usage(c.current_scale) * 100);
+        file[4].help = "Max Heat Produced At 100% Operating Efficiency, * 100";
 
         float max_power_draw = 0;
 
@@ -4621,7 +4629,10 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         }
 
         file[5].set_int(max_power_draw);
+        file[5].help = "Max Power Draw";
+
         file[6].set_int(c.get_my_temperature());
+        file[6].help = "Temperature (K)";
     }
 }
 

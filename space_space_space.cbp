@@ -115,11 +115,11 @@
 		<Compiler>
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
-			<Add option="-std=c++17" />
 			<Add option="-fexceptions" />
 			<Add option="-Wno-narrowing" />
 			<Add option="-Werror=return-type" />
 			<Add option="-Wno-unused-parameter" />
+			<Add option="-std=c++2a" />
 			<Add option="-DSFML_STATIC" />
 			<Add directory="deps" />
 			<Add directory="deps/imgui" />
