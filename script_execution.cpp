@@ -1685,5 +1685,25 @@ void cpu_tests()
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == -67);
     }
 
+    ///overflow
+    {
+        cpu_state test;
+        test.add_line("ADDI " + std::to_string(std::numeric_limits<int>::max()) + " 1 X0");
+
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == std::numeric_limits<int>::max());
+    }
+
+    ///negative overflow
+    {
+        cpu_state test;
+        test.add_line("ADDI " + std::to_string(std::numeric_limits<int>::lowest()) + " -1 X0");
+
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == std::numeric_limits<int>::lowest());
+    }
+
     //exit(0);
 }

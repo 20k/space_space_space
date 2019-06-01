@@ -3,6 +3,7 @@
 
 #include <random>
 #include "random.hpp"
+#include <limits>
 
 int hex_to_dec(char hex)
 {
@@ -42,6 +43,29 @@ int hex_to_dec(char hex)
     return 0;
 }
 
+int saturate(int64_t in)
+{
+    if(in > std::numeric_limits<int>::max())
+        return std::numeric_limits<int>::max();
+
+    if(in < std::numeric_limits<int>::lowest())
+        return std::numeric_limits<int>::lowest();
+
+    return (int)in;
+}
+
+template<typename T>
+int saturating_op(int v1, int v2, T op)
+{
+    int64_t i1 = v1;
+    int64_t i2 = v2;
+
+    ///man i love c++
+    int64_t i3 = op(i1, i2);
+
+    return saturate(i3);
+}
+
 void icopy(register_value& one, register_value& two)
 {
     two = one;
@@ -58,7 +82,9 @@ void iaddi(register_value& r1, register_value& r2, register_value& r3)
         throw std::runtime_error("ADDI arguments must be of same type, got " + r1.as_string() + " and " + r2.as_string());
 
     if(r1.is_int())
-        r3.set_int(r1.value + r2.value);
+        r3.set_int(saturating_op(r1.value, r2.value, std::plus<int64_t>{}));
+
+        //r3.set_int(r1.value + r2.value);
 
     else if(r1.is_label())
         r3.set_label(r1.label + r2.label);
@@ -75,7 +101,9 @@ void isubi(register_value& r1, register_value& r2, register_value& r3)
     NUM(r1);
     NUM(r2);
 
-    r3.set_int(r1.value - r2.value);
+    r3.set_int(saturating_op(r1.value, r2.value, std::minus<int64_t>{}));
+
+    //r3.set_int(r1.value - r2.value);
 }
 
 void imuli(register_value& r1, register_value& r2, register_value& r3)
@@ -83,7 +111,9 @@ void imuli(register_value& r1, register_value& r2, register_value& r3)
     NUM(r1);
     NUM(r2);
 
-    r3.set_int(r1.value * r2.value);
+    r3.set_int(saturating_op(r1.value, r2.value, std::multiplies<int64_t>{}));
+
+    //r3.set_int(r1.value * r2.value);
 }
 
 void idivi(register_value& r1, register_value& r2, register_value& r3)
@@ -105,7 +135,10 @@ void imodi(register_value& r1, register_value& r2, register_value& r3)
     if(r2.value == 0)
         throw std::runtime_error("Tried to MODI by 0");
 
-    r3.set_int(r1.value % r2.value);
+    ///-'128' % -1
+    r3.set_int(saturating_op(r1.value, r2.value, std::modulus<int64_t>{}));
+
+    //r3.set_int(r1.value % r2.value);
 }
 
 void iswiz(register_value& r1, register_value& r2, register_value& r3)
@@ -145,7 +178,16 @@ void iswiz(register_value& r1, register_value& r2, register_value& r3)
         result += base_10_val[offset_val];
     }
 
-    int fval = std::stoi(result);
+    int64_t fval = 0;
+
+    try
+    {
+        fval = std::stoi(result);
+    }
+    catch(...)
+    {
+        throw std::runtime_error("Error in iswiz, raw result string: " + result);
+    }
 
     if(r2.value >= 0)
         r3.set_int(fval);
