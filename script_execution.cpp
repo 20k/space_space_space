@@ -1158,10 +1158,6 @@ void cpu_state::step()
 
             if(defs != 0)
                 throw std::runtime_error("Unterminated @DEF, needs @END");
-
-            context.pc++;
-
-            return;
         }
 
         break;
