@@ -4603,7 +4603,11 @@ std::optional<std::pair<size_t, int>> id_by_directory(ship& s, const std::string
 
         if(fullname == str)
         {
-            return std::pair<size_t, int>(c._pid, 1);
+            ///????
+            if(c.base_id == component_type::MATERIAL)
+                return std::pair<size_t, int>(s._pid, 0);
+            else
+                return std::pair<size_t, int>(c._pid, 1);
         }
 
         std::map<int, int> them_type_counts;
@@ -4621,10 +4625,10 @@ std::optional<std::pair<size_t, int>> id_by_directory(ship& s, const std::string
 
                 std::map<int, int> ship_type;
                 ships[sname]++;
-                ret = id_by_directory(ns, sname + "_" + std::to_string(mcount), ship_type);
+                ret = id_by_directory(ns, str, ship_type, sname + "_" + std::to_string(mcount));
             }
             else
-                ret = id_by_directory(ns, fullname, them_type_counts);
+                ret = id_by_directory(ns, str, them_type_counts, fullname);
 
             if(ret.has_value())
                 return ret;
@@ -4760,8 +4764,6 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
         {
             cpu.tx_pending = false;
 
-            printf("TX PENDING %i\n", cpu.xfers.size());
-
             for(cpu_xfer& xfer : cpu.xfers)
             {
                 auto opt_ship = s.get_ship_id_by_directory(xfer.from);
@@ -4769,20 +4771,14 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
                 if(opt_ship && opt_comp)
                 {
-                    printf("In 1\n");
-
                     owned* ocomp = find_by_id(s, opt_comp.value());
 
                     if(ocomp)
                     {
-                        printf("In 2\n");
-
                         component* c = dynamic_cast<component*>(ocomp);
 
                         if(c)
                         {
-                            printf("Success!\n");
-
                             pending_transfer trans;
                             trans.pid_component = opt_comp.value();
                             trans.pid_ship = opt_ship.value();
@@ -4790,16 +4786,6 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
                             c->transfers.push_back(trans);
                         }
                     }
-                }
-
-                if(!opt_ship)
-                {
-                    printf("Did not find ship\n");
-                }
-
-                if(!opt_comp)
-                {
-                    printf("Did not find comp\n");
                 }
             }
 
