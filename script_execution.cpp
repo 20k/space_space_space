@@ -888,7 +888,7 @@ void cpu_state::step()
         CALL2(icopy, E, R);
         break;
     case ADDI:
-        CALL3(iaddi, RN, RN, R);
+        CALL3(iaddi, RNLS, RNLS, R);
         break;
     case SUBI:
         CALL3(isubi, RN, RN, R);

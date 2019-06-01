@@ -49,10 +49,25 @@ void icopy(register_value& one, register_value& two)
 
 void iaddi(register_value& r1, register_value& r2, register_value& r3)
 {
-    NUM(r1);
+    /*NUM(r1);
     NUM(r2);
 
-    r3.set_int(r1.value + r2.value);
+    r3.set_int(r1.value + r2.value);*/
+
+    if(r1.which != r2.which)
+        throw std::runtime_error("ADDI arguments must be of same type, got " + r1.as_string() + " and " + r2.as_string());
+
+    if(r1.is_int())
+        r3.set_int(r1.value + r2.value);
+
+    else if(r1.is_label())
+        r3.set_label(r1.label + r2.label);
+
+    else if(r1.is_symbol())
+        r3.set_symbol(r1.symbol + r2.symbol);
+
+    else
+        throw std::runtime_error("Somehow non int/label/symbol snuck into ADDI, probably developer error but your fault too: " + r1.as_string() + " " + r2.as_string());
 }
 
 void isubi(register_value& r1, register_value& r2, register_value& r3)
