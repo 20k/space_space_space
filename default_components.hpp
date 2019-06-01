@@ -44,15 +44,15 @@ namespace component_type
     static inline std::vector<std::string> cpu_names
     {
         "IMPULSE",
-        "S_D",
-        "W_D",
+        "S_DRIVE",
+        "W_DRIVE",
         "SHIELD",
         "LASER",
         "SENSOR",
         "ARMOUR",
         "RADIATOR",
         "POWER",
-        "M_CRE",
+        "M_CORE",
         "DESTRUCT",
         "CARGO",
         "TANK",

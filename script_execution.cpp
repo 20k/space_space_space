@@ -343,6 +343,22 @@ void cpu_file::set_size(int next_size)
     ensure_eof();
 }
 
+void cpu_file::clear()
+{
+    set_size(0);
+}
+
+register_value& cpu_file::operator[](int idx)
+{
+    if(idx < 0)
+        throw std::runtime_error("IDX < 0 in cpu file operator[]");
+
+    if(idx >= len())
+        set_size(idx + 1);
+
+    return data[idx];
+}
+
 std::string register_value::as_string() const
 {
     if(is_reg())

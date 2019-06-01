@@ -295,6 +295,9 @@ struct cpu_file : serialisable
 
     void set_size(int next);
 
+    void clear();
+    register_value& operator[](int idx);
+
     SERIALISE_SIGNATURE();
 };
 

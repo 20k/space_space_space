@@ -4572,6 +4572,59 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     }
 }
 
+void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r)
+{
+    assert(component_type::COUNT == component_type::cpu_names.size());
+
+    dump_radar_data_into_cpu(cpu, s, play, space, r);
+
+    std::map<int, int> type_counts;
+
+    for(component& c : s.components)
+    {
+        if(c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        int my_offset = type_counts[(int)c.base_id];
+
+        type_counts[(int)c.base_id]++;
+
+        //if(c.get_operating_efficiency() < 0.2)
+        //    continue;
+
+        std::string fullname = component_type::cpu_names[(int)c.base_id] + "_" + std::to_string(my_offset) + "_HW";
+
+        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname);
+
+        if(!opt_file.has_value())
+            continue;
+
+        cpu_file& file = *opt_file.value();
+
+        if(file.len() > 0 && file[0].is_int() && file[0].value >= 0)
+        {
+            c.set_activation_level(file[0].value / 100.);
+        }
+
+        file[0].set_int(-1);
+
+        file[1].set_int(c.activation_level * 100);
+        file[2].set_int(c.get_hp_frac() * 100);
+        file[3].set_int(c.get_operating_efficiency() * 100);
+        file[4].set_int(c.get_fixed_props().get_heat_produced_at_full_usage(c.current_scale) * 100);
+
+        float max_power_draw = 0;
+
+        if(c.has(component_info::POWER))
+        {
+            max_power_draw = c.get_fixed(component_info::POWER).recharge;
+        }
+
+        file[5].set_int(max_power_draw);
+        file[6].set_int(c.get_my_temperature());
+    }
+}
+
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
     for(component& c : s.components)
@@ -4584,7 +4637,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         cpu_state& cpu = c.cpu_core;
 
-        dump_radar_data_into_cpu(cpu, s, play, space, r);
+        check_update_components_in_hardware(s, cpu, play, space, r);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())
