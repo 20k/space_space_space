@@ -1049,7 +1049,7 @@ void server_thread(std::atomic_bool& should_term)
 
         #endif // SERVER_VIEW
 
-        std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+        //std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         //std::cout << "FULL FRAME " << tickclock.restart().asMicroseconds()/1000. << std::endl;
 

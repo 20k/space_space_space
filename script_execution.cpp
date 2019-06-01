@@ -489,10 +489,10 @@ void instruction::make(const std::vector<std::string>& raw, cpu_state& cpu)
     if(type == instructions::AT_DEF)
     {
         if(args.size() == 0)
-            throw std::runtime_error("@DEF <NAME> <ARGS...>");
+            throw std::runtime_error("No args, use @DEF <NAME> <ARGS...>");
 
         if(!args[0].is_label())
-            throw std::runtime_error("@DEF NAME");
+            throw std::runtime_error("Invalid name, use @DEF NAME from " + args[0].as_string());
 
         custom_instruction cust;
         cust.name = args[0].label;
@@ -500,7 +500,7 @@ void instruction::make(const std::vector<std::string>& raw, cpu_state& cpu)
         for(int i=1; i < (int)args.size(); i++)
         {
             if(!args[i].is_label())
-                throw std::runtime_error("@DEF args must be literal names, eg @DEF FUNC A0");
+                throw std::runtime_error("@DEF args must be literal names, eg @DEF FUNC A0, got " + args[i].as_string());
 
             cust.args.push_back(args[i].label);
         }
@@ -756,7 +756,7 @@ register_value& restricta(register_value& in, const std::string& types)
 register_value& check_environ(cpu_state& st, cpu_stash& stash, register_value& in)
 {
     if(!in.is_label())
-        return in;
+        return in.decode(st, stash);
 
     if(stash.my_argument_names.size() != stash.called_with.size())
         throw std::runtime_error("Logic error in CPU arg name stuff [developer's fault]");
@@ -775,26 +775,45 @@ register_value& check_environ(cpu_state& st, cpu_stash& stash, register_value& i
                 return check_environ(st, their_stash, their_value).decode(st, their_stash);
             }
 
-            return their_value.decode(st, their_stash);
+            std::cout << "found type " << their_value.as_string() << std::endl;
+
+            register_value& decoded = their_value.decode(st, their_stash);
+
+
+            std::cout << "DEC " << decoded.as_string() << std::endl;
+
+            return decoded;
 
             //return st.context.called_with
         }
     }
 
-    return in;
+    std::cout << "IN VAL " << in.as_string() << std::endl;
+
+    return in.decode(st, stash);
 }
 
-#define RA(x, y) restricta(check_environ(*this, context, x), #y)
-
-#define R(x) restrict_r(check_environ(*this, context, x)).decode(*this, context) ///register only
-#define RN(x) RA(restrict_rn(check_environ(*this, context, x)).decode(*this, context), N) ///register or number
-#define RNS(x) RA(restrict_rns(check_environ(*this, context, x)).decode(*this, context), NS) ///register or number or symbol
-#define RNLS(x) RA(restrict_rnls(check_environ(*this, context, x)).decode(*this, context), NLS) ///register or number or symbol
-#define RLS(x) RA(restrict_rls(check_environ(*this, context, x)).decode(*this, context), LS)
-#define RS(x) RA(restrict_rs(check_environ(*this, context, x)).decode(*this, context), S)
+/*#define RA(x, y) restricta(check_environ(*this, context, x), #y)
+#define R(x) restrict_r(check_environ(*this, context, x))///register only
+#define RN(x) RA(restrict_rn(check_environ(*this, context, x)), N) ///register or number
+#define RNS(x) RA(restrict_rns(check_environ(*this, context, x)), NS) ///register or number or symbol
+#define RNLS(x) RA(restrict_rnls(check_environ(*this, context, x)), NLS) ///register or number or symbol
+#define RLS(x) RA(restrict_rls(check_environ(*this, context, x)), LS)
+#define RS(x) RA(restrict_rs(check_environ(*this, context, x)), S)
 #define E(x) RA(RA(x, RLANS).decode(*this, context), RLANS) ///everything, except file pointer
-#define L(x) restrict_l(check_environ(*this, context, x)).decode(*this, context)
+#define L(x) restrict_l(check_environ(*this, context, x))*/
 
+#define RA(x, y) restricta(x, #y)
+#define CHECK(x) check_environ(*this, context, x)
+
+#define R(x) CHECK(RA(x, R))
+#define RN(x) RA(CHECK(RA(x, RN)), N)
+#define RNS(x) RA(CHECK(RA(x, RNS)), NS)
+#define RNLS(x) RA(CHECK(RA(x, RNLS)), NLS)
+#define RLS(x) RA(CHECK(RA(x, RLS)), LS)
+#define RS(x) RA(CHECK(RA(x, RS)), S)
+#define E(x) CHECK(RA(x, RLANS))
+#define L(x) CHECK(RA(x, L))
 
 #define SYM(x) restrict_s(x)
 
