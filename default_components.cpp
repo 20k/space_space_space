@@ -407,6 +407,7 @@ component get_component_default(component_type::type id, float scale)
 
     to_fetch._pid = get_next_persistent_id();
     to_fetch.cpu_core._pid = get_next_persistent_id();
+    to_fetch.cap_id = get_next_persistent_id();
 
     return to_fetch;
 }

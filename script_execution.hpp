@@ -27,6 +27,8 @@ namespace registers
     };
 }
 
+///current file map is fine if we just fix map networking
+
 struct cpu_state;
 struct cpu_stash;
 
@@ -285,12 +287,13 @@ struct instruction : serialisable
     SERIALISE_SIGNATURE();
 };
 
-struct cpu_file : serialisable
+struct cpu_file : serialisable, owned
 {
     register_value name;
     std::vector<register_value> data;
     int file_pointer = 0;
     bool was_xferred = false;
+    bool is_bad = false; ///delete me whenever possible, do not let me be grabbed
 
     cpu_file();
 
@@ -322,14 +325,13 @@ struct cpu_xfer : serialisable
     std::string from, to;
     float fraction = 1;
     bool is_fractiony = false;
-    int held_file = -1;
 
     SERIALISE_SIGNATURE();
 };
 
 struct cpu_stash : serialisable
 {
-    int held_file = -1;
+    size_t held_file_id = -1;
 
     std::vector<register_value> register_states;
     int pc = 0;
@@ -339,6 +341,7 @@ struct cpu_stash : serialisable
     std::vector<std::string> my_argument_names;
 
     cpu_stash();
+    bool has_file();
 
     SERIALISE_SIGNATURE();
 };
@@ -353,8 +356,10 @@ struct cpu_state : serialisable, owned
 {
     cpu_state();
 
+    cpu_file dummy_master;
     std::vector<cpu_stash> all_stash;
-    std::vector<cpu_file> files;
+    //std::vector<cpu_file> files;
+    std::map<size_t, cpu_file> files;
     std::vector<custom_instruction> custom;
 
     std::vector<instruction> inst;
@@ -406,9 +411,10 @@ struct cpu_state : serialisable, owned
     void update_length_register();
     void update_f_register();
 
-    std::optional<cpu_file*> get_create_capability_file(const std::string& filename);
+    std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t pid);
 
-    void remove_file(int idx);
+    void remove_file(size_t idx);
+    void add_file(cpu_file& fle);
 };
 
 void cpu_tests();

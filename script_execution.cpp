@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include "time.hpp"
+#include <SFML/System/Clock.hpp>
 
 void strip_whitespace(std::string& in)
 {
@@ -66,7 +67,7 @@ void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t
 
 void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
-    DO_SERIALISE(held_file);
+    DO_SERIALISE(held_file_id);
     DO_SERIALISE(register_states);
     DO_SERIALISE(pc);
     DO_SERIALISE(called_with);
@@ -92,11 +93,11 @@ void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(to);
     DO_SERIALISE(fraction);
     DO_SERIALISE(is_fractiony);
-    DO_SERIALISE(held_file);
 }
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
+    DO_SERIALISE(dummy_master);
     DO_SERIALISE(all_stash);
     DO_SERIALISE(files);
     DO_SERIALISE(inst);
@@ -123,6 +124,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(data);
     DO_SERIALISE(file_pointer);
     DO_SERIALISE(was_xferred);
+    DO_SERIALISE(is_bad);
 }
 
 bool all_numeric(const std::string& str)
@@ -422,10 +424,10 @@ register_value& register_value::decode(cpu_state& state, cpu_stash& stash)
 
     if(is_address())
     {
-        if(stash.held_file == -1)
+        if(!stash.has_file())
             throw std::runtime_error("No file held, caused by [address] " + as_string());
 
-        cpu_file& fle = state.files[stash.held_file];
+        cpu_file& fle = state.files[stash.held_file_id];
 
         int check_address = address;
 
@@ -661,7 +663,10 @@ cpu_state::cpu_state()
 
     update_length_register();
 
-    files.push_back(get_master_virtual_file());
+    auto master = get_master_virtual_file();
+
+    files[master._pid] = master;
+    //files.push_back(get_master_virtual_file());
     update_master_virtual_file();
 }
 
@@ -806,12 +811,20 @@ bool should_skip(cpu_state& s)
 cpu_file cpu_state::get_master_virtual_file()
 {
     cpu_file fle;
+    fle._pid = dummy_master._pid;
 
     fle.data.clear();
 
-    for(int i=0; i < (int)files.size(); i++)
+    /*for(int i=0; i < (int)files.size(); i++)
     {
         register_value fname = files[i].name;
+
+        fle.data.push_back(fname);
+    }*/
+
+    for(auto& i : files)
+    {
+        register_value fname = i.second.name;
 
         fle.data.push_back(fname);
     }
@@ -825,21 +838,25 @@ cpu_file cpu_state::get_master_virtual_file()
 
 void cpu_state::update_master_virtual_file()
 {
-    register_value val;
-    val.set_label("FILES");
+    //register_value val;
+    //val.set_label("FILES");
 
-    for(auto& i : files)
+    /*for(auto& i : files)
     {
-        if(i.name == val)
+        if(i.second.name == val)
         {
-            i = get_master_virtual_file();
+            i.second = get_master_virtual_file();
             return;
         }
-    }
+    }*/
+
+    auto master = get_master_virtual_file();
+
+    files[master._pid] = master;
 
     ///file not present
-    files.push_back(get_master_virtual_file());
-    update_master_virtual_file();
+    //files.push_back(get_master_virtual_file());
+    //update_master_virtual_file();
 }
 
 bool cpu_state::any_blocked()
@@ -861,9 +878,9 @@ struct eof_helper
 
     ~eof_helper()
     {
-        if(st.context.held_file != -1)
+        if(st.context.has_file())
         {
-            if(st.files[st.context.held_file].ensure_eof())
+            if(st.files[st.context.held_file_id].ensure_eof())
             {
                 st.update_length_register();
             }
@@ -880,6 +897,18 @@ struct f_register_helper
     ~f_register_helper()
     {
         st.update_f_register();
+    }
+};
+
+struct simple_timer
+{
+    sf::Clock clk;
+
+    ~simple_timer()
+    {
+        double time_ms = clk.getElapsedTime().asMicroseconds() / 1000.;
+
+        std::cout << "TMS " << time_ms << std::endl;
     }
 };
 
@@ -983,12 +1012,12 @@ void cpu_state::step()
     case TEST:
         if(next.num_args() == 1 && next[0].is_label())
         {
-            if(context.held_file == -1)
+            if(!context.has_file())
                 throw std::runtime_error("Not holding file [TEST EOF]");
 
             if(next[0].label == "EOF")
             {
-                cpu_file& held = files[context.held_file];
+                cpu_file& held = files[context.held_file_id];
 
                 int fptr = held.file_pointer;
 
@@ -1015,17 +1044,17 @@ void cpu_state::step()
         throw std::runtime_error("Unimplemented HOST");
         break;
     case MAKE:
-        if(context.held_file != -1)
-            throw std::runtime_error("Already holding file [MAKE] " + files[context.held_file].name.as_string());
+        if(context.has_file())
+            throw std::runtime_error("Already holding file [MAKE] " + files[context.held_file_id].name.as_string());
 
         if(next.num_args() == 0)
         {
             cpu_file fle;
             fle.name.set_int(get_next_persistent_id());
 
-            files.push_back(fle);
+            add_file(fle);
 
-            context.held_file = (int)files.size() - 1;
+            context.held_file_id = fle._pid;
             update_length_register();
         }
         else if(next.num_args() == 1)
@@ -1034,16 +1063,16 @@ void cpu_state::step()
 
             for(auto& i : files)
             {
-                if(i.name == name)
+                if(i.second.name == name)
                     throw std::runtime_error("Duplicate file name [MAKE] " + name.as_string());
             }
 
             cpu_file fle;
             fle.name = name;
 
-            files.push_back(fle);
+            add_file(fle);
 
-            context.held_file = (int)files.size() - 1;
+            context.held_file_id = fle._pid;
             update_length_register();
         }
         else
@@ -1052,7 +1081,7 @@ void cpu_state::step()
         }
         break;
     case RNAM:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [RNAM]");
 
         {
@@ -1061,11 +1090,11 @@ void cpu_state::step()
 
             for(auto& i : files)
             {
-                if(i.name == name)
+                if(i.second.name == name)
                     throw std::runtime_error("Duplicate file name [RNAM] " + name.as_string());
             }
 
-            files[context.held_file].name = name;
+            files[context.held_file_id].name = name;
 
             ///incase we rename the master virtual file
             update_master_virtual_file();
@@ -1074,11 +1103,11 @@ void cpu_state::step()
         break;
 
     case RSIZ:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [RSIZ]");
 
         {
-            cpu_file& cur = files[context.held_file];
+            cpu_file& cur = files[context.held_file_id];
             int next_size = NUM(RN(next[0])).value;
 
             if(next_size > 1024 * 1024)
@@ -1097,15 +1126,14 @@ void cpu_state::step()
     ///or maybe drop should just take a destination arg
     case TXFR:
         {
-            if(context.held_file == -1)
+            if(!context.has_file())
                 throw std::runtime_error("Not holding file [TXFR]");
 
-            cpu_file& file = files[context.held_file];
+            cpu_file& file = files[context.held_file_id];
 
             cpu_xfer xf;
             xf.from = file.name.as_string();
             xf.to = E(next[0]).as_string();
-            xf.held_file = context.held_file;
             xfers.push_back(xf);
             ///so
             ///when xferring stuff around we can guarantee no duplicates because the names are uniquely generated
@@ -1127,8 +1155,8 @@ void cpu_state::step()
 
     case GRAB:
     {
-        if(context.held_file != -1)
-            throw std::runtime_error("Already holding file " + files[context.held_file].name.as_string());
+        if(context.has_file())
+            throw std::runtime_error("Already holding file " + files[context.held_file_id].name.as_string());
 
         register_value& to_grab = RNLS(next[0]);
 
@@ -1137,7 +1165,7 @@ void cpu_state::step()
             update_master_virtual_file();
         }
 
-        for(int kk=0; kk < (int)files.size(); kk++)
+        /*for(int kk=0; kk < (int)files.size(); kk++)
         {
             if(files[kk].name == to_grab)
             {
@@ -1150,9 +1178,24 @@ void cpu_state::step()
                 context.held_file = kk;
                 break;
             }
+        }*/
+
+        for(auto& i : files)
+        {
+            if(i.second.name == to_grab)
+            {
+                for(int st = 0; st < (int)all_stash.size(); st++)
+                {
+                    if(all_stash[st].held_file_id == i.first)
+                        throw std::runtime_error("File already held by offset " + std::to_string(st) + " of " + std::to_string(all_stash.size()));
+                }
+
+                context.held_file_id = i.first;
+                break;
+            }
         }
 
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
 
         update_length_register();
@@ -1160,39 +1203,42 @@ void cpu_state::step()
         break;
     }
     case instructions::FILE:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [FILE]");
 
-        R(next[0]) = files[context.held_file].name;
+        R(next[0]) = files[context.held_file_id].name;
         break;
 
     case SEEK:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [SEEK]");
 
         {
             int off = RN(next[0]).value;
 
-            files[context.held_file].file_pointer += off;
-            files[context.held_file].file_pointer = clamp(files[context.held_file].file_pointer, 0, files[context.held_file].len());
+            files[context.held_file_id].file_pointer += off;
+            files[context.held_file_id].file_pointer = clamp(files[context.held_file_id].file_pointer, 0, files[context.held_file_id].len());
         }
 
         break;
 
 
     case VOID_FUCK_WINAPI:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [VOID]");
 
-        if(files[context.held_file].file_pointer < (int)files[context.held_file].len())
         {
-            files[context.held_file].data.erase(files[context.held_file].data.begin() + files[context.held_file].file_pointer);
-        }
+            cpu_file& fle = files[context.held_file_id];
 
+            if(fle.file_pointer < fle.len())
+            {
+                fle.data.erase(fle.data.begin() + fle.file_pointer);
+            }
+        }
         break;
 
     case DROP:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [DROP]");
 
         drop_file();
@@ -1200,10 +1246,12 @@ void cpu_state::step()
         break;
 
     case WIPE:
-        if(context.held_file == -1)
+        if(!context.has_file())
             throw std::runtime_error("Not holding file [WIPE]");
 
-        files.erase(files.begin() + context.held_file);
+        files.erase(files.find(context.held_file_id));
+
+        //files.erase(files.begin() + context.held_file);
         drop_file();
         update_length_register();
         break;
@@ -1399,20 +1447,20 @@ void cpu_state::reset_rpc()
 
 void cpu_state::drop_file()
 {
-    if(context.held_file == -1)
+    if(!context.has_file())
         throw std::runtime_error("BAD DROP FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
 
-    files[context.held_file].file_pointer = 0;
-    context.held_file = -1;
+    files[context.held_file_id].file_pointer = 0;
+    context.held_file_id = -1;
 }
 
 void cpu_state::update_length_register()
 {
     int len = -1;
 
-    if(context.held_file != -1)
+    if(context.has_file())
     {
-        len = files[context.held_file].len();
+        len = files[context.held_file_id].len();
     }
 
     context.register_states[(int)registers::FILE_LENGTH].set_int(len);
@@ -1420,16 +1468,18 @@ void cpu_state::update_length_register()
 
 void cpu_state::update_f_register()
 {
-    if(context.held_file == -1)
+    if(!context.has_file())
     {
         context.register_states[(int)registers::FILE].set_int(0);
     }
     else
     {
-        if(files[context.held_file].file_pointer >= (int)files[context.held_file].data.size())
+        cpu_file& fle = files[context.held_file_id];
+
+        if(fle.file_pointer >= (int)fle.data.size())
             context.register_states[(int)registers::FILE].set_eof();
         else
-            context.register_states[(int)registers::FILE] = files[context.held_file].data[files[context.held_file].file_pointer];
+            context.register_states[(int)registers::FILE] = fle.data[fle.file_pointer];
     }
 
 }
@@ -1460,15 +1510,17 @@ register_value& cpu_state::fetch(cpu_stash& stash, registers::type type)
 
     if(type == registers::FILE)
     {
-        if(stash.held_file == -1)
+        if(stash.held_file_id == -1)
             throw std::runtime_error("No file held");
 
-        if(files[stash.held_file].file_pointer >= (int)files[stash.held_file].data.size())
-            throw std::runtime_error("Invalid file pointer " + std::to_string(files[stash.held_file].file_pointer));
+        cpu_file& fle = files[stash.held_file_id];
 
-        int& fp = files[stash.held_file].file_pointer;
+        if(fle.file_pointer >= (int)fle.data.size())
+            throw std::runtime_error("Invalid file pointer " + std::to_string(fle.file_pointer));
 
-        register_value& next = files[stash.held_file].data[fp];
+        int& fp = fle.file_pointer;
+
+        register_value& next = fle.data[fp];
 
         fp++;
 
@@ -1565,31 +1617,49 @@ void cpu_state::set_program(std::string str)
     }
 }
 
-std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename)
+std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename, size_t pid)
 {
-    for(int i=0; i < (int)files.size(); i++)
+    //for(int i=0; i < (int)files.size(); i++)
+
+    auto it = files.find(pid);
+
+    ///STH NOT RIGHT HERE
+    if(it != files.end())
     {
-        if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
+        /*if(it->second.name.is_label() && it->second.name.label != filename)
         {
-            if(context.held_file == i)
+            std::cout << "UPDATING PID " << pid << " NAME " << it->second.name.label << " to " << filename << std::endl;;
+        }*/
+
+        it->second.name.set_label(filename);
+    }
+
+    for(auto& fle : files)
+    {
+        if((fle.second.name.is_symbol() && fle.second.name.symbol == filename) || (fle.second.name.is_label() && fle.second.name.label == filename))
+        {
+            if(context.held_file_id == fle.first)
                 return std::nullopt;
 
-            return &files[i];
+            return &fle.second;
         }
     }
 
     cpu_file fle;
     fle.name.set_label(filename);
+    fle._pid = pid;
+
+    files[fle._pid] = fle;
 
     ///cannot invalidate held file integer
-    files.push_back(fle);
+    //files.push_back(fle);
 
-    return &files.back();
+    return &files[fle._pid];
 }
 
-void cpu_state::remove_file(int held_id)
+void cpu_state::remove_file(size_t held_id)
 {
-    if(held_id == -1)
+    /*if(held_id == -1)
         throw std::runtime_error("Held id -1 in remove_file");
 
     if(held_id >= (int)files.size())
@@ -1615,17 +1685,48 @@ void cpu_state::remove_file(int held_id)
             sth.held_file--;
     }
 
-    files.erase(files.begin() + held_id);
+    files.erase(files.begin() + held_id);*/
+
+
+    if(context.held_file_id == held_id)
+        throw std::runtime_error("Bad logic error, attempted to remove file in use");
+
+    for(cpu_stash& sth : all_stash)
+    {
+        if(sth.held_file_id == held_id)
+            throw std::runtime_error("Bad logic error, attempted to remove file in use in stack");
+    }
+
+    auto it = files.find(held_id);
+
+    files.erase(it);
+}
+
+bool cpu_stash::has_file()
+{
+    return held_file_id != -1;
+}
+
+void cpu_state::add_file(cpu_file& fle)
+{
+    files[fle._pid] = fle;
 }
 
 void cpu_tests()
 {
     assert(instructions::rnames.size() == instructions::COUNT);
 
+    printf("Cpu tests\n");
+
     {
         cpu_state test;
 
+        printf("Start\n");
+
         test.add_line("COPY 5 X");
+
+        printf("Add\n");
+
         test.add_line("COPY 7 T");
         test.add_line("ADDI X T X");
 
