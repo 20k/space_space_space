@@ -75,7 +75,7 @@ void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
-    DO_SERIALISE(stash);
+    DO_SERIALISE(all_stash);
     DO_SERIALISE(files);
     DO_SERIALISE(inst);
     DO_SERIALISE(context);
@@ -368,25 +368,25 @@ std::string register_value::as_string()
     throw std::runtime_error("Bad register val?");
 }
 
-register_value& register_value::decode(cpu_state& state)
+register_value& register_value::decode(cpu_state& state, cpu_stash& stash)
 {
     if(is_reg())
     {
-        return state.fetch(reg);
+        return state.fetch(stash, reg);
     }
 
     if(is_address())
     {
-        if(state.context.held_file == -1)
+        if(stash.held_file == -1)
             throw std::runtime_error("No file held, caused by [address] " + as_string());
 
-        cpu_file& fle = state.files[state.context.held_file];
+        cpu_file& fle = state.files[stash.held_file];
 
         int check_address = address;
 
         if(which == 5)
         {
-            register_value& nval = state.context.register_states[(int)reg_address];
+            register_value& nval = stash.register_states[(int)reg_address];
 
             if(!nval.is_int())
             {
@@ -467,8 +467,9 @@ void instruction::make(const std::vector<std::string>& raw, cpu_state& cpu)
                     val.make(raw[i]);
 
                     args.push_back(val);
-                    return;
                 }
+
+                return;
             }
         }
 
@@ -498,7 +499,10 @@ void instruction::make(const std::vector<std::string>& raw, cpu_state& cpu)
 
         for(int i=1; i < (int)args.size(); i++)
         {
-            cust.args.push_back(args[i]);
+            if(!args[i].is_label())
+                throw std::runtime_error("@DEF args must be literal names, eg @DEF FUNC A0");
+
+            cust.args.push_back(args[i].label);
         }
 
         cpu.custom.push_back(cust);
@@ -749,16 +753,47 @@ register_value& restricta(register_value& in, const std::string& types)
     return in;
 }
 
-#define RA(x, y) restricta(x, #y)
+register_value& check_environ(cpu_state& st, cpu_stash& stash, register_value& in)
+{
+    if(!in.is_label())
+        return in;
 
-#define R(x) restrict_r(x).decode(*this) ///register only
-#define RN(x) RA(restrict_rn(x).decode(*this), N) ///register or number
-#define RNS(x) RA(restrict_rns(x).decode(*this), NS) ///register or number or symbol
-#define RNLS(x) RA(restrict_rnls(x).decode(*this), NLS) ///register or number or symbol
-#define RLS(x) RA(restrict_rls(x).decode(*this), LS)
-#define RS(x) RA(restrict_rs(x).decode(*this), S)
-#define E(x) RA(RA(x, RLANS).decode(*this), RLANS) ///everything, except file pointer
-#define L(x) restrict_l(x).decode(*this)
+    if(stash.my_argument_names.size() != stash.called_with.size())
+        throw std::runtime_error("Logic error in CPU arg name stuff [developer's fault]");
+
+    for(int i=0; i < (int)stash.my_argument_names.size(); i++)
+    {
+        if(stash.my_argument_names[i] == in.label)
+        {
+            register_value& their_value = stash.called_with[i].first;
+            int stk = stash.called_with[i].second;
+
+            cpu_stash& their_stash = st.all_stash[stk];
+
+            if(their_value.is_label())
+            {
+                return check_environ(st, their_stash, their_value).decode(st, their_stash);
+            }
+
+            return their_value.decode(st, their_stash);
+
+            //return st.context.called_with
+        }
+    }
+
+    return in;
+}
+
+#define RA(x, y) restricta(check_environ(*this, context, x), #y)
+
+#define R(x) restrict_r(check_environ(*this, context, x)).decode(*this, context) ///register only
+#define RN(x) RA(restrict_rn(check_environ(*this, context, x)).decode(*this, context), N) ///register or number
+#define RNS(x) RA(restrict_rns(check_environ(*this, context, x)).decode(*this, context), NS) ///register or number or symbol
+#define RNLS(x) RA(restrict_rnls(check_environ(*this, context, x)).decode(*this, context), NLS) ///register or number or symbol
+#define RLS(x) RA(restrict_rls(check_environ(*this, context, x)).decode(*this, context), LS)
+#define RS(x) RA(restrict_rs(check_environ(*this, context, x)).decode(*this, context), S)
+#define E(x) RA(RA(x, RLANS).decode(*this, context), RLANS) ///everything, except file pointer
+#define L(x) restrict_l(check_environ(*this, context, x)).decode(*this, context)
 
 
 #define SYM(x) restrict_s(x)
@@ -893,6 +928,9 @@ void cpu_state::step()
     if(next.type == instructions::COUNT)
         throw std::runtime_error("Bad instruction at runtime?");
 
+    ///so whenever we get a label
+    ///need to run it through our list
+
     //std::cout << "NEXT " << instructions::rnames[(int)next.type] << std::endl;
 
     ///ensure that whatever happens, our file has an eof at the end
@@ -931,7 +969,7 @@ void cpu_state::step()
         return;
         break;
     case TJMP:
-        if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value != 0)
+        if(fetch(context, registers::TEST).is_int() && fetch(context, registers::TEST).value != 0)
         {
             context.pc = label_to_pc(L(next[0]).label) + 1;
             return;
@@ -939,7 +977,7 @@ void cpu_state::step()
 
         break;
     case FJMP:
-        if(fetch(registers::TEST).is_int() && fetch(registers::TEST).value == 0)
+        if(fetch(context, registers::TEST).is_int() && fetch(context, registers::TEST).value == 0)
         {
             context.pc = label_to_pc(L(next[0]).label) + 1;
             return;
@@ -959,7 +997,7 @@ void cpu_state::step()
 
                 int fptr = held.file_pointer;
 
-                fetch(registers::TEST).set_int(held.data[fptr].is_eof());
+                fetch(context, registers::TEST).set_int(held.data[fptr].is_eof());
                 break;
             }
             else
@@ -968,7 +1006,7 @@ void cpu_state::step()
             }
         }
 
-        itest(RNLS(next[0]), SYM(next[1]), RNLS(next[2]), fetch(registers::TEST));
+        itest(RNLS(next[0]), SYM(next[1]), RNLS(next[2]), fetch(context, registers::TEST));
         break;
     case HALT:
         throw std::runtime_error("Received HALT");
@@ -1077,10 +1115,10 @@ void cpu_state::step()
         {
             if(files[kk].name == to_grab)
             {
-                for(int st = 0; st < (int)stash.size(); st++)
+                for(int st = 0; st < (int)all_stash.size(); st++)
                 {
-                    if(stash[st].held_file == kk)
-                        throw std::runtime_error("File already held by offset " + std::to_string(st) + " of " + std::to_string(stash.size()));
+                    if(all_stash[st].held_file == kk)
+                        throw std::runtime_error("File already held by offset " + std::to_string(st) + " of " + std::to_string(all_stash.size()));
                 }
 
                 context.held_file = kk;
@@ -1160,11 +1198,11 @@ void cpu_state::step()
     case AT_REP:
         throw std::runtime_error("Should never be executed [rep]");
     case AT_END:
-        if(stash.size() == 0)
+        if(all_stash.size() == 0)
             throw std::runtime_error("Not in a function! @END");
         {
-            context = stash.back();
-            stash.pop_back();
+            context = all_stash.back();
+            all_stash.pop_back();
             update_length_register();
         }
         break;
@@ -1174,6 +1212,8 @@ void cpu_state::step()
         //throw std::runtime_error("Should never be execited [@def]");
         {
             int defs = 1;
+
+            context.pc++;
 
             for(; context.pc < (int)inst.size(); context.pc++)
             {
@@ -1189,7 +1229,11 @@ void cpu_state::step()
                 }
             }
 
+            if(defs != 0)
+                throw std::runtime_error("Unterminated @DEF, needs @END");
+
             context.pc++;
+
             return;
         }
 
@@ -1197,6 +1241,10 @@ void cpu_state::step()
     case CALL:
         {
             std::string name = L(next[0]).label;
+
+            bool found = false;
+
+            std::vector<std::string> args;
 
             for(custom_instruction& cst : custom)
             {
@@ -1208,12 +1256,33 @@ void cpu_state::step()
                     {
                         throw std::runtime_error("Instruction " + name + " expects " + std::to_string(cst.args.size()) + " args, got " + std::to_string(my_args - 1));
                     }
+                    else
+                    {
+                        args = cst.args;
+
+                        found = true;
+                    }
                 }
             }
 
-            stash.push_back(context);
-            context = cpu_stash();
-            context.pc = get_custom_instr_pc(name) + 1;
+            if(!found)
+                throw std::runtime_error("No such instruction to call, [" + name + "]");
+
+            all_stash.push_back(context);
+
+            cpu_stash next_stash;
+
+            for(int i=1; i < next.num_args(); i++)
+            {
+                next_stash.called_with.push_back({next[i], (int)all_stash.size() - 1});
+            }
+
+            next_stash.my_argument_names = args;
+
+            int npc = get_custom_instr_pc(name) + 1;
+
+            context = next_stash;
+            context.pc = npc;
 
             update_length_register();
         }
@@ -1360,29 +1429,29 @@ void cpu_state::debug_state()
     }
 }
 
-register_value& cpu_state::fetch(registers::type type)
+register_value& cpu_state::fetch(cpu_stash& stash, registers::type type)
 {
-    if((int)type < 0 || (int)type >= (int)context.register_states.size())
+    if((int)type < 0 || (int)type >= (int)stash.register_states.size())
         throw std::runtime_error("No such register " + std::to_string((int)type));
 
     if(type == registers::FILE)
     {
-        if(context.held_file == -1)
+        if(stash.held_file == -1)
             throw std::runtime_error("No file held");
 
-        if(files[context.held_file].file_pointer >= (int)files[context.held_file].data.size())
-            throw std::runtime_error("Invalid file pointer " + std::to_string(files[context.held_file].file_pointer));
+        if(files[stash.held_file].file_pointer >= (int)files[stash.held_file].data.size())
+            throw std::runtime_error("Invalid file pointer " + std::to_string(files[stash.held_file].file_pointer));
 
-        int& fp = files[context.held_file].file_pointer;
+        int& fp = files[stash.held_file].file_pointer;
 
-        register_value& next = files[context.held_file].data[fp];
+        register_value& next = files[stash.held_file].data[fp];
 
         fp++;
 
         return next;
     }
 
-    return context.register_states[(int)type];
+    return stash.register_states[(int)type];
 }
 
 void cpu_state::add(const std::vector<std::string>& raw)

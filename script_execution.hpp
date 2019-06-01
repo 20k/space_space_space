@@ -28,6 +28,7 @@ namespace registers
 }
 
 struct cpu_state;
+struct cpu_stash;
 
 struct register_value : serialisable
 {
@@ -146,7 +147,7 @@ struct register_value : serialisable
         return false;
     }
 
-    register_value& decode(cpu_state& state);
+    register_value& decode(cpu_state& state, cpu_stash& stash);
 
     SERIALISE_SIGNATURE();
 };
@@ -304,7 +305,9 @@ struct cpu_stash : serialisable
     std::vector<register_value> register_states;
     int pc = 0;
 
-    std::vector<register_value*> called_with;
+    ///int is which cpu stash they are
+    std::vector<std::pair<register_value, int>> called_with;
+    std::vector<std::string> my_argument_names;
 
     cpu_stash();
 
@@ -314,14 +317,14 @@ struct cpu_stash : serialisable
 struct custom_instruction
 {
     std::string name;
-    std::vector<register_value> args;
+    std::vector<std::string> args;
 };
 
 struct cpu_state : serialisable, owned
 {
     cpu_state();
 
-    std::vector<cpu_stash> stash;
+    std::vector<cpu_stash> all_stash;
     std::vector<cpu_file> files;
     std::vector<custom_instruction> custom;
 
@@ -352,7 +355,7 @@ struct cpu_state : serialisable, owned
 
     void debug_state();
 
-    register_value& fetch(registers::type type);
+    register_value& fetch(cpu_stash& stash, registers::type type);
 
     void add(const std::vector<std::string>& raw);
     void add_line(const std::string& str);
