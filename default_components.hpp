@@ -4,6 +4,9 @@
 struct component;
 struct component_fixed_properties;
 
+#include <vector>
+#include <string>
+
 #define POWER_TO_HEAT 1
 
 namespace component_type
@@ -36,6 +39,32 @@ namespace component_type
         RADAR,
         CPU,
         COUNT,
+    };
+
+    static inline std::vector<std::string> cpu_names
+    {
+        "IMPULSE",
+        "S_D",
+        "W_D",
+        "SHIELD",
+        "LASER",
+        "SENSOR",
+        "ARMOUR",
+        "RADIATOR",
+        "POWER",
+        "M_CRE",
+        "DESTRUCT",
+        "CARGO",
+        "TANK",
+        "TANK_HS",
+        "HEAT_BLOCK",
+        "MATERIAL",
+        "LAUNCHER",
+        "M_LASER",
+        "REFINERY",
+        "FACTORY",
+        "RADAR",
+        "CPU"
     };
 }
 
