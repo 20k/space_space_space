@@ -298,6 +298,17 @@ struct cpu_file : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct spair : serialisable
+{
+    register_value first;
+    int second = 0;
+
+    spair();
+    spair(register_value f1, int s);
+
+    SERIALISE_SIGNATURE();
+};
+
 struct cpu_stash : serialisable
 {
     int held_file = -1;
@@ -306,7 +317,7 @@ struct cpu_stash : serialisable
     int pc = 0;
 
     ///int is which cpu stash they are
-    std::vector<std::pair<register_value, int>> called_with;
+    std::vector<spair> called_with;
     std::vector<std::string> my_argument_names;
 
     cpu_stash();
@@ -327,13 +338,6 @@ struct cpu_state : serialisable, owned
     std::vector<cpu_stash> all_stash;
     std::vector<cpu_file> files;
     std::vector<custom_instruction> custom;
-
-    /*std::vector<cpu_file> files;
-    int held_file = -1;
-
-    std::vector<register_value> register_states;
-    std::vector<instruction> inst;
-    int pc = 0; ///instruction to be executed next*/
 
     std::vector<instruction> inst;
 

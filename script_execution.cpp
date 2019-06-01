@@ -71,6 +71,21 @@ void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(held_file);
     DO_SERIALISE(register_states);
     DO_SERIALISE(pc);
+    DO_SERIALISE(called_with);
+    DO_SERIALISE(my_argument_names);
+}
+
+spair::spair()
+{
+
+}
+
+spair::spair(register_value f1, int s) : first(f1), second(s){}
+
+void spair::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(first);
+    DO_SERIALISE(second);
 }
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
