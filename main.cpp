@@ -275,7 +275,7 @@ void server_thread(std::atomic_bool& should_term)
     default_missile.add_component_at(get_component_default(component_type::HEAT_BLOCK, 1), {300, 300}, 2);
     default_missile.add_component_at(get_component_default(component_type::RADIATOR, 1), {350, 350}, 2);
     default_missile.add_component_at(get_component_default(component_type::CARGO_STORAGE, 1), {400, 400}, 4);
-    default_missile.name = "Default Missile";
+    default_missile.name = "DEFAULT_MISSILE";
     default_missile.add_tag("missile");
 
     const component_fixed_properties& cold_fixed = get_component_fixed_props(component_type::STORAGE_TANK, 1);
