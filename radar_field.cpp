@@ -307,8 +307,14 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         #if 1
         if(packet.frequency == HEAT_FREQ)
         {
-            ///only absorb 10% of heat? we only reflect 90%
-            collide.latent_heat += local_intensity * (1 - reflect_percentage);
+            float nonphysical_damp = 1;
+
+            if(packet.emitted_by == collide._pid)
+            {
+                nonphysical_damp *= 0.1;
+            }
+
+            collide.latent_heat += nonphysical_damp * local_intensity * (1 - reflect_percentage);
 
             /*if(dynamic_cast<ship*>(&collide))
             {
