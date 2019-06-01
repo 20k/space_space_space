@@ -328,7 +328,7 @@ void cpu_file::set_size(int next_size)
     ensure_eof();
 }
 
-std::string register_value::as_string()
+std::string register_value::as_string() const
 {
     if(is_reg())
     {
@@ -620,94 +620,18 @@ cpu_state::cpu_state()
     update_master_virtual_file();
 }
 
-register_value& restrict_r(register_value& in)
+struct register_bundle
 {
-    if(!in.is_reg() && !in.is_address())
-        throw std::runtime_error("Expected register or address, got " + in.as_string());
+    cpu_stash& stash;
+    register_value& in;
 
-    return in;
-}
+    register_bundle(cpu_stash& st, register_value& r) : stash(st), in(r){}
 
-register_value& restrict_n(register_value& in)
-{
-    if(!in.is_int())
-        throw std::runtime_error("Expected value, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_rn(register_value& in)
-{
-    if(!in.is_reg() && !in.is_address() && !in.is_int())
-        throw std::runtime_error("Expected register, address, or integer, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_rns(register_value& in)
-{
-    if(!in.is_reg() && !in.is_address() && !in.is_int() && !in.is_symbol())
-        throw std::runtime_error("Expected register, address, integer, or symbol, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_rnls(register_value& in)
-{
-    if(!in.is_reg() && !in.is_address() && !in.is_int() && !in.is_symbol() && !in.is_label())
-        throw std::runtime_error("Expected register, address, integer, symbol, or label got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_rls(register_value& in)
-{
-    if(!in.is_reg() && !in.is_address() && !in.is_label() && !in.is_symbol())
-        throw std::runtime_error("Expected register, address, label, or symbol, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_rs(register_value& in)
-{
-    if(!in.is_reg() && !in.is_address() && !in.is_symbol())
-        throw std::runtime_error("Expected register, address, or symbol, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_l(register_value& in)
-{
-    if(!in.is_label())
-        throw std::runtime_error("Expected label, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_s(register_value& in)
-{
-    if(!in.is_symbol())
-        throw std::runtime_error("Expected symbol, got " + in.as_string());
-
-    return in;
-}
-
-register_value& pseudo_symbol(register_value& in)
-{
-    ///BIT HACKY
-    if(!in.is_label())
-        throw std::runtime_error("Expected <, > or =, got " + in.as_string());
-
-    return in;
-}
-
-register_value& restrict_all(register_value& in)
-{
-    //if(!in.is_reg() && !in.is_int())
-    //    throw std::runtime_error("Expected register or integer, got " + in.as_string());
-
-    return in;
-}
+    register_value& decode(cpu_state& st)
+    {
+        return in.decode(st, stash);
+    }
+};
 
 register_value& restricta(register_value& in, const std::string& types)
 {
@@ -753,10 +677,20 @@ register_value& restricta(register_value& in, const std::string& types)
     return in;
 }
 
-register_value& check_environ(cpu_state& st, cpu_stash& stash, register_value& in)
+register_bundle restricta(const register_bundle& bun, const std::string& types)
+{
+    register_value& val = restricta(bun.in, types);
+
+    return register_bundle(bun.stash, val);
+}
+
+///problem is we're not early decoding
+///really need to pass through variable but need to bundle stash with it
+///then decode right at the end
+register_bundle check_environ(cpu_state& st, cpu_stash& stash, register_value& in)
 {
     if(!in.is_label())
-        return in.decode(st, stash);
+        return register_bundle(stash, in);
 
     if(stash.my_argument_names.size() != stash.called_with.size())
         throw std::runtime_error("Logic error in CPU arg name stuff [developer's fault]");
@@ -770,54 +704,28 @@ register_value& check_environ(cpu_state& st, cpu_stash& stash, register_value& i
 
             cpu_stash& their_stash = st.all_stash[stk];
 
-            if(their_value.is_label())
-            {
-                return check_environ(st, their_stash, their_value).decode(st, their_stash);
-            }
-
-            std::cout << "found type " << their_value.as_string() << std::endl;
-
-            register_value& decoded = their_value.decode(st, their_stash);
-
-
-            std::cout << "DEC " << decoded.as_string() << std::endl;
-
-            return decoded;
-
-            //return st.context.called_with
+            return check_environ(st, their_stash, their_value);
         }
     }
 
-    std::cout << "IN VAL " << in.as_string() << std::endl;
-
-    return in.decode(st, stash);
+    return register_bundle(stash, in);
 }
-
-/*#define RA(x, y) restricta(check_environ(*this, context, x), #y)
-#define R(x) restrict_r(check_environ(*this, context, x))///register only
-#define RN(x) RA(restrict_rn(check_environ(*this, context, x)), N) ///register or number
-#define RNS(x) RA(restrict_rns(check_environ(*this, context, x)), NS) ///register or number or symbol
-#define RNLS(x) RA(restrict_rnls(check_environ(*this, context, x)), NLS) ///register or number or symbol
-#define RLS(x) RA(restrict_rls(check_environ(*this, context, x)), LS)
-#define RS(x) RA(restrict_rs(check_environ(*this, context, x)), S)
-#define E(x) RA(RA(x, RLANS).decode(*this, context), RLANS) ///everything, except file pointer
-#define L(x) restrict_l(check_environ(*this, context, x))*/
 
 #define RA(x, y) restricta(x, #y)
 #define CHECK(x) check_environ(*this, context, x)
+#define DEC(x) x.decode(*this)
 
-#define R(x) CHECK(RA(x, R))
-#define RN(x) RA(CHECK(RA(x, RN)), N)
-#define RNS(x) RA(CHECK(RA(x, RNS)), NS)
-#define RNLS(x) RA(CHECK(RA(x, RNLS)), NLS)
-#define RLS(x) RA(CHECK(RA(x, RLS)), LS)
-#define RS(x) RA(CHECK(RA(x, RS)), S)
-#define E(x) CHECK(RA(x, RLANS))
-#define L(x) CHECK(RA(x, L))
+#define R(x) DEC(RA(CHECK(x), R))
+#define RN(x) RA(DEC(RA(CHECK(x), RN)), N)
+#define RNS(x) RA(DEC(RA(CHECK(x), RNS)), NS)
+#define RNLS(x) RA(DEC(RA(CHECK(x), RNLS)), NLS)
+#define RLS(x) RA(DEC(RA(CHECK(x), RLS)), LS)
+#define RS(x) RA(DEC(RA(CHECK(x), RS)), S)
+#define E(x) DEC(RA(CHECK(x), RLANS))
+#define L(x) DEC(RA(CHECK(x), L))
 
-#define SYM(x) restrict_s(x)
-
-#define NUM(x) restrict_n(x)
+#define SYM(x) RA(x, S)
+#define NUM(x) RA(x, N)
 
 #define A1(x) x(next[0])
 #define A2(x, y) x(next[0]), y(next[1])

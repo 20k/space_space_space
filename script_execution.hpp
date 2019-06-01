@@ -44,7 +44,7 @@ struct register_value : serialisable
     bool file_eof = false;
 
     void make(const std::string& str);
-    std::string as_string();
+    std::string as_string() const;
 
     bool is_reg() const
     {
@@ -71,7 +71,7 @@ struct register_value : serialisable
         return which == 4 || which == 5;
     }
 
-    bool is_eof()
+    bool is_eof() const
     {
         return which == 6;
     }
