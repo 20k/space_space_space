@@ -4572,11 +4572,9 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     }
 }
 
-void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r)
+void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::string dir = "")
 {
     assert(component_type::COUNT == component_type::cpu_names.size());
-
-    dump_radar_data_into_cpu(cpu, s, play, space, r);
 
     std::map<int, int> type_counts;
 
@@ -4593,6 +4591,11 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         //    continue;
 
         std::string fullname = component_type::cpu_names[(int)c.base_id] + "_" + std::to_string(my_offset) + "_HW";
+
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
 
         std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname);
 
@@ -4633,6 +4636,14 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
         file[6].set_int(c.get_my_temperature());
         file[6].help = "Temperature (K)";
+
+        for(ship& ns : c.stored)
+        {
+            if(ns.is_ship)
+                check_update_components_in_hardware(ns, cpu, play, space, r, fullname + "/" + ns.blueprint_name);
+            else
+                check_update_components_in_hardware(ns, cpu, play, space, r, fullname);
+        }
     }
 }
 
@@ -4648,7 +4659,15 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         cpu_state& cpu = c.cpu_core;
 
+        if(cpu.tx_pending && cpu.waiting_for_hardware_feedback)
+        {
+            cpu.tx_pending = false;
+
+
+        }
+
         check_update_components_in_hardware(s, cpu, play, space, r);
+        dump_radar_data_into_cpu(cpu, s, play, space, r);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())

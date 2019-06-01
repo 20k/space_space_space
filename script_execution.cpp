@@ -86,6 +86,12 @@ void spair::serialise(serialise_context& ctx, nlohmann::json& data, self_t* othe
     DO_SERIALISE(second);
 }
 
+void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(from);
+    DO_SERIALISE(to);
+}
+
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
     DO_SERIALISE(all_stash);
@@ -96,9 +102,12 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(free_running);
     DO_SERIALISE(last_error);
     DO_SERIALISE(ports);
+    DO_SERIALISE(xfers);
     DO_SERIALISE(blocking_status);
     DO_SERIALISE(waiting_for_hardware_feedback);
     DO_SERIALISE(saved_program);
+    DO_SERIALISE(tx_pending);
+    DO_SERIALISE(tx_result);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -1060,6 +1069,26 @@ void cpu_state::step()
             cur.set_size(next_size);
 
             update_length_register();
+        }
+
+        break;
+
+    ///or maybe drop should just take a destination arg
+    case TXFR:
+        {
+            if(context.held_file == -1)
+                throw std::runtime_error("Not holding file [TXFR]");
+
+            cpu_file& file = files[context.held_file];
+
+            cpu_xfer xf;
+            xf.from = file.name.as_string();
+            xf.to = E(next[0]).as_string();
+
+            tx_pending = true;
+            tx_result = false;
+
+            waiting_for_hardware_feedback = true;
         }
 
         break;

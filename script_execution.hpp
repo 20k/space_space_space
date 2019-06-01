@@ -184,6 +184,7 @@ namespace instructions
         MAKE,
         RNAM,
         RSIZ,
+        TXFR,
         GRAB,
         FILE,
         SEEK,
@@ -230,6 +231,7 @@ namespace instructions
         "MAKE",
         "RNAM",
         "RSIZ",
+        "TXFR",
         "GRAB",
         "FILE",
         "SEEK",
@@ -314,6 +316,13 @@ struct spair : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct cpu_xfer : serialisable
+{
+    std::string from, to;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct cpu_stash : serialisable
 {
     int held_file = -1;
@@ -352,8 +361,11 @@ struct cpu_state : serialisable, owned
     std::string last_error;
 
     std::vector<register_value> ports;
+    std::vector<cpu_xfer> xfers;
     std::vector<int> blocking_status;
     bool waiting_for_hardware_feedback = false;
+    bool tx_pending = false;
+    bool tx_result = false;
 
     std::string saved_program;
 
