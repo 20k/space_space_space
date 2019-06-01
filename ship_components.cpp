@@ -4172,6 +4172,17 @@ void ship::show_power()
         c.render_inline_ui();
     }
 
+    for(component& c : components)
+    {
+        if(c.has(component_info::SELF_DESTRUCT))
+        {
+            if(ImGuiX::SimpleButton("(Destruct (There is no confirmation!))"))
+            {
+                rpc("set_use", c);
+            }
+        }
+    }
+
     ImGui::End();
 }
 
@@ -4194,108 +4205,6 @@ std::vector<double> ship::get_capacity()
            {
               return c.get_capacity();
            });
-}
-
-void ship::advanced_ship_display()
-{
-    ImGui::Begin(("Advanced Ship" + std::to_string(_pid)).c_str());
-
-    #if 0
-    for(auto& i : data_track)
-    {
-        if(i.vsat.size() == 0)
-            continue;
-
-        /*std::string name_1 = component_info::dname[i.first];
-        std::string name_2 = component_info::dname[i.first];
-
-        std::vector<std::string> names{name_1, name_2};
-
-        std::string label = "hi";
-
-        std::vector<ImColor> cols;
-
-        cols.push_back(ImColor(255, 128, 128, 255));
-        cols.push_back(ImColor(128, 128, 255, 255));
-
-        ImGuiX::PlotMultiEx(ImGuiPlotType_Lines, label.c_str(), names, cols, {i.second.vsat, i.second.vheld}, 0, 1, ImVec2(0,0));*/
-
-        //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, 1);
-        //ImGui::PlotLines(name_1.c_str(), &i.second.vsat[0], i.second.vsat.size(), 0, nullptr, 0, 1);
-
-        //ImGui::PlotHistogram(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
-
-        //ImGui::PlotLines(name.c_str(), &i.second.data[0], i.second.data.size(), 0, nullptr, 0, get_capacity()[i.first]);
-    }
-    #endif // 0
-
-    ImGui::Columns(2);
-
-    ImGui::Text("Stored");
-
-    //for(auto& i : data_track)
-
-    //for(int kk=0; kk < (int)data_track.size(); kk++)
-    for(auto& kk : tracked)
-    {
-        if(data_track[kk].vheld.size() == 0)
-            continue;
-
-        std::string name_1 = component_info::dname[kk];
-
-        ImGui::PlotLines(name_1.c_str(), &(data_track[kk].vheld)[0], data_track[kk].vheld.size(), 0, nullptr, 0, get_capacity()[kk], ImVec2(0, 0));
-    }
-
-    ImGui::NextColumn();
-
-    ImGui::Text("Satisfied");
-
-    //for(auto& i : data_track)
-
-    for(auto& kk : tracked)
-    {
-        if((data_track)[kk].vsat.size() == 0)
-            continue;
-
-        if(kk == component_info::CAPACITOR)
-        {
-            ImGui::NewLine();
-            continue;
-        }
-
-        std::string name_1 = component_info::dname[kk];
-
-        ImGui::PlotLines(name_1.c_str(), &(data_track[kk].vsat)[0], data_track[kk].vsat.size(), 0, nullptr, 0, 1, ImVec2(0, 0));
-    }
-
-    ImGui::EndColumns();
-
-    for(component& c : components)
-    {
-        if(c.has(component_info::WEAPONS))
-        {
-            ImGui::Button("Fire");
-
-            if(ImGui::IsItemClicked())
-            {
-                rpc("set_use", c);
-
-                //c.try_use = true;
-            }
-        }
-
-        if(c.has(component_info::SELF_DESTRUCT))
-        {
-            ImGui::Button("DESTRUCT");
-
-            if(ImGui::IsItemClicked())
-            {
-                rpc("set_use", c);
-            }
-        }
-    }
-
-    ImGui::End();
 }
 
 void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage)

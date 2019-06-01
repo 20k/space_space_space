@@ -815,8 +815,6 @@ struct ship : heatable_entity
         return ret;
     }
 
-    void advanced_ship_display();
-
     void apply_force(vec2f dir);
     void apply_rotation_force(float force);
 

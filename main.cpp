@@ -1757,8 +1757,6 @@ int main()
 
             s.show_resources();
 
-            s.advanced_ship_display();
-
             s.show_power();
 
             s.show_manufacturing_windows(design.server_blueprint_manage);
