@@ -45,9 +45,6 @@ std::vector<std::string> split(const std::string &s, char delim)
     return elems;
 }
 
-
-///need to parse 0xFF to 255
-
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
     DO_SERIALISE(reg);
