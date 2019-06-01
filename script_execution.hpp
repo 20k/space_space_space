@@ -290,6 +290,7 @@ struct cpu_file : serialisable
     register_value name;
     std::vector<register_value> data;
     int file_pointer = 0;
+    bool was_xferred = false;
 
     cpu_file();
 
@@ -321,6 +322,7 @@ struct cpu_xfer : serialisable
     std::string from, to;
     float fraction = 1;
     bool is_fractiony = false;
+    int held_file = -1;
 
     SERIALISE_SIGNATURE();
 };
@@ -367,6 +369,7 @@ struct cpu_state : serialisable, owned
     std::vector<int> blocking_status;
     bool waiting_for_hardware_feedback = false;
     bool tx_pending = false;
+    bool had_tx_pending = false;
 
     std::string saved_program;
 
@@ -404,6 +407,8 @@ struct cpu_state : serialisable, owned
     void update_f_register();
 
     std::optional<cpu_file*> get_create_capability_file(const std::string& filename);
+
+    void remove_file(int idx);
 };
 
 void cpu_tests();

@@ -4577,6 +4577,67 @@ std::string make_component_dir_name(int base_id, int offset)
     return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
 }
 
+std::optional<std::string> get_directory_name_impl(ship& s, std::map<int, int>& type_counts, std::string dir, size_t of)
+{
+    if(of == s._pid)
+        return dir;
+
+    for(component& c : s.components)
+    {
+        if(c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        int my_offset = type_counts[(int)c.base_id];
+        type_counts[(int)c.base_id]++;
+
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
+
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
+
+        if(of == c._pid)
+            return fullname;
+
+        std::map<int, int> them_type_counts;
+        std::map<std::string, int> ships;
+
+        for(ship& ns : c.stored)
+        {
+            std::optional<std::string> ret;
+
+            if(ns.is_ship)
+            {
+                std::string sname = fullname + "/" + ns.blueprint_name;
+                int mcount = ships[sname];
+
+                sname += "_" + std::to_string(mcount);
+
+                std::map<int, int> ship_type;
+                ships[sname]++;
+                ret = get_directory_name_impl(ns, ship_type, sname, of);
+            }
+            else
+            {
+                ret = get_directory_name_impl(ns, them_type_counts, fullname, of);
+            }
+
+            if(ret.has_value())
+                return ret;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string> ship::get_directory_name(ship& root, size_t pid)
+{
+    std::map<int, int> nmap;
+
+    return get_directory_name_impl(root, nmap, "", pid);
+}
+
 ///second id is what type we are
 ///0 == ship, 1 == component
 std::optional<std::pair<size_t, int>> id_by_directory(ship& s, const std::string& str, std::map<int, int>& type_counts, std::string dir = "")
@@ -4671,6 +4732,16 @@ std::optional<size_t> ship::get_ship_id_by_directory(const std::string& str)
 void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir = "")
 {
     assert(component_type::COUNT == component_type::cpu_names.size());
+
+    if(dir.size() > 0)
+    {
+        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir);
+
+        if(opt_ship_file.has_value())
+        {
+
+        }
+    }
 
     for(component& c : s.components)
     {
@@ -5342,6 +5413,10 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
                     bool success = check_add_transfer(*this, xfers, equiv);
 
                     c.cpu_core.context.register_states[(int)registers::TEST].set_int(success);
+
+                    assert(cxfer.held_file >= 0 && cxfer.held_file < (int)c.cpu_core.files.size());
+
+                    c.cpu_core.files[cxfer.held_file].was_xferred = true;
                 }
             }
 

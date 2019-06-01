@@ -92,6 +92,7 @@ void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(to);
     DO_SERIALISE(fraction);
     DO_SERIALISE(is_fractiony);
+    DO_SERIALISE(held_file);
 }
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -109,6 +110,7 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(waiting_for_hardware_feedback);
     DO_SERIALISE(saved_program);
     DO_SERIALISE(tx_pending);
+    DO_SERIALISE(had_tx_pending);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -120,6 +122,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(name);
     DO_SERIALISE(data);
     DO_SERIALISE(file_pointer);
+    DO_SERIALISE(was_xferred);
 }
 
 bool all_numeric(const std::string& str)
@@ -885,6 +888,23 @@ void cpu_state::step()
     if(waiting_for_hardware_feedback || tx_pending)
         return;
 
+    ///shit we might double tx which makes dirty filing not work
+    ///need to rename correctly
+    /*if(had_tx_pending)
+    {
+        for(int i=0; i < (int)files.size(); i++)
+        {
+            if(files[i].was_xferred)
+            {
+                remove_file(i);
+                i--;
+                continue;
+            }
+        }
+
+        had_tx_pending = false;
+    }*/
+
     if(inst.size() == 0)
         return;
 
@@ -1085,10 +1105,22 @@ void cpu_state::step()
             cpu_xfer xf;
             xf.from = file.name.as_string();
             xf.to = E(next[0]).as_string();
+            xf.held_file = context.held_file;
             xfers.push_back(xf);
+            ///so
+            ///when xferring stuff around we can guarantee no duplicates because the names are uniquely generated
+            ///unless someone's put something there already, in which case it should get trampled? ignore that for the moment
+            ///can make it illegal to name things in a certain way?
+            ///ok so
+            ///need to pretend that the file we're holding has gone somewhere else
+            ///need to delete any files with that name already, or deliberately overwrite
+            ///involes fixing all held files up, not too much of a problem
+            ///although... if someone's holding it that's a problem
+            ///so maybe naming scheme is way to go
 
             ///stalls
             tx_pending = true;
+            had_tx_pending = true;
         }
 
         break;
@@ -1553,6 +1585,37 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
     files.push_back(fle);
 
     return &files.back();
+}
+
+void cpu_state::remove_file(int held_id)
+{
+    if(held_id == -1)
+        throw std::runtime_error("Held id -1 in remove_file");
+
+    if(held_id >= (int)files.size())
+        throw std::runtime_error("Should be impossible, held_id >= files.size()");
+
+    if(context.held_file == held_id)
+        throw std::runtime_error("Bad logic error, attempted to remove file in use");
+
+    for(cpu_stash& sth : all_stash)
+    {
+        if(sth.held_file == held_id)
+            throw std::runtime_error("Bad logic error, attempted to remove file in use in stack");
+    }
+
+    if(context.held_file > held_id)
+    {
+        context.held_file--;
+    }
+
+    for(cpu_stash& sth : all_stash)
+    {
+        if(sth.held_file > held_id)
+            sth.held_file--;
+    }
+
+    files.erase(files.begin() + held_id);
 }
 
 void cpu_tests()
