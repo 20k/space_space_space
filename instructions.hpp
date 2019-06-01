@@ -4,6 +4,44 @@
 #include <random>
 #include "random.hpp"
 
+int hex_to_dec(char hex)
+{
+    if(hex == '0')
+        return 0;
+    if(hex == '1')
+        return 1;
+    if(hex == '2')
+        return 2;
+    if(hex == '3')
+        return 3;
+    if(hex == '4')
+        return 4;
+    if(hex == '5')
+        return 5;
+    if(hex == '6')
+        return 6;
+    if(hex == '7')
+        return 7;
+    if(hex == '8')
+        return 8;
+    if(hex == '9')
+        return 9;
+    if(hex == 'A' || hex == 'a')
+        return 10;
+    if(hex == 'B' || hex == 'b')
+        return 11;
+    if(hex == 'C' || hex == 'c')
+        return 12;
+    if(hex == 'D' || hex == 'd')
+        return 13;
+    if(hex == 'E' || hex == 'e')
+        return 14;
+    if(hex == 'F' || hex == 'f')
+        return 15;
+
+    return 0;
+}
+
 void icopy(register_value& one, register_value& two)
 {
     two = one;
@@ -53,6 +91,51 @@ void imodi(register_value& r1, register_value& r2, register_value& r3)
         throw std::runtime_error("Tried to MODI by 0");
 
     r3.set_int(r1.value % r2.value);
+}
+
+void iswiz(register_value& r1, register_value& r2, register_value& r3)
+{
+    NUM(r1);
+    NUM(r2);
+
+    std::string base_10_val = std::to_string(r1.value);
+    std::string base_10_mask = std::to_string(r2.value);
+
+    int start = 0;
+
+    if(r2.value < 0)
+        start = 1;
+
+    std::string result = "";
+
+    for(int i=start; i < (int)base_10_mask.size(); i++)
+    {
+        int val = hex_to_dec(base_10_mask[i]);
+
+        ///1 indexed
+        int offset_val = base_10_val.size() - val;
+
+        if(offset_val < 0)
+        {
+            result += std::string("0");
+            continue;
+        }
+
+        if(offset_val >= (int)base_10_val.size())
+        {
+            result += std::string("0");
+            continue;
+        }
+
+        result += base_10_val[offset_val];
+    }
+
+    int fval = std::stoi(result);
+
+    if(r2.value >= 0)
+        r3.set_int(fval);
+    else
+        r3.set_int(-fval);
 }
 
 void itest(register_value& r1, register_value& msym, register_value& r2, register_value& t)

@@ -908,7 +908,10 @@ void cpu_state::step()
         //return;
         break;
     case SWIZ:
-        throw std::runtime_error("Unimplemented SWIZ");
+
+        CALL3(iswiz, RN, RN, R);
+        //throw std::runtime_error("Unimplemented SWIZ");
+        break;
     case JUMP:
         context.pc = label_to_pc(L(next[0]).label) + 1;
         return;
@@ -1630,6 +1633,39 @@ void cpu_tests()
         assert(test.context.register_states[(int)registers::TEST].value == 1);
 
         test.debug_state();
+    }
+
+    ///thanks https://www.reddit.com/r/exapunks/comments/96vox3/how_do_swiz/ reddit beause swiz is a bit
+    ///confusing
+    {
+        cpu_state test;
+
+        test.add_line("SWIZ 8567 3214 X");
+
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 5678);
+
+        test.add_line("SWIZ 1234 0003 X");
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 2);
+
+        test.add_line("SWIZ 5678 3 X");
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 6);
+
+        test.add_line("SWIZ 5678 32 X");
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 67);
+
+
+        test.add_line("SWIZ 5678 -32 X");
+        test.step();
+
+        assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == -67);
     }
 
     //exit(0);
