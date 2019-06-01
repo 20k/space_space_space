@@ -1084,6 +1084,7 @@ void cpu_state::step()
             cpu_xfer xf;
             xf.from = file.name.as_string();
             xf.to = E(next[0]).as_string();
+            xfers.push_back(xf);
 
             tx_pending = true;
             tx_result = false;

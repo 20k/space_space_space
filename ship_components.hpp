@@ -875,6 +875,9 @@ struct ship : heatable_entity
 
     bool is_ship = false;
 
+    std::optional<size_t> get_component_id_by_directory(const std::string& str);
+    std::optional<size_t> get_ship_id_by_directory(const std::string& str);
+
 private:
     double thrusters_active = 0;
 };

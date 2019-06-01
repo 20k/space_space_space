@@ -4572,11 +4572,19 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     }
 }
 
-void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::string dir = "")
+std::string make_component_dir_name(int base_id, int offset)
 {
-    assert(component_type::COUNT == component_type::cpu_names.size());
+    return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
+}
 
-    std::map<int, int> type_counts;
+///second id is what type we are
+///0 == ship, 1 == component
+std::optional<std::pair<size_t, int>> id_by_directory(ship& s, const std::string& str, std::map<int, int>& type_counts, std::string dir = "")
+{
+    if(dir == str)
+    {
+        return std::pair<size_t, int>(s._pid, 0);
+    }
 
     for(component& c : s.components)
     {
@@ -4584,13 +4592,91 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
             continue;
 
         int my_offset = type_counts[(int)c.base_id];
-
         type_counts[(int)c.base_id]++;
 
-        //if(c.get_operating_efficiency() < 0.2)
-        //    continue;
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
 
-        std::string fullname = component_type::cpu_names[(int)c.base_id] + "_" + std::to_string(my_offset) + "_HW";
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
+
+        if(fullname == str)
+        {
+            return std::pair<size_t, int>(c._pid, 1);
+        }
+
+        std::map<int, int> them_type_counts;
+        std::map<std::string, int> ships;
+
+        for(ship& ns : c.stored)
+        {
+            std::optional<std::pair<size_t, int>> ret;
+
+            if(ns.is_ship)
+            {
+                std::string sname = fullname + "/" + ns.blueprint_name;
+
+                int mcount = ships[sname];
+
+                std::map<int, int> ship_type;
+                ships[sname]++;
+                ret = id_by_directory(ns, sname + "_" + std::to_string(mcount), ship_type);
+            }
+            else
+                ret = id_by_directory(ns, fullname, them_type_counts);
+
+            if(ret.has_value())
+                return ret;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<size_t> ship::get_component_id_by_directory(const std::string& str)
+{
+    std::map<int, int> type_counts;
+
+    auto opt_info = id_by_directory(*this, str, type_counts, "");
+
+    if(!opt_info.has_value())
+        return std::nullopt;
+
+    if(opt_info.value().second == 0)
+        return std::nullopt;
+
+    return opt_info.value().first;
+}
+
+std::optional<size_t> ship::get_ship_id_by_directory(const std::string& str)
+{
+    std::map<int, int> type_counts;
+
+    auto opt_info = id_by_directory(*this, str, type_counts, "");
+
+    if(!opt_info.has_value())
+        return std::nullopt;
+
+    if(opt_info.value().second == 1)
+        return std::nullopt;
+
+    return opt_info.value().first;
+}
+
+void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir = "")
+{
+    assert(component_type::COUNT == component_type::cpu_names.size());
+
+    for(component& c : s.components)
+    {
+        if(c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        int my_offset = type_counts[(int)c.base_id];
+        type_counts[(int)c.base_id]++;
+
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
 
         if(dir.size() > 0)
         {
@@ -4637,12 +4723,23 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         file[6].set_int(c.get_my_temperature());
         file[6].help = "Temperature (K)";
 
+        std::map<int, int> them_type_counts;
+        std::map<std::string, int> ships;
+
         for(ship& ns : c.stored)
         {
             if(ns.is_ship)
-                check_update_components_in_hardware(ns, cpu, play, space, r, fullname + "/" + ns.blueprint_name);
+            {
+                std::string sname = fullname + "/" + ns.blueprint_name;
+
+                int mcount = ships[sname];
+
+                std::map<int, int> ship_type;
+                ships[sname]++;
+                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname + "_" + std::to_string(mcount));
+            }
             else
-                check_update_components_in_hardware(ns, cpu, play, space, r, fullname);
+                check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname);
         }
     }
 }
@@ -4663,10 +4760,55 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
         {
             cpu.tx_pending = false;
 
+            printf("TX PENDING %i\n", cpu.xfers.size());
 
+            for(cpu_xfer& xfer : cpu.xfers)
+            {
+                auto opt_ship = s.get_ship_id_by_directory(xfer.from);
+                auto opt_comp = s.get_component_id_by_directory(xfer.to);
+
+                if(opt_ship && opt_comp)
+                {
+                    printf("In 1\n");
+
+                    owned* ocomp = find_by_id(s, opt_comp.value());
+
+                    if(ocomp)
+                    {
+                        printf("In 2\n");
+
+                        component* c = dynamic_cast<component*>(ocomp);
+
+                        if(c)
+                        {
+                            printf("Success!\n");
+
+                            pending_transfer trans;
+                            trans.pid_component = opt_comp.value();
+                            trans.pid_ship = opt_ship.value();
+
+                            c->transfers.push_back(trans);
+                        }
+                    }
+                }
+
+                if(!opt_ship)
+                {
+                    printf("Did not find ship\n");
+                }
+
+                if(!opt_comp)
+                {
+                    printf("Did not find comp\n");
+                }
+            }
+
+            cpu.xfers.clear();
         }
 
-        check_update_components_in_hardware(s, cpu, play, space, r);
+        std::map<int, int> type_counts;
+
+        check_update_components_in_hardware(s, cpu, play, space, r, type_counts);
         dump_radar_data_into_cpu(cpu, s, play, space, r);
 
         ///use ints
