@@ -1151,23 +1151,12 @@ void cpu_state::step()
             update_master_virtual_file();
         }
 
-        for(int kk=0; kk < (int)files.size(); kk++)
-        {
-            if(files[kk].name == to_grab)
-            {
-                for(int st = 0; st < (int)all_stash.size(); st++)
-                {
-                    if(all_stash[st].held_file == kk)
-                        throw std::runtime_error("File already held by offset " + std::to_string(st) + " of " + std::to_string(all_stash.size()));
-                }
+        auto grab_opt = get_grabbable_file(to_grab);
 
-                context.held_file = kk;
-                break;
-            }
-        }
+        if(!grab_opt)
+            throw std::runtime_error("No such file, or already held by someone else [GRAB]");
 
-        if(context.held_file == -1)
-            throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
+        context.held_file = grab_opt.value();
 
         update_length_register();
 
@@ -1190,25 +1179,13 @@ void cpu_state::step()
                 update_master_virtual_file();
             }
 
-            auto id_opt = name_to_file_id(to_grab);
+            auto grab_opt = get_grabbable_file(to_grab);
 
-            ///found an ID
-            if(id_opt)
+            if(grab_opt)
             {
-                if(any_holds(id_opt.value()))
-                {
-                    success = false;
-                }
-                else
-                {
-                    success = true;
-                    context.held_file = id_opt.value();
-                    update_length_register();
-                }
-            }
-            else
-            {
-                success = false;
+                success = true;
+                context.held_file = grab_opt.value();
+                update_length_register();
             }
         }
 
@@ -1698,6 +1675,11 @@ bool cpu_state::any_holds(int held_id)
     return false;
 }
 
+bool file_equiv_name(register_value& v1, register_value& v2)
+{
+    return v1 == v2;
+}
+
 std::optional<int> cpu_state::name_to_file_id(register_value& name)
 {
     for(int i=0; i < (int)files.size(); i++)
@@ -1709,9 +1691,39 @@ std::optional<int> cpu_state::name_to_file_id(register_value& name)
     return std::nullopt;
 }
 
-bool file_equiv_name(register_value& v1, register_value& v2)
+std::optional<int> cpu_state::get_grabbable_file(register_value& name)
 {
-    return v1 == v2;
+    ///look through capability files first
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        cpu_file& fle = files[i];
+
+        if(fle.owner == -1)
+            continue;
+
+        if(any_holds(i))
+            continue;
+
+        if(fle.name == name)
+            return i;
+    }
+
+    ///look through non capability files
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        cpu_file& fle = files[i];
+
+        if(fle.owner != -1)
+            continue;
+
+        if(any_holds(i))
+            continue;
+
+        if(fle.name == name)
+            return i;
+    }
+
+    return std::nullopt;
 }
 
 void cpu_state::check_for_bad_files()
@@ -1748,6 +1760,8 @@ void cpu_state::check_for_bad_files()
             {
                 if(any_holds(j))
                     continue;
+
+                printf("Cleaned\n");
 
                 if(i > j)
                 {

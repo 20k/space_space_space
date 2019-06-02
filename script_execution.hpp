@@ -414,6 +414,7 @@ struct cpu_state : serialisable, owned
     void remove_file(int idx);
     bool any_holds(int idx);
     std::optional<int> name_to_file_id(register_value& name);
+    std::optional<int> get_grabbable_file(register_value& name);
 
     void check_for_bad_files();
 };
