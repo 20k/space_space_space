@@ -829,6 +829,14 @@ bool cpu_state::update_master_virtual_file()
     register_value val;
     val.set_label("FILES");
 
+    auto id_opt = name_to_file_id("FILES");
+
+    if(id_opt)
+    {
+        if(any_holds(id_opt.value()))
+            return;
+    }
+
     for(auto& i : files)
     {
         if(i.name == val)
@@ -1084,6 +1092,7 @@ void cpu_state::step()
             }
 
             files[context.held_file].name = name;
+            files[context.held_file].owner = -1;
 
             ///incase we rename the master virtual file
             update_master_virtual_file();
@@ -1258,6 +1267,7 @@ void cpu_state::step()
 
         drop_file();
         update_length_register();
+        update_master_virtual_file(); ///in case we drop the master file, now's a good time to update it
         break;
 
     case WIPE:
@@ -1267,6 +1277,7 @@ void cpu_state::step()
         files.erase(files.begin() + context.held_file);
         drop_file();
         update_length_register();
+        update_master_virtual_file();
         break;
 
     case NOOP:
@@ -1635,6 +1646,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         {
             files[i].name.set_label(filename);
             files[i].was_updated_this_tick = true;
+            update_master_virtual_file();
 
             if(context.held_file == i)
                 return std::nullopt;

@@ -232,6 +232,7 @@ namespace instructions
         "RSIZ",
         "TXFR",
         "GRAB",
+        "FASK",
         "FILE",
         "SEEK",
         "DROP",
