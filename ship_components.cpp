@@ -4474,7 +4474,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
     alt_radar_sample& sam = s.last_sample;
 
-    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s._pid, 1, false);
+    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s._pid, 1, true);
 
     if(!opt_fle.has_value())
         return;
