@@ -185,6 +185,7 @@ namespace instructions
         TXFR,
         GRAB,
         FASK,
+        ISHW,
         FILE,
         SEEK,
         DROP,
@@ -233,6 +234,7 @@ namespace instructions
         "TXFR",
         "GRAB",
         "FASK",
+        "ISHW",
         "FILE",
         "SEEK",
         "DROP",
@@ -294,6 +296,7 @@ struct cpu_file : serialisable
     size_t owner = -1;
     size_t owner_offset = -1;
     bool was_updated_this_tick = false;
+    bool is_hw = false;
 
     cpu_file();
 
@@ -409,7 +412,7 @@ struct cpu_state : serialisable, owned
     void update_length_register();
     void update_f_register();
 
-    std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset);
+    std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset, bool is_hw);
 
     void remove_file(int idx);
     bool any_holds(int idx);

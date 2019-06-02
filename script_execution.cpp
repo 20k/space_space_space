@@ -124,6 +124,8 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(file_pointer);
     DO_SERIALISE(was_xferred);
     DO_SERIALISE(owner);
+    DO_SERIALISE(owner_offset);
+    DO_SERIALISE(is_hw);
 }
 
 bool all_numeric(const std::string& str)
@@ -1193,6 +1195,15 @@ void cpu_state::step()
 
         break;
     }
+
+    case ISHW:
+        if(context.held_file == -1)
+            throw std::runtime_error("Not holding file [ISHW]");
+
+        context.register_states[(int)registers::TEST].set_int(files[context.held_file].owner != -1);
+
+        break;
+
     case instructions::FILE:
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [FILE]");
@@ -1601,7 +1612,7 @@ void cpu_state::set_program(std::string str)
     }
 }
 
-std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset)
+std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset, bool is_hw)
 {
     for(int i=0; i < (int)files.size(); i++)
     {
@@ -1610,6 +1621,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         {
             files[i].name.set_label(filename);
             files[i].was_updated_this_tick = true;
+            files[i].is_hw = is_hw;
             update_master_virtual_file();
 
             if(context.held_file == i)
@@ -1623,6 +1635,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
     fle.name.set_label(filename);
     fle.owner = owner;
     fle.owner_offset = owner_offset;
+    fle.is_hw = is_hw;
 
     ///cannot invalidate held file integer
     files.push_back(fle);

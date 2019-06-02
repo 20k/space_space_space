@@ -4474,7 +4474,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
     alt_radar_sample& sam = s.last_sample;
 
-    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s._pid, 1);
+    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s._pid, 1, false);
 
     if(!opt_fle.has_value())
         return;
@@ -4734,7 +4734,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     if(dir.size() > 0)
     {
-        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0);
+        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
 
         if(opt_ship_file.has_value())
         {
@@ -4757,7 +4757,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
             fullname = dir + "/" + fullname;
         }
 
-        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0);
+        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
 
         if(!opt_file.has_value())
             continue;
