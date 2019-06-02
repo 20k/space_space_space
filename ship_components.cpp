@@ -1963,6 +1963,8 @@ void ship::tick(double dt_s)
         {
             if(c.can_use(next_resource_status) || c.force_use)
             {
+                c.last_activation_successful = true;
+
                 c.use(next_resource_status);
 
                 c.add_heat_to_me(c.get_use_heat());
@@ -2134,6 +2136,10 @@ void ship::tick(double dt_s)
                         aoe->velocity = velocity;
                     }
                 }
+            }
+            else
+            {
+                c.last_activation_successful = false;
             }
 
             c.try_use = false;
@@ -4817,6 +4823,9 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
             file[8].set_int(-1);
             file[8].help = "Activate Weapon Hardware Mapped IO";
+
+            file[9].set_int(c.last_activation_successful);
+            file[9].help = "Was last activation successful?";
         }
 
         std::map<int, int> them_type_counts;

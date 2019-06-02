@@ -398,6 +398,7 @@ struct component : serialisable, owned
     ///user requested activation level
     float activation_level = 1;
     bool last_could_use = false;
+    bool last_activation_successful = false;
     //component_info::activation_type activation_type = component_info::NO_ACTIVATION;
 
     ///time this component has been nearly empty enough to remove
@@ -442,6 +443,7 @@ struct component : serialisable, owned
         DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
         DO_SERIALISE(activation_level);
         DO_SERIALISE(last_could_use);
+        DO_SERIALISE(last_activation_successful);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
         DO_SERIALISE(cpu_core);
