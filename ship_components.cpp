@@ -3767,7 +3767,11 @@ void ship::show_power()
         bool changed = false;
 
         ImVec4 default_slider_col = ImGui::GetLinearStyleColorVec4(ImGuiCol_SliderGrab);
-        ImVec4 red_col = ImVec4(1, 0, 0, 1);
+        ImVec4 red_col = ImVec4(0.7, 0.1, 0.1, 1);
+
+        ImGui::BeginGroup();
+
+        //ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
         ///HP
         {
@@ -3819,6 +3823,10 @@ void ship::show_power()
             float min_bad_temp = fixed.melting_point * 0.8;
             float max_bad_temp = fixed.melting_point;
 
+            float overall_frac = current_temperature / max_bad_temp;
+
+            overall_frac = clamp(overall_frac, 0, 1);
+
             float bad_fraction = (current_temperature - min_bad_temp) / (max_bad_temp - min_bad_temp);
 
             float good_fraction = clamp(bad_fraction, 0, 1);
@@ -3826,6 +3834,7 @@ void ship::show_power()
             bad_fraction = clamp(1 - bad_fraction, 0, 1);
 
             ImVec4 ccol = im4_mix(default_slider_col, red_col, good_fraction);
+            ImVec4 progress_col = im4_mix(default_slider_col, red_col, overall_frac);
 
             ImGui::PushLinearStyleColor(ImGuiCol_Text, ImVec4(1,bad_fraction,bad_fraction,1));
             ImGui::PushLinearStyleColor(ImGuiCol_SliderGrab, ccol);
@@ -3841,6 +3850,8 @@ void ship::show_power()
             if(current_temperature > fixed.melting_point * 1.5)
                 fmt_string = "!" + fmt_string + "!";
 
+            //ImGuiX::ProgressBarPseudo(overall_frac, ImVec2(80, 3), "", progress_col);
+
             ImGuiX::SliderFloat("##b" + std::to_string(c._pid), &current_temperature, 0, fixed.melting_point, fmt_string);
 
             ImGui::PopItemWidth();
@@ -3848,6 +3859,9 @@ void ship::show_power()
             ImGui::PopStyleColor(2);
         }
 
+        //ImGui::PopStyleVar(1);
+
+        ImGui::EndGroup();
 
         const component_fixed_properties& fixed_properties = c.get_fixed_props();
 
