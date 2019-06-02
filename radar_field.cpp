@@ -511,37 +511,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
         float next_radius = current_radius + speed_of_light_per_tick;
 
-        /*for(aggregate<alt_collideable>& agg : aggregates.data)
-        {
-            if(agg.intersects(packet.origin, current_radius, next_radius))
-            {
-                //num_hit_rects++;
-
-                for(alt_collideable& collide : agg.data)
-                {
-                    std::optional<reflect_info> reflected = test_reflect_from(packet, collide, subtractive_packets);
-
-                    if(reflected)
-                    {
-                        //num_hit++;
-
-                        //hitp.insert(packet.id);
-
-                        reflect_info inf = reflected.value();
-
-                        ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
-                        ///which will affect compat with imaginary shadows
-
-                        if(inf.collide)
-                            next_subtractive[packet.id].push_back(inf.collide.value());
-
-                        if(inf.reflect)
-                            speculative_packets.push_back(inf.reflect.value());
-                    }
-                }
-            }
-        }*/
-
         ///ok need to scale the entities radius
         ///shifted and scaled origins
         for(auto& coarse : em.collision.data)
@@ -554,9 +523,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                     {
                         for(entity* collide : fine.data)
                         {
-                            //if(dynamic_cast<heatable_entity*>(collide) == nullptr)
-                            //    continue;
-
                             if(!collide->is_heat)
                                 continue;
 
