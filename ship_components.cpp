@@ -3769,12 +3769,6 @@ void ship::show_power()
         ImVec4 default_slider_col = ImGui::GetLinearStyleColorVec4(ImGuiCol_SliderGrab);
         ImVec4 red_col = ImVec4(1, 0, 0, 1);
 
-        //if(current_temperature >= fixed.melting_point)
-
-        #define HORIZONTAL
-        #ifdef HORIZONTAL
-        //ImGui::Text((temperature + "K").c_str());
-
         ///HP
         {
             float hp = c.get_hp_frac() * 100;
@@ -3901,31 +3895,7 @@ void ship::show_power()
                     c.factory_view_open = !c.factory_view_open;
                 }
             }
-            else
-            {
-                /*if((c.base_id == component_type::S_DRIVE || c.base_id == component_type::W_DRIVE) && c.activation_level > 0)
-                {
-                    bool success = (c.base_id == component_type::S_DRIVE && has_s_power) || (c.base_id == component_type::W_DRIVE && has_w_power);
-
-                    if(success)
-                        ImGui::TextColored(colours::pastel_green, name.c_str());
-                    else
-                        ImGui::TextColored(colours::pastel_red, name.c_str());
-                }
-                else
-                    ImGui::Text(name.c_str());*/
-            }
         }
-        #endif // HORIZONTAL
-
-        //#define VERTICAL
-        #ifdef VERTICAL
-
-        bool changed = ImGuiX::VSliderFloat("##" + std::to_string(c._pid), &as_percentage, 0, 100, "%.0f");
-
-        ImGui::SameLine();
-
-        #endif // VERTICAL
 
         c.activation_level = as_percentage / 100.f;
 
@@ -3934,169 +3904,6 @@ void ship::show_power()
     }
 
     ImGui::NewLine();
-
-    #if 0
-    std::map<size_t, bool> processed_pipes;
-    std::set<size_t> storage_comps;
-
-    //ImGui::BeginGroup();
-
-    //ImGui::Text("");
-
-    //ImGui::EndGroup();
-
-    //ImGui::SameLine();
-
-    /*ImGui::PushItemWidth(0.1);
-
-    float favdf = 0;
-    ImGuiX::SliderFloat("##poop", &favdf, 0, 0);
-
-    ImGui::PopItemWidth();*/
-
-    ImGui::Button("", ImVec2(0.1, 0.1));
-
-    ImGui::SameLine();
-
-    int pidx = 0;
-
-    while(processed_pipes.size() != pipes.size())
-    {
-        storage_pipe& first = pipes[pidx];
-
-        auto c1 = get_component_from_id(first.id_1);
-
-        storage_comps.insert(first.id_1);
-
-        if(c1)
-        {
-            component& c = *c1.value();
-
-            //ImGui::BeginGroup();
-
-            //c.render_inline_ui();
-
-            ImGui::Text((c.long_name).c_str());
-
-            //ImGui::EndGroup();
-        }
-
-        ImGui::PushItemWidth(80);
-
-        ImGui::SameLine();
-
-        if(c1)
-        {
-            float lbound = -first.max_flow_rate;
-
-            if(first.goes_to_space)
-            {
-                lbound = 0;
-            }
-
-            bool changed = ImGuiX::SliderFloat("##" + std::to_string(first._pid), &first.flow_rate, lbound, first.max_flow_rate);
-
-            if(changed)
-                rpc("set_flow_rate", first, first.set_flow_rate, first.flow_rate);
-
-            ///nice idea but too distracting
-            /*if(ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-
-                auto c2 = get_component_from_id(first.id_2);
-
-                ImGui::BeginGroup();
-
-                c1.value()->render_inline_ui();
-
-                ImGui::SameLine();
-
-                ImGui::Text("to");
-
-                ImGui::EndGroup();
-
-                ImGui::SameLine();
-
-                if(c2 && !first.goes_to_space)
-                {
-                    ImGui::SameLine();
-
-                    ImGui::BeginGroup();
-
-                    c2.value()->render_inline_ui();
-
-                    ImGui::EndGroup();
-                }
-                else
-                {
-                    ImGui::SameLine();
-
-                    ImGui::Text("Space");
-                }
-
-                ImGui::EndTooltip();
-            }*/
-        }
-
-        ImGui::PopItemWidth();
-
-        //ImGui::Text(std::to_string(first.id_1).c_str());
-
-        processed_pipes[first._pid] = true;
-
-        bool any = false;
-        size_t any_id = -1;
-
-        for(int i=0; i < pipes.size() && !first.goes_to_space; i++)
-        {
-            if(pipes[i].id_1 == first.id_2)
-            {
-                pidx = i;
-                any = true;
-                any_id = i;
-                break;
-            }
-        }
-
-        if(any)
-        {
-            ImGui::SameLine();
-
-            pidx = any_id;
-            continue;
-        }
-
-        if(first.goes_to_space)
-        {
-            ImGui::SameLine();
-
-            ImGui::Text("Space");
-
-            ImGui::Button("", ImVec2(0.1, 0.1));
-            ImGui::SameLine();
-
-            continue;
-        }
-
-        for(int i=0; i < (int)pipes.size(); i++)
-        {
-            if(processed_pipes.find(pipes[i]._pid) == processed_pipes.end())
-            {
-                pidx = any_id;
-                break;
-            }
-        }
-
-        ImGui::Button("", ImVec2(0.1, 0.1));
-        ImGui::SameLine();
-    }
-
-    if(pipes.size() > 0)
-    {
-        ImGui::Text("");
-    }
-    #endif // 0
 
     std::vector<std::string> formatted_names;
 
