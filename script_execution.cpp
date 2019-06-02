@@ -1274,7 +1274,7 @@ void cpu_state::step()
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [WIPE]");
 
-        files.erase(files.begin() + context.held_file);
+        remove_file(context.held_file);
         drop_file();
         update_length_register();
         update_master_virtual_file();
