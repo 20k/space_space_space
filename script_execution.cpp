@@ -916,20 +916,7 @@ void cpu_state::step()
         had_tx_pending = false;
     }*/
 
-    for(int i=0; i < (int)files.size(); i++)
-    {
-        if(files[i].owner != (size_t)-1 && !files[i].was_updated_this_tick && !any_holds(i))
-        {
-            remove_file(i);
-            i--;
-            continue;
-        }
-    }
-
-    for(int i=0; i < (int)files.size(); i++)
-    {
-        files[i].was_updated_this_tick = false;
-    }
+    check_for_bad_files();
 
     if(inst.size() == 0)
         return;
@@ -1720,6 +1707,59 @@ std::optional<int> cpu_state::name_to_file_id(register_value& name)
     }
 
     return std::nullopt;
+}
+
+bool file_equiv_name(register_value& v1, register_value& v2)
+{
+    return v1 == v2;
+}
+
+void cpu_state::check_for_bad_files()
+{
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].owner != (size_t)-1 && !files[i].was_updated_this_tick && !any_holds(i))
+        {
+            remove_file(i);
+            i--;
+            continue;
+        }
+    }
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        files[i].was_updated_this_tick = false;
+    }
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].owner == -1)
+            continue;
+
+        for(int j=0; j < (int)files.size(); j++)
+        {
+            if(i == j)
+                continue;
+
+            if(files[j].owner != -1)
+                continue;
+
+            if(file_equiv_name(files[i].name, files[j].name))
+            {
+                if(any_holds(j))
+                    continue;
+
+                if(i > j)
+                {
+                    i--;
+                }
+
+                remove_file(j);
+                j--;
+                continue;
+            }
+        }
+    }
 }
 
 void cpu_tests()
