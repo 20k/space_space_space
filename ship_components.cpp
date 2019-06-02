@@ -42,8 +42,6 @@ ship::ship()
     phys_drag = true;
 
     data_track.resize(component_info::COUNT);
-
-    cap_id = get_next_persistent_id();
 }
 
 void component_fixed_properties::add(component_info::does_type type, double amount)
@@ -2261,7 +2259,7 @@ void ship::tick(double dt_s)
     ///pending transfers
     {
         std::vector<pending_transfer> all_transfers;
-        this->consume_all_transfers(*this, all_transfers);
+        this->consume_all_transfers(all_transfers);
 
         std::vector<std::optional<ship>> removed_ships;
 
@@ -4477,7 +4475,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
     alt_radar_sample& sam = s.last_sample;
 
-    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s.cap_id);
+    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA");
 
     if(!opt_fle.has_value())
         return;
@@ -4737,7 +4735,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     if(dir.size() > 0)
     {
-        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s.cap_id);
+        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir);
 
         if(opt_ship_file.has_value())
         {
@@ -4760,7 +4758,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
             fullname = dir + "/" + fullname;
         }
 
-        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c.cap_id);
+        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname);
 
         if(!opt_file.has_value())
             continue;
@@ -5391,7 +5389,7 @@ bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_t
     return true;
 }
 
-void ship::consume_all_transfers(ship& root, std::vector<pending_transfer>& xfers)
+void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 {
     for(component& c : components)
     {
@@ -5411,13 +5409,14 @@ void ship::consume_all_transfers(ship& root, std::vector<pending_transfer>& xfer
                     equiv.pid_ship = opt_ship.value();
                     equiv.is_fractiony = cxfer.is_fractiony;
                     equiv.fraction = cxfer.fraction;
-                    //equiv.held_file = cxfer.held_file;
 
                     bool success = check_add_transfer(*this, xfers, equiv);
 
                     c.cpu_core.context.register_states[(int)registers::TEST].set_int(success);
 
-                    //assert(cxfer.held_file >= 0 && cxfer.held_file < (int)c.cpu_core.files.size());
+                    assert(cxfer.held_file >= 0 && cxfer.held_file < (int)c.cpu_core.files.size());
+
+                    c.cpu_core.files[cxfer.held_file].was_xferred = true;
                 }
             }
 
@@ -5434,7 +5433,7 @@ void ship::consume_all_transfers(ship& root, std::vector<pending_transfer>& xfer
 
         for(ship& s : c.stored)
         {
-            s.consume_all_transfers(root, xfers);
+            s.consume_all_transfers(xfers);
         }
     }
 }
@@ -5598,15 +5597,7 @@ void ship::new_network_copy()
         }
 
         c._pid = next_id;
-        c.cap_id = get_next_persistent_id();
-
-        for(ship& s : c.stored)
-        {
-            s.new_network_copy();
-        }
     }
-
-    cap_id = get_next_persistent_id();
 }
 
 #if 0

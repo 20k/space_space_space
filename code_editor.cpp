@@ -70,18 +70,13 @@ void code_editor::render(cpu_state& cpu)
 
     if(show_file)
     {
-        if(cpu.context.held_file_id != -1)
+        if(cpu.context.held_file != -1 && cpu.context.held_file >= 0 && cpu.context.held_file < (int)cpu.files.size())
         {
-            auto it = cpu.files.find(cpu.context.held_file_id);
+            cpu_file& fle = cpu.files[cpu.context.held_file];
 
-            if(it != cpu.files.end())
-            {
-                cpu_file& fle = it->second;
+            //ImGui::Begin((fle.name.as_string() + "###Files").c_str());
 
-                //ImGui::Begin((fle.name.as_string() + "###Files").c_str());
-
-                file_edit.render(fle);
-            }
+            file_edit.render(fle);
         }
         else
         {

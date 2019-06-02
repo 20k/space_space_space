@@ -407,8 +407,6 @@ struct component : serialisable, owned
 
     std::vector<size_t> unchecked_blueprints;
 
-    size_t cap_id = get_next_persistent_id();
-
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
     //bool production_heat_scales = false;
@@ -445,7 +443,6 @@ struct component : serialisable, owned
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
         DO_SERIALISE(cpu_core);
-        DO_SERIALISE(cap_id);
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
@@ -762,8 +759,6 @@ struct ship : heatable_entity
     vec2f realspace_destination;
     size_t realspace_pid_target = -1;
 
-    size_t cap_id = -1;
-
     std::optional<component*> get_component_from_id(uint64_t id);
 
     void handle_cleanup();
@@ -857,13 +852,12 @@ struct ship : heatable_entity
         DO_SERIALISE(travelling_in_realspace);
         DO_SERIALISE(realspace_destination);
         DO_SERIALISE(realspace_pid_target);
-        DO_SERIALISE(cap_id);
     }
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
 
-    void consume_all_transfers(ship& root, std::vector<pending_transfer>& xfers);
+    void consume_all_transfers(std::vector<pending_transfer>& xfers);
     std::optional<ship*> fetch_ship_by_id(size_t pid);
     std::optional<component> fetch_component_by_id(size_t pid);
     std::optional<ship> remove_ship_by_id(size_t pid);
