@@ -829,12 +829,12 @@ bool cpu_state::update_master_virtual_file()
     register_value val;
     val.set_label("FILES");
 
-    auto id_opt = name_to_file_id("FILES");
+    auto id_opt = name_to_file_id(val);
 
     if(id_opt)
     {
         if(any_holds(id_opt.value()))
-            return;
+            return false;
     }
 
     for(auto& i : files)
