@@ -910,7 +910,7 @@ void cpu_state::step()
 
     for(int i=0; i < (int)files.size(); i++)
     {
-        if(files[i].owner != -1 && !files[i].was_updated_this_tick && !any_holds(i))
+        if(files[i].owner != (size_t)-1 && !files[i].was_updated_this_tick && !any_holds(i))
         {
             remove_file(i);
             i--;
@@ -1174,6 +1174,49 @@ void cpu_state::step()
             throw std::runtime_error("No file [GRAB] " + to_grab.as_string());
 
         update_length_register();
+
+        break;
+    }
+    case FASK:
+    {
+        bool success = false;
+
+        if(context.held_file != -1)
+        {
+            success = false;
+        }
+        else
+        {
+            register_value& to_grab = RNLS(next[0]);
+
+            if(to_grab.is_label() && to_grab.label == "FILES")
+            {
+                update_master_virtual_file();
+            }
+
+            auto id_opt = name_to_file_id(to_grab);
+
+            ///found an ID
+            if(id_opt)
+            {
+                if(any_holds(id_opt.value()))
+                {
+                    success = false;
+                }
+                else
+                {
+                    success = true;
+                    context.held_file = id_opt.value();
+                    update_length_register();
+                }
+            }
+            else
+            {
+                success = false;
+            }
+        }
+
+        context.register_states[(int)registers::TEST].set_int(success);
 
         break;
     }
@@ -1654,6 +1697,17 @@ bool cpu_state::any_holds(int held_id)
     }
 
     return false;
+}
+
+std::optional<int> cpu_state::name_to_file_id(register_value& name)
+{
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].name == name)
+            return i;
+    }
+
+    return std::nullopt;
 }
 
 void cpu_tests()

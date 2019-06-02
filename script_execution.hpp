@@ -3,8 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include <array>
 #include <networking/serialisable_fwd.hpp>
 
 namespace registers
@@ -186,6 +184,7 @@ namespace instructions
         RSIZ,
         TXFR,
         GRAB,
+        FASK,
         FILE,
         SEEK,
         DROP,
@@ -413,6 +412,7 @@ struct cpu_state : serialisable, owned
 
     void remove_file(int idx);
     bool any_holds(int idx);
+    std::optional<int> name_to_file_id(register_value& name);
 };
 
 void cpu_tests();
