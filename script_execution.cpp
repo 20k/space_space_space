@@ -123,6 +123,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(data);
     DO_SERIALISE(file_pointer);
     DO_SERIALISE(was_xferred);
+    DO_SERIALISE(owner);
 }
 
 bool all_numeric(const std::string& str)
@@ -1565,12 +1566,15 @@ void cpu_state::set_program(std::string str)
     }
 }
 
-std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename)
+std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset)
 {
     for(int i=0; i < (int)files.size(); i++)
     {
-        if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
+        //if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
+        if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
+            files[i].name.set_label(filename);
+
             if(context.held_file == i)
                 return std::nullopt;
 
@@ -1580,6 +1584,8 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
 
     cpu_file fle;
     fle.name.set_label(filename);
+    fle.owner = owner;
+    fle.owner_offset = owner_offset;
 
     ///cannot invalidate held file integer
     files.push_back(fle);

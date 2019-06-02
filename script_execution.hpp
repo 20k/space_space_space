@@ -291,6 +291,8 @@ struct cpu_file : serialisable
     std::vector<register_value> data;
     int file_pointer = 0;
     bool was_xferred = false;
+    size_t owner = -1;
+    size_t owner_offset = -1;
 
     cpu_file();
 
@@ -406,7 +408,7 @@ struct cpu_state : serialisable, owned
     void update_length_register();
     void update_f_register();
 
-    std::optional<cpu_file*> get_create_capability_file(const std::string& filename);
+    std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset);
 
     void remove_file(int idx);
 };
