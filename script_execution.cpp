@@ -832,11 +832,11 @@ cpu_file cpu_state::get_master_virtual_file()
 
     fle.data.clear();
 
+    fle.data.reserve(files.size());
+
     for(int i=0; i < (int)files.size(); i++)
     {
-        register_value fname = files[i].name;
-
-        fle.data.push_back(fname);
+        fle.data.push_back(files[i].name);
     }
 
     fle.name.set_label("FILES");
@@ -856,17 +856,24 @@ bool cpu_state::update_master_virtual_file()
     if(id_opt)
     {
         if(any_holds(id_opt.value()))
+        {
             return false;
+        }
+        else
+        {
+            files[id_opt.value()] = get_master_virtual_file();
+            return false;
+        }
     }
 
-    for(auto& i : files)
+    /*(for(auto& i : files)
     {
         if(i.name == val)
         {
             i = get_master_virtual_file();
             return false;
         }
-    }
+    }*/
 
     ///file not present
     files.push_back(get_master_virtual_file());
@@ -1639,10 +1646,14 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         //if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
         if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
+            bool dirty = !files[i].name.is_label() || files[i].name.label != filename;
+
             files[i].name.set_label(filename);
             files[i].was_updated_this_tick = true;
             files[i].is_hw = is_hw;
-            update_master_virtual_file();
+
+            if(dirty)
+                update_master_virtual_file();
 
             if(context.held_file == i)
                 return std::nullopt;
