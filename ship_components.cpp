@@ -784,7 +784,6 @@ void component::store(const ship& s)
     }
 
     ship nship = s;
-    nship.new_network_copy();
 
     stored.push_back(nship);
 }

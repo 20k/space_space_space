@@ -369,6 +369,7 @@ void server_thread(std::atomic_bool& should_term)
                 ///which isn't totally insane but it is a bit odd
                 ///that said... we should definitely be able to fire asteroids out of a cannon so what do i know
 
+                mship.new_network_copy();
                 c.store(mship);
             }
         }

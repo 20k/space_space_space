@@ -824,7 +824,7 @@ cpu_file cpu_state::get_master_virtual_file()
     return fle;
 }
 
-void cpu_state::update_master_virtual_file()
+bool cpu_state::update_master_virtual_file()
 {
     register_value val;
     val.set_label("FILES");
@@ -834,13 +834,15 @@ void cpu_state::update_master_virtual_file()
         if(i.name == val)
         {
             i = get_master_virtual_file();
-            return;
+            return false;
         }
     }
 
     ///file not present
     files.push_back(get_master_virtual_file());
     update_master_virtual_file();
+
+    return true;
 }
 
 bool cpu_state::any_blocked()
@@ -1574,6 +1576,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
             files[i].name.set_label(filename);
+            update_master_virtual_file();
 
             if(context.held_file == i)
                 return std::nullopt;

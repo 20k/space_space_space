@@ -376,7 +376,7 @@ struct cpu_state : serialisable, owned
     std::string saved_program;
 
     cpu_file get_master_virtual_file();
-    void update_master_virtual_file();
+    bool update_master_virtual_file();
 
     bool any_blocked();
 
