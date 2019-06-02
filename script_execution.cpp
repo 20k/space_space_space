@@ -1576,7 +1576,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
             files[i].name.set_label(filename);
-            update_master_virtual_file();
+            files[i].was_updated_this_tick = true;
 
             if(context.held_file == i)
                 return std::nullopt;
