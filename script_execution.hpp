@@ -412,6 +412,7 @@ struct cpu_state : serialisable, owned
     std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset);
 
     void remove_file(int idx);
+    bool any_holds(int idx);
 };
 
 void cpu_tests();

@@ -908,6 +908,21 @@ void cpu_state::step()
         had_tx_pending = false;
     }*/
 
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].owner != -1 && !files[i].was_updated_this_tick && !any_holds(i))
+        {
+            remove_file(i);
+            i--;
+            continue;
+        }
+    }
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        files[i].was_updated_this_tick = false;
+    }
+
     if(inst.size() == 0)
         return;
 
@@ -1625,6 +1640,20 @@ void cpu_state::remove_file(int held_id)
     }
 
     files.erase(files.begin() + held_id);
+}
+
+bool cpu_state::any_holds(int held_id)
+{
+    if(context.held_file == held_id)
+        return true;
+
+    for(cpu_stash& sth : all_stash)
+    {
+        if(sth.held_file == held_id)
+            return true;
+    }
+
+    return false;
 }
 
 void cpu_tests()
