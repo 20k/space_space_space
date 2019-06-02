@@ -573,10 +573,6 @@ void server_thread(std::atomic_bool& should_term)
 
         frametime_dt = (clk.restart().asMicroseconds() / 1000.) / 1000.;
 
-        alt_frequency_packet alt_pack;
-        alt_pack.intensity = 50000;
-        alt_pack.frequency = 1000;
-
         #ifdef SERVER_VIEW
         /*vec2f mpos = {mouse.getPosition(debug).x, mouse.getPosition(debug).y};
 
@@ -594,13 +590,6 @@ void server_thread(std::atomic_bool& should_term)
         }*/
         #endif // SERVER_VIEW
 
-        //if(key.isKeyPressed(sf::Keyboard::K))
-        #ifdef SERVER_VIEW
-        /*if(ONCE_MACRO(sf::Keyboard::K))
-        {
-            radar.add_packet(alt_pack, {mouse.getPosition(debug).x, mouse.getPosition(debug).y});
-        }*/
-        #endif // SERVER_VIEW
 
         /*if(ONCE_MACRO(sf::Keyboard::L, true))
         {
@@ -1050,7 +1039,7 @@ void server_thread(std::atomic_bool& should_term)
 
         #endif // SERVER_VIEW
 
-        //std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+        std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         //std::cout << "FULL FRAME " << tickclock.restart().asMicroseconds()/1000. << std::endl;
 

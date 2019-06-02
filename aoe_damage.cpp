@@ -33,8 +33,10 @@ void aoe_damage::tick(double dt_s)
         alt_radar_field& radar = *field;
 
         alt_frequency_packet alt_pack;
-        alt_pack.intensity = damage * 100;
-        alt_pack.frequency = HEAT_FREQ;
+        /*alt_pack.intensity = damage * 100;
+        alt_pack.frequency = HEAT_FREQ;*/
+
+        alt_pack.make(damage * 100, HEAT_FREQ);
 
         std::optional<entity*> en = parent->fetch(emitted_by);
 

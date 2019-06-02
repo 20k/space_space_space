@@ -9,6 +9,33 @@
 
 std::map<std::string, double> info_dump;
 
+bool frequency_in_range(float freq, const std::vector<double>& frequencies)
+{
+    if(frequencies.size() == 0)
+        return false;
+
+    if(frequencies.size() == 1)
+        return approx_equal(freq, frequencies[0]);
+
+    ///assumes frequencies are sorted
+    for(int i=0; i < (int)frequencies.size() - 1; i++)
+    {
+        double cur = frequencies[i];
+        double next = frequencies[i];
+
+        if(approx_equal(freq, cur))
+            return true;
+
+        if(approx_equal(freq, next))
+            return true;
+
+        if(freq >= cur && freq <= next)
+            return true;
+    }
+
+    return false;
+}
+
 struct info_dumper
 {
     std::string name;
@@ -97,8 +124,7 @@ void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissi
     if(permanent_heat + emitted >= RADAR_CUTOFF)
     {
         alt_frequency_packet heat;
-        heat.frequency = HEAT_FREQ;
-        heat.intensity = permanent_heat + emitted;
+        heat.make(permanent_heat + emitted, HEAT_FREQ);
         heat.packet_wavefront_width *= ticks_between_emissions;
 
         radar.emit(heat, r.position, *this);
@@ -196,7 +222,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     if(packet.start_iteration == iteration_count)
         return false;
 
-    float real_intensity = packet.intensity / (real_distance * real_distance);
+    float real_intensity = packet.get_max_intensity() / (real_distance * real_distance);
 
     return real_intensity < RADAR_CUTOFF;
 }
@@ -305,7 +331,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage *= 0.5;
 
         #if 1
-        if(packet.frequency == HEAT_FREQ)
+        if(packet.is_heat())
         {
             float nonphysical_damp = 1;
 
@@ -326,8 +352,13 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         alt_frequency_packet reflect = packet;
         reflect.id = alt_frequency_packet::gid++;
 
-        ///maybe intensity should be distributed here to avoid energy increase
-        reflect.intensity = packet.intensity * reflect_percentage;
+        //reflect.make_from(packet.intensities, packet.frequencies, reflect_percentage);
+
+        for(auto& i : reflect.intensities)
+            i *= reflect_percentage;
+
+        reflect.summed_intensity *= reflect_percentage;
+
         reflect.origin = collide.r.position + packet_vector;
         reflect.start_angle = (collide.r.position - reflect.origin).angle();
         reflect.precalculated_start_angle = (collide.r.position - reflect.origin).norm();
@@ -356,7 +387,8 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         //return {{std::nullopt, collide_packet}};
 
-        if(reflect_percentage == 0 || reflect.intensity < RADAR_CUTOFF)
+        if(reflect_percentage == 0 || local_intensity * reflect_percentage < RADAR_CUTOFF)
+        //if(reflect_percentage == 0 || reflect.intensity < RADAR_CUTOFF)
         {
             return {{std::nullopt, collide_packet}};
         }
@@ -735,9 +767,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     float err = 1;
 
     if(my_distance_to_packet_sq > err*err)
-        return ivdistance * packet.intensity / my_distance_to_packet_sq;
+        return ivdistance * packet.get_max_intensity() / my_distance_to_packet_sq;
     else
-        return ivdistance * packet.intensity / (err * err);
+        return ivdistance * packet.get_max_intensity() / (err * err);
 
     assert(false);
 }
@@ -1209,7 +1241,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             }
         }
 
-        packet.intensity = intensity;
+        packet.summed_intensity = intensity;
 
         post_intensity_calculate.push_back(packet);
     }
@@ -1260,9 +1292,9 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         ///ASSUMES THAT PARENT PACKET HAS SAME INTENSITY AS PACKET UNDER CONSIDERATION
         ///THIS WILL NOT BE TRUE IF I MAKE IT DECREASE IN INTENSITY AFTER A REFLECTION SO THIS IS KIND OF WEIRD
-        float intensity = packet.intensity * radar_mult;
+        float intensity = packet.get_max_intensity() * radar_mult;
         //float intensity = get_intensity_at_of(pos, packet);
-        float frequency = packet.frequency;
+        //float frequency = packet.frequency;
 
         if(intensity == 0)
             continue;
@@ -1276,7 +1308,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             reflected_position = packet.last_reflected_position;
         }*/
 
-        alt_frequency_packet consider = packet;
+        const alt_frequency_packet& consider = packet;
 
         uint64_t search_entity = packet.emitted_by;
 
@@ -1303,14 +1335,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         #ifdef RECT
         if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > HIGH_DETAIL)
         {
-            /*s.echo_position.push_back(packet.reflected_position);
-            s.echo_id.push_back(packet.reflected_by);*/
-
             vec2f next_pos = consider.reflected_position + rconst.err_1 * uncertainty;
 
             float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequencies, cs});
         }
         #endif // RECT
 
@@ -1318,14 +1347,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         #ifdef RECT_RECV
         if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > HIGH_DETAIL)
         {
-            /*s.echo_position.push_back(packet.reflected_position);
-            s.echo_id.push_back(packet.reflected_by);*/
-
             vec2f next_pos = consider.origin + rconst.err_2 * uncertainty;
 
             float cs = get_physical_cross_section(consider.cross_dim, consider.cross_angle, (next_pos - pos).angle());
 
-            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequency, cs});
+            s.echo_pos.push_back({consider.emitted_by, consider.reflected_by, next_pos, consider.frequencies, cs});
         }
         #endif // RECT_RECV
 
@@ -1336,7 +1362,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
             next_dir = next_dir.rot(rconst.err_3 * uncertainty);
 
-            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequency, 0});
+            s.echo_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir * intensity, consider.frequencies, 0});
         }
 
         if(consider.emitted_by != uid && consider.reflected_by == (uint32_t)-1 && intensity > LOW_DETAIL)
@@ -1345,7 +1371,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
             next_dir = next_dir.rot(rconst.err_4 * uncertainty);
 
-            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequency, 0});
+            s.receive_dir.push_back({consider.emitted_by, consider.reflected_by, next_dir.norm() * intensity, consider.frequencies, 0});
 
             //std::cout << "sent intens " << intensity << std::endl;
         }
@@ -1355,22 +1381,30 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         //std::cout << "loop " << intensity << std::endl;
 
-        bool found = false;
-
-        for(int i=0; i < (int)s.frequencies.size(); i++)
+        for(int j=0; j < (int)packet.frequencies.size(); j++)
         {
-            if(s.frequencies[i] == frequency)
+            bool found = false;
+
+            float scaled_intens = packet.summed_intensity / packet.intensities[j];
+
+            for(int i=0; i < (int)s.frequencies.size(); i++)
             {
-                s.intensities[i] += packet.intensity;
-                found = true;
-                break;
-            }
-        }
+                if(s.frequencies[i] == (float)packet.frequencies[j])
+                {
+                    found = true;
 
-        if(!found)
-        {
-            s.frequencies.push_back(packet.frequency);
-            s.intensities.push_back(packet.intensity);
+                    ///summed intensity is real intensity here
+                    s.intensities[i] += scaled_intens;
+
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                s.intensities.push_back(scaled_intens);
+                s.frequencies.push_back((float)packet.frequencies[j]);
+            }
         }
     }
 
@@ -1385,7 +1419,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             if(packet.emitted_by == en._pid && packet.reflected_by == (uint32_t)-1)
                 continue;
 
-            float intensity = packet.intensity * radar_mult;
+            float intensity = packet.get_max_intensity() * radar_mult;
 
             uint64_t search_entity = packet.emitted_by;
 

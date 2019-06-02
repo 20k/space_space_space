@@ -17,8 +17,9 @@ struct room_entity : entity
 
     virtual void tick(double dt_s) override
     {
-        if(ren->ptype == poi_type::DEAD_SPACE)
-            r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
+        ///not good enough
+        //if(ren->ptype == poi_type::DEAD_SPACE)
+        //    r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
     }
 };
 

@@ -49,8 +49,14 @@ namespace sf
 ///every packet is unique
 struct alt_frequency_packet
 {
-    double frequency = 0;
-    float intensity = 0;
+    std::vector<double> frequencies;
+    std::vector<float> intensities;
+    float summed_intensity = 0;
+    bool is_hot = false;
+
+    //float frequency = 0;
+    //float intensity = 0;
+
     vec2f origin = {0,0};
     float scale = 1;
 
@@ -82,6 +88,41 @@ struct alt_frequency_packet
 
     ///parent packet
     std::shared_ptr<alt_frequency_packet> last_packet;
+
+    void make(float intensity, float freq)
+    {
+        if(intensity < RADAR_CUTOFF)
+            return;
+
+        if(freq == HEAT_FREQ)
+            is_hot = true;
+
+        intensities.push_back(intensity);
+        frequencies.push_back(freq);
+
+        summed_intensity += intensity;
+    }
+
+    void make_from(const std::vector<float>& intens, const std::vector<double>& freq, float fraction)
+    {
+        for(int i=0; i < (int)intens.size(); i++)
+        {
+            if(intens[i] * fraction < RADAR_CUTOFF)
+                continue;
+
+            make(intens[i] * fraction, freq[i]);
+        }
+    }
+
+    float get_max_intensity() const
+    {
+        return summed_intensity;
+    }
+
+    bool is_heat() const
+    {
+        return is_hot;
+    }
 };
 
 float get_physical_cross_section(vec2f dim, float initial_angle, float observe_angle);
@@ -147,7 +188,7 @@ struct alt_object_property : serialisable
     uint32_t id_r = -1;
     uint32_t uid = -1;
     T property = T();
-    float frequency = 0;
+    std::vector<double> frequency;
     float cross_section = 1;
 
     alt_object_property()
@@ -155,7 +196,7 @@ struct alt_object_property : serialisable
 
     }
 
-    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, float _frequency, float _cross_section) :
+    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, std::vector<double> _frequency, float _cross_section) :
         id_e(_id_e), id_r(_id_r), property(_property), frequency(_frequency), cross_section(_cross_section)
     {
 
@@ -176,6 +217,8 @@ struct alt_object_property : serialisable
         DO_SERIALISE(cross_section);
     }
 };
+
+bool frequency_in_range(float freq, const std::vector<double>& frequencies);
 
 struct alt_radar_sample : serialisable
 {

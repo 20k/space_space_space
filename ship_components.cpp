@@ -1408,8 +1408,7 @@ struct laser : projectile
         }
 
         alt_frequency_packet em;
-        em.frequency = 3000;
-        em.intensity = 10000;
+        em.make(10000, 3000);
 
         field->emit(em, r.position, *this);
     }
@@ -1454,8 +1453,7 @@ struct mining_laser : projectile
         }
 
         alt_frequency_packet em;
-        em.frequency = 3000;
-        em.intensity = 10000;
+        em.make(10000, 3000);
 
         field->emit(em, r.position, *this);
     }
@@ -1550,7 +1548,7 @@ void ship::tick_missile_behaviour(double dt_s)
 
     for(auto& i : sam.receive_dir)
     {
-        if(i.frequency != homing_frequency)
+        if(!frequency_in_range(homing_frequency, i.frequency))
             continue;
 
         if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
@@ -1568,7 +1566,7 @@ void ship::tick_missile_behaviour(double dt_s)
 
     for(auto& i : sam.echo_dir)
     {
-        if(i.frequency != homing_frequency)
+        if(!frequency_in_range(homing_frequency, i.frequency))
             continue;
 
         if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
@@ -1586,7 +1584,7 @@ void ship::tick_missile_behaviour(double dt_s)
 
     for(auto& i : sam.echo_pos)
     {
-        if(i.frequency != homing_frequency)
+        if(!frequency_in_range(homing_frequency, i.frequency))
             continue;
 
         if((i.id_e == _pid || i.id_e == spawned_by || i.id_r == _pid || i.id_r == spawned_by) && !activated)
@@ -1946,9 +1944,8 @@ void ship::tick(double dt_s)
         alt_radar_field& radar = *current_radar_field;
 
         alt_frequency_packet em;
-        em.frequency = 2000;
         ///getting a bit complex to determine this value
-        em.intensity = 20000 * c.get_operating_efficiency() * d.recharge;
+        em.make(20000 * c.get_operating_efficiency() * d.recharge, 2000);
 
         radar.emit(em, r.position, *this);
     }
@@ -2023,8 +2020,7 @@ void ship::tick(double dt_s)
                     }
 
                     alt_frequency_packet em;
-                    em.frequency = 1000;
-                    em.intensity = 20000;
+                    em.make(20000, 1000);
 
                     radar.emit(em, r.position, *this);
                 }
@@ -2214,8 +2210,7 @@ void ship::tick(double dt_s)
 
 
                 alt_frequency_packet heat;
-                heat.frequency = HEAT_FREQ;
-                heat.intensity = real_emissions * 100;
+                heat.make(real_emissions * 100, HEAT_FREQ);
 
                 alt_radar_field& radar = *current_radar_field;
 
@@ -2870,8 +2865,8 @@ void ship::handle_heat(double dt_s)
         alt_radar_field& radar = *current_radar_field;
 
         alt_frequency_packet heat;
-        heat.frequency = HEAT_FREQ;
-        heat.intensity = permanent_heat + heat_to_radiate * 100;
+        heat.make(permanent_heat + heat_to_radiate * 100, HEAT_FREQ);
+
         //heat.packet_wavefront_width *= ticks_between_emissions;
 
         radar.emit(heat, r.position, *this);
@@ -4208,8 +4203,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
         if(disruptive)
         {
             alt_frequency_packet heat;
-            heat.frequency = HEAT_FREQ;
-            heat.intensity = 20000;
+            heat.make(20000, HEAT_FREQ);
 
             s.current_radar_field->emit(heat, s.r.position, s);
         }
