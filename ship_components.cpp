@@ -2144,6 +2144,8 @@ void ship::tick(double dt_s)
         {
             d.last_use_s += dt_s;
         }
+
+        c.last_could_use = c.can_use(next_resource_status);
     }
 
     for(storage_pipe& p : pipes)
@@ -4796,6 +4798,26 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
         file[6].set_int(c.get_my_temperature());
         file[6].help = "Temperature (K)";
+
+        ///???
+        if(c.has_tag(tag_info::TAG_WEAPON))
+        {
+            /*if(file.len() > 7 && file[0].is_int() && file[0].value >= 0)
+            {
+                c.try_use = true;
+            }*/
+
+            file[7].set_int(c.last_could_use);
+            file[7].help = "Can be fired";
+
+            if(file[8].is_int() && file[8].value > 0)
+            {
+                c.try_use = true;
+            }
+
+            file[8].set_int(-1);
+            file[8].help = "Activate Weapon Hardware Mapped IO";
+        }
 
         std::map<int, int> them_type_counts;
         std::map<std::string, int> ships;

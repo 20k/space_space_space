@@ -376,6 +376,26 @@ register_value& cpu_file::operator[](int idx)
     return data[idx];
 }
 
+register_value& cpu_file::get_with_default(int idx, int val)
+{
+    if(idx < 0)
+        throw std::runtime_error("IDX < 0 in cpu file operator[]");
+
+    int last_size = len();
+
+    if(idx >= len())
+        set_size(idx + 1);
+
+    for(int i=last_size; i < len(); i++)
+    {
+        assert(i < (int)data.size());
+
+        data[i].set_int(val);
+    }
+
+    return data[idx];
+}
+
 std::string register_value::as_string() const
 {
     if(is_reg())

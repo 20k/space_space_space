@@ -308,6 +308,7 @@ struct cpu_file : serialisable
 
     void clear();
     register_value& operator[](int idx);
+    register_value& get_with_default(int idx, int val);
 
     SERIALISE_SIGNATURE();
 };
