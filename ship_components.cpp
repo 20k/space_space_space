@@ -4516,6 +4516,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         intens = clamp(intens, 0, 255 * 10);
 
         fle.data[base + ifreq].set_int((int)intens);
+        fle.data[base + ifreq].help = "Intensity";
     }
 
     base = max_radar_data;
@@ -4523,6 +4524,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     std::vector<playspace*> connected = play.get_connected_systems_for(&s);
 
     fle.data[base].set_int(connected.size());
+    fle.data[base].help = "Number of Connected Systems";
 
     base++;
 
@@ -4533,6 +4535,9 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
         fle.data[base + i*2 + 0].set_int(pid);
         fle.data[base + i*2 + 1].set_symbol(name);
+
+        fle.data[base + i*2 + 0].help = "ID";
+        fle.data[base + i*2 + 1].help = "Name";
     }
 
     base += max_connected_systems;
@@ -4540,6 +4545,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     std::vector<room*> pois = space->all_rooms();
 
     fle.data[base].set_int(pois.size());
+    fle.data[base].help = "Number of POIs";
 
     base++;
 
@@ -4553,11 +4559,16 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         fle.data[base + i * 3 + 0].set_int(pid);
         fle.data[base + i * 3 + 1].set_symbol(type);
         fle.data[base + i * 3 + 2].set_int(offset);
+
+        fle.data[base + i * 3 + 0].help = "ID";
+        fle.data[base + i * 3 + 1].help = "Type";
+        fle.data[base + i * 3 + 2].help = "Offset";
     }
 
     base += max_pois;
 
     fle.data[base].set_int(s.last_sample.renderables.size());
+    fle.data[base].help = "Number of Local Objects";
 
     base++;
 
@@ -4576,6 +4587,11 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         fle.data[base + i * 4 + 1].set_int(x);
         fle.data[base + i * 4 + 2].set_int(y);
         fle.data[base + i * 4 + 3].set_int(idist);
+
+        fle.data[base + i * 4 + 0].help = "ID";
+        fle.data[base + i * 4 + 1].help = "x";
+        fle.data[base + i * 4 + 2].help = "y";
+        fle.data[base + i * 4 + 3].help = "Distance";
     }
 }
 
