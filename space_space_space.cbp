@@ -35,6 +35,7 @@
 				<Option object_output="obj/Profile/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option projectCompilerOptionsRelation="0" />
 				<Compiler>
 					<Add option="-pg" />
 					<Add option="-Og" />
@@ -152,6 +153,7 @@
 		<Unit filename="code_editor.cpp" />
 		<Unit filename="code_editor.hpp" />
 		<Unit filename="colours.hpp" />
+		<Unit filename="common_renderable.cpp" />
 		<Unit filename="common_renderable.hpp" />
 		<Unit filename="default_components.cpp" />
 		<Unit filename="default_components.hpp" />

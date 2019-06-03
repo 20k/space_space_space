@@ -2,8 +2,9 @@
 #define ENTITY_HPP_INCLUDED
 
 #include <vec/vec.hpp>
-#include <networking/serialisable.hpp>
+#include <networking/serialisable_fwd.hpp>
 #include "aggregates.hpp"
+#include <networking/netinterpolate.hpp>
 
 namespace sf
 {
@@ -34,20 +35,7 @@ struct client_renderable : serialisable
     uint32_t network_owner = -1;
     bool transient = false;
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(position);
-        DO_SERIALISE(rotation);
-        DO_SERIALISE(render_layer);
-
-        DO_SERIALISE(vert_dist);
-        DO_SERIALISE(vert_angle);
-        DO_SERIALISE(vert_cols);
-
-        DO_SERIALISE(approx_rad);
-        DO_SERIALISE(scale);
-        DO_SERIALISE(network_owner);
-    }
+    SERIALISE_SIGNATURE();
 
     void init_xagonal(float rad, int n);
     void init_rectangular(vec2f dim);
@@ -118,20 +106,7 @@ struct entity : serialisable, owned
 
     virtual ~entity(){}
 
-    SERIALISE_SIGNATURE()
-    {
-        /*DO_SERIALISE(position);
-        DO_SERIALISE(rotation);
-
-        DO_SERIALISE(vert_dist);
-        DO_SERIALISE(vert_angle);
-        DO_SERIALISE(vert_cols);*/
-
-        DO_SERIALISE(r);
-        DO_SERIALISE(velocity);
-
-        //r.serialise(ctx, data);
-    }
+    SERIALISE_SIGNATURE();
 };
 
 bool collides(entity& e1, entity& e2);
@@ -225,10 +200,7 @@ struct entity_manager : serialisable
 
     void cleanup();
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(entities);
-    }
+    SERIALISE_SIGNATURE();
 };
 
 #endif // ENTITY_HPP_INCLUDED

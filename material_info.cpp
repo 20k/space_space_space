@@ -1,5 +1,26 @@
 #include "material_info.hpp"
 #include "ship_components.hpp"
+#include <networking/serialisable.hpp>
+
+SERIALISE_BODY(material_fixed_properties)
+{
+    DO_SERIALISE(specific_heat);
+    DO_SERIALISE(reflectivity);
+    DO_SERIALISE(melting_point);
+    DO_SERIALISE(specific_explosiveness);
+    DO_SERIALISE(density);
+}
+
+SERIALISE_BODY(material_dynamic_properties)
+{
+    DO_SERIALISE(volume);
+}
+
+SERIALISE_BODY(material)
+{
+    DO_SERIALISE(dynamic_desc);
+    DO_SERIALISE(type);
+}
 
 material_fixed_properties material_info::fetch(material_info::material_type type)
 {

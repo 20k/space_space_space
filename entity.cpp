@@ -1,6 +1,42 @@
 #include "entity.hpp"
 #include <SFML/Graphics.hpp>
 #include "camera.hpp"
+#include <networking/serialisable.hpp>
+
+void client_renderable::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(position);
+    DO_SERIALISE(rotation);
+    DO_SERIALISE(render_layer);
+
+    DO_SERIALISE(vert_dist);
+    DO_SERIALISE(vert_angle);
+    DO_SERIALISE(vert_cols);
+
+    DO_SERIALISE(approx_rad);
+    DO_SERIALISE(scale);
+    DO_SERIALISE(network_owner);
+}
+
+void entity::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    /*DO_SERIALISE(position);
+    DO_SERIALISE(rotation);
+
+    DO_SERIALISE(vert_dist);
+    DO_SERIALISE(vert_angle);
+    DO_SERIALISE(vert_cols);*/
+
+    DO_SERIALISE(r);
+    DO_SERIALISE(velocity);
+
+    //r.serialise(ctx, data);
+}
+
+void entity_manager::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+{
+    DO_SERIALISE(entities);
+}
 
 bool collides(entity& e1, entity& e2)
 {

@@ -129,16 +129,7 @@ struct does_fixed : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(capacity);
-        //DO_SERIALISE(held);
-        DO_SERIALISE(recharge);
-        DO_SERIALISE(recharge_unconditional);
-        DO_SERIALISE(time_between_use_s);
-        //DO_SERIALISE(last_use_s);
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE();
 
     does_fixed scale(float scale) const
     {
@@ -160,22 +151,14 @@ struct does_dynamic : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(held);
-        DO_SERIALISE(last_use_s);
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE();
 };
 
 struct tag : serialisable
 {
     tag_info::tag_type type = tag_info::TAG_NONE;
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE();
 };
 
 struct storage_pipe : serialisable, owned
@@ -202,19 +185,7 @@ struct storage_pipe : serialisable, owned
     ///uh ok rpcs
     ///how doth implement
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(id_1);
-        DO_SERIALISE(id_2);
-
-        DO_SERIALISE(flow_rate);
-        DO_SERIALISE(max_flow_rate);
-        DO_SERIALISE(goes_to_space);
-
-        DO_SERIALISE(transfer_work);
-
-        DO_RPC(set_flow_rate);
-    }
+    SERIALISE_SIGNATURE();
 
     void set_flow_rate(float in)
     {
@@ -269,23 +240,7 @@ struct component_fixed_properties : serialisable
 
     float base_volume = 1;
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(d_info);
-        DO_SERIALISE(d_activate_requirements);
-        DO_SERIALISE(tags);
-        DO_SERIALISE(no_drain_on_full_production);
-        DO_SERIALISE(complex_no_drain_on_full_production);
-        DO_SERIALISE(subtype);
-        DO_SERIALISE(activation_type);
-        DO_SERIALISE(internal_volume);
-        DO_SERIALISE(heat_sink);
-        DO_SERIALISE(production_heat_scales);
-        DO_SERIALISE(max_use_angle);
-        DO_SERIALISE(heat_produced_at_full_usage);
-        DO_SERIALISE(primary_type);
-        DO_SERIALISE(base_volume);
-    }
+    SERIALISE_SIGNATURE();
 
     const does_fixed& get_info(component_info::does_type type) const
     {
@@ -413,49 +368,10 @@ struct component : serialisable, owned
     ///aka power gen
     //bool production_heat_scales = false;
 
-    SERIALISE_SIGNATURE()
-    {
-        //DO_SERIALISE(info);
-        //DO_SERIALISE(activate_requirements);
-        //DO_SERIALISE(tags);
-        DO_SERIALISE(dyn_info);
-        DO_SERIALISE(dyn_activate_requirements);
-        DO_SERIALISE(base_id);
-        DO_SERIALISE(long_name);
-        DO_SERIALISE(short_name);
-        DO_SERIALISE(last_sat);
-        DO_SERIALISE(flows);
-        DO_SERIALISE(phase);
-        //DO_SERIALISE(heat_sink);
-        //DO_SERIALISE(no_drain_on_full_production);
-        //DO_SERIALISE(complex_no_drain_on_full_production);
-        DO_SERIALISE(last_production_frac);
-        //DO_SERIALISE(max_use_angle);
-        //DO_SERIALISE(subtype);
-        //DO_SERIALISE(production_heat_scales);
-        //DO_SERIALISE(my_volume);
-        //DO_SERIALISE(internal_volume);
-        DO_SERIALISE(current_scale);
-        DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
-        //DO_SERIALISE(primary_type);
-        //DO_SERIALISE(id);
-        DO_SERIALISE(composition);
-        DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
-        DO_SERIALISE(activation_level);
-        DO_SERIALISE(last_could_use);
-        DO_SERIALISE(last_activation_successful);
-        DO_SERIALISE(building);
-        DO_SERIALISE(build_queue);
-        DO_SERIALISE(cpu_core);
-        //DO_SERIALISE(activation_type);
-        DO_RPC(set_activation_level);
-        DO_RPC(set_use);
-        DO_RPC(manufacture_blueprint_id);
-        DO_RPC(transfer_stored_from_to);
-        DO_RPC(transfer_stored_from_to_frac);
-    }
+    SERIALISE_SIGNATURE();
 
-    FRIENDLY_RPC_NAME(manufacture_blueprint_id);
+    //FRIENDLY_RPC_NAME(manufacture_blueprint_id);
+    void manufacture_blueprint_id_rpc(size_t blue_id);
 
     const component_fixed_properties& get_fixed_props()
     {
@@ -625,8 +541,11 @@ struct component : serialisable, owned
 
     void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
     void transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac);
-    FRIENDLY_RPC_NAME(transfer_stored_from_to);
-    FRIENDLY_RPC_NAME(transfer_stored_from_to_frac);
+    //FRIENDLY_RPC_NAME(transfer_stored_from_to);
+    //FRIENDLY_RPC_NAME(transfer_stored_from_to_frac);
+
+    void transfer_stored_from_to_rpc(size_t pid_ship_from, size_t pid_component_to);
+    void transfer_stored_from_to_frac_rpc(size_t pid_ship_from, size_t pid_component_to, float frac);
 
     void set_activation_level(double level)
     {
@@ -679,25 +598,7 @@ struct data_tracker : serialisable, owned
 
     void add(double sat, double held);
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(vsat);
-        DO_SERIALISE(vheld);
-        DO_SERIALISE(max_data);
-
-        if(ctx.serialisation)
-        {
-            while((int)vsat.size() > max_data)
-            {
-                vsat.erase(vsat.begin());
-            }
-
-            while((int)vheld.size() > max_data)
-            {
-                vheld.erase(vheld.begin());
-            }
-        }
-    }
+    SERIALISE_SIGNATURE();
 };
 
 struct alt_radar_field;
@@ -836,27 +737,7 @@ struct ship : heatable_entity
     float get_mass();
     float get_max_temperature();
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(construction_amount);
-        DO_SERIALISE(data_track);
-        DO_SERIALISE(network_owner);
-        DO_SERIALISE(components);
-        DO_SERIALISE(last_sat_percentage);
-        DO_SERIALISE(latent_heat);
-        DO_SERIALISE(pipes);
-        DO_SERIALISE(my_size);
-        DO_SERIALISE(is_ship);
-        DO_SERIALISE(blueprint_name);
-        DO_SERIALISE(has_s_power);
-        DO_SERIALISE(has_w_power);
-        DO_SERIALISE(room_type);
-        DO_SERIALISE(last_room_type);
-        DO_SERIALISE(current_room_pid);
-        DO_SERIALISE(travelling_in_realspace);
-        DO_SERIALISE(realspace_destination);
-        DO_SERIALISE(realspace_pid_target);
-    }
+    SERIALISE_SIGNATURE();
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
