@@ -42,6 +42,9 @@ ship::ship()
     phys_drag = true;
 
     data_track.resize(component_info::COUNT);
+
+    radar_frequency_composition.push_back(2000);
+    radar_intensity_composition.push_back(1);
 }
 
 void component_fixed_properties::add(component_info::does_type type, double amount)
@@ -1937,9 +1940,16 @@ void ship::tick(double dt_s)
 
         alt_radar_field& radar = *current_radar_field;
 
+        assert(radar_frequency_composition.size() == radar_intensity_composition.size());
+
         alt_frequency_packet em;
         ///getting a bit complex to determine this value
-        em.make(20000 * c.get_operating_efficiency() * d.recharge, 2000);
+        //em.make(20000 * c.get_operating_efficiency() * d.recharge, 2000);
+
+        for(int i=0; i < (int)radar_intensity_composition.size(); i++)
+        {
+            em.make(20000 * c.get_operating_efficiency() * d.recharge * radar_intensity_composition[i], radar_frequency_composition[i]);
+        }
 
         radar.emit(em, r.position, *this);
     }
@@ -4348,14 +4358,14 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         }
 
         fle.data[base + i].help = "Hardware Mapped IO for Frequecy bucket " + std::to_string(i);
+
+        ///if enabled, this makes the radar pulse instead of activate continuously
         fle.data[base + i].set_int(0);
     }
 
     {
         if(to_send.intensities.size() > 0 && to_send.summed_intensity > 0.001)
         {
-            printf("In emissions\n");
-
             ///sum of intensities should at most be one
             if(to_send.summed_intensity > 1)
             {
@@ -4364,27 +4374,8 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
                 to_send.scale_by(scale_frac);
             }
 
-            float max_radar_strength = 0;
-
-            for(component& c : s.components)
-            {
-                if(!c.has(component_info::RADAR))
-                    continue;
-
-                does_fixed d = c.get_fixed(component_info::RADAR);
-
-                max_radar_strength += 20000 * c.get_operating_efficiency() * d.recharge;
-            }
-
-            to_send.scale_by(max_radar_strength);
-
-            for(int i=0; i < (int)to_send.intensities.size(); i++)
-            {
-                std::cout << "int " << to_send.intensities[i] << " fr " << to_send.frequencies[i] << std::endl;
-            }
-
-            alt_radar_field& radar = *s.current_radar_field;
-            radar.emit(to_send, s.r.position, s);
+            s.radar_frequency_composition = to_send.frequencies;
+            s.radar_intensity_composition = to_send.intensities;
         }
     }
 

@@ -790,6 +790,9 @@ struct ship : heatable_entity
 
     std::vector<double> last_sat_percentage;
 
+    std::vector<double> radar_frequency_composition;
+    std::vector<float> radar_intensity_composition;
+
     //std::string show_components();
     void show_resources(bool window = true);
     void show_power();
@@ -860,6 +863,8 @@ struct ship : heatable_entity
         DO_SERIALISE(travelling_in_realspace);
         DO_SERIALISE(realspace_destination);
         DO_SERIALISE(realspace_pid_target);
+        DO_SERIALISE(radar_frequency_composition);
+        DO_SERIALISE(radar_intensity_composition);
     }
 
     virtual void pre_collide(entity& other) override;
