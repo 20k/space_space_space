@@ -384,12 +384,16 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
         piecewise_linear(val, sizes[2], sizes[3], 0.7, 0.95, rval);
         piecewise_linear(val, sizes[3], sizes[4], 0.95, 1, rval);
 
+
         asteroid* a = r->entity_manage->make_new<asteroid>(r->field);
         a->init(val.x(), val.y());
         a->r.position = found_pos; ///poispace
         a->ticks_between_collisions = 2;
         //a->is_heat = false;
         a->angular_velocity = rand_det_s(rng, -0.01, 0.3);
+
+        if(val.y() < 3)
+            a->sun_reflectivity = 0;
 
         r->entity_manage->cleanup();
     }

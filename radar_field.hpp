@@ -281,6 +281,7 @@ struct heatable_entity : entity, heatable
 {
     ///aka the sun, used for optimising
     bool hot_stationary = false;
+    float sun_reflectivity = 1;
 
     heatable_entity()
     {

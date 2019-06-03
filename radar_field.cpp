@@ -327,7 +327,10 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage *= 0.5;
 
         if(packet.emitted_by == sun_id)
+        {
             reflect_percentage *= 0.5;
+            reflect_percentage *= collide.sun_reflectivity;
+        }
 
         #if 1
         if(packet.is_heat())
@@ -386,7 +389,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         //return {{std::nullopt, collide_packet}};
 
-        if(reflect_percentage == 0 || local_intensity * reflect_percentage < RADAR_CUTOFF)
+        if(reflect_percentage == 0 || local_intensity * reflect_percentage < RADAR_CUTOFF || reflect.get_max_intensity() < RADAR_CUTOFF)
         //if(reflect_percentage == 0 || reflect.intensity < RADAR_CUTOFF)
         {
             return {{std::nullopt, collide_packet}};
