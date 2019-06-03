@@ -103,6 +103,9 @@ void shared_audio::play_all()
 
         sound->setBuffer(*buf);
         sound->play();
+
+        buffers.push_back(buf);
+        sounds.push_back(sound);
     }
 
     relative_amplitudes.clear();
