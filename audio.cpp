@@ -10,6 +10,7 @@
 #endif
 
 #define SAMPLES 44100
+#define SAMPLE_RATE (int)(4410 * 1.5)
 
 template<typename T>
 std::array<sf::Int16, SAMPLES>
@@ -62,6 +63,8 @@ smooth_samples(const std::array<sf::Int16, SAMPLES>& in)
 
         ret[i] = mix(in[i], 0, frac);
     }
+
+    return ret;
 }
 
 
@@ -81,7 +84,7 @@ void shared_audio::play_all()
         }
     }
 
-    for(int i=0; i < (int)relative_amplitudes; i++)
+    for(int i=0; i < (int)relative_amplitudes.size(); i++)
     {
         sf::SoundBuffer* buf = new sf::SoundBuffer;
         sf::Sound* sound = new sf::Sound;
@@ -90,13 +93,16 @@ void shared_audio::play_all()
         float freq = frequencies[i];
 
         if(types[i] == waveform::SIN)
-            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sinf, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sinf, amp, freq)).data(), SAMPLES, 1, SAMPLE_RATE);
         if(types[i] == waveform::SAW)
-            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sawtooth_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sawtooth_wave, amp, freq)).data(), SAMPLES, 1, SAMPLE_RATE);
         if(types[i] == waveform::TRI)
-            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(triangle_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(triangle_wave, amp, freq)).data(), SAMPLES, 1, SAMPLE_RATE);
         if(types[i] == waveform::SQR)
-            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(square_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(square_wave, amp, freq)).data(), SAMPLES, 1, SAMPLE_RATE);
+
+        sound->setBuffer(*buf);
+        sound->play();
     }
 
     relative_amplitudes.clear();
