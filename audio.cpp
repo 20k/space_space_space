@@ -29,6 +29,8 @@ template<typename T>
 std::array<sf::Int16, SAMPLES>
 apply_sample_fetcher(T in, float amplitude, double frequency)
 {
+    amplitude = clamp(amplitude, 0, 1);
+
 	//const unsigned SAMPLE_RATE = 44100;
 	const unsigned AMPLITUDE = amplitude * 1000;
 
