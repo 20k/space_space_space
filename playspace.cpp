@@ -408,7 +408,7 @@ void playspace::init_default(int seed)
     asteroid* sun = entity_manage->make_new<asteroid>(field);
     sun->init(3, 4);
     sun->r.position = {0, 0}; ///realspace
-    //sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
+    sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
     sun->collides = false;
 

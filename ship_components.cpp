@@ -4323,7 +4323,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         ifreq = clamp(ifreq, 0, 127);
         intens = clamp(intens, 0, 255 * 10);
 
-        fle.data[base + ifreq].set_int((int)intens);
+        fle.data[base + ifreq].value += (int)intens;
         fle.data[base + ifreq].help = "Intensity";
     }
 

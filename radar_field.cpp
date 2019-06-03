@@ -1385,7 +1385,12 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         {
             bool found = false;
 
-            float scaled_intens = packet.summed_intensity / packet.intensities[j];
+            float vanilla_max = 0;
+
+            for(auto& i : packet.intensities)
+                vanilla_max += i;
+
+            float scaled_intens = packet.summed_intensity * packet.intensities[j] / vanilla_max;
 
             for(int i=0; i < (int)s.frequencies.size(); i++)
             {
