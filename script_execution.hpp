@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <networking/serialisable_fwd.hpp>
+#include "audio.hpp"
 
 namespace registers
 {
@@ -361,6 +362,8 @@ struct custom_instruction
 struct cpu_state : serialisable, owned
 {
     cpu_state();
+
+    shared_audio audio;
 
     std::vector<cpu_stash> all_stash;
     std::vector<cpu_file> files;

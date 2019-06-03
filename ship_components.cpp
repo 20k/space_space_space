@@ -4755,6 +4755,28 @@ void update_alive_ids(cpu_state& cpu, const std::vector<size_t>& ids)
     }
 }
 
+void check_audio_hardware(cpu_state& cpu, size_t my_pid)
+{
+    std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file("Audio", my_pid, 1, true);
+
+    if(opt_ship_file.has_value())
+    {
+        cpu_file& fle = *opt_ship_file.value();
+
+        for(int i=0; i < (int)fle.len(); i += 3)
+        {
+            float intens = fle[i + 0].value / 100.;
+            float freq = fle[i + 1].value;
+            int type = fle[i + 2].value;
+
+            cpu.audio.add(intens, freq, (waveform::type)type);
+        }
+
+        fle.data.clear();
+        fle.ensure_eof();
+    }
+}
+
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
     for(component& c : s.components)
@@ -4772,6 +4794,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
         std::vector<size_t> ids;
         check_update_components_in_hardware(s, cpu, play, space, r, type_counts, "", ids);
         dump_radar_data_into_cpu(cpu, s, play, space, r);
+        check_audio_hardware(cpu, c._pid);
 
         update_alive_ids(cpu, ids);
 

@@ -20,6 +20,7 @@ namespace waveform
         SAW,
         TRI,
         SQR,
+        COUNT,
     };
 }
 
@@ -36,7 +37,7 @@ struct shared_audio : serialisable
 
     void play_all();
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(shared_audio);
 };
 
 #endif // AUDIO_HPP_INCLUDED

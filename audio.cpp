@@ -18,7 +18,7 @@ double get_frequency_from_A(int half_steps)
     return pow(pow(2, 1/12.), half_steps) * 440.; ///heh screw you americans
 }
 
-SERIALISE_BODY(shared_audio)
+SERIALISE_BODY_SIMPLE(shared_audio)
 {
     DO_SERIALISE(relative_amplitudes);
     DO_SERIALISE(frequencies);
@@ -95,6 +95,9 @@ void shared_audio::add(float intensity, double frequency, waveform::type type)
 {
     intensity = clamp(intensity, 0, 1);
     frequency = clamp(frequency, 50, 5000);
+
+    if(type < waveform::SIN || type >= waveform::COUNT)
+        type = waveform::SIN;
 
     relative_amplitudes.push_back(intensity);
     frequencies.push_back(frequency);
