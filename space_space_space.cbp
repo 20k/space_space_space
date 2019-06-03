@@ -130,6 +130,7 @@
 		<Linker>
 			<Add option="-lsfml-graphics-s" />
 			<Add option="-lsfml-window-s" />
+			<Add option="-lsfml-audio-s" />
 			<Add option="-lsfml-system-s" />
 			<Add option="-lfreetype" />
 			<Add option="-lopengl32" />
@@ -138,6 +139,12 @@
 			<Add option="-lws2_32" />
 			<Add option="-lmswsock" />
 			<Add option="-llmdb" />
+			<Add option="-lopenal" />
+			<Add option="-lflac" />
+			<Add option="-lvorbisenc" />
+			<Add option="-lvorbisfile" />
+			<Add option="-lvorbis" />
+			<Add option="-logg" />
 			<Add library="deps/steamworks_sdk_142/sdk/public/steam/lib/win64/libsdkencryptedappticket64.a" />
 			<Add library="deps/steamworks_sdk_142/sdk/redistributable_bin/win64/libsteam_api64.a" />
 			<Add directory="deps/liblmdb" />
@@ -147,6 +154,8 @@
 		<Unit filename="aggregates.hpp" />
 		<Unit filename="aoe_damage.cpp" />
 		<Unit filename="aoe_damage.hpp" />
+		<Unit filename="audio.cpp" />
+		<Unit filename="audio.hpp" />
 		<Unit filename="camera.cpp" />
 		<Unit filename="camera.hpp" />
 		<Unit filename="code_editor.cpp" />

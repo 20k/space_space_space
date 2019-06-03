@@ -25,6 +25,7 @@
 #include "colours.hpp"
 #include "script_execution.hpp"
 #include "code_editor.hpp"
+#include "audio.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -1090,6 +1091,8 @@ int main()
     #endif // WITH_SERVER
     #endif // CLIENT_ONLY
     #endif // SERVER_ONLY
+
+    audio_test();
 
     #ifdef SERVER_ONLY
     server_thread(term);
