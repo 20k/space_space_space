@@ -4175,6 +4175,8 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
 
     if(r == nullptr)
     {
+        r.velocity = {0,0};
+
         if(disruptive)
         {
             float my_mass = s.get_mass();
@@ -4268,6 +4270,8 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
         std::optional<std::pair<playspace*, room*>> dest = play.get_room_from_id(s.destination_poi_pid);
 
         s.travelling_to_poi = false;
+
+        s.velocity = {0,0};
 
         if(dest)
         {
@@ -5030,6 +5034,7 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         room* nr = dest.value()->make_room(this->r.position, 5, poi_type::DEAD_SPACE);
         play.enter_room(this, nr);
         travelling_in_realspace = false;
+        velocity = {0,0};
 
         return;
     }
