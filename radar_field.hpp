@@ -109,6 +109,14 @@ struct alt_frequency_packet
         }
     }
 
+    void scale_by(float fraction)
+    {
+        for(auto& i : intensities)
+            i *= fraction;
+
+        summed_intensity *= fraction;
+    }
+
     float get_max_intensity() const
     {
         return summed_intensity;

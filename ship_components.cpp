@@ -1944,7 +1944,6 @@ void ship::tick(double dt_s)
         radar.emit(em, r.position, *this);
     }
 
-
     ///item uses
     for(component& c : components)
     {
@@ -4298,16 +4297,22 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     cpu_file& fle = *opt_fle.value();
 
     int max_radar_data = 128;
+    int max_write_radar_data = 128;
     int max_connected_systems = 127;
     int max_pois = 127;
     int max_objects = 255;
 
-    fle.data.resize(max_radar_data + max_connected_systems + max_pois + max_objects);
+    float intensity_mult = 16;
+
+    fle.data.resize(max_radar_data + max_write_radar_data + max_connected_systems + max_pois + max_objects);
     fle.ensure_eof();
     cpu.update_length_register();
 
     for(int i=0; i < (int)fle.len(); i++)
     {
+        if(i >= max_radar_data && i < max_radar_data + max_write_radar_data)
+            continue;
+
         fle.data[i].set_int(0);
     }
 
@@ -4316,18 +4321,74 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
     for(int i=0; i < (int)sam.frequencies.size(); i++)
     {
         float freq = round((sam.frequencies[i] - MIN_FREQ) / (MAX_FREQ - MIN_FREQ));
-        float intens = round(sam.intensities[i] * 10);
+        float intens = round(sam.intensities[i] * intensity_mult);
 
         int ifreq = (int)freq;
 
         ifreq = clamp(ifreq, 0, 127);
-        intens = clamp(intens, 0, 255 * 10);
+        intens = clamp(intens, 0, 256 * intensity_mult - 1);
 
         fle.data[base + ifreq].value += (int)intens;
         fle.data[base + ifreq].help = "Intensity";
     }
 
-    base = max_radar_data;
+    base += max_radar_data;
+
+    alt_frequency_packet to_send;
+
+    for(int i=0; i < (int)max_write_radar_data; i++)
+    {
+        if(fle.data[base + i].is_int() && fle.data[base + i].value > 0)
+        {
+            float intensity_to_send = clamp(fle.data[base + i].value / intensity_mult, 0, 256) / 256.f;
+            float frequency = (((float)i / max_write_radar_data) * (MAX_FREQ - MIN_FREQ)) + MIN_FREQ;
+
+            ///so intensity between 0 and 1
+            to_send.make(intensity_to_send, frequency);
+        }
+
+        fle.data[base + i].help = "Hardware Mapped IO for Frequecy bucket " + std::to_string(i);
+        fle.data[base + i].set_int(0);
+    }
+
+    {
+        if(to_send.intensities.size() > 0 && to_send.summed_intensity > 0.001)
+        {
+            printf("In emissions\n");
+
+            ///sum of intensities should at most be one
+            if(to_send.summed_intensity > 1)
+            {
+                float scale_frac = 1 / to_send.summed_intensity;
+
+                to_send.scale_by(scale_frac);
+            }
+
+            float max_radar_strength = 0;
+
+            for(component& c : s.components)
+            {
+                if(!c.has(component_info::RADAR))
+                    continue;
+
+                does_fixed d = c.get_fixed(component_info::RADAR);
+
+                max_radar_strength += 20000 * c.get_operating_efficiency() * d.recharge;
+            }
+
+            to_send.scale_by(max_radar_strength);
+
+            for(int i=0; i < (int)to_send.intensities.size(); i++)
+            {
+                std::cout << "int " << to_send.intensities[i] << " fr " << to_send.frequencies[i] << std::endl;
+            }
+
+            alt_radar_field& radar = *s.current_radar_field;
+            radar.emit(to_send, s.r.position, s);
+        }
+    }
+
+    base += max_write_radar_data;
 
     std::vector<playspace*> connected = play.get_connected_systems_for(&s);
 

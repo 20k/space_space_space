@@ -447,7 +447,9 @@ std::string register_value::as_string() const
         return "EOF";
     }
 
-    throw std::runtime_error("Bad register val?");
+    return "ERR";
+
+    //throw std::runtime_error("Bad register val?");
 }
 
 register_value& register_value::decode(cpu_state& state, cpu_stash& stash)
