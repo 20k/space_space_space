@@ -236,6 +236,7 @@ void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(name);
     DO_SERIALISE(position);
     DO_SERIALISE(entity_manage);
+    DO_SERIALISE(drawables);
 }
 
 playspace::playspace()
@@ -246,10 +247,13 @@ playspace::playspace()
     //field->space_scaling = ROOM_POI_SCALE;
     field->speed_of_light_per_tick = field->speed_of_light_per_tick * ROOM_POI_SCALE;
     field->space_scaling = 1/ROOM_POI_SCALE;
+
+    drawables = new entity_manager;
 }
 
 playspace::~playspace()
 {
+    delete drawables;
     delete entity_manage;
 }
 
@@ -439,7 +443,7 @@ void playspace::init_default(int seed)
 
         for(int idx = 0; idx < max_num; idx++)
         {
-            asteroid* a = entity_manage->make_new<asteroid>(field);
+            asteroid* a = drawables->make_new<asteroid>(field);
             a->init(1, 2);
             a->is_heat = false;
             a->collides = false;
@@ -453,6 +457,8 @@ void playspace::init_default(int seed)
             a->r.position = pos;
         }
     }
+
+    drawables->force_spawn();
 }
 
 void playspace::add(entity* e)
@@ -785,7 +791,15 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
             {
                 ret.renderables.push_back(e->r);
                 ret.renderables.back().render_layer = RENDER_LAYER_SSPACE;
-                continue;
+            }
+        }
+
+        for(auto& e : play->drawables->entities)
+        {
+            if(!e->collides)
+            {
+                ret.renderables.push_back(e->r);
+                ret.renderables.back().render_layer = RENDER_LAYER_SSPACE;
             }
         }
     }

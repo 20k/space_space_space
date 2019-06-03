@@ -1165,6 +1165,9 @@ int main()
     entity_manager entities;
     entities.use_aggregates = false;
 
+    entity_manager drawables;
+    drawables.use_aggregates = false;
+
     entity* ship_proxy = entities.make_new<entity>();
 
     stardust_manager star_manage(poi_cam, entities);

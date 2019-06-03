@@ -123,6 +123,7 @@ struct playspace : serialisable, owned
 
     std::shared_ptr<alt_radar_field> field;
     entity_manager* entity_manage = nullptr;
+    entity_manager* drawables = nullptr;
 
     playspace();
     ~playspace();

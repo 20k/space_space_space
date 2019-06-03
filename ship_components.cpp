@@ -1000,10 +1000,7 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
 
     for(component& c : components)
     {
-        double hp = c.get_held()[component_info::HP];
-        double max_hp = c.get_capacity()[component_info::HP];
-
-        assert(max_hp > 0);
+        float hp_frac = c.get_hp_frac();
 
         double min_sat = c.get_sat(all_sat);
 
@@ -1014,9 +1011,9 @@ std::vector<double> ship::get_net_resources(double dt_s, const std::vector<doubl
             does_fixed d = c.scale(unscaled);
 
             if(d.recharge > 0 || d.recharge_unconditional > 0)
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * min_sat * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
+                produced_resources[d.type] += d.recharge * hp_frac * min_sat * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
             else
-                produced_resources[d.type] += d.recharge * (hp / max_hp) * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
+                produced_resources[d.type] += d.recharge * hp_frac * dt_s * c.last_production_frac * c.activation_level + d.recharge_unconditional * dt_s;
         }
 
         c.last_sat = min_sat;
@@ -1299,10 +1296,7 @@ std::vector<double> ship::get_sat_percentage()
 
     for(component& c : components)
     {
-        double hp = c.get_held()[component_info::HP];
-        double max_hp = c.get_capacity()[component_info::HP];
-
-        assert(max_hp > 0);
+        float hp_frac = c.get_hp_frac();
 
         const component_fixed_properties& fixed = c.get_fixed_props();
 
@@ -1311,10 +1305,10 @@ std::vector<double> ship::get_sat_percentage()
             does_fixed d = c.scale(unscaled);
 
             if(d.recharge < 0)
-                all_needed[d.type] += d.recharge * (hp / max_hp) * c.last_production_frac * c.activation_level + d.recharge_unconditional;
+                all_needed[d.type] += d.recharge * hp_frac * c.last_production_frac * c.activation_level + d.recharge_unconditional;
 
             if(d.recharge > 0)
-                all_produced[d.type] += d.recharge * (hp / max_hp) * c.get_sat(last_sat_percentage) * c.last_production_frac * c.activation_level + d.recharge_unconditional;
+                all_produced[d.type] += d.recharge * hp_frac * c.get_sat(last_sat_percentage) * c.last_production_frac * c.activation_level + d.recharge_unconditional;
         }
     }
 
