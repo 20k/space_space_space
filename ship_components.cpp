@@ -4057,8 +4057,6 @@ float ship::get_max_angular_thrust()
 
     if(room_type == space_type::REAL_SPACE)
         return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 / mass;
-    if(room_type == space_type::S_SPACE)
-        return std::max(get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 / mass, 0.);
 
     return 0;
 }
@@ -4069,8 +4067,6 @@ float ship::get_max_velocity_thrust()
 
     if(room_type == space_type::REAL_SPACE)
         return get_net_resources(1, last_sat_percentage)[component_info::THRUST] * 2 * 20 / mass;
-    if(room_type == space_type::S_SPACE)
-        return std::max(get_net_resources(1, last_sat_percentage)[component_info::S_POWER] * 2 * 300 * 20 / mass, 0.);
 
     return 0;
 }
@@ -4111,6 +4107,9 @@ float ship::get_max_temperature()
 
 void ship::tick_pre_phys(double dt_s)
 {
+    if(control_force.x() == 0 && control_force.y() == 0 && control_angular_force == 0)
+        return;
+
     double angular_thrust = get_max_angular_thrust();
     double velocity_thrust = get_max_velocity_thrust();
 
