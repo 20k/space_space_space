@@ -108,13 +108,14 @@ void shared_audio::play_all()
 {
     for(int i=0; i < (int)buffers.size(); i++)
     {
-        if(sounds[i]->getStatus() == sf::Sound::Status::Stopped || sounds[i]->getStatus() == sf::Sound::Status::Paused)
+        if(kill_clock[i].getElapsedTime().asSeconds() > 2)
         {
             delete sounds[i];
             delete buffers[i];
 
             sounds.erase(sounds.begin() + i);
             buffers.erase(buffers.begin() + i);
+            kill_clock.erase(kill_clock.begin() + i);
             i--;
             continue;
         }
@@ -142,6 +143,7 @@ void shared_audio::play_all()
 
         buffers.push_back(buf);
         sounds.push_back(sound);
+        kill_clock.emplace_back();
     }
 
     relative_amplitudes.clear();

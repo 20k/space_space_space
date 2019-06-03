@@ -111,6 +111,7 @@ void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
 
 void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
+    DO_SERIALISE(audio);
     DO_SERIALISE(all_stash);
     DO_SERIALISE(files);
     DO_SERIALISE(inst);
@@ -129,6 +130,8 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
     DO_RPC(reset);
+    DO_RPC(run);
+    DO_RPC(stop);
 }
 
 void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
@@ -1504,6 +1507,26 @@ void cpu_state::reset()
 void cpu_state::reset_rpc()
 {
     rpc("reset", *this);
+}
+
+void cpu_state::run()
+{
+    free_running = true;
+}
+
+void cpu_state::run_rpc()
+{
+    rpc("run", *this);
+}
+
+void cpu_state::stop()
+{
+    free_running = false;
+}
+
+void cpu_state::stop_rpc()
+{
+    rpc("stop", *this);
 }
 
 void cpu_state::drop_file()

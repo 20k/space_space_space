@@ -1954,6 +1954,15 @@ void ship::tick(double dt_s)
         radar.emit(em, r.position, *this);
     }
 
+    for(component& c : components)
+    {
+        if(!c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        if(c.cpu_core.free_running)
+            c.cpu_core.step();
+    }
+
     ///item uses
     for(component& c : components)
     {

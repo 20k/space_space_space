@@ -3,6 +3,7 @@
 
 #include <networking/serialisable_fwd.hpp>
 #include <vector>
+#include <SFML/System/Clock.hpp>
 
 namespace sf
 {
@@ -32,6 +33,7 @@ struct shared_audio : serialisable
 
     std::vector<sf::SoundBuffer*> buffers;
     std::vector<sf::Sound*> sounds;
+    std::vector<sf::Clock> kill_clock;
 
     void play_all();
 

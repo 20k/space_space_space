@@ -54,6 +54,16 @@ void code_editor::render(cpu_state& cpu)
         cpu.reset_rpc();
     }
 
+    if(ImGuiX::SimpleButton("(Run)"))
+    {
+        cpu.run_rpc();
+    }
+
+    if(ImGuiX::SimpleButton("(Stop)"))
+    {
+        cpu.stop_rpc();
+    }
+
     ImGui::TextWrapped(cpu.last_error.c_str());
 
     ImGui::Checkbox("Show File?", &show_file);
