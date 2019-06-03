@@ -800,6 +800,7 @@ void server_thread(std::atomic_bool& should_term)
                     }
                 }
 
+                if(read_data.rpcs.all_rpcs.size() > 0)
                 {
                     serialise_context ctx;
                     ctx.inf = read_data.rpcs;
@@ -848,6 +849,7 @@ void server_thread(std::atomic_bool& should_term)
                 }
             }
 
+            if(read_data.rpcs.all_rpcs.size() > 0)
             {
                 serialise_context ctx;
                 ctx.inf = read_data.rpcs;
