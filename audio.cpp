@@ -10,8 +10,8 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-#define SAMPLES 44100
-#define SAMPLE_RATE (int)(4410 * 1.5)
+#define SAMPLES (int)(4410 * 1.5)
+#define SAMPLE_RATE (int)(44100)
 
 double get_frequency_from_A(int half_steps)
 {
@@ -30,7 +30,7 @@ std::array<sf::Int16, SAMPLES>
 apply_sample_fetcher(T in, float amplitude, double frequency)
 {
 	//const unsigned SAMPLE_RATE = 44100;
-	const unsigned AMPLITUDE = amplitude;
+	const unsigned AMPLITUDE = amplitude * 1000;
 
 	std::array<sf::Int16, SAMPLES> ret;
 
@@ -70,11 +70,20 @@ smooth_samples(const std::array<sf::Int16, SAMPLES>& in)
 {
     auto ret = in;
 
-    for(int i=SAMPLES-100; i < SAMPLES; i++)
+    int smooth = 200;
+
+    for(int i=SAMPLES-smooth; i < SAMPLES; i++)
     {
-        float frac = (i - (SAMPLES - 100)) / 99.;
+        float frac = (i - (SAMPLES - smooth)) / (smooth - 1.);
 
         ret[i] = mix(in[i], 0, frac);
+    }
+
+    for(int i=0; i < smooth; i++)
+    {
+        float frac = i / (smooth - 1.);
+
+        ret[i] = mix(0, in[i], frac);
     }
 
     return ret;
