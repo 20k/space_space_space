@@ -54,9 +54,6 @@ struct alt_frequency_packet
     float summed_intensity = 0;
     bool is_hot = false;
 
-    //float frequency = 0;
-    //float intensity = 0;
-
     vec2f origin = {0,0};
 
     uint32_t start_iteration = 0;
@@ -75,7 +72,6 @@ struct alt_frequency_packet
     float cross_angle = 0;
 
     uint32_t id = 0;
-    uint32_t id_block = 0;
     static inline uint32_t gid = 0;
 
     uint32_t emitted_by = -1;

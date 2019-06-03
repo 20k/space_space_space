@@ -29,6 +29,12 @@ vec2f tget_dim(T* in)
     return in->get_dim();
 }
 
+inline
+float left_side_from_origin(const vec<2, float>& l2, const vec<2, float>& lp)
+{
+    return l2.v[0] * lp.v[1] - l2.v[1] * lp.v[0];
+}
+
 template<typename T>
 struct aggregate
 {
@@ -104,8 +110,6 @@ struct aggregate
 
     bool intersects(vec2f in_pos, float current_radius, float next_radius, vec2f start_dir, float restrict_angle, vec2f left_restrict, vec2f right_restrict)
     {
-        //return true;
-
         ///so, if we hit the doughnut AND we fully lie within the unoccluded zone, hit
 
         ///see rect_intersects_doughnut
@@ -160,19 +164,16 @@ struct aggregate
 
         //return true;
 
-        vec2f vright = right_restrict;
-        vec2f vleft = left_restrict;
-
-        if(!is_left_side((vec2f){0,0}, vleft, rtl) &&
-           !is_left_side((vec2f){0,0}, vleft, rtr) &&
-           !is_left_side((vec2f){0,0}, vleft, rbl) &&
-           !is_left_side((vec2f){0,0}, vleft, rbr))
+        if(left_side_from_origin(left_restrict, rtl) <= 0 &&
+           left_side_from_origin(left_restrict, rtr) <= 0 &&
+           left_side_from_origin(left_restrict, rbl) <= 0 &&
+           left_side_from_origin(left_restrict, rbr) <= 0)
             return false;
 
-        if(is_left_side((vec2f){0,0}, vright, rtl) &&
-           is_left_side((vec2f){0,0}, vright, rtr) &&
-           is_left_side((vec2f){0,0}, vright, rbl) &&
-           is_left_side((vec2f){0,0}, vright, rbr))
+        if(left_side_from_origin(right_restrict, rtl) > 0 &&
+           left_side_from_origin(right_restrict, rtr) > 0 &&
+           left_side_from_origin(right_restrict, rbl) > 0 &&
+           left_side_from_origin(right_restrict, rbr) > 0)
             return false;
 
         return true;

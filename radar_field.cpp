@@ -296,7 +296,6 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         vec2f packet_vector = collide.r.position - packet.origin;
 
         alt_frequency_packet collide_packet = packet;
-        collide_packet.id_block = packet.id;
         collide_packet.id = alt_frequency_packet::gid++;
         //collide_packet.emitted_by = -1;
 
@@ -551,7 +550,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
             {
                 for(auto& fine : coarse.data)
                 {
-                    if(fine.data.size() == 1 || fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+                    if(fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                     {
                         for(entity* collide : fine.data)
                         {
