@@ -1,7 +1,7 @@
 #ifndef COMMON_RENDERABLE_HPP_INCLUDED
 #define COMMON_RENDERABLE_HPP_INCLUDED
 
-#include <networking/serialisable_fwd.hpp>
+#include <networking/serialisable.hpp>
 #include <vec/vec.hpp>
 #include "fixed_clock.hpp"
 #include "entity.hpp"
@@ -58,7 +58,13 @@ struct common_renderable : serialisable, uncertain
     client_renderable r;
     vec2f velocity = {0,0};
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(type);
+        DO_SERIALISE(r);
+        DO_SERIALISE(velocity);
+        DO_SERIALISE(is_unknown);
+    }
 };
 
 #endif // COMMON_RENDERABLE_HPP_INCLUDED

@@ -129,6 +129,28 @@ float get_physical_cross_section(vec2f dim, float initial_angle, float observe_a
 
 struct heatable_entity;
 
+/*struct alt_collideable
+{
+    vec2f dim = {0,0};
+    float angle = 0;
+    uint32_t uid = 0;
+    vec2f pos = {0,0};
+    heatable_entity* en = nullptr; ///uuh
+
+    float get_cross_section(float angle);
+    float get_physical_cross_section(float angle);
+
+    vec2f get_pos() const
+    {
+        return pos;
+    }
+
+    vec2f get_dim() const
+    {
+        return dim;
+    }
+};*/
+
 struct hacky_clock
 {
     bool once = true;
@@ -216,7 +238,23 @@ struct alt_radar_sample : serialisable
 
     bool fresh = false;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(location);
+        DO_SERIALISE(frequencies);
+        DO_SERIALISE(intensities);
+
+        DO_SERIALISE(echo_pos);
+        /*DO_SERIALISE(echo_dir);
+        DO_SERIALISE(receive_dir);*/
+
+        DO_SERIALISE(renderables);
+        //DO_SERIALISE(low_detail);
+        DO_SERIALISE(fresh);
+
+        /*DO_SERIALISE(echo_position);
+        DO_SERIALISE(echo_id);*/
+    }
 };
 
 struct player_model;

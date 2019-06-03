@@ -1,15 +1,6 @@
 #include "aoe_damage.hpp"
 #include "ship_components.hpp"
 #include "radar_field.hpp"
-#include <networking/serialisable.hpp>
-
-SERIALISE_BODY(aoe_damage)
-{
-    DO_SERIALISE(radius);
-    DO_SERIALISE(max_radius);
-    DO_SERIALISE(damage);
-    DO_SERIALISE(accumulated_time);
-}
 
 aoe_damage::aoe_damage(std::shared_ptr<alt_radar_field> _field)
 {

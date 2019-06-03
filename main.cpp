@@ -13,6 +13,7 @@
 #include "stardust.hpp"
 #include "player.hpp"
 #include "fixed_clock.hpp"
+#include "aoe_damage.hpp"
 #include "design_editor.hpp"
 #include <fstream>
 #include <nauth/auth.hpp>

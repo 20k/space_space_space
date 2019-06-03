@@ -9,24 +9,6 @@
 
 std::map<std::string, double> info_dump;
 
-void alt_radar_sample::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
-{
-    DO_SERIALISE(location);
-    DO_SERIALISE(frequencies);
-    DO_SERIALISE(intensities);
-
-    DO_SERIALISE(echo_pos);
-    /*DO_SERIALISE(echo_dir);
-    DO_SERIALISE(receive_dir);*/
-
-    DO_SERIALISE(renderables);
-    //DO_SERIALISE(low_detail);
-    DO_SERIALISE(fresh);
-
-    /*DO_SERIALISE(echo_position);
-    DO_SERIALISE(echo_id);*/
-}
-
 bool frequency_in_range(float freq, const std::vector<double>& frequencies)
 {
     if(frequencies.size() == 0)
