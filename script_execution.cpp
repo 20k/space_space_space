@@ -47,15 +47,29 @@ std::vector<std::string> split(const std::string &s, char delim)
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
-    DO_SERIALISE(reg);
-    DO_SERIALISE(value);
-    DO_SERIALISE(symbol);
-    DO_SERIALISE(label);
-    DO_SERIALISE(address);
-    DO_SERIALISE(reg_address);
-    DO_SERIALISE(file_eof);
     DO_SERIALISE(which);
     DO_SERIALISE(help);
+
+    if(which == 0)
+        DO_SERIALISE(reg);
+
+    if(which == 1)
+        DO_SERIALISE(value);
+
+    if(which == 2)
+        DO_SERIALISE(symbol);
+
+    if(which == 3)
+        DO_SERIALISE(label);
+
+    if(which == 4)
+        DO_SERIALISE(address);
+
+    if(which == 5)
+        DO_SERIALISE(reg_address);
+
+    if(which == 6)
+        DO_SERIALISE(file_eof);
 }
 
 void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
