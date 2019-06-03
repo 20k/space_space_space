@@ -446,7 +446,11 @@ struct component : serialisable, owned
         DO_SERIALISE(last_activation_successful);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
-        DO_SERIALISE(cpu_core);
+
+        if(base_id == component_type::CPU)
+        {
+            DO_SERIALISE(cpu_core);
+        }
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);

@@ -902,8 +902,8 @@ void server_thread(std::atomic_bool& should_term)
             ship_network_data network_ships = playspace_manage.get_network_data_for(s, i);
 
             data.client_network_id = i;
-            data.ships = network_ships.ships;
-            data.renderables = network_ships.renderables;
+            data.ships = std::move(network_ships.ships);
+            data.renderables = std::move(network_ships.renderables);
 
             data.labels.clear();
             data.connected_systems.clear();
