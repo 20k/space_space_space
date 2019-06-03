@@ -4,6 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include <vec/vec.hpp>
+#include <networking/serialisable.hpp>
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -11,6 +12,18 @@
 
 #define SAMPLES 44100
 #define SAMPLE_RATE (int)(4410 * 1.5)
+
+double get_frequency_from_A(int half_steps)
+{
+    return pow(pow(2, 1/12.), half_steps) * 440.; ///heh screw you americans
+}
+
+SERIALISE_BODY(shared_audio)
+{
+    DO_SERIALISE(relative_amplitudes);
+    DO_SERIALISE(frequencies);
+    DO_SERIALISE(types);
+}
 
 template<typename T>
 std::array<sf::Int16, SAMPLES>
@@ -67,6 +80,15 @@ smooth_samples(const std::array<sf::Int16, SAMPLES>& in)
     return ret;
 }
 
+void shared_audio::add(float intensity, double frequency, waveform::type type)
+{
+    intensity = clamp(intensity, 0, 1);
+    frequency = clamp(frequency, 50, 5000);
+
+    relative_amplitudes.push_back(intensity);
+    frequencies.push_back(frequency);
+    types.push_back(type);
+}
 
 void shared_audio::play_all()
 {
@@ -133,6 +155,28 @@ void audio_test()
 		sf::sleep(sf::milliseconds(100));
 	}*/
 
+    shared_audio aud;
 
+    aud.add(1, get_frequency_from_A(0), waveform::SIN);
+    aud.play_all();
+    sf::sleep(sf::milliseconds(200));
+
+    aud.add(1, get_frequency_from_A(2), waveform::SIN);
+    aud.play_all();
+    sf::sleep(sf::milliseconds(200));
+
+    aud.add(1, get_frequency_from_A(3), waveform::SIN);
+    aud.play_all();
+    sf::sleep(sf::milliseconds(200));
+
+    aud.add(1, get_frequency_from_A(5), waveform::SIN);
+    aud.play_all();
+    sf::sleep(sf::milliseconds(200));
+
+    aud.add(1, get_frequency_from_A(7), waveform::SIN);
+    aud.play_all();
+    sf::sleep(sf::milliseconds(200));
+
+    while(1){}
 }
 
