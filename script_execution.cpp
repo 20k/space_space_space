@@ -1013,9 +1013,7 @@ void cpu_state::step()
         //return;
         break;
     case SWIZ:
-
-        CALL3(iswiz, RN, RN, R);
-        //throw std::runtime_error("Unimplemented SWIZ");
+        CALL3(iswiz, RNLS, RN, R);
         break;
     case JUMP:
         context.pc = label_to_pc(L(next[0]).label) + 1;

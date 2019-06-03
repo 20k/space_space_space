@@ -141,8 +141,29 @@ void imodi(register_value& r1, register_value& r2, register_value& r3)
     //r3.set_int(r1.value % r2.value);
 }
 
+void sswiz(register_value& r1, register_value& r2, register_value& r3)
+{
+    NUM(r2);
+
+    std::string str = r1.is_label() ? r1.label : r1.symbol;
+
+    int r2_v = r2.value;
+
+    if(r2_v < 0 || r2_v >= (int)str.size())
+        throw std::runtime_error("Bad string SWIZ, out of bounds: index " + std::to_string(r2_v) + " in string " + str + " of length " + std::to_string(str.size()));
+
+    if(r1.is_label())
+        r3.set_label(std::string(1, str[r2_v]));
+
+    if(r1.is_symbol())
+        r3.set_symbol(std::string(1, str[r2_v]));
+}
+
 void iswiz(register_value& r1, register_value& r2, register_value& r3)
 {
+    if(r1.is_label() || r1.is_symbol())
+        return sswiz(r1, r2, r3);
+
     NUM(r1);
     NUM(r2);
 
