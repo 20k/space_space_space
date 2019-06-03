@@ -149,6 +149,7 @@ void shared_audio::play_all()
     types.clear();
 }
 
+#if 0
 void audio_test()
 {
 	/*const unsigned SAMPLE_RATE = 44100;
@@ -193,4 +194,5 @@ void audio_test()
 
     while(1){}
 }
+#endif // 0
 

@@ -4,8 +4,6 @@
 #include <networking/serialisable_fwd.hpp>
 #include <vector>
 
-void audio_test();
-
 namespace sf
 {
     struct SoundBuffer;

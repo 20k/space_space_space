@@ -4757,7 +4757,7 @@ void update_alive_ids(cpu_state& cpu, const std::vector<size_t>& ids)
 
 void check_audio_hardware(cpu_state& cpu, size_t my_pid)
 {
-    std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file("Audio", my_pid, 1, true);
+    std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file("AUDIO", my_pid, 1, true);
 
     if(opt_ship_file.has_value())
     {

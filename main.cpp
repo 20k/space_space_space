@@ -989,6 +989,17 @@ void server_thread(std::atomic_bool& should_term)
                 //conn.writes_to(model, i);
             }
 
+
+            ///SO THIS IS KIND OF HACKY
+
+            if(s)
+            {
+                for(component& c : s->components)
+                {
+                    c.cpu_core.audio = shared_audio();
+                }
+            }
+
             /*if(player_model)
             {
                 for(auto it = player_model->renderables.begin(); it != player_model->renderables.end();)
@@ -1092,8 +1103,6 @@ int main()
     #endif // CLIENT_ONLY
     #endif // SERVER_ONLY
 
-    audio_test();
-
     #ifdef SERVER_ONLY
     server_thread(term);
     exit(0);
@@ -1130,6 +1139,7 @@ int main()
         tex->create(width, height);
         tex->update((const unsigned char*)data);
     };
+
 
     ImGuiFreeType::BuildFontAtlas(atlas, ImGuiFreeType::ForceAutoHint, ImGuiFreeType::LEGACY);
 
@@ -1188,6 +1198,9 @@ int main()
 
     steamapi api;
 
+    if(!api.enabled)
+        throw std::runtime_error("No steam");
+
     {
         api.request_auth_token("");
 
@@ -1211,6 +1224,8 @@ int main()
     vec2f last_s_size = {0,0};
 
     std::map<size_t, code_editor> editors;
+
+    shared_audio audio;
 
     while(window.isOpen())
     {
@@ -1300,6 +1315,26 @@ int main()
             renderables.entities = model.renderables;
 
             update_interpolated_variables(model);
+
+            for(ship& s : model.ships)
+            {
+                if(s._pid == !model.controlled_ship_id)
+                    continue;
+
+                for(component& c : s.components)
+                {
+                    if(c.base_id != component_type::CPU)
+                        continue;
+
+                    audio.relative_amplitudes = c.cpu_core.audio.relative_amplitudes;
+                    audio.frequencies = c.cpu_core.audio.frequencies;
+                    audio.types = c.cpu_core.audio.types;
+
+                    audio.play_all();
+                }
+
+                break;
+            }
         }
 
         for(client_renderable& r : model.renderables)
