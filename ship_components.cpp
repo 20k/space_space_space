@@ -4175,7 +4175,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
 
     if(r == nullptr)
     {
-        r.velocity = {0,0};
+        s.velocity = {0,0};
 
         if(disruptive)
         {
