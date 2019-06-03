@@ -390,6 +390,7 @@ struct cpu_state : serialisable, owned
 
     bool any_blocked();
 
+    void ustep();
     void step();
 
     void debug_state();

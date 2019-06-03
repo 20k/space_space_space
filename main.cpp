@@ -1330,6 +1330,11 @@ int main()
                     audio.frequencies = c.cpu_core.audio.frequencies;
                     audio.types = c.cpu_core.audio.types;
 
+                    for(auto& i : audio.relative_amplitudes)
+                    {
+                        i *= editors[c._pid].audio_volume;
+                    }
+
                     audio.play_all();
                 }
 
@@ -1885,8 +1890,6 @@ int main()
         window.clear();
 
         sf::sleep(sf::milliseconds(4));
-
-        //std::cout << "frametime " << frametime_dt << std::endl;
     }
 
     return 0;

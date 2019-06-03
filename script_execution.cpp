@@ -945,6 +945,19 @@ struct f_register_helper
 
 void cpu_state::step()
 {
+    try
+    {
+        ustep();
+    }
+    catch(std::runtime_error& err)
+    {
+        last_error = err.what();
+        free_running = false;
+    }
+}
+
+void cpu_state::ustep()
+{
     if(waiting_for_hardware_feedback || tx_pending)
         return;
 

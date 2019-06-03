@@ -68,6 +68,10 @@ void code_editor::render(cpu_state& cpu)
 
     ImGui::Checkbox("Show File?", &show_file);
 
+    ImGui::PushItemWidth(80);
+    ImGui::SliderFloat(("Volume##" + std::to_string(cpu._pid)).c_str(), &audio_volume, 0, 1);
+    ImGui::PopItemWidth();
+
     int max_data = 128*128;
 
     ///so

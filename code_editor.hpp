@@ -12,6 +12,7 @@ struct code_editor
     file_editor file_edit;
 
     bool show_file = true;
+    float audio_volume = 1;
 
     void render(cpu_state& cpu);
 };
