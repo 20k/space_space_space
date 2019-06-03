@@ -1646,12 +1646,10 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         //if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
         if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
-            bool dirty = !files[i].name.is_label() || files[i].name.label != filename;
-
             files[i].was_updated_this_tick = true;
             files[i].is_hw = is_hw;
 
-            if(dirty)
+            if(!files[i].name.is_label() || files[i].name.label != filename)
             {
                 files[i].name.set_label(filename);
                 //update_master_virtual_file();
