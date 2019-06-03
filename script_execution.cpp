@@ -1654,7 +1654,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
             if(dirty)
             {
                 files[i].name.set_label(filename);
-                update_master_virtual_file();
+                //update_master_virtual_file();
             }
 
             if(context.held_file == i)
