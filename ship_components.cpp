@@ -4660,19 +4660,19 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         }
 
         std::map<int, int> them_type_counts;
-        std::map<std::string, int> ships;
+        std::unordered_map<std::string, int> ships;
 
         for(ship& ns : c.stored)
         {
             if(ns.is_ship)
             {
-                std::string sname = fullname + "/" + ns.blueprint_name;
-
-                int mcount = ships[sname];
+                int mcount = ships[ns.blueprint_name];
 
                 std::map<int, int> ship_type;
-                ships[sname]++;
-                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname + "_" + std::to_string(mcount));
+                ships[ns.blueprint_name]++;
+
+                std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
+                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname);
             }
             else
                 check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname);
