@@ -202,7 +202,7 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
 
 bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 {
-    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * packet.scale * space_scaling;
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * space_scaling;
 
     float dist_min = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
     float dist_max = dist_min + speed_of_light_per_tick;
@@ -756,7 +756,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
 
     float awidth = packet.packet_wavefront_width / space_scaling;
 
-    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * packet.scale * packet.scale * space_scaling * space_scaling;
+    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * space_scaling * space_scaling;
 
     float ivdistance = 1;
 

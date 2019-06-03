@@ -58,7 +58,6 @@ struct alt_frequency_packet
     //float intensity = 0;
 
     vec2f origin = {0,0};
-    float scale = 1;
 
     uint32_t start_iteration = 0;
     float restrict_angle = M_PI;
