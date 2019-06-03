@@ -4598,65 +4598,65 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
         std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
 
-        if(!opt_file.has_value())
-            continue;
-
-        cpu_file& file = *opt_file.value();
-
-        if(file.len() > 0 && file[0].is_int() && file[0].value >= 0)
+        if(opt_file.has_value())
         {
-            c.set_activation_level(file[0].value / 100.);
-        }
+            cpu_file& file = *opt_file.value();
 
-        file[0].set_int(-1);
-        file[0].help = "Set Activation Level Hardware Mapped IO";
-
-        file[1].set_int(c.activation_level * 100);
-        file[1].help = "Activation level %";
-
-        file[2].set_int(c.get_hp_frac() * 100);
-        file[2].help = "HP %";
-
-        file[3].set_int(c.get_operating_efficiency() * 100);
-        file[3].help = "Operating Efficiency %";
-
-        file[4].set_int(c.get_fixed_props().get_heat_produced_at_full_usage(c.current_scale) * 100);
-        file[4].help = "Max Heat Produced At 100% Operating Efficiency, * 100";
-
-        float max_power_draw = 0;
-
-        if(c.has(component_info::POWER))
-        {
-            max_power_draw = c.get_fixed(component_info::POWER).recharge;
-        }
-
-        file[5].set_int(max_power_draw);
-        file[5].help = "Max Power Draw";
-
-        file[6].set_int(c.get_my_temperature());
-        file[6].help = "Temperature (K)";
-
-        ///???
-        if(c.has_tag(tag_info::TAG_WEAPON))
-        {
-            /*if(file.len() > 7 && file[0].is_int() && file[0].value >= 0)
+            if(file.len() > 0 && file[0].is_int() && file[0].value >= 0)
             {
-                c.try_use = true;
-            }*/
-
-            file[7].set_int(c.last_could_use);
-            file[7].help = "Can be fired";
-
-            if(file[8].is_int() && file[8].value > 0)
-            {
-                c.try_use = true;
+                c.set_activation_level(file[0].value / 100.);
             }
 
-            file[8].set_int(-1);
-            file[8].help = "Activate Weapon Hardware Mapped IO";
+            file[0].set_int(-1);
+            file[0].help = "Set Activation Level Hardware Mapped IO";
 
-            file[9].set_int(c.last_activation_successful);
-            file[9].help = "Was last activation successful?";
+            file[1].set_int(c.activation_level * 100);
+            file[1].help = "Activation level %";
+
+            file[2].set_int(c.get_hp_frac() * 100);
+            file[2].help = "HP %";
+
+            file[3].set_int(c.get_operating_efficiency() * 100);
+            file[3].help = "Operating Efficiency %";
+
+            file[4].set_int(c.get_fixed_props().get_heat_produced_at_full_usage(c.current_scale) * 100);
+            file[4].help = "Max Heat Produced At 100% Operating Efficiency, * 100";
+
+            float max_power_draw = 0;
+
+            if(c.has(component_info::POWER))
+            {
+                max_power_draw = c.get_fixed(component_info::POWER).recharge;
+            }
+
+            file[5].set_int(max_power_draw);
+            file[5].help = "Max Power Draw";
+
+            file[6].set_int(c.get_my_temperature());
+            file[6].help = "Temperature (K)";
+
+            ///???
+            if(c.has_tag(tag_info::TAG_WEAPON))
+            {
+                /*if(file.len() > 7 && file[0].is_int() && file[0].value >= 0)
+                {
+                    c.try_use = true;
+                }*/
+
+                file[7].set_int(c.last_could_use);
+                file[7].help = "Can be fired";
+
+                if(file[8].is_int() && file[8].value > 0)
+                {
+                    c.try_use = true;
+                }
+
+                file[8].set_int(-1);
+                file[8].help = "Activate Weapon Hardware Mapped IO";
+
+                file[9].set_int(c.last_activation_successful);
+                file[9].help = "Was last activation successful?";
+            }
         }
 
         std::map<int, int> them_type_counts;

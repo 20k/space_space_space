@@ -1227,7 +1227,7 @@ void cpu_state::step()
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [ISHW]");
 
-        context.register_states[(int)registers::TEST].set_int(files[context.held_file].owner != -1);
+        context.register_states[(int)registers::TEST].set_int(files[context.held_file].owner != (size_t)-1);
 
         break;
 
@@ -1744,7 +1744,7 @@ std::optional<int> cpu_state::get_grabbable_file(register_value& name)
     {
         cpu_file& fle = files[i];
 
-        if(fle.owner == -1)
+        if(fle.owner == (size_t)-1)
             continue;
 
         if(any_holds(i))
@@ -1759,7 +1759,7 @@ std::optional<int> cpu_state::get_grabbable_file(register_value& name)
     {
         cpu_file& fle = files[i];
 
-        if(fle.owner != -1)
+        if(fle.owner != (size_t)-1)
             continue;
 
         if(any_holds(i))
@@ -1791,7 +1791,7 @@ void cpu_state::check_for_bad_files()
 
     for(int i=0; i < (int)files.size(); i++)
     {
-        if(files[i].owner == -1)
+        if(files[i].owner == (size_t)-1)
             continue;
 
         for(int j=0; j < (int)files.size(); j++)
@@ -1799,7 +1799,7 @@ void cpu_state::check_for_bad_files()
             if(i == j)
                 continue;
 
-            if(files[j].owner != -1)
+            if(files[j].owner != (size_t)-1)
                 continue;
 
             if(file_equiv_name(files[i].name, files[j].name))
