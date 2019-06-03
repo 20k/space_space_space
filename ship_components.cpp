@@ -5458,6 +5458,11 @@ void ship::new_network_copy()
         }
 
         c._pid = next_id;
+
+        for(ship& s : c.stored)
+        {
+            s.new_network_copy();
+        }
     }
 }
 
