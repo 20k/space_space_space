@@ -1061,6 +1061,26 @@ void cpu_state::step()
 
         itest(RNLS(next[0]), SYM(next[1]), RNLS(next[2]), fetch(context, registers::TEST));
         break;
+    case SLEN:
+    {
+        register_value& val = RLS(next[0]);
+        register_value& dest = R(next[1]);
+
+        if(val.is_label())
+        {
+            dest.set_int(val.label.size());
+        }
+        else if(val.is_symbol())
+        {
+            dest.set_int(val.symbol.size());
+        }
+        else
+        {
+            throw std::runtime_error("Not label or symbol in [SLEN]");
+        }
+
+        break;
+    }
     case HALT:
         throw std::runtime_error("Received HALT");
         break;
