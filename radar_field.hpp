@@ -196,7 +196,7 @@ struct alt_object_property : serialisable
 
     }
 
-    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, std::vector<double> _frequency, float _cross_section) :
+    alt_object_property(uint32_t _id_e, uint32_t _id_r, T _property, const std::vector<double>& _frequency, float _cross_section) :
         id_e(_id_e), id_r(_id_r), property(_property), frequency(_frequency), cross_section(_cross_section)
     {
 
