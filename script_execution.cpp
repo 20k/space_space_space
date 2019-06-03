@@ -140,6 +140,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(owner);
     DO_SERIALISE(owner_offset);
     DO_SERIALISE(is_hw);
+    DO_SERIALISE(alive);
 }
 
 bool all_numeric(const std::string& str)
@@ -1680,8 +1681,8 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
         //if((files[i].name.is_symbol() && files[i].name.symbol == filename) || (files[i].name.is_label() && files[i].name.label == filename))
         if(files[i].owner == owner && files[i].owner_offset == owner_offset)
         {
-            files[i].was_updated_this_tick = true;
             files[i].is_hw = is_hw;
+            files[i].alive = true;
 
             if(!files[i].name.is_label() || files[i].name.label != filename)
             {
@@ -1808,17 +1809,12 @@ void cpu_state::check_for_bad_files()
 {
     for(int i=0; i < (int)files.size(); i++)
     {
-        if(files[i].owner != (size_t)-1 && !files[i].was_updated_this_tick && !any_holds(i))
+        if(files[i].owner != (size_t)-1 && !files[i].alive && !any_holds(i))
         {
             remove_file(i);
             i--;
             continue;
         }
-    }
-
-    for(int i=0; i < (int)files.size(); i++)
-    {
-        files[i].was_updated_this_tick = false;
     }
 
     for(int i=0; i < (int)files.size(); i++)

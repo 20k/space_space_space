@@ -4616,9 +4616,11 @@ std::optional<size_t> ship::get_ship_id_by_directory(const std::string& str)
     return opt_info.value().first;
 }
 
-void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir = "")
+void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids)
 {
     assert(component_type::COUNT == component_type::cpu_names.size());
+
+    alive_ids.push_back(s._pid);
 
     if(dir.size() > 0)
     {
@@ -4632,6 +4634,8 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     for(component& c : s.components)
     {
+        alive_ids.push_back(c._pid);
+
         if(c.has_tag(tag_info::TAG_CPU))
             continue;
 
@@ -4721,11 +4725,33 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 ships[ns.blueprint_name]++;
 
                 std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
-                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname);
+                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname, alive_ids);
             }
             else
-                check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname);
+                check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname, alive_ids);
         }
+    }
+}
+
+void update_alive_ids(cpu_state& cpu, const std::vector<size_t>& ids)
+{
+    for(int i=0; i < (int)cpu.files.size(); i++)
+    {
+        if(cpu.files[i].owner == -1)
+            continue;
+
+        bool found = false;
+
+        for(int j=0; j < (int)ids.size(); j++)
+        {
+            if(cpu.files[i].owner == ids[j])
+            {
+                found = true;
+                break;
+            }
+        }
+
+        cpu.files[i].alive = found;
     }
 }
 
@@ -4743,8 +4769,11 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         std::map<int, int> type_counts;
 
-        check_update_components_in_hardware(s, cpu, play, space, r, type_counts);
+        std::vector<size_t> ids;
+        check_update_components_in_hardware(s, cpu, play, space, r, type_counts, "", ids);
         dump_radar_data_into_cpu(cpu, s, play, space, r);
+
+        update_alive_ids(cpu, ids);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())

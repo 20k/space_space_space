@@ -297,7 +297,7 @@ struct cpu_file : serialisable
     bool was_xferred = false;
     size_t owner = -1;
     size_t owner_offset = -1;
-    bool was_updated_this_tick = false;
+    bool alive = true;
     bool is_hw = false;
 
     cpu_file();
