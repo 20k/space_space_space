@@ -13,14 +13,14 @@
 
 template<typename T>
 std::array<sf::Int16, SAMPLES>
-apply_sample_fetcher(T in)
+apply_sample_fetcher(T in, float amplitude, double frequency)
 {
 	//const unsigned SAMPLE_RATE = 44100;
-	const unsigned AMPLITUDE = 1000;
+	const unsigned AMPLITUDE = amplitude;
 
 	std::array<sf::Int16, SAMPLES> ret;
 
-	const double increment = 440./44100;
+	const double increment = frequency/SAMPLE_RATE;
 	double x = 0;
 	for (unsigned i = 0; i < SAMPLES; i++) {
 		ret[i] = AMPLITUDE * in(std::fmod(x * M_PI * 2, M_PI*2));
@@ -51,9 +51,62 @@ double sawtooth_wave(double in)
     return mix(-1, 1, in / (2 * M_PI));
 }
 
+std::array<sf::Int16, SAMPLES>
+smooth_samples(const std::array<sf::Int16, SAMPLES>& in)
+{
+    auto ret = in;
+
+    for(int i=SAMPLES-100; i < SAMPLES; i++)
+    {
+        float frac = (i - (SAMPLES - 100)) / 99.;
+
+        ret[i] = mix(in[i], 0, frac);
+    }
+}
+
+
+void shared_audio::play_all()
+{
+    for(int i=0; i < (int)buffers.size(); i++)
+    {
+        if(sounds[i]->getStatus() == sf::Sound::Status::Stopped || sounds[i]->getStatus() == sf::Sound::Status::Paused)
+        {
+            delete sounds[i];
+            delete buffers[i];
+
+            sounds.erase(sounds.begin() + i);
+            buffers.erase(buffers.begin() + i);
+            i--;
+            continue;
+        }
+    }
+
+    for(int i=0; i < (int)relative_amplitudes; i++)
+    {
+        sf::SoundBuffer* buf = new sf::SoundBuffer;
+        sf::Sound* sound = new sf::Sound;
+
+        float amp = relative_amplitudes[i];
+        float freq = frequencies[i];
+
+        if(types[i] == waveform::SIN)
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sinf, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+        if(types[i] == waveform::SAW)
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(sawtooth_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+        if(types[i] == waveform::TRI)
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(triangle_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+        if(types[i] == waveform::SQR)
+            buf->loadFromSamples(smooth_samples(apply_sample_fetcher(square_wave, amp, freq).data()), SAMPLES, 1, SAMPLE_RATE);
+    }
+
+    relative_amplitudes.clear();
+    frequencies.clear();
+    types.clear();
+}
+
 void audio_test()
 {
-	const unsigned SAMPLE_RATE = 44100;
+	/*const unsigned SAMPLE_RATE = 44100;
 
     auto swave = apply_sample_fetcher(square_wave);
 
@@ -69,6 +122,8 @@ void audio_test()
 	Sound.play();
 	while (1) {
 		sf::sleep(sf::milliseconds(100));
-	}
+	}*/
+
+
 }
 
