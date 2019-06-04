@@ -380,10 +380,6 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.left_restrict = (vec2f){1, 0}.rot(reflect.start_angle - reflect.restrict_angle);
         reflect.right_restrict = (vec2f){1, 0}.rot(reflect.start_angle + reflect.restrict_angle);
 
-
-        //reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
-        //reflect.last_packet->last_packet = std::shared_ptr<alt_frequency_packet>();
-
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
         ignore(packet.id, collide);
@@ -1176,120 +1172,9 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     ///need to sum packets with the same emitted id and frequency
     random_constants rconst = get_random_constants_for(en._pid);
 
-    /*std::vector<alt_frequency_packet> merged;
-
-    for(const alt_frequency_packet& packet : packets)
-    {
-        bool found = false;
-
-        for(alt_frequency_packet& other : merged)
-        {
-            if(other.emitted_by == packet.emitted_by && other.reflected_by == packet.reflected_by && other.frequency == packet.frequency && other.origin == packet.origin)
-            {
-                other.intensity += packet.intensity;
-                found = true;
-                break;
-            }
-        }
-
-        if(found)
-            continue;
-
-        merged.push_back(packet);
-    }*/
-
-    ///ok so the problem with merging is that we calculate intensity analytically, which means that issues are caused by naively combining them
-    ///need to combine POST intensity merge
-
-    #ifdef REVERSE_IGNORE
-    auto it_packet = ignore_map.find(uid);
-    #endif // REVERSE_IGNORE
-
     #define SUPER_LOW_DETAIL 0.001
     #define LOW_DETAIL 0.01
     #define HIGH_DETAIL 0.5
-
-    /*std::vector<alt_frequency_packet> post_intensity_calculate;
-
-    for(alt_frequency_packet packet : packets)
-    {
-        float intensity = get_intensity_at_of(pos, packet, subtractive_packets);
-
-        if(intensity <= SUPER_LOW_DETAIL)
-            continue;
-
-        #ifndef REVERSE_IGNORE
-        auto it_packet = ignore_map.find(packet.id);
-        #endif // REVERSE_IGNORE
-
-        if(it_packet != ignore_map.end())
-        {
-            #ifndef REVERSE_IGNORE
-            auto it_collide = it_packet->second.find(en._pid);
-            #else
-            auto it_collide = it_packet->second.find(packet.id);
-            #endif
-
-            //auto it_collide = en.ignore_packets.find(packet.id);
-
-            //if(it_collide != en.ignore_packets.end())
-            if(it_collide != it_packet->second.end())
-            {
-                if(it_collide->second.should_ignore())
-                {
-                    if(!packet.last_packet)
-                        continue;
-
-                    alt_frequency_packet lpacket = *packet.last_packet;
-                    lpacket.start_iteration = packet.start_iteration;
-                    lpacket.id = packet.id;
-
-                    packet = lpacket;
-
-                    intensity = get_intensity_at_of(pos, packet, subtractive_packets);
-                }
-            }
-        }
-
-        packet.summed_intensity = intensity;
-
-        post_intensity_calculate.push_back(packet);
-    }*/
-
-    /*{
-        float dsum = 0;
-
-        for(auto& i : post_intensity_calculate)
-        {
-            dsum += i.intensity;
-        }
-
-        std::cout << "DSUM " << dsum << std::endl;
-    }*/
-
-    ///could get around the jitter by sending intensity as frequently as we update randomness
-    ///aka move to a frequency sampling basis
-    /*std::vector<alt_frequency_packet> merged;
-
-    for(const alt_frequency_packet& packet : post_intensity_calculate)
-    {
-        bool found = false;
-
-        for(alt_frequency_packet& other : merged)
-        {
-            if(other.emitted_by == packet.emitted_by && other.reflected_by == packet.reflected_by && other.frequency == packet.frequency && other.origin == packet.origin)
-            {
-                other.intensity += packet.intensity;
-                found = true;
-                break;
-            }
-        }
-
-        if(found)
-            continue;
-
-        merged.push_back(packet);
-    }*/
 
     std::set<uint32_t> considered_packets;
 
@@ -1327,11 +1212,6 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         if(intensity >= SUPER_LOW_DETAIL)
             considered_packets.insert(search_entity);
-
-        /*if(consider.reflected_by == uid && consider.last_packet)
-        {
-            consider = *consider.last_packet;
-        }*/
 
         //std::cout << intensity << std::endl;
 
