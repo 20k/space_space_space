@@ -4974,11 +4974,13 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         known_target_angle = target.value()->r.rotation;
 
         ///move to absolute target if we have one, update cache
+        ///you know what
+        ///maybe this shouldn't chase?
         if(s.move_args.type == instructions::AMOV && s.move_args.id != (size_t)-1)
         {
             s.move_args.x = known_target_dest.x();
             s.move_args.y = known_target_dest.y();
-            s.move_args.angle = known_target_angle;
+            //s.move_args.angle = known_target_angle;
         }
 
         ///nothing on rmov, always moves to fixed coordinate
@@ -4988,6 +4990,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         }
 
+        ///???
         if(s.move_args.type == instructions::KEEP)
         {
             assert(s.move_args.id != (size_t)-1);
@@ -5019,98 +5022,126 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         should_angle_turn = true;
     }
 
-
-
-    vec2f move_to = {s.move_args.x, s.move_args.y};
-
     float target_angle = s.move_args.angle;
 
-    /*if(target)
+    bool is_turn = s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN;
+
+    if(is_turn)
     {
-        dest = target.value()->r.position;
-        s.realspace_destination = dest;
-    }*/
+        float max_turn_rate = s.get_max_angular_thrust();
 
-    vec2f start_pos = s.r.position;
+        float signed_angle = signed_angle_between_vectors((vec2f){1, 0}.rot(s.r.rotation), (vec2f){1, 0}.rot(target_angle));
 
-    vec2f to_dest = move_to - start_pos;
+        float per_tick = max_turn_rate * dt_s;
 
-    vec2f additional_force = {0,0};
-
-    if(to_dest.length() < 150)
-    {
-        vec2f my_vel = s.velocity;
-
-        if(my_vel.length() > 20)
+        if(fabs(per_tick) > fabs(signed_angle))
         {
-            additional_force = -my_vel.norm();
+            per_tick = signum(signed_angle) * signed_angle;
+        }
+
+        s.apply_rotation_force(per_tick);
+
+        if(fabs(signed_angle) < M_PI/64)
+        {
+            unblock_cpu_hardware(s, hardware::T_DRIVE);
+            s.travelling_in_realspace = false;
+            return;
         }
     }
 
-    if(to_dest.length() < 70)
+    bool is_move = s.move_args.type == instructions::AMOV || s.move_args.type == instructions::RMOV || s.move_args.type == instructions::KEEP;
+
+    if(is_move)
     {
-        unblock_cpu_hardware(s, hardware::T_DRIVE);
-        s.travelling_in_realspace = false;
-        return;
-    }
+        vec2f move_to = {s.move_args.x, s.move_args.y};
 
-    float search_distance = 50;
-    vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
-
-    ///colliding with all entities!!! not just stuff in sensor range!
-    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
-    {
-        vec2f my_travel_direction = s.velocity;
-        vec2f my_position = s.r.position;
-
-        vec2f their_travel_direction = coll.value()->velocity;
-        vec2f their_position = coll.value()->r.position;
-
-        ///counterclockwise
-        vec2f perpendicular_direction = perpendicular((their_position - my_position).norm());
-
-        float burn_dir = 1;
-
-        int my_velocity_in_perp = angle_between_vectors(perpendicular_direction, my_travel_direction) < M_PI/2;
-        int their_velocity_in_perp = angle_between_vectors(perpendicular_direction, their_travel_direction) < M_PI/2;
-
-        vec2f my_perp_component = projection(my_travel_direction, perpendicular_direction.norm());
-        vec2f their_perp_component = projection(their_travel_direction, perpendicular_direction.norm());
-
-        ///so, if their velocity has a component which is the opposite direction to our velocity
-        ///should accelerate in our velocity perpendicular direction
-        if(my_velocity_in_perp != their_velocity_in_perp)
+        /*if(target)
         {
-            burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
-        }
-        else
-        {
-            ///both in same direction
+            dest = target.value()->r.position;
+            s.realspace_destination = dest;
+        }*/
 
-            if(their_perp_component.length() > my_perp_component.length())
+        vec2f start_pos = s.r.position;
+
+        vec2f to_dest = move_to - start_pos;
+
+        vec2f additional_force = {0,0};
+
+        if(to_dest.length() < 150)
+        {
+            vec2f my_vel = s.velocity;
+
+            if(my_vel.length() > 20)
             {
-                ///their velocity in the perpendicular > mine, should reverse velocity away
-                burn_dir = my_velocity_in_perp > 0 ? -1 : 1;
+                additional_force = -my_vel.norm();
+            }
+        }
+
+        if(to_dest.length() < 70)
+        {
+            unblock_cpu_hardware(s, hardware::T_DRIVE);
+            s.travelling_in_realspace = false;
+            return;
+        }
+
+        float search_distance = 50;
+        vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
+
+        ///colliding with all entities!!! not just stuff in sensor range!
+        if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
+        {
+            vec2f my_travel_direction = s.velocity;
+            vec2f my_position = s.r.position;
+
+            vec2f their_travel_direction = coll.value()->velocity;
+            vec2f their_position = coll.value()->r.position;
+
+            ///counterclockwise
+            vec2f perpendicular_direction = perpendicular((their_position - my_position).norm());
+
+            float burn_dir = 1;
+
+            int my_velocity_in_perp = angle_between_vectors(perpendicular_direction, my_travel_direction) < M_PI/2;
+            int their_velocity_in_perp = angle_between_vectors(perpendicular_direction, their_travel_direction) < M_PI/2;
+
+            vec2f my_perp_component = projection(my_travel_direction, perpendicular_direction.norm());
+            vec2f their_perp_component = projection(their_travel_direction, perpendicular_direction.norm());
+
+            ///so, if their velocity has a component which is the opposite direction to our velocity
+            ///should accelerate in our velocity perpendicular direction
+            if(my_velocity_in_perp != their_velocity_in_perp)
+            {
+                burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
             }
             else
             {
-                ///my velocity in perp is > theirs, should more in the same direction
-                burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
+                ///both in same direction
+
+                if(their_perp_component.length() > my_perp_component.length())
+                {
+                    ///their velocity in the perpendicular > mine, should reverse velocity away
+                    burn_dir = my_velocity_in_perp > 0 ? -1 : 1;
+                }
+                else
+                {
+                    ///my velocity in perp is > theirs, should more in the same direction
+                    burn_dir = my_velocity_in_perp > 0 ? 1 : -1;
+                }
             }
+
+            to_dest = perpendicular_direction.norm() * burn_dir;
+
+            //vec2f relative_velocity = s.velocity - velocity;
         }
 
-        to_dest = perpendicular_direction.norm() * burn_dir;
+        vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
 
-        //vec2f relative_velocity = s.velocity - velocity;
+        s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
+        s.set_thrusters_active(1);
+
+        vec2f crot = (vec2f){1, 0}.rot(s.r.rotation);
+        s.r.rotation = (crot * 100 + final_force).angle();
     }
-
-    vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
-
-    s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
-    s.set_thrusters_active(1);
-
-    vec2f crot = (vec2f){1, 0}.rot(s.r.rotation);
-    s.r.rotation = (crot * 100 + final_force).angle();
 }
 
 void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r)
