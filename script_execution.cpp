@@ -1498,29 +1498,33 @@ void cpu_state::ustep()
     }
     case RMOV:
     {
-        register_value& val = RNS(next[0]);
-
-        register_value& xval = RN(next[1]);
-        register_value& yval = RN(next[2]);
+        register_value& xval = RN(next[0]);
+        register_value& yval = RN(next[1]);
 
         ports[(int)hardware::T_DRIVE].set_int(1);
 
         my_move = decltype(my_move)();
 
-        if(val.is_int())
+        if(next.num_args() > 2)
         {
-            ///ease of use
-            if(val.value == 0)
-                val.value = -1;
+            register_value& val = RNS(next[2]);
 
-            my_move.id = val.value;
+            if(val.is_int())
+            {
+                ///ease of use
+                if(val.value == 0)
+                    val.value = -1;
+
+                my_move.id = val.value;
+            }
+
+            if(val.is_symbol())
+                my_move.name = val.symbol;
+
+            if(val.is_label())
+                my_move.name = val.label;
         }
 
-        if(val.is_symbol())
-            my_move.name = val.symbol;
-
-        if(val.is_label())
-            my_move.name = val.label;
 
         my_move.type = RMOV;
         my_move.x = xval.value;
