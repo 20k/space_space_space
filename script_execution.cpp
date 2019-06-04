@@ -1462,7 +1462,7 @@ void cpu_state::ustep()
         blocking_status[(int)hardware::S_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;
-    case TRVL:
+    case AMOV:
         ports[(int)hardware::T_DRIVE] = RNS(next[0]);
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;

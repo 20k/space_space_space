@@ -205,7 +205,12 @@ namespace instructions
         DATA,
         WARP,
         SLIP,
-        TRVL,
+        AMOV, ///travel to absolute coordinates or target
+        RMOV, ///move relative to target, either id or coords
+        ORBT, ///move in circles around target, or xy pair. takes a radius
+        KEEP, ///keep distance away from target
+        ATRN, ///target or absolute angle
+        RTRN, ///degrees
         COUNT,
     };
 
@@ -254,7 +259,12 @@ namespace instructions
         "DATA",
         "WARP",
         "SLIP",
-        "TRVL",
+        "AMOV",
+        "RMOV",
+        "ORBT",
+        "KEEP",
+        "ATRN",
+        "RTRN"
     };
 
     type fetch(const std::string& name);
