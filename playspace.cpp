@@ -996,6 +996,7 @@ bool playspace_manager::start_warp_travel(ship& s, size_t pid)
             s.warp_to_pid = pid;
 
             s.travelling_in_realspace = false;
+            s.velocity = {0,0};
 
             return true;
         }
@@ -1016,6 +1017,7 @@ bool playspace_manager::start_room_travel(ship& s, size_t pid)
         s.destination_poi_position = room_opt.value().second->position;
 
         s.travelling_in_realspace = false;
+        s.velocity = {0,0};
 
         return true;
     }
@@ -1078,8 +1080,8 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
             vec2f forward_component = to_dest * args.y;
             vec2f perp_component = to_dest.rot(M_PI/2) * args.x;
 
-            s.move_args.x = forward_component.x() + perp_component.x();
-            s.move_args.y = forward_component.y() + perp_component.y();
+            s.move_args.x = forward_component.x() + perp_component.x() + s.r.position.x();
+            s.move_args.y = forward_component.y() + perp_component.y() + s.r.position.y();
         }
 
         if(s.move_args.type == instructions::ATRN)
@@ -1102,8 +1104,8 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
             vec2f my_forward = (vec2f){1, 0}.rot(s.r.rotation) * args.y;
             vec2f my_perp = (vec2f){1, 0}.rot(s.r.rotation + M_PI/2) * args.x;
 
-            s.move_args.x = my_forward.x() + my_perp.x();
-            s.move_args.y = my_forward.y() + my_perp.y();
+            s.move_args.x = my_forward.x() + my_perp.x() + s.r.position.x();
+            s.move_args.y = my_forward.y() + my_perp.y() + s.r.position.y();
         }
 
         if(s.move_args.type == instructions::RTRN)
