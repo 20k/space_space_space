@@ -1508,7 +1508,13 @@ void cpu_state::ustep()
         my_move = decltype(my_move)();
 
         if(val.is_int())
+        {
+            ///ease of use
+            if(val.value == 0)
+                val.value = -1;
+
             my_move.id = val.value;
+        }
 
         if(val.is_symbol())
             my_move.name = val.symbol;
