@@ -1496,6 +1496,34 @@ void cpu_state::ustep()
         waiting_for_hardware_feedback = true;
         break;
     }
+    case RMOV:
+    {
+        register_value& val = RNS(next[0]);
+
+        register_value& xval = RN(next[1]);
+        register_value& yval = RN(next[2]);
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+
+        my_move = decltype(my_move)();
+
+        if(val.is_int())
+            my_move.id = val.value;
+
+        if(val.is_symbol())
+            my_move.name = val.symbol;
+
+        if(val.is_label())
+            my_move.name = val.label;
+
+        my_move.type = RMOV;
+        my_move.x = xval.value;
+        my_move.y = yval.value;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
+        break;
+    }
     case COUNT:
         throw std::runtime_error("Unreachable?");
     }

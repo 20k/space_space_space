@@ -4816,7 +4816,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
             std::string poi_name = cpu.ports[hardware::S_DRIVE].symbol;
         }*/
 
-        if(cpu.ports[hardware::T_DRIVE].is_int())
+        if(cpu.ports[hardware::T_DRIVE].is_int() && cpu.ports[hardware::T_DRIVE].value > 0)
         {
             int success = 0;
 

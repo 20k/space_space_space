@@ -1031,10 +1031,15 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
     if(s.move_warp)
         return false;
 
-    bool can_fly = s.get_max_velocity_thrust() > 0;
+    ///unreliable due to activation measures
+    /*bool can_fly = s.get_max_velocity_thrust() > 0;
+
+    std::cout << "RSPACE? " << (s.room_type == space_type::REAL_SPACE) << std::endl;
+
+    std::cout << "CFLY " << can_fly << std::endl;;
 
     if(!can_fly)
-        return false;
+        return false;*/
 
     auto [play, r] = get_location_for(&s);
 
@@ -1062,9 +1067,6 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
 
         if(!in_sensor_range)
             return false;
-
-        //s.realspace_destination = e.value()->r.position;
-        //s.realspace_pid_target = pid;
 
         s.move_args = args;
 
