@@ -602,8 +602,15 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                             }
                             else
                             {
-                                if(agg_ignore[packet.id][en->_pid])
-                                    continue;
+                                auto it_1 = agg_ignore.find(packet.id);
+
+                                if(it_1 != agg_ignore.end())
+                                {
+                                    auto it_2 = it_1->second.find(en->_pid);
+
+                                    if(it_2->second)
+                                        continue;
+                                }
 
                                 aggregate<int> aggs;
                                 aggs.pos = en->r.position;
