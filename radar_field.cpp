@@ -608,8 +608,11 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                                 {
                                     auto it_2 = it_1->second.find(en->_pid);
 
-                                    if(it_2->second)
-                                        continue;
+                                    if(it_2 != it_1->second.end())
+                                    {
+                                        if(it_2->second)
+                                            continue;
+                                    }
                                 }
 
                                 aggregate<int> aggs;
