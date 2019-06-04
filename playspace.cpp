@@ -100,20 +100,29 @@ void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, se
     DO_SERIALISE(offset);
 }
 
-alt_frequency_packet transform_space(const alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
+struct transform_data
 {
-    alt_frequency_packet ret = in;
+    vec2f origin;
+    vec2f reflected_position;
+    uint32_t start_iteration = 0;
+};
+
+transform_data transform_space(const alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
+{
+    //alt_frequency_packet ret = in;
+
+    transform_data ret;
 
     alt_radar_field& new_field = *r.field;
 
     ret.origin = r.get_in_local(in.origin);
 
-    if(ret.reflected_by != -1)
+    if(in.reflected_by != -1)
         ret.reflected_position = r.get_in_local(in.reflected_position);
 
     //uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
 
-    uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration);
+    uint32_t it_diff = (parent_field.iteration_count - in.start_iteration);
 
     ret.start_iteration = new_field.iteration_count - it_diff;
     //ret.scale = ROOM_POI_SCALE;
@@ -129,22 +138,27 @@ alt_frequency_packet transform_space(const alt_frequency_packet& in, room& r, al
 
 void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
 {
-    bool sort_sun = false;
-
     for(const alt_frequency_packet& pack : pack)
     {
         if(me.imported_waves.find(pack.id) != me.imported_waves.end())
             continue;
 
-        alt_frequency_packet fixed_pack = transform_space(pack, me, theirs);
+        //alt_frequency_packet fixed_pack = transform_space(pack, me, theirs);
 
-        float current_radius = (me.field->iteration_count - fixed_pack.start_iteration) * me.field->speed_of_light_per_tick;
+        transform_data data = transform_space(pack, me, theirs);
+
+        float current_radius = (me.field->iteration_count - data.start_iteration) * me.field->speed_of_light_per_tick;
         float next_radius = current_radius + me.field->speed_of_light_per_tick;
 
-        if(!me.entity_manage->collision.intersects(fixed_pack.origin, current_radius, next_radius, fixed_pack.precalculated_start_angle, fixed_pack.restrict_angle, fixed_pack.left_restrict, fixed_pack.right_restrict))
+        if(!me.entity_manage->collision.intersects(data.origin, current_radius, next_radius, pack.precalculated_start_angle, pack.restrict_angle, pack.left_restrict, pack.right_restrict))
             continue;
 
         me.imported_waves[pack.id] = true;
+
+        alt_frequency_packet fixed_pack = pack;
+        fixed_pack.origin = data.origin;
+        fixed_pack.reflected_position = data.reflected_position;
+        fixed_pack.start_iteration = data.start_iteration;
 
         me.field->packets.push_back(fixed_pack);
 
@@ -156,9 +170,18 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
         {
             auto vec = subtr_it->second;
 
-            for(auto& i : vec)
+            /*for(auto& i : vec)
             {
                 i = transform_space(i, me, theirs);
+            }*/
+
+            for(auto& i : vec)
+            {
+                transform_data trans = transform_space(i, me, theirs);
+
+                i.origin = trans.origin;
+                i.reflected_position = trans.reflected_position;
+                i.start_iteration = trans.start_iteration;
             }
 
             me.field->subtractive_packets[pack.id] = vec;
