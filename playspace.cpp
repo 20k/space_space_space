@@ -48,6 +48,8 @@ struct packet_harvester_type : heatable_entity
         r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
         r.approx_dim = ren->entity_manage->collision.half_dim * ROOM_POI_SCALE;
 
+        r.approx_dim = max(r.approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+
         r.init_rectangular(r.approx_dim);
 
         //std::cout << "RADIM " << r.approx_dim << std::endl;
@@ -273,7 +275,7 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 {
     //sf::Clock clk;
 
-    float lrad = entity_manage->collision.half_dim.largest_elem();
+    //float lrad = entity_manage->collision.half_dim.largest_elem();
 
     //import_radio_raw(*this, theirs.packets, theirs);
 

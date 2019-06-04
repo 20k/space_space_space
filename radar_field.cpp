@@ -333,7 +333,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage *= collide.sun_reflectivity;
         }
 
-        reflect_percentage = 0;
+        //reflect_percentage = 0;
 
         #if 1
         if(packet.is_heat())
