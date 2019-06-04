@@ -163,7 +163,7 @@ void server_thread(std::atomic_bool& should_term)
 
     cpu_tests();
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");

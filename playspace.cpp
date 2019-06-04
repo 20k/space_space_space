@@ -24,6 +24,25 @@ struct room_entity : entity
     }
 };
 
+struct packet_harvester_type : heatable_entity
+{
+    room* ren = nullptr;
+
+    packet_harvester_type(room* in) : ren(in)
+    {
+        r.init_rectangular({5, 5});
+        precise_harvestable = true;
+
+        collides = false;
+    }
+
+    virtual void tick(double dt_s) override
+    {
+        r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
+        r.approx_dim = ren->entity_manage->collision.half_dim * ROOM_POI_SCALE;
+    }
+};
+
 room::room()
 {
     field = std::make_shared<alt_radar_field>((vec2f){1200, 1200});
@@ -196,29 +215,18 @@ void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, a
     }
 }
 
-void room::import_radio_waves_from(alt_radar_field& theirs)
+void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
 {
-    //sf::Clock clk;
-
-    float lrad = entity_manage->collision.half_dim.largest_elem();
-
-    import_radio_raw(*this, theirs.packets, theirs);
-
-    /*for(alt_frequency_packet& pack : theirs.packets)
+    for(const alt_frequency_packet& pack : pack)
     {
-        if(imported_waves.find(pack.id) != imported_waves.end())
-            continue;
+        transform_data data = transform_space(pack, me, theirs);
 
-        alt_frequency_packet fixed_pack = transform_space(pack, *this, theirs);
+        alt_frequency_packet fixed_pack = pack;
+        fixed_pack.origin = data.origin;
+        fixed_pack.reflected_position = data.reflected_position;
+        fixed_pack.start_iteration = data.start_iteration;
 
-        float current_radius = (field->iteration_count - fixed_pack.start_iteration) * field->speed_of_light_per_tick;
-        float next_radius = current_radius + field->speed_of_light_per_tick;
-
-        if(!entity_manage->collision.intersects(fixed_pack.origin, current_radius, next_radius, fixed_pack.precalculated_start_angle, fixed_pack.restrict_angle, fixed_pack.left_restrict, fixed_pack.right_restrict))
-            continue;
-
-        imported_waves[pack.id] = true;
-        field->packets.push_back(fixed_pack);
+        me.field->packets.push_back(fixed_pack);
 
         //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
 
@@ -230,19 +238,38 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
             for(auto& i : vec)
             {
-                i = transform_space(i, *this, theirs);
+                transform_data trans = transform_space(i, me, theirs);
+
+                i.origin = trans.origin;
+                i.reflected_position = trans.reflected_position;
+                i.start_iteration = trans.start_iteration;
             }
 
-            field->subtractive_packets[pack.id] = vec;
+            me.field->subtractive_packets[pack.id] = vec;
         }
 
         auto f_ignore = theirs.ignore_map.find(pack.id);
 
         if(f_ignore != theirs.ignore_map.end())
         {
-            field->ignore_map[pack.id] = f_ignore->second;
+            me.field->ignore_map[pack.id] = f_ignore->second;
         }
-    }*/
+    }
+}
+
+
+void room::import_radio_waves_from(alt_radar_field& theirs)
+{
+    //sf::Clock clk;
+
+    float lrad = entity_manage->collision.half_dim.largest_elem();
+
+    //import_radio_raw(*this, theirs.packets, theirs);
+
+    assert(packet_harvester);
+
+    import_radio_fast(*this, packet_harvester->samples, theirs);
+    packet_harvester->samples.clear();
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
@@ -307,6 +334,7 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
     pending_rooms.push_back(r);
 
     r->my_entity = entity_manage->make_new<room_entity>(r);
+    r->packet_harvester = entity_manage->make_new<packet_harvester_type>(r);
 
     {
         r->my_entity->r = client_renderable();
@@ -330,6 +358,8 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
 
     r->my_entity->r.position = where;
     r->my_entity->collides = false;
+
+    r->packet_harvester->r.position = where;
 
     r->field->iteration_count = field->iteration_count;
 
@@ -571,7 +601,7 @@ void room::tick(double dt_s)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    //std::cout << "fdnum " << field->packets.size() << std::endl;
+    std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)

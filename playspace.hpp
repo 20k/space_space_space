@@ -65,6 +65,8 @@ namespace poi_type
 
 #define ROOM_POI_SCALE 0.01f
 
+struct heatable_entity;
+
 ///aka poi
 struct room : serialisable, owned
 {
@@ -78,6 +80,7 @@ struct room : serialisable, owned
     vec2f position;
 
     entity* my_entity = nullptr;
+    heatable_entity* packet_harvester = nullptr;
     std::shared_ptr<alt_radar_field> field;
 
     std::map<uint32_t, bool> imported_waves;

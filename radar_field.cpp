@@ -333,6 +333,8 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
             reflect_percentage *= collide.sun_reflectivity;
         }
 
+        reflect_percentage = 0;
+
         #if 1
         if(packet.is_heat())
         {
@@ -564,29 +566,45 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                             if(!collide->is_heat)
                                 continue;
 
-                            if(!collide->is_collided_with)
-                                continue;
-
                             heatable_entity* en = static_cast<heatable_entity*>(collide);
 
-                            std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
-
-                            if(reflected)
+                            if(!en->precise_harvestable)
                             {
-                                //num_hit++;
+                                if(!collide->is_collided_with)
+                                    continue;
 
-                                //hitp.insert(packet.id);
+                                std::optional<reflect_info> reflected = test_reflect_from(packet, *en, subtractive_packets);
 
-                                reflect_info inf = reflected.value();
+                                if(reflected)
+                                {
+                                    //num_hit++;
 
-                                ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
-                                ///which will affect compat with imaginary shadows
+                                    //hitp.insert(packet.id);
 
-                                if(inf.collide)
-                                    next_subtractive[packet.id].push_back(inf.collide.value());
+                                    reflect_info inf = reflected.value();
 
-                                if(inf.reflect)
-                                    speculative_packets.push_back(inf.reflect.value());
+                                    ///should really make these changes pending so it doesn't affect future results, atm its purely ordering dependent
+                                    ///which will affect compat with imaginary shadows
+
+                                    if(inf.collide)
+                                        next_subtractive[packet.id].push_back(inf.collide.value());
+
+                                    if(inf.reflect)
+                                        speculative_packets.push_back(inf.reflect.value());
+                                }
+                            }
+                            else
+                            {
+                                aggregate<int> aggs;
+                                aggs.pos = en->r.position;
+                                aggs.half_dim = en->r.approx_dim;
+
+                                aggs.recalculate_bounds();
+
+                                if(aggs.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+                                {
+                                    en->samples.push_back(packet);
+                                }
                             }
                         }
                     }
