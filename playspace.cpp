@@ -106,11 +106,6 @@ alt_frequency_packet transform_space(const alt_frequency_packet& in, room& r, al
 
     alt_radar_field& new_field = *r.field;
 
-    if(ret.last_packet)
-    {
-        ret.last_packet = std::make_shared<alt_frequency_packet>(transform_space(*ret.last_packet, r, parent_field));
-    }
-
     ret.origin = r.get_in_local(in.origin);
 
     if(ret.reflected_by != -1)
@@ -527,6 +522,7 @@ void room::tick(double dt_s)
     for(ship* s : ships)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
+        s->samples.clear();
     }
 
     /*field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);*/
@@ -617,6 +613,7 @@ void playspace::tick(double dt_s)
     for(ship* s : ships)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
+        s->samples.clear();
     }
 
     field->tick(*entity_manage, dt_s);

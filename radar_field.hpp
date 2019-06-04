@@ -81,9 +81,6 @@ struct alt_frequency_packet
     /*uint32_t prev_reflected_by = -1;
     vec2f last_reflected_position = {0,0};*/
 
-    ///parent packet
-    std::shared_ptr<alt_frequency_packet> last_packet;
-
     void make(float intensity, float freq)
     {
         if(intensity < RADAR_CUTOFF)
@@ -282,6 +279,9 @@ struct heatable_entity : entity, heatable
     ///aka the sun, used for optimising
     bool hot_stationary = false;
     float sun_reflectivity = 1;
+
+    std::vector<alt_frequency_packet> samples;
+    bool accumulates_samples = false;
 
     heatable_entity()
     {

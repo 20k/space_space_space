@@ -45,6 +45,7 @@ ship::ship()
 
     radar_frequency_composition.push_back(2000);
     radar_intensity_composition.push_back(1);
+    accumulates_samples = true;
 }
 
 void component_fixed_properties::add(component_info::does_type type, double amount)

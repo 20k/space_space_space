@@ -258,16 +258,17 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
     //if(angle_between_vectors(relative_pos, packet_angle) > packet.restrict_angle)
     //    return std::nullopt;
 
-    if(!angle_lies_between_vectors_cos(relative_pos.norm(), packet_angle, packet.cos_restrict_angle))
+    if(iteration_count == packet.start_iteration)
+        return std::nullopt;
+
+    float len = sqrtf(len_sq);
+
+    if(!angle_lies_between_vectors_cos(relative_pos / len, packet_angle, packet.cos_restrict_angle))
        return std::nullopt;
 
     //float cross_section = collide.get_cross_section(relative_pos.angle()) * 5;
 
-    float cross_section = 0;
-
-    float len = sqrtf(len_sq);
-
-    if(len < next_radius + cross_section/2 && len >= current_radius - cross_section/2)
+    if(len_sq < next_radius*next_radius && len_sq >= current_radius*current_radius)
     {
         #ifndef REVERSE_IGNORE
         if(ignore_map[packet.id][collide._pid].should_ignore())
@@ -380,12 +381,19 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.right_restrict = (vec2f){1, 0}.rot(reflect.start_angle + reflect.restrict_angle);
 
 
-        reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
-        reflect.last_packet->last_packet = std::shared_ptr<alt_frequency_packet>();
+        //reflect.last_packet = std::make_shared<alt_frequency_packet>(packet);
+        //reflect.last_packet->last_packet = std::shared_ptr<alt_frequency_packet>();
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
         ignore(packet.id, collide);
+
+
+        if(collide.accumulates_samples)
+        {
+            collide.samples.push_back(packet);
+            collide.samples.back().summed_intensity = local_intensity; ///expected by sample_for
+        }
 
         //return {{std::nullopt, collide_packet}};
 
@@ -1201,7 +1209,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
     #define LOW_DETAIL 0.01
     #define HIGH_DETAIL 0.5
 
-    std::vector<alt_frequency_packet> post_intensity_calculate;
+    /*std::vector<alt_frequency_packet> post_intensity_calculate;
 
     for(alt_frequency_packet packet : packets)
     {
@@ -1246,7 +1254,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         packet.summed_intensity = intensity;
 
         post_intensity_calculate.push_back(packet);
-    }
+    }*/
 
     /*{
         float dsum = 0;
@@ -1287,7 +1295,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
     //std::cout << "pseudo size " << pseudo_packets.size() << std::endl;
 
-    for(alt_frequency_packet& packet : post_intensity_calculate)
+    for(const alt_frequency_packet& packet : en.samples)
     {
         if(packet.emitted_by == en._pid && packet.reflected_by == (uint32_t)-1)
             continue;
@@ -1421,7 +1429,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         std::set<uint32_t> low_detail_entities;
         std::set<uint32_t> all_entities;
 
-        for(alt_frequency_packet& packet : post_intensity_calculate)
+        for(alt_frequency_packet& packet : en.samples)
         {
             if(packet.emitted_by == en._pid && packet.reflected_by == (uint32_t)-1)
                 continue;
