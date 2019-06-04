@@ -71,7 +71,7 @@ struct heatable_entity;
 struct room : serialisable, owned
 {
     size_t friendly_id = -1;
-    room_type::type type = room_type::POI;
+    //room_type::type type = room_type::POI;
 
     poi_type::type ptype = poi_type::DEAD_SPACE;
     int poi_offset = 0; ///idx offset
@@ -82,8 +82,6 @@ struct room : serialisable, owned
     entity* my_entity = nullptr;
     heatable_entity* packet_harvester = nullptr;
     std::shared_ptr<alt_radar_field> field;
-
-    std::map<uint32_t, bool> imported_waves;
 
     room();
     ~room();

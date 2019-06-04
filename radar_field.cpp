@@ -202,8 +202,6 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
 
 bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 {
-    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * space_scaling;
-
     float dist_min = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
     float dist_max = dist_min + speed_of_light_per_tick;
 
@@ -221,6 +219,8 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
     if(packet.start_iteration == iteration_count)
         return false;
+
+    float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick * space_scaling;
 
     float real_intensity = packet.get_max_intensity() / (real_distance * real_distance);
 
@@ -610,8 +610,10 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                                     if(it_2 != it_1->second.end())
                                     {
-                                        if(it_2->second)
-                                            continue;
+                                        //if(it_2->second)
+                                        //    continue;
+
+                                        continue;
                                     }
                                 }
 
@@ -623,7 +625,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                                 if(aggs.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                                 {
-                                    agg_ignore[packet.id][en->_pid] = true;
+                                    //agg_ignore[packet.id][en->_pid] = true;
+
+                                    agg_ignore[packet.id].insert(en->_pid);
 
                                     en->samples.push_back(packet);
                                 }

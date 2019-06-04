@@ -38,6 +38,10 @@ struct packet_harvester_type : heatable_entity
         aggregate_unconditionally = true;
 
         collides = false;
+
+        r.vert_angle.clear();
+        r.vert_cols.clear();
+        r.vert_dist.clear();
     }
 
     virtual void tick(double dt_s) override
@@ -50,7 +54,7 @@ struct packet_harvester_type : heatable_entity
 
         r.approx_dim = max(r.approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
 
-        r.init_rectangular(r.approx_dim);
+        //r.init_rectangular(r.approx_dim);
 
         //std::cout << "RADIM " << r.approx_dim << std::endl;
     }
@@ -115,7 +119,6 @@ vec2f room::get_in_absolute(vec2f local)
 void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
 {
     DO_SERIALISE(friendly_id);
-    DO_SERIALISE(type);
     DO_SERIALISE(name);
     DO_SERIALISE(position);
     DO_SERIALISE(entity_manage);
@@ -168,66 +171,6 @@ transform_data transform_space(const alt_frequency_packet& in, room& r, alt_rada
     return ret;
 }
 
-void import_radio_raw(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
-{
-    for(const alt_frequency_packet& pack : pack)
-    {
-        if(me.imported_waves.find(pack.id) != me.imported_waves.end())
-            continue;
-
-        //alt_frequency_packet fixed_pack = transform_space(pack, me, theirs);
-
-        transform_data data = transform_space(pack, me, theirs);
-
-        float current_radius = (me.field->iteration_count - data.start_iteration) * me.field->speed_of_light_per_tick;
-        float next_radius = current_radius + me.field->speed_of_light_per_tick;
-
-        if(!me.entity_manage->collision.intersects(data.origin, current_radius, next_radius, pack.precalculated_start_angle, pack.restrict_angle, pack.left_restrict, pack.right_restrict))
-            continue;
-
-        me.imported_waves[pack.id] = true;
-
-        alt_frequency_packet fixed_pack = pack;
-        fixed_pack.origin = data.origin;
-        fixed_pack.reflected_position = data.reflected_position;
-        fixed_pack.start_iteration = data.start_iteration;
-
-        me.field->packets.push_back(fixed_pack);
-
-        //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
-
-        auto subtr_it = theirs.subtractive_packets.find(pack.id);
-
-        if(subtr_it != theirs.subtractive_packets.end())
-        {
-            auto vec = subtr_it->second;
-
-            /*for(auto& i : vec)
-            {
-                i = transform_space(i, me, theirs);
-            }*/
-
-            for(auto& i : vec)
-            {
-                transform_data trans = transform_space(i, me, theirs);
-
-                i.origin = trans.origin;
-                i.reflected_position = trans.reflected_position;
-                i.start_iteration = trans.start_iteration;
-            }
-
-            me.field->subtractive_packets[pack.id] = vec;
-        }
-
-        auto f_ignore = theirs.ignore_map.find(pack.id);
-
-        if(f_ignore != theirs.ignore_map.end())
-        {
-            me.field->ignore_map[pack.id] = f_ignore->second;
-        }
-    }
-}
-
 void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
 {
     for(const alt_frequency_packet& pack : pack)
@@ -241,8 +184,6 @@ void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, 
 
         me.field->packets.push_back(fixed_pack);
 
-        //std::cout << "VALD " << field->packet_expired(fixed_pack) << std::endl;
-
         auto subtr_it = theirs.subtractive_packets.find(pack.id);
 
         if(subtr_it != theirs.subtractive_packets.end())
@@ -270,14 +211,9 @@ void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, 
     }
 }
 
-
 void room::import_radio_waves_from(alt_radar_field& theirs)
 {
     //sf::Clock clk;
-
-    //float lrad = entity_manage->collision.half_dim.largest_elem();
-
-    //import_radio_raw(*this, theirs.packets, theirs);
 
     assert(packet_harvester);
 
@@ -571,32 +507,6 @@ void room::tick(double dt_s)
 {
     entity_manage->tick(dt_s);
     entity_manage->cleanup();
-
-    /*for(entity* e : entity_manage->entities)
-    {
-        ship* s = dynamic_cast<ship*>(e);
-
-        if(s)
-        {
-            std::vector<pending_transfer> all_transfers;
-            s->consume_all_transfers(all_transfers);
-
-            std::vector<std::optional<ship>> removed_ships;
-
-            for(auto& i : all_transfers)
-            {
-                removed_ships.push_back(s->remove_ship_by_id(i.pid_ship));
-            }
-
-            for(int i=0; i < (int)removed_ships.size(); i++)
-            {
-                if(!removed_ships[i])
-                    continue;
-
-                s->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
-            }
-        }
-    }*/
 
     std::vector<ship*> ships = entity_manage->fetch<ship>();
 
