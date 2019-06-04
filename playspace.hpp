@@ -128,6 +128,8 @@ struct playspace : serialisable, owned
     entity_manager* entity_manage = nullptr;
     entity_manager* drawables = nullptr;
 
+    std::map<size_t, std::vector<entity*>> room_specific_cleanup;
+
     playspace();
     ~playspace();
 

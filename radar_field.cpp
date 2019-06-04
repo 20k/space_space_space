@@ -467,6 +467,13 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
             }
             #endif
 
+            auto agg_it = field.agg_ignore.find(it->id);
+
+            if(agg_it != field.agg_ignore.end())
+            {
+                field.agg_ignore.erase(agg_it);
+            }
+
             ret.push_back(it->id);
         }
     }
@@ -595,6 +602,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                             }
                             else
                             {
+                                if(agg_ignore[packet.id][en->_pid])
+                                    continue;
+
                                 aggregate<int> aggs;
                                 aggs.pos = en->r.position;
                                 aggs.half_dim = en->r.approx_dim;
@@ -603,6 +613,8 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                                 if(aggs.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                                 {
+                                    agg_ignore[packet.id][en->_pid] = true;
+
                                     en->samples.push_back(packet);
                                 }
                             }
@@ -655,8 +667,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     {
         subtractive_packets[i.first].insert(subtractive_packets[i.first].end(), i.second.begin(), i.second.end());
     }
-
-
 
     packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 

@@ -67,6 +67,7 @@ struct entity : serialisable, owned
     int cleanup_rounds = 0;
     bool collides = true;
     bool is_collided_with = true;
+    bool aggregate_unconditionally = false;
     int ticks_between_collisions = 1;
 
     float mass = 1;

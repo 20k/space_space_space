@@ -18,6 +18,9 @@ struct room_entity : entity
 
     virtual void tick(double dt_s) override
     {
+        if(cleanup)
+            return;
+
         ///not good enough
         //if(ren->ptype == poi_type::DEAD_SPACE)
         //    r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
@@ -32,14 +35,22 @@ struct packet_harvester_type : heatable_entity
     {
         r.init_rectangular({5, 5});
         precise_harvestable = true;
+        aggregate_unconditionally = true;
 
         collides = false;
     }
 
     virtual void tick(double dt_s) override
     {
+        if(cleanup)
+            return;
+
         r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
         r.approx_dim = ren->entity_manage->collision.half_dim * ROOM_POI_SCALE;
+
+        r.init_rectangular(r.approx_dim);
+
+        //std::cout << "RADIM " << r.approx_dim << std::endl;
     }
 };
 
@@ -336,6 +347,9 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
     r->my_entity = entity_manage->make_new<room_entity>(r);
     r->packet_harvester = entity_manage->make_new<packet_harvester_type>(r);
 
+    room_specific_cleanup[r->_pid].push_back(r->my_entity);
+    room_specific_cleanup[r->_pid].push_back(r->packet_harvester);
+
     {
         r->my_entity->r = client_renderable();
 
@@ -369,7 +383,7 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
 
 void playspace::delete_room(room* r)
 {
-    std::vector<room_entity*> ens = entity_manage->fetch<room_entity>();
+    /*std::vector<room_entity*> ens = entity_manage->fetch<room_entity>();
 
     for(room_entity* e : ens)
     {
@@ -377,6 +391,18 @@ void playspace::delete_room(room* r)
         {
             e->cleanup = true;
         }
+    }*/
+
+    auto it = room_specific_cleanup.find(r->_pid);
+
+    if(it != room_specific_cleanup.end())
+    {
+        std::cout << "FOUND " << it->second.size() << std::endl;
+
+        for(auto& i : it->second)
+            i->cleanup = true;
+
+        room_specific_cleanup.erase(it);
     }
 
     delete r;
@@ -601,7 +627,7 @@ void room::tick(double dt_s)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    std::cout << "fdnum " << field->packets.size() << std::endl;
+    //std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 void playspace::tick(double dt_s)

@@ -886,7 +886,7 @@ void entity_manager::handle_aggregates()
 
     for(entity* e : entities)
     {
-        if(e->collides && e->is_collided_with)
+        if((e->collides && e->is_collided_with) || e->aggregate_unconditionally)
         {
             my_entities.push_back(e);
         }
@@ -1045,5 +1045,11 @@ void entity_manager::cleanup()
             i--;
             continue;
         }
+    }
+
+    if(aggregates_dirty)
+    {
+        handle_aggregates();
+        aggregates_dirty = false;
     }
 }

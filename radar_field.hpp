@@ -316,6 +316,7 @@ struct alt_radar_field
     //std::vector<alt_collideable> collideables;
 
     std::unordered_map<uint32_t, std::unordered_map<uint32_t, hacky_clock>> ignore_map;
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, bool>> agg_ignore;
 
     std::map<uint32_t, fixed_clock> sample_time;
     std::map<uint32_t, alt_radar_sample> cached_samples;
