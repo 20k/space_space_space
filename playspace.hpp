@@ -169,6 +169,8 @@ struct ship_network_data
     std::vector<client_poi_data> pois;
 };
 
+struct cpu_move_args;
+
 struct playspace_manager : serialisable
 {
     std::vector<playspace*> spaces;
@@ -203,7 +205,10 @@ struct playspace_manager : serialisable
 
     bool start_warp_travel(ship& s, size_t pid);
     bool start_room_travel(ship& s, size_t pid);
-    bool start_realspace_travel(ship& s, size_t pid);
+    //bool start_realspace_travel(ship& s, size_t pid);
+    //bool start_realspace_travel(ship& s, vec2f coord);
+
+    bool start_realspace_travel(ship& s, const cpu_move_args& args);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

@@ -4474,6 +4474,7 @@ std::string make_component_dir_name(int base_id, int offset)
     return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
 }
 
+#if 0
 std::optional<std::string> get_directory_name_impl(ship& s, std::map<int, int>& type_counts, std::string dir, size_t of)
 {
     if(of == s._pid)
@@ -4534,6 +4535,7 @@ std::optional<std::string> ship::get_directory_name(ship& root, size_t pid)
 
     return get_directory_name_impl(root, nmap, "", pid);
 }
+#endif // 0
 
 ///second id is what type we are
 ///0 == ship, 1 == component
@@ -4816,25 +4818,18 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         if(cpu.ports[hardware::T_DRIVE].is_int())
         {
-            int id = cpu.ports[hardware::T_DRIVE].value;
+            int success = 0;
 
-            ///unimplemented
-
-            if(id != -1)
+            if(play.start_realspace_travel(s, cpu.my_move))
             {
-                int success = 0;
-
-                if(play.start_realspace_travel(s, id))
-                {
-                    success = 1;
-                }
-                else
-                {
-                    unblock_cpu_hardware(s, hardware::T_DRIVE);
-                }
-
-                cpu.context.register_states[(int)registers::TEST].set_int(success);
+                success = 1;
             }
+            else
+            {
+                unblock_cpu_hardware(s, hardware::T_DRIVE);
+            }
+
+            cpu.context.register_states[(int)registers::TEST].set_int(success);
         }
 
         if(cpu.ports[hardware::S_DRIVE].is_int())
@@ -4934,19 +4929,111 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
 void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspace* space, room* r)
 {
-    std::optional<entity*> target = r->entity_manage->fetch(s.realspace_pid_target);
+    std::optional<entity*> target = std::nullopt;
 
-    vec2f dest = s.realspace_destination;
+    //vec2f dest = s.realspace_destination;
 
-    if(target)
+    ///uuh ok this is just wrong, not checking sensor data?
+    /*if(s.realspace_pid_target)
+    {
+        target = r->entity_manage->fetch(s.realspace_pid_target);
+    }*/
+
+    vec2f known_target_dest = {s.move_args.x, s.move_args.y};
+    float known_target_angle = 0;
+    bool should_angle_turn = false;
+
+    if(s.move_args.id != (size_t)-1)
+    {
+        std::optional<entity*> e = r->entity_manage->fetch(s.move_args.id);
+
+        ///check that its in the same room as me
+        if(e.has_value())
+        {
+            bool in_sensor_range = false;
+
+            for(auto& i : s.last_sample.renderables)
+            {
+                if(i.uid == s.move_args.id)
+                {
+                    in_sensor_range = true;
+                    break;
+                }
+            }
+
+            if(in_sensor_range)
+            {
+                target = e;
+            }
+        }
+    }
+
+    if(target.has_value())
+    {
+        known_target_dest = target.value()->r.position;
+        known_target_angle = target.value()->r.rotation;
+
+        ///move to absolute target if we have one, update cache
+        if(s.move_args.type == instructions::AMOV && s.move_args.id != (size_t)-1)
+        {
+            s.move_args.x = known_target_dest.x();
+            s.move_args.y = known_target_dest.y();
+            s.move_args.angle = known_target_angle;
+        }
+
+        ///nothing on rmov, always moves to fixed coordinate
+        ///also moves relative to myself but that's a one time kinda deal
+        if(s.move_args.type == instructions::RMOV)
+        {
+
+        }
+
+        if(s.move_args.type == instructions::KEEP)
+        {
+            assert(s.move_args.id != (size_t)-1);
+
+            float distance_away = s.move_args.radius;
+
+            vec2f absolute_keep_position = (s.r.position - known_target_dest).norm() * distance_away;
+
+            s.move_args.x = absolute_keep_position.x();
+            s.move_args.y = absolute_keep_position.y();
+        }
+
+        ///turn to face absolute coordinate, does nothing
+        if(s.move_args.type == instructions::ATRN)
+        {
+
+        }
+
+        ///do nothing
+        if(s.move_args.type == instructions::RTRN)
+        {
+
+        }
+    }
+
+
+    if(s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN)
+    {
+        should_angle_turn = true;
+    }
+
+
+
+    vec2f move_to = {s.move_args.x, s.move_args.y};
+
+    float target_angle = s.move_args.angle;
+
+    /*if(target)
     {
         dest = target.value()->r.position;
         s.realspace_destination = dest;
-    }
+    }*/
 
     vec2f start_pos = s.r.position;
 
-    vec2f to_dest = dest - start_pos;
+    vec2f to_dest = move_to - start_pos;
 
     vec2f additional_force = {0,0};
 
@@ -4970,7 +5057,8 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
     float search_distance = 50;
     vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
 
-    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && coll.value()->_pid != s.realspace_pid_target)
+    ///colliding with all entities!!! not just stuff in sensor range!
+    if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
     {
         vec2f my_travel_direction = s.velocity;
         vec2f my_position = s.r.position;

@@ -764,8 +764,9 @@ struct ship : heatable_entity
     bool travelling_to_poi = false;
     vec2f destination_poi_position;
     bool travelling_in_realspace = false;
-    vec2f realspace_destination;
-    size_t realspace_pid_target = -1;
+    cpu_move_args move_args;
+    //vec2f realspace_destination;
+    //size_t realspace_pid_target = -1;
 
     std::optional<component*> get_component_from_id(uint64_t id);
 
@@ -861,8 +862,9 @@ struct ship : heatable_entity
         DO_SERIALISE(last_room_type);
         DO_SERIALISE(current_room_pid);
         DO_SERIALISE(travelling_in_realspace);
-        DO_SERIALISE(realspace_destination);
-        DO_SERIALISE(realspace_pid_target);
+        //DO_SERIALISE(realspace_destination);
+        //DO_SERIALISE(realspace_pid_target);
+        DO_SERIALISE(move_args);
         DO_SERIALISE(radar_frequency_composition);
         DO_SERIALISE(radar_intensity_composition);
     }

@@ -126,6 +126,7 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(saved_program);
     DO_SERIALISE(tx_pending);
     DO_SERIALISE(had_tx_pending);
+    DO_SERIALISE(my_move);
 
     DO_RPC(inc_pc);
     DO_RPC(set_program);
@@ -144,6 +145,16 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(owner_offset);
     DO_SERIALISE(is_hw);
     DO_SERIALISE(alive);
+}
+
+SERIALISE_BODY(cpu_move_args)
+{
+    DO_SERIALISE(name);
+    DO_SERIALISE(id);
+    DO_SERIALISE(radius);
+    DO_SERIALISE(x);
+    DO_SERIALISE(y);
+    DO_SERIALISE(angle);
 }
 
 bool all_numeric(const std::string& str)
@@ -1463,10 +1474,28 @@ void cpu_state::ustep()
         waiting_for_hardware_feedback = true;
         break;
     case AMOV:
-        ports[(int)hardware::T_DRIVE] = RNS(next[0]);
+    {
+        register_value& val = RNS(next[0]);
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+
+        my_move = decltype(my_move)();
+
+        if(val.is_int())
+            my_move.id = val.value;
+
+        if(val.is_symbol())
+            my_move.name = val.symbol;
+
+        if(val.is_label())
+            my_move.name = val.label;
+
+        my_move.type = AMOV;
+
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;
+    }
     case COUNT:
         throw std::runtime_error("Unreachable?");
     }

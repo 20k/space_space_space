@@ -207,10 +207,10 @@ namespace instructions
         SLIP,
         AMOV, ///travel to absolute coordinates or target
         RMOV, ///move relative to target, either id or coords
-        ORBT, ///move in circles around target, or xy pair. takes a radius
+        //ORBT, ///move in circles around target, or xy pair. takes a radius, taken out because its continuous rather than goal focused
         KEEP, ///keep distance away from target
         ATRN, ///target or absolute angle
-        RTRN, ///degrees
+        RTRN, ///degrees, should i bother to have an id version?
         COUNT,
     };
 
@@ -261,7 +261,7 @@ namespace instructions
         "SLIP",
         "AMOV",
         "RMOV",
-        "ORBT",
+        //"ORBT",
         "KEEP",
         "ATRN",
         "RTRN"
@@ -363,6 +363,20 @@ struct cpu_stash : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct cpu_move_args : serialisable
+{
+    std::string name;
+    size_t id = -1;
+    float radius = 0;
+    float x = 0;
+    float y = 0;
+    float angle = 0;
+
+    instructions::type type = instructions::COUNT;
+
+    SERIALISE_SIGNATURE();
+};
+
 struct custom_instruction
 {
     std::string name;
@@ -395,6 +409,9 @@ struct cpu_state : serialisable, owned
     bool had_tx_pending = false;
 
     std::string saved_program;
+
+    ///check ports to see whats what
+    cpu_move_args my_move;
 
     cpu_file get_master_virtual_file();
     bool update_master_virtual_file();

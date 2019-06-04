@@ -1023,6 +1023,99 @@ bool playspace_manager::start_room_travel(ship& s, size_t pid)
     return false;
 }
 
+bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& args)
+{
+    if(s.travelling_to_poi)
+        return false;
+
+    if(s.move_warp)
+        return false;
+
+    bool can_fly = s.get_max_velocity_thrust() > 0;
+
+    if(!can_fly)
+        return false;
+
+    auto [play, r] = get_location_for(&s);
+
+    if(play == nullptr || r == nullptr)
+        return false;
+
+    if(args.id != -1 && args.id != s._pid)
+    {
+        std::optional<entity*> e = r->entity_manage->fetch(args.id);
+
+        ///check that its in the same room as me
+        if(!e.has_value())
+            return false;
+
+        bool in_sensor_range = false;
+
+        for(auto& i : s.last_sample.renderables)
+        {
+            if(i.uid == args.id)
+            {
+                in_sensor_range = true;
+                break;
+            }
+        }
+
+        if(!in_sensor_range)
+            return false;
+
+        //s.realspace_destination = e.value()->r.position;
+        //s.realspace_pid_target = pid;
+
+        s.move_args = args;
+
+        if(s.move_args.type == instructions::RMOV)
+        {
+            vec2f destination = e.value()->r.position;
+            vec2f to_dest = (destination - s.r.position).norm();
+
+            vec2f forward_component = to_dest * args.y;
+            vec2f perp_component = to_dest.rot(M_PI/2) * args.x;
+
+            s.move_args.x = forward_component.x() + perp_component.x();
+            s.move_args.y = forward_component.y() + perp_component.y();
+        }
+
+        if(s.move_args.type == instructions::ATRN)
+        {
+            float their_angle = (e.value()->r.position - s.r.position).angle();
+
+            s.move_args.angle = their_angle;
+        }
+
+        s.travelling_in_realspace = true;
+
+        return true;
+    }
+    else
+    {
+        s.move_args = args;
+
+        if(s.move_args.type == instructions::RMOV)
+        {
+            vec2f my_forward = (vec2f){1, 0}.rot(s.r.rotation) * args.y;
+            vec2f my_perp = (vec2f){1, 0}.rot(s.r.rotation + M_PI/2) * args.x;
+
+            s.move_args.x = my_forward.x() + my_perp.x();
+            s.move_args.y = my_forward.y() + my_perp.y();
+        }
+
+        if(s.move_args.type == instructions::RTRN)
+        {
+            s.move_args.angle = args.angle + s.r.rotation;
+        }
+
+        s.travelling_in_realspace = true;
+
+        return true;
+    }
+}
+
+#if 0
 bool playspace_manager::start_realspace_travel(ship& s, size_t pid)
 {
     if(s.travelling_to_poi)
@@ -1064,4 +1157,27 @@ bool playspace_manager::start_realspace_travel(ship& s, size_t pid)
 
     return can_fly;
 }
+
+bool playspace_manager::start_realspace_travel(ship& s, vec2f coord)
+{
+    if(s.travelling_to_poi)
+        return false;
+
+    if(s.move_warp)
+        return false;
+
+    auto [play, r] = get_location_for(&s);
+
+    if(play == nullptr || r == nullptr)
+        return false;
+
+    s.realspace_destination = coord;
+    s.realspace_pid_target = -1;
+    s.travelling_in_realspace = true;
+
+    bool can_fly = s.get_max_velocity_thrust() > 0;
+
+    return can_fly;
+}
+#endif // 0
 
