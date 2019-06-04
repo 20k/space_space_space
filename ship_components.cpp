@@ -4189,7 +4189,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
 
         if(disruptive)
         {
-            float my_mass = s.get_mass();
+            //float my_mass = s.get_mass();
 
             /*double health = s.get_capacity()[component_info::HP] / 2;
             s.take_damage(health, true, true);*/
