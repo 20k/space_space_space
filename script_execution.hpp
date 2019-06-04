@@ -374,6 +374,7 @@ struct cpu_state : serialisable, owned
     cpu_stash context;
 
     bool free_running = false;
+    bool should_step = false;
     std::string last_error;
 
     std::vector<register_value> ports;

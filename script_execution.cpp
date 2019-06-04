@@ -961,6 +961,8 @@ void cpu_state::ustep()
     if(waiting_for_hardware_feedback || tx_pending)
         return;
 
+    should_step = false;
+
     ///shit we might double tx which makes dirty filing not work
     ///need to rename correctly
     /*if(had_tx_pending)
@@ -1485,15 +1487,7 @@ void cpu_state::inc_pc()
 {
     free_running = false;
 
-    try
-    {
-        step();
-    }
-    catch(std::runtime_error& err)
-    {
-        last_error = err.what();
-        free_running = false;
-    }
+    should_step = true;
 }
 
 void cpu_state::inc_pc_rpc()
