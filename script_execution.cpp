@@ -1473,7 +1473,7 @@ void cpu_state::ustep()
         blocking_status[(int)hardware::S_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;
-    case AMOV:
+    case TMOV:
     {
         register_value& val = RNS(next[0]);
 
@@ -1490,10 +1490,24 @@ void cpu_state::ustep()
         if(val.is_label())
             my_move.name = val.label;
 
+        my_move.type = TMOV;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
+        break;
+    }
+    case AMOV:
+    {
+        register_value& xval = RN(next[0]);
+        register_value& yval = RN(next[1]);
+
+        my_move = decltype(my_move)();
+
         my_move.type = AMOV;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
+
         break;
     }
     case RMOV:
@@ -1525,13 +1539,35 @@ void cpu_state::ustep()
                 my_move.name = val.label;
         }
 
-
         my_move.type = RMOV;
         my_move.x = xval.value;
         my_move.y = yval.value;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
+        break;
+    }
+    case KEEP:
+    {
+        int dist = RN(next[0]).value;
+        int id = RN(next[1]).value;
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+
+        my_move = decltype(my_move)();
+
+        //my_move.type = KEEP;
+        //my_move.x = xval.value;
+        //my_move.y = yval.value;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
+        break;
+    }
+
+    case ATRN:
+    {
+
         break;
     }
     case COUNT:

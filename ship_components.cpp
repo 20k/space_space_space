@@ -4976,11 +4976,17 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         ///move to absolute target if we have one, update cache
         ///you know what
         ///maybe this shouldn't chase?
-        if(s.move_args.type == instructions::AMOV && s.move_args.id != (size_t)-1)
+        if(s.move_args.type == instructions::TMOV && s.move_args.id != (size_t)-1)
         {
             s.move_args.x = known_target_dest.x();
             s.move_args.y = known_target_dest.y();
             //s.move_args.angle = known_target_angle;
+        }
+
+        ///nope
+        if(s.move_args.type == instructions::AMOV)
+        {
+
         }
 
         ///nothing on rmov, always moves to fixed coordinate
@@ -4991,7 +4997,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         }
 
         ///???
-        if(s.move_args.type == instructions::KEEP)
+        /*if(s.move_args.type == instructions::KEEP)
         {
             assert(s.move_args.id != (size_t)-1);
 
@@ -5001,7 +5007,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
             s.move_args.x = absolute_keep_position.x();
             s.move_args.y = absolute_keep_position.y();
-        }
+        }*/
 
         ///turn to face absolute coordinate, does nothing
         if(s.move_args.type == instructions::ATRN)
@@ -5049,7 +5055,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         }
     }
 
-    bool is_move = s.move_args.type == instructions::AMOV || s.move_args.type == instructions::RMOV || s.move_args.type == instructions::KEEP;
+    bool is_move = s.move_args.type == instructions::TMOV || s.move_args.type == instructions::AMOV || s.move_args.type == instructions::RMOV || s.move_args.type == instructions::KEEP;
 
     if(is_move)
     {

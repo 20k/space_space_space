@@ -1091,6 +1091,16 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
             s.move_args.angle = their_angle;
         }
 
+        if(s.move_args.type == instructions::KEEP)
+        {
+            float distance_away = s.move_args.radius;
+
+            vec2f absolute_keep_position = (s.r.position - e.value()->r.position).norm() * distance_away;
+
+            s.move_args.x = absolute_keep_position.x();
+            s.move_args.y = absolute_keep_position.y();
+        }
+
         s.travelling_in_realspace = true;
 
         return true;
@@ -1112,6 +1122,9 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
         {
             s.move_args.angle = args.angle + s.r.rotation;
         }
+
+        if(s.move_args.type == instructions::KEEP)
+            return false;
 
         s.travelling_in_realspace = true;
 

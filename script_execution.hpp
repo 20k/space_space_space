@@ -205,11 +205,13 @@ namespace instructions
         DATA,
         WARP,
         SLIP,
-        AMOV, ///travel to absolute coordinates or target
+        TMOV, ///move to target
+        AMOV, ///travel to absolute coordinates
         RMOV, ///move relative to target, either id or coords
         //ORBT, ///move in circles around target, or xy pair. takes a radius, taken out because its continuous rather than goal focused
         KEEP, ///keep distance away from target
-        ATRN, ///target or absolute angle
+        TTRN, ///target
+        ATRN, ///absolute angle ///wait can't do both because its only 1 arg
         RTRN, ///degrees, should i bother to have an id version?
         COUNT,
     };
