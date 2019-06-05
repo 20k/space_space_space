@@ -1084,7 +1084,7 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
             s.move_args.y = forward_component.y() + perp_component.y() + s.r.position.y();
         }
 
-        if(s.move_args.type == instructions::ATRN)
+        if(s.move_args.type == instructions::TTRN)
         {
             float their_angle = (e.value()->r.position - s.r.position).angle();
 
@@ -1108,6 +1108,12 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
     else
     {
         s.move_args = args;
+
+        if(s.move_args.type == instructions::TMOV)
+            return false;
+
+        if(s.move_args.type == instructions::TTRN)
+            return false;
 
         if(s.move_args.type == instructions::RMOV)
         {

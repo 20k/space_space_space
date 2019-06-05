@@ -5023,7 +5023,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
     }
 
 
-    if(s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN)
+    if(s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN || s.move_args.type == instructions::TTRN)
     {
         should_angle_turn = true;
     }

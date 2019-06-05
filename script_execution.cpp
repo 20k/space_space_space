@@ -1475,7 +1475,7 @@ void cpu_state::ustep()
         break;
     case TMOV:
     {
-        register_value& val = RNS(next[0]);
+        register_value& val = RNLS(next[0]);
 
         ports[(int)hardware::T_DRIVE].set_int(1);
 
@@ -1521,7 +1521,7 @@ void cpu_state::ustep()
 
         if(next.num_args() > 2)
         {
-            register_value& val = RNS(next[2]);
+            register_value& val = RNLS(next[2]);
 
             if(val.is_int())
             {
@@ -1559,15 +1559,69 @@ void cpu_state::ustep()
         //my_move.type = KEEP;
         //my_move.x = xval.value;
         //my_move.y = yval.value;
+        my_move.radius = dist;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
         break;
     }
 
+    case TTRN:
+    {
+        register_value& val = RNLS(next[0]);
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+
+        my_move = decltype(my_move)();
+
+        if(val.is_int())
+            my_move.id = val.value;
+
+        if(val.is_symbol())
+            my_move.name = val.symbol;
+
+        if(val.is_label())
+            my_move.name = val.label;
+
+        my_move.type = TTRN;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
+
+        break;
+    }
     case ATRN:
     {
+        register_value& angle = RN(next[0]);
 
+        ///maybe make the angle up even though i know itll make me really angry ok
+        ///but you know most people just don't work in atan2 space
+        ///which is fine even though they're obviously bad people
+        float rang = (angle.value / 360.) * 2 * M_PI;
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+        my_move = decltype(my_move)();
+
+        my_move.type = ATRN;
+        my_move.angle = rang;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
+        break;
+    }
+    case RTRN:
+    {
+        register_value& angle = RN(next[0]);
+        float rang = (angle.value / 360.) * 2 * M_PI;
+
+        ports[(int)hardware::T_DRIVE].set_int(1);
+        my_move = decltype(my_move)();
+
+        my_move.type = TTRN;
+        my_move.angle = rang;
+
+        blocking_status[(int)hardware::T_DRIVE] = 1;
+        waiting_for_hardware_feedback = true;
         break;
     }
     case COUNT:
