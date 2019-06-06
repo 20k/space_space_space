@@ -5053,8 +5053,8 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         ///maybe this shouldn't chase?
         if(s.move_args.type == instructions::TMOV && s.move_args.id != (size_t)-1)
         {
-            s.move_args.x = known_target_dest.x();
-            s.move_args.y = known_target_dest.y();
+            /*s.move_args.x = known_target_dest.x();
+            s.move_args.y = known_target_dest.y();*/
             //s.move_args.angle = known_target_angle;
         }
 

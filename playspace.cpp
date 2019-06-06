@@ -1072,6 +1072,12 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
 
         s.move_args = args;
 
+        if(s.move_args.type == instructions::TMOV)
+        {
+            s.move_args.x = e.value()->r.position.x();
+            s.move_args.y = e.value()->r.position.y();
+        }
+
         if(s.move_args.type == instructions::RMOV)
         {
             vec2f destination = e.value()->r.position;
