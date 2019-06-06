@@ -213,6 +213,7 @@ namespace instructions
         TTRN, ///target
         ATRN, ///absolute angle ///wait can't do both because its only 1 arg
         RTRN, ///degrees, should i bother to have an id version?
+        TFIN, ///test if is finished
         COUNT,
     };
 
@@ -268,7 +269,8 @@ namespace instructions
         "KEEP",
         "TTRN",
         "ATRN",
-        "RTRN"
+        "RTRN",
+        "TFIN", ///test if finished
     };
 
     type fetch(const std::string& name);

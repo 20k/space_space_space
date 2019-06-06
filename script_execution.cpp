@@ -1505,6 +1505,8 @@ void cpu_state::ustep()
         my_move = decltype(my_move)();
 
         my_move.type = AMOV;
+        my_move.x = xval.value;
+        my_move.y = yval.value;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
@@ -1621,6 +1623,30 @@ void cpu_state::ustep()
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
+
+        break;
+    }
+    case TFIN:
+    {
+        register_value& val = RN(next[0]);
+
+        if(val.is_int())
+        {
+            int ival = val.value;
+
+            if(ival == hardware::S_DRIVE)
+                context.register_states[(int)registers::TEST].set_int(blocking_status[ival]);
+            else if(ival == hardware::T_DRIVE)
+                context.register_states[(int)registers::TEST].set_int(blocking_status[ival]);
+            else if(ival == hardware::W_DRIVE)
+                context.register_states[(int)registers::TEST].set_int(blocking_status[ival]);
+            else
+                throw std::runtime_error("No such value [TFIN] " + std::to_string(ival));
+        }
+        else
+        {
+            throw std::runtime_error("Unimplemented [TFIN]");
+        }
 
         break;
     }
