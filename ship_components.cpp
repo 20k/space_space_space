@@ -4927,6 +4927,75 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
     }
 }
 
+vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, double max_acceleration)
+{
+    vec2f to_target = (target - my_position).norm();
+
+    //float linear_velocity = my_velocity.length();
+
+    ///ok so steps
+    ///take vector from me to them
+    ///find velocity perpendicular to that direction
+    ///cancel velocity perpendicular to that direction primarily
+    ///then find out how much acceleration we have left
+    ///basically: two states we need to distinguish
+    ///either apply velocity in direction of target to go fast
+    ///or apply velocity in opposite direction to go slow
+    ///assuming available acceleration doesn't change, need to
+    ///start decelerating when v^2 = u^2 + 2as says we need slightly less acceleration than we have to stop (but do even if we need more)
+
+    vec2f control_force = {0,0};
+
+    double remaining_control_force = max_acceleration;
+
+    ///LEFT
+    vec2f perpendicular_direction = perpendicular(to_target).norm();
+
+    vec2f velocity_in_perp = projection(my_velocity, perpendicular_direction);
+
+    if(velocity_in_perp.length() > 10)
+    {
+        double steal = remaining_control_force/2;
+
+        remaining_control_force -= steal;
+
+        control_force += steal * -velocity_in_perp.norm();
+    }
+
+    ///v2 = u2 + 2as
+    ///v2 = 0
+    ///-u2 = 2as
+    ///u2 / (2a) = stopping distance
+
+    if(remaining_control_force <= 0.0001)
+        return control_force;
+
+    vec2f velocity_in_parallel = projection(my_velocity, to_target);
+
+    float linear_velocity_in_parallel = velocity_in_parallel.length();
+
+    if(linear_velocity_in_parallel)
+    {
+        control_force += to_target * remaining_control_force;
+        return control_force;
+    }
+
+    double suvat_stop_distance = linear_velocity_in_parallel * linear_velocity_in_parallel / (2 * remaining_control_force);
+
+    float distance_to_target = to_target.length();
+
+    if(suvat_stop_distance >= distance_to_target - 10)
+    {
+        control_force += -to_target * remaining_control_force;
+        return control_force;
+    }
+    else
+    {
+        control_force += to_target * remaining_control_force;
+        return control_force;
+    }
+}
+
 void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspace* space, room* r)
 {
     std::optional<entity*> target = std::nullopt;
@@ -4941,7 +5010,6 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
     vec2f known_target_dest = {s.move_args.x, s.move_args.y};
     float known_target_angle = 0;
-    bool should_angle_turn = false;
 
     if(s.move_args.id != (size_t)-1)
     {
@@ -5022,18 +5090,13 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         }
     }
 
-
-    if(s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN || s.move_args.type == instructions::TTRN)
-    {
-        should_angle_turn = true;
-    }
-
     float target_angle = s.move_args.angle;
 
-    bool is_turn = s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN;
+    bool is_turn = s.move_args.type == instructions::ATRN || s.move_args.type == instructions::RTRN || s.move_args.type == instructions::TTRN;
 
     if(is_turn)
     {
+        s.set_thrusters_active(1);
         float max_turn_rate = s.get_max_angular_thrust();
 
         float signed_angle = signed_angle_between_vectors((vec2f){1, 0}.rot(s.r.rotation), (vec2f){1, 0}.rot(target_angle));
@@ -5045,7 +5108,11 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
             per_tick = signum(signed_angle) * signed_angle;
         }
 
-        s.apply_rotation_force(per_tick);
+        float rotation_force = signum(per_tick) * dt_s;
+
+        s.apply_rotation_force(rotation_force);
+
+        ///need to slow down again as well
 
         if(fabs(signed_angle) < M_PI/64)
         {

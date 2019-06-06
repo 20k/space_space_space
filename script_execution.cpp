@@ -1556,9 +1556,7 @@ void cpu_state::ustep()
 
         my_move = decltype(my_move)();
 
-        //my_move.type = KEEP;
-        //my_move.x = xval.value;
-        //my_move.y = yval.value;
+        my_move.type = KEEP;
         my_move.radius = dist;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
@@ -1617,11 +1615,12 @@ void cpu_state::ustep()
         ports[(int)hardware::T_DRIVE].set_int(1);
         my_move = decltype(my_move)();
 
-        my_move.type = TTRN;
+        my_move.type = RTRN;
         my_move.angle = rang;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
+
         break;
     }
     case COUNT:

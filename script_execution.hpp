@@ -261,10 +261,12 @@ namespace instructions
         "DATA",
         "WARP",
         "SLIP",
+        "TMOV",
         "AMOV",
         "RMOV",
         //"ORBT",
         "KEEP",
+        "TTRN",
         "ATRN",
         "RTRN"
     };

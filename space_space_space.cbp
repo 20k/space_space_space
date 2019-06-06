@@ -131,7 +131,7 @@
 				<Compiler>
 					<Add option="-m64" />
 					<Add option="-O3" />
-					<Add option="-Weverything" />
+					<Add option="-Wall" />
 					<Add option="-std=c++2a" />
 				</Compiler>
 				<Linker>
