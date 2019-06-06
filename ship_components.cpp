@@ -4987,11 +4987,9 @@ vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, doub
 
     double suvat_stop_distance = -(linear_velocity_in_parallel * linear_velocity_in_parallel) / (-2 * max_acceleration);
 
-    //suvat_stop_distance = fabs(suvat_stop_distance);
-
     float distance_to_target = (target - my_position).length();
 
-    std::cout << "SUVAT " << suvat_stop_distance << " DIST " << distance_to_target << std::endl;
+    //std::cout << "SUVAT " << suvat_stop_distance << " DIST " << distance_to_target << std::endl;
 
     if(suvat_stop_distance >= distance_to_target - 5 && suvat_stop_distance > 0 && mult > 0)
     {
