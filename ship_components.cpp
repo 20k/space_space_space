@@ -4933,7 +4933,7 @@ float get_angular_control_force(float target, float my_angular_velocity, float m
 
     float sign_to_target = signum(to_target);
 
-    if(my_angular_velocity < 0.00001)
+    if(fabs(my_angular_velocity) < 0.00001)
     {
         return sign_to_target * max_angular_acceleration;
     }
