@@ -1561,6 +1561,7 @@ void cpu_state::ustep()
 
         my_move.type = KEEP;
         my_move.radius = dist;
+        my_move.id = id;
 
         blocking_status[(int)hardware::T_DRIVE] = 1;
         waiting_for_hardware_feedback = true;
