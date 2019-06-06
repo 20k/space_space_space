@@ -4744,7 +4744,9 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                     c.radar_restrict_angle = d2r(file[8].value);
                 }
 
-                file[8].set_int(round(r2d(c.radar_restrict_angle)));
+                float in_deg = round(r2d(c.radar_restrict_angle));
+
+                file[8].set_int(in_deg);
             }
         }
 
