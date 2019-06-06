@@ -4965,26 +4965,35 @@ vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, doub
     ///v2 = u2 + 2as
     ///v2 = 0
     ///-u2 = 2as
-    ///u2 / (2a) = stopping distance
+    ///-u2 / (2a) = stopping distance
 
-    if(remaining_control_force <= 0.0001)
+    if(remaining_control_force <= 0.00001)
         return control_force;
 
     vec2f velocity_in_parallel = projection(my_velocity, to_target);
 
     float linear_velocity_in_parallel = velocity_in_parallel.length();
 
-    if(linear_velocity_in_parallel)
+    if(linear_velocity_in_parallel < 0.00001)
     {
         control_force += to_target * remaining_control_force;
         return control_force;
     }
 
-    double suvat_stop_distance = linear_velocity_in_parallel * linear_velocity_in_parallel / (2 * remaining_control_force);
+    float mult = 1;
 
-    float distance_to_target = to_target.length();
+    if(angle_between_vectors(to_target, velocity_in_parallel) > M_PI/2)
+        mult = -1;
 
-    if(suvat_stop_distance >= distance_to_target - 10)
+    double suvat_stop_distance = -(linear_velocity_in_parallel * linear_velocity_in_parallel) / (-2 * max_acceleration);
+
+    //suvat_stop_distance = fabs(suvat_stop_distance);
+
+    float distance_to_target = (target - my_position).length();
+
+    std::cout << "SUVAT " << suvat_stop_distance << " DIST " << distance_to_target << std::endl;
+
+    if(suvat_stop_distance >= distance_to_target - 5 && suvat_stop_distance > 0 && mult > 0)
     {
         control_force += -to_target * remaining_control_force;
         return control_force;
@@ -5218,14 +5227,18 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
             //vec2f relative_velocity = s.velocity - velocity;
         }
 
+        float available_thrust = s.get_max_velocity_thrust();
+
         //vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
 
-        vec2f target_force = get_control_force(move_to, s.velocity, s.r.position, 1);
+        vec2f target_force = get_control_force(move_to, s.velocity, s.r.position, available_thrust);
 
+        vec2f final_force = (target_force.norm() * dt_s + avoid_force.norm() * available_thrust * dt_s).norm();
 
-        vec2f final_force = (target_force.norm() + avoid_force.norm()).norm();
+        //s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
 
-        s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
+        s.velocity += final_force * available_thrust * dt_s;
+
         s.set_thrusters_active(1);
 
         vec2f crot = (vec2f){1, 0}.rot(s.r.rotation);
