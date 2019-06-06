@@ -401,6 +401,9 @@ struct component : serialisable, owned
     bool last_activation_successful = false;
     //component_info::activation_type activation_type = component_info::NO_ACTIVATION;
 
+    float radar_offset_angle = 0;
+    float radar_restrict_angle = M_PI;
+
     ///time this component has been nearly empty enough to remove
     std::optional<fixed_clock> bad_time;
 
@@ -446,6 +449,8 @@ struct component : serialisable, owned
         DO_SERIALISE(last_activation_successful);
         DO_SERIALISE(building);
         DO_SERIALISE(build_queue);
+        DO_SERIALISE(radar_offset_angle);
+        DO_SERIALISE(radar_restrict_angle);
 
         if(base_id == component_type::CPU)
         {

@@ -96,6 +96,8 @@ struct alt_frequency_packet
         summed_intensity += intensity;
     }
 
+    void restrict(float offset, float angle);
+
     void make_from(const std::vector<float>& intens, const std::vector<double>& freq, float fraction)
     {
         for(int i=0; i < (int)intens.size(); i++)

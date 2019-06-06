@@ -240,6 +240,17 @@ void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
     //en.ignore_packets[packet_id].restart();
 }
 
+void alt_frequency_packet::restrict(float offset, float angle)
+{
+    start_angle = offset;
+    precalculated_start_angle = (vec2f){1, 0}.rot(offset);
+    restrict_angle = angle;
+    cos_restrict_angle = cos(restrict_angle);
+
+    left_restrict = (vec2f){1, 0}.rot(start_angle - restrict_angle);
+    right_restrict = (vec2f){1, 0}.rot(start_angle + restrict_angle);
+}
+
 std::optional<reflect_info>
 alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_entity& collide, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive)
 {
