@@ -5138,7 +5138,16 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         vec2f to_dest = move_to - start_pos;
 
-        vec2f additional_force = {0,0};
+        ///collision avoidance here
+        if(to_dest.length() < 20)
+        {
+            unblock_cpu_hardware(s, hardware::T_DRIVE);
+            s.travelling_in_realspace = false;
+
+            return;
+        }
+
+        /*vec2f additional_force = {0,0};
 
         if(to_dest.length() < 150)
         {
@@ -5155,10 +5164,12 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
             unblock_cpu_hardware(s, hardware::T_DRIVE);
             s.travelling_in_realspace = false;
             return;
-        }
+        }*/
 
         float search_distance = 50;
         vec2f centre = s.r.position + to_dest.norm() * 10 + (to_dest.norm() * search_distance) / 2.f;
+
+        vec2f avoid_force = {0,0};
 
         ///colliding with all entities!!! not just stuff in sensor range!
         if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
@@ -5202,12 +5213,17 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
                 }
             }
 
-            to_dest = perpendicular_direction.norm() * burn_dir;
+            avoid_force = perpendicular_direction.norm() * burn_dir;
 
             //vec2f relative_velocity = s.velocity - velocity;
         }
 
-        vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
+        //vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
+
+        vec2f target_force = get_control_force(move_to, s.velocity, s.r.position, 1);
+
+
+        vec2f final_force = (target_force.norm() + avoid_force.norm()).norm();
 
         s.apply_force(final_force.rot(-s.r.rotation) * dt_s);
         s.set_thrusters_active(1);
