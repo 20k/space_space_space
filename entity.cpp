@@ -892,7 +892,7 @@ void entity_manager::handle_aggregates()
         }
     }
 
-    all_aggregates<entity*> nsecond = collect_aggregates(my_entities, 10);
+    all_aggregates<entity*> nsecond = collect_aggregates(my_entities, 20);
 
     collision.data.clear();
     collision.data.reserve(nsecond.data.size());

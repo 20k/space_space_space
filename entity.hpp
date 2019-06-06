@@ -112,6 +112,9 @@ struct entity : serialisable, owned
     vec2f get_pos();
     vec2f get_dim();
 
+    entity(){}
+    entity(temporary_owned tmp) : owned(tmp){}
+
     virtual void pre_collide(entity& other){}
     virtual void on_collide(entity_manager& em, entity& other){}
 

@@ -1952,6 +1952,8 @@ void ship::tick(double dt_s)
             em.make(20000 * c.get_operating_efficiency() * d.recharge * radar_intensity_composition[i], radar_frequency_composition[i]);
         }
 
+        em.restrict(c.radar_offset_angle, c.radar_restrict_angle);
+
         radar.emit(em, r.position, *this);
     }
 
@@ -4727,6 +4729,23 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 file[9].set_int(c.last_activation_successful);
                 file[9].help = "Was last activation successful?";
             }
+
+            if(c.base_id == component_type::RADAR)
+            {
+                if(file[7].is_int() && file[7].value > 0)
+                {
+                    c.radar_offset_angle = d2r(file[7].value);
+                }
+
+                file[7].set_int(round(r2d(c.radar_offset_angle)));
+
+                if(file[8].is_int() && file[8].value > 0)
+                {
+                    c.radar_restrict_angle = d2r(file[8].value);
+                }
+
+                file[8].set_int(round(r2d(c.radar_restrict_angle)));
+            }
         }
 
         std::map<int, int> them_type_counts;
@@ -5167,7 +5186,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
     if(is_move)
     {
-        vec2f move_to = {s.move_args.x, s.move_args.y};
+        const vec2f move_to = {s.move_args.x, s.move_args.y};
 
         /*if(target)
         {
@@ -5179,8 +5198,30 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         vec2f to_dest = move_to - start_pos;
 
+
+        float extra_lax_distance = 0;
+
+        {
+            entity dtest(temporary_owned{});
+            dtest.r.init_rectangular({50, 50});
+            dtest.r.position = move_to;
+            dtest.r.rotation = 0;
+
+            ///check for bad target
+            for(auto& i : s.last_sample.renderables)
+            {
+                entity tent(temporary_owned{});
+                tent.r = i.property.r;
+
+                if(collides(dtest, tent))
+                {
+                    extra_lax_distance += i.property.r.approx_dim.length() * 2 * 1.5;
+                }
+            }
+        }
+
         ///collision avoidance here
-        if(to_dest.length() < s.move_args.lax_distance)
+        if(to_dest.length() < s.move_args.lax_distance + extra_lax_distance)
         {
             unblock_cpu_hardware(s, hardware::T_DRIVE);
             s.travelling_in_realspace = false;
