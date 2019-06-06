@@ -1303,6 +1303,16 @@ void cpu_state::ustep()
         R(next[0]) = files[context.held_file].name;
         break;
 
+    case FIDX:
+    {
+        if(context.held_file == -1)
+            throw std::runtime_error("Not holding file [FIDX]");
+
+        R(next[0]).set_int(files[context.held_file].file_pointer);
+        break;
+    }
+
+
     case SEEK:
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [SEEK]");
@@ -2241,6 +2251,43 @@ void cpu_tests()
         test.step();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == std::numeric_limits<int>::lowest());
+    }
+
+    ///fidx
+    {
+        cpu_state test;
+        test.add_line("MAKE 1234");
+        test.add_line("FIDX X0");
+        test.add_line("RSIZ 54");
+        test.add_line("FIDX X0");
+        test.add_line("COPY F X0");
+        test.add_line("FIDX X0");
+        test.add_line("RSIZ 0");
+        test.add_line("FIDX X0");
+
+        register_value& x0 = test.context.register_states[(int)registers::GENERAL_PURPOSE0];
+
+        test.step();
+        test.step();
+
+        assert(x0.value == 0);
+
+        test.step();
+        test.step();
+
+        assert(x0.value == 0);
+
+        test.step();
+        test.step();
+
+        assert(test.files[test.context.held_file].file_pointer == 1);
+
+        assert(x0.value == 1);
+
+        test.step();
+        test.step();
+
+        assert(x0.value == 0);
     }
 
     //exit(0);
