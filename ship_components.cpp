@@ -4927,7 +4927,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
     }
 }
 
-vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, double max_acceleration)
+vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, double max_acceleration, float lax_distance)
 {
     vec2f to_target = (target - my_position).norm();
 
@@ -4991,7 +4991,7 @@ vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, doub
 
     //std::cout << "SUVAT " << suvat_stop_distance << " DIST " << distance_to_target << std::endl;
 
-    if(suvat_stop_distance >= distance_to_target - 5 && suvat_stop_distance > 0 && mult > 0)
+    if(suvat_stop_distance >= distance_to_target - (10 + lax_distance) && suvat_stop_distance > 0 && mult > 0)
     {
         control_force += -to_target * remaining_control_force;
         return control_force;
@@ -5146,7 +5146,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         vec2f to_dest = move_to - start_pos;
 
         ///collision avoidance here
-        if(to_dest.length() < 20)
+        if(to_dest.length() < s.move_args.lax_distance)
         {
             unblock_cpu_hardware(s, hardware::T_DRIVE);
             s.travelling_in_realspace = false;
@@ -5229,7 +5229,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         //vec2f final_force = (to_dest.norm() + additional_force.norm()).norm();
 
-        vec2f target_force = get_control_force(move_to, s.velocity, s.r.position, available_thrust);
+        vec2f target_force = get_control_force(move_to, s.velocity, s.r.position, available_thrust, s.move_args.lax_distance);
 
         vec2f final_force = (target_force.norm() * dt_s + avoid_force.norm() * available_thrust * dt_s).norm();
 

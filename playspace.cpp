@@ -1102,6 +1102,7 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
         }
 
         s.travelling_in_realspace = true;
+        s.move_args.lax_distance = e.value()->r.approx_dim.length() * 2 * 1.5 + 5;
 
         return true;
     }
@@ -1133,6 +1134,7 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
             return false;
 
         s.travelling_in_realspace = true;
+        s.move_args.lax_distance = 5;
 
         return true;
     }

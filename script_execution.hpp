@@ -375,6 +375,7 @@ struct cpu_move_args : serialisable
     float x = 0;
     float y = 0;
     float angle = 0;
+    float lax_distance = 0;
 
     instructions::type type = instructions::COUNT;
 

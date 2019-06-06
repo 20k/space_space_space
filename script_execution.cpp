@@ -155,6 +155,7 @@ SERIALISE_BODY(cpu_move_args)
     DO_SERIALISE(x);
     DO_SERIALISE(y);
     DO_SERIALISE(angle);
+    DO_SERIALISE(lax_distance);
 }
 
 bool all_numeric(const std::string& str)
