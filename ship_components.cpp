@@ -4738,6 +4738,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 }
 
                 file[7].set_int(round(r2d(c.radar_offset_angle)));
+                file[7].help = "Radar Direction (degrees) Hardware Mapped IO"
 
                 if(file[8].is_int() && file[8].value > 0)
                 {
@@ -4747,6 +4748,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 float in_deg = round(r2d(c.radar_restrict_angle));
 
                 file[8].set_int(in_deg);
+                file[8].help = "Radar Send Angle (degrees) Hardware Mapped IO";
             }
         }
 
