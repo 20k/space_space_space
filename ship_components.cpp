@@ -4927,6 +4927,32 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
     }
 }
 
+float get_angular_control_force(float target, float my_angular_velocity, float my_angle, float max_angular_acceleration)
+{
+    float to_target = signed_angle_between_vectors((vec2f){1, 0}.rot(my_angle), (vec2f){1, 0}.rot(target));
+
+    float sign_to_target = signum(to_target);
+
+    if(my_angular_velocity < 0.00001)
+    {
+        return sign_to_target * max_angular_acceleration;
+    }
+
+    if(max_angular_acceleration <= 0.000001)
+        return sign_to_target * max_angular_acceleration;
+
+    float distance_to_decel = -my_angular_velocity * my_angular_velocity / (-2 * max_angular_acceleration);
+
+    if(distance_to_decel >= fabs(to_target) - M_PI/256 && signum(to_target) == signum(my_angular_velocity))
+    {
+        return -sign_to_target * max_angular_acceleration;
+    }
+    else
+    {
+        return sign_to_target * max_angular_acceleration;
+    }
+}
+
 vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, double max_acceleration, float lax_distance)
 {
     vec2f to_target = (target - my_position).norm();
@@ -5108,7 +5134,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         float signed_angle = signed_angle_between_vectors((vec2f){1, 0}.rot(s.r.rotation), (vec2f){1, 0}.rot(target_angle));
 
-        float per_tick = max_turn_rate * dt_s;
+        /*float per_tick = max_turn_rate * dt_s;
 
         if(fabs(per_tick) > fabs(signed_angle))
         {
@@ -5117,11 +5143,14 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
         float rotation_force = signum(per_tick) * dt_s;
 
-        s.apply_rotation_force(rotation_force);
+        s.apply_rotation_force(rotation_force);*/
+
+        float angular = get_angular_control_force(target_angle, s.angular_velocity, s.r.rotation, max_turn_rate) * dt_s;
+
+        s.angular_velocity += angular;
 
         ///need to slow down again as well
-
-        if(fabs(signed_angle) < M_PI/64)
+        if(fabs(signed_angle) < M_PI/32 && fabs(s.angular_velocity) < M_PI/64)
         {
             unblock_cpu_hardware(s, hardware::T_DRIVE);
             s.travelling_in_realspace = false;
