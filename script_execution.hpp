@@ -395,14 +395,12 @@ struct cpu_move_args : serialisable
     SERIALISE_SIGNATURE_SIMPLE(cpu_move_args);
 };
 
-struct hardware_request : serialisable
+struct hardware_request
 {
     bool has_request = false;
     instructions::type type = instructions::COUNT;
     size_t id = -1;
     std::vector<register_value*> registers;
-
-    SERIALISE_SIGNATURE_SIMPLE(hardware_request);
 };
 
 struct custom_instruction

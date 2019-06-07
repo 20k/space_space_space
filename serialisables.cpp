@@ -73,7 +73,6 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, cpu_stat
     DO_SERIALISE(all_stash);
     DO_SERIALISE(files);
     DO_SERIALISE(inst);
-    DO_SERIALISE(hw_req);
     DO_SERIALISE(context);
 
     DO_SERIALISE(free_running);
