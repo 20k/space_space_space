@@ -6,6 +6,8 @@
 #include <string>
 #include "time.hpp"
 #include <vec/vec.hpp>
+#include "ship_components.hpp"
+#include "playspace.hpp"
 
 void strip_whitespace(std::string& in)
 {
@@ -856,6 +858,17 @@ void cpu_state::step(ship* s, playspace_manager* play, playspace* space, room* r
     }
 }
 
+bool entity_visible_to(entity* e, ship& s)
+{
+    for(auto& i : s.last_sample.renderables)
+    {
+        if(e->_pid == i.uid)
+            return true;
+    }
+
+    return false;
+}
+
 void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* r)
 {
     if(waiting_for_hardware_feedback || tx_pending)
@@ -1550,56 +1563,77 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         break;
     }
 
-    /*case TANG:
+    case TANG:
     {
-        hw_req = decltype(hw_req)();
+        if(s == nullptr || r == nullptr)
+            throw std::runtime_error("Cannot be used while not in a POI, or invalid ship [TANG]");
 
-        ///ALWAYS FIRST
-        hw_req.id = RN(next[0]).value;
-        hw_req.has_request = true;
-        hw_req.type = TANG;
-        hw_req.registers.push_back(&R(next[1]));
+        size_t id = RN(next[0]).value;
 
+        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+
+        if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
+            break;
+
+        vec2f to_them = e_opt.value()->r.position - s->r.position;
+
+        R(next[1]).set_int(round(r2d(to_them.angle())));
         break;
     }
+
     case TDST:
     {
-        hw_req = decltype(hw_req)();
+        if(s == nullptr || r == nullptr)
+            throw std::runtime_error("Cannot be used while not in a POI, or invalid ship [TDST]");
 
-        ///ALWAYS FIRST
-        hw_req.id = RN(next[0]).value;
-        hw_req.has_request = true;
-        hw_req.type = TDST;
-        hw_req.registers.push_back(&R(next[1]));
+        size_t id = RN(next[0]).value;
 
+        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+
+        if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
+            break;
+
+        vec2f to_them = e_opt.value()->r.position - s->r.position;
+
+        R(next[1]).set_int(round(to_them.length()));
         break;
     }
+
     case TPOS:
     {
-        hw_req = decltype(hw_req)();
+        if(s == nullptr || r == nullptr)
+            throw std::runtime_error("Cannot be used while not in a POI, or invalid ship [TPOS]");
 
-        ///ALWAYS FIRST
-        hw_req.id = RN(next[0]).value;
-        hw_req.has_request = true;
-        hw_req.type = TPOS;
-        hw_req.registers.push_back(&R(next[1]));
-        hw_req.registers.push_back(&R(next[2]));
+        size_t id = RN(next[0]).value;
 
+        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+
+        if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
+            break;
+
+        R(next[1]).set_int(round(e_opt.value()->r.position.x()));
+        R(next[2]).set_int(round(e_opt.value()->r.position.y()));
         break;
     }
+
     case TREL:
     {
-        hw_req = decltype(hw_req)();
+        if(s == nullptr || r == nullptr)
+            throw std::runtime_error("Cannot be used while not in a POI, or invalid ship [TPOS]");
 
-        ///ALWAYS FIRST
-        hw_req.id = RN(next[0]).value;
-        hw_req.has_request = true;
-        hw_req.type = TREL;
-        hw_req.registers.push_back(&R(next[1]));
-        hw_req.registers.push_back(&R(next[2]));
+        size_t id = RN(next[0]).value;
 
+        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+
+        if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
+            break;
+
+        vec2f to_them = e_opt.value()->r.position - s->r.position;
+
+        R(next[1]).set_int(round(to_them.x()));
+        R(next[2]).set_int(round(to_them.y()));
         break;
-    }*/
+    }
 
     case COUNT:
         throw std::runtime_error("Unreachable?");
