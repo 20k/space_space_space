@@ -4710,32 +4710,30 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
             ///???
             if(c.has_tag(tag_info::TAG_WEAPON))
             {
-                /*if(file.len() > 7 && file[0].is_int() && file[0].value >= 0)
-                {
-                    c.try_use = true;
-                }*/
-
                 file[7].set_int(c.last_could_use);
                 file[7].help = "Can be fired";
 
-                /*if(file[8].is_int())
+                if(file[8].is_int() && file[8].value != INT_MIN)
                 {
                     c.use_angle = d2r(file[8].value);
-                }*/
+                }
 
-                file[8].set_int(round(r2d(c.use_angle)));
+                file[8].set_int(INT_MIN);
                 file[8].help = "Target Angle Hardware Mapped IO";
 
-                if(file[9].is_int() && file[9].value > 0)
+                file[9].set_int(round(r2d(c.use_angle)));
+                file[9].help = "Current Weapon Angle";
+
+                if(file[10].is_int() && file[10].value > 0)
                 {
                     c.try_use = true;
                 }
 
-                file[9].set_int(-1);
-                file[9].help = "Activate Weapon Hardware Mapped IO";
+                file[10].set_int(-1);
+                file[10].help = "Activate Weapon Hardware Mapped IO";
 
-                file[10].set_int(c.last_activation_successful);
-                file[10].help = "Was last activation successful?";
+                file[11].set_int(c.last_activation_successful);
+                file[11].help = "Was last activation successful?";
             }
 
             if(c.base_id == component_type::RADAR)
