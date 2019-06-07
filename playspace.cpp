@@ -1101,7 +1101,7 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
         {
             float distance_away = s.move_args.radius;
 
-            vec2f absolute_keep_position = (s.r.position - e.value()->r.position).norm() * distance_away;
+            vec2f absolute_keep_position = (s.r.position - e.value()->r.position).norm() * distance_away + e.value()->r.position;
 
             s.move_args.x = absolute_keep_position.x();
             s.move_args.y = absolute_keep_position.y();
