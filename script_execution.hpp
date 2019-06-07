@@ -215,6 +215,9 @@ namespace instructions
         ATRN, ///absolute angle ///wait can't do both because its only 1 arg
         RTRN, ///degrees, should i bother to have an id version?
         TFIN, ///test if is finished
+        TANG,
+        TDST,
+        TPOS,
         COUNT,
     };
 
@@ -273,6 +276,9 @@ namespace instructions
         "ATRN",
         "RTRN",
         "TFIN", ///test if finished
+        "TANG", ///get angle of target from me
+        "TDST", ///distance
+        "TPOS", ///position
     };
 
     type fetch(const std::string& name);
@@ -386,6 +392,16 @@ struct cpu_move_args : serialisable
     SERIALISE_SIGNATURE();
 };
 
+struct hardware_request : serialisable
+{
+    bool has_request = false;
+    instructions::type type = instructions::COUNT;
+    size_t id = -1;
+    std::vector<register_value*> registers;
+
+    SERIALISE_SIGNATURE_SIMPLE(hardware_request);
+};
+
 struct custom_instruction
 {
     std::string name;
@@ -403,6 +419,7 @@ struct cpu_state : serialisable, owned
     std::vector<custom_instruction> custom;
 
     std::vector<instruction> inst;
+    hardware_request hw_req;
 
     cpu_stash context;
 

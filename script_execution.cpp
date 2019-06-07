@@ -115,6 +115,7 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_SERIALISE(all_stash);
     DO_SERIALISE(files);
     DO_SERIALISE(inst);
+    DO_SERIALISE(hw_req);
     DO_SERIALISE(context);
 
     DO_SERIALISE(free_running);
@@ -156,6 +157,13 @@ SERIALISE_BODY(cpu_move_args)
     DO_SERIALISE(y);
     DO_SERIALISE(angle);
     DO_SERIALISE(lax_distance);
+}
+
+SERIALISE_BODY_SIMPLE(hardware_request)
+{
+    DO_SERIALISE(has_request);
+    DO_SERIALISE(type);
+    DO_SERIALISE(id);
 }
 
 bool all_numeric(const std::string& str)
@@ -970,7 +978,7 @@ void cpu_state::step()
 
 void cpu_state::ustep()
 {
-    if(waiting_for_hardware_feedback || tx_pending)
+    if(waiting_for_hardware_feedback || tx_pending || hw_req.has_request)
         return;
 
     should_step = false;
@@ -1661,6 +1669,45 @@ void cpu_state::ustep()
 
         break;
     }
+
+    case TANG:
+    {
+        hw_req = decltype(hw_req)();
+
+        ///ALWAYS FIRST
+        hw_req.id = RN(next[0]).value;
+        hw_req.has_request = true;
+        hw_req.type = TANG;
+        hw_req.registers.push_back(&R(next[1]));
+
+        break;
+    }
+    case TDST:
+    {
+        hw_req = decltype(hw_req)();
+
+        ///ALWAYS FIRST
+        hw_req.id = RN(next[0]).value;
+        hw_req.has_request = true;
+        hw_req.type = TDST;
+        hw_req.registers.push_back(&R(next[1]));
+
+        break;
+    }
+    case TPOS:
+    {
+        hw_req = decltype(hw_req)();
+
+        ///ALWAYS FIRST
+        hw_req.id = RN(next[0]).value;
+        hw_req.has_request = true;
+        hw_req.type = TDST;
+        hw_req.registers.push_back(&R(next[1]));
+        hw_req.registers.push_back(&R(next[2]));
+
+        break;
+    }
+
     case COUNT:
         throw std::runtime_error("Unreachable?");
     }
