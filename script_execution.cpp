@@ -1587,6 +1587,19 @@ void cpu_state::ustep()
 
         break;
     }
+    case TREL:
+    {
+        hw_req = decltype(hw_req)();
+
+        ///ALWAYS FIRST
+        hw_req.id = RN(next[0]).value;
+        hw_req.has_request = true;
+        hw_req.type = TREL;
+        hw_req.registers.push_back(&R(next[1]));
+        hw_req.registers.push_back(&R(next[2]));
+
+        break;
+    }
 
     case COUNT:
         throw std::runtime_error("Unreachable?");

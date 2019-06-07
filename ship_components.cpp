@@ -4783,7 +4783,7 @@ void update_alive_ids(cpu_state& cpu, const std::vector<size_t>& ids)
 {
     for(int i=0; i < (int)cpu.files.size(); i++)
     {
-        if(cpu.files[i].owner == -1)
+        if(cpu.files[i].owner == (size_t)-1)
             continue;
 
         bool found = false;
@@ -4825,7 +4825,48 @@ void check_audio_hardware(cpu_state& cpu, size_t my_pid)
 
 void check_hardware_requests(ship& s, playspace_manager& play, playspace* space, room* r, cpu_state& cpu)
 {
+    if(!cpu.hw_req.has_request)
+        return;
 
+    cpu.hw_req.has_request = false;
+
+    std::optional<entity*> e_opt = r->entity_manage->fetch(cpu.hw_req.id);
+
+    if(!e_opt.has_value())
+        return;
+
+    vec2f dest_pos = e_opt.value()->r.position;
+    vec2f to_dest = dest_pos - s.r.position;
+
+    if(cpu.hw_req.type == instructions::TANG)
+    {
+        assert(cpu.hw_req.registers.size() == 1);
+
+        cpu.hw_req.registers[0]->set_int(round(r2d(to_dest.angle())));
+    }
+
+    if(cpu.hw_req.type == instructions::TDST)
+    {
+        assert(cpu.hw_req.registers.size() == 1);
+
+        cpu.hw_req.registers[0]->set_int(round(to_dest.length()));
+    }
+
+    if(cpu.hw_req.type == instructions::TPOS)
+    {
+        assert(cpu.hw_req.registers.size() == 2);
+
+        cpu.hw_req.registers[0]->set_int(round(dest_pos.x()));
+        cpu.hw_req.registers[1]->set_int(round(dest_pos.y()));
+    }
+
+    if(cpu.hw_req.type == instructions::TREL)
+    {
+        assert(cpu.hw_req.registers.size() == 2);
+
+        cpu.hw_req.registers[0]->set_int(round(to_dest.x()));
+        cpu.hw_req.registers[1]->set_int(round(to_dest.y()));
+    }
 }
 
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)

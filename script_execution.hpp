@@ -219,6 +219,7 @@ namespace instructions
         TANG,
         TDST,
         TPOS,
+        TREL,
         COUNT,
     };
 
@@ -280,6 +281,7 @@ namespace instructions
         "TANG", ///get angle of target from me
         "TDST", ///distance
         "TPOS", ///position
+        "TREL", ///relative position
     };
 
     type fetch(const std::string& name);
