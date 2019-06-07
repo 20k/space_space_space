@@ -395,19 +395,26 @@ struct cpu_move_args : serialisable
     SERIALISE_SIGNATURE_SIMPLE(cpu_move_args);
 };
 
-struct hardware_request
+/*struct hardware_request
 {
     bool has_request = false;
     instructions::type type = instructions::COUNT;
     size_t id = -1;
     std::vector<register_value*> registers;
-};
+};*/
 
 struct custom_instruction
 {
     std::string name;
     std::vector<std::string> args;
 };
+
+///basically because its too hard to do
+///hardware requests properly
+struct playspace_manager;
+struct playspace;
+struct room;
+struct ship;
 
 ///increasingly untenable to keep this divorced from ship systems
 ///not convinced its worthwhile
@@ -422,7 +429,7 @@ struct cpu_state : serialisable, owned
     std::vector<custom_instruction> custom;
 
     std::vector<instruction> inst;
-    hardware_request hw_req;
+    //hardware_request hw_req;
 
     cpu_stash context;
 
@@ -447,8 +454,9 @@ struct cpu_state : serialisable, owned
 
     bool any_blocked();
 
-    void ustep();
-    void step();
+    void ustep(ship* s, playspace_manager* play, playspace* space, room* r);
+    void step(ship* s, playspace_manager* play, playspace* space, room* r);
+    void nullstep();
 
     void debug_state();
 

@@ -1957,15 +1957,6 @@ void ship::tick(double dt_s)
         radar.emit(em, r.position, *this);
     }
 
-    for(component& c : components)
-    {
-        if(!c.has_tag(tag_info::TAG_CPU))
-            continue;
-
-        if(c.cpu_core.free_running || c.cpu_core.should_step)
-            c.cpu_core.step();
-    }
-
     ///item uses
     for(component& c : components)
     {
@@ -4823,7 +4814,7 @@ void check_audio_hardware(cpu_state& cpu, size_t my_pid)
     }
 }
 
-void check_hardware_requests(ship& s, playspace_manager& play, playspace* space, room* r, cpu_state& cpu)
+/*void check_hardware_requests(ship& s, playspace_manager& play, playspace* space, room* r, cpu_state& cpu)
 {
     if(!cpu.hw_req.has_request)
         return;
@@ -4881,7 +4872,7 @@ void check_hardware_requests(ship& s, playspace_manager& play, playspace* space,
         cpu.hw_req.registers[0]->set_int(round(to_dest.x()));
         cpu.hw_req.registers[1]->set_int(round(to_dest.y()));
     }
-}
+}*/
 
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
@@ -4904,7 +4895,7 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
 
         update_alive_ids(cpu, ids);
 
-        check_hardware_requests(s, play, space, r, cpu);
+        //check_hardware_requests(s, play, space, r, cpu);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())
@@ -5500,6 +5491,18 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
             play.enter_room(this, found.value());
         }
     }*/
+}
+
+void ship::step_cpus(playspace_manager& play, playspace* space, room* r)
+{
+    for(component& c : components)
+    {
+        if(!c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        if(c.cpu_core.free_running || c.cpu_core.should_step)
+            c.cpu_core.step(this, &play, space, r);
+    }
 }
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)

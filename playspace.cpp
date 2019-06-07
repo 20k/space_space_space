@@ -642,6 +642,7 @@ void playspace_manager::tick(double dt_s)
             for(ship* s : ships)
             {
                 s->check_space_rules(dt_s, *this, play, r);
+                s->step_cpus(*this, play, r);
             }
         }
 
@@ -650,6 +651,7 @@ void playspace_manager::tick(double dt_s)
         for(ship* s : ships)
         {
             s->check_space_rules(dt_s, *this, play, nullptr);
+            s->step_cpus(*this, play, nullptr);
         }
     }
 

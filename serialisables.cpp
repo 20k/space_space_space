@@ -116,12 +116,12 @@ SERIALISE_BODY_SIMPLE(cpu_move_args)
     DO_SERIALISE(lax_distance);
 }
 
-SERIALISE_BODY_SIMPLE(hardware_request)
+/*SERIALISE_BODY_SIMPLE(hardware_request)
 {
     DO_SERIALISE(has_request);
     DO_SERIALISE(type);
     DO_SERIALISE(id);
-}
+}*/
 
 void cpu_state::inc_pc_rpc()
 {

@@ -784,6 +784,7 @@ struct ship : heatable_entity
     //void render(sf::RenderWindow& win);
 
     void check_space_rules(double dt_s, playspace_manager& play, playspace* space, room* r);
+    void step_cpus(playspace_manager& play, playspace* space, room* r);
 
     void add(const component& c);
 

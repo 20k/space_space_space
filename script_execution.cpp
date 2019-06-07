@@ -843,11 +843,11 @@ struct f_register_helper
     }
 };
 
-void cpu_state::step()
+void cpu_state::step(ship* s, playspace_manager* play, playspace* space, room* r)
 {
     try
     {
-        ustep();
+        ustep(s, play, space, r);
     }
     catch(std::runtime_error& err)
     {
@@ -856,9 +856,9 @@ void cpu_state::step()
     }
 }
 
-void cpu_state::ustep()
+void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* r)
 {
-    if(waiting_for_hardware_feedback || tx_pending || hw_req.has_request)
+    if(waiting_for_hardware_feedback || tx_pending)
         return;
 
     should_step = false;
@@ -1550,7 +1550,7 @@ void cpu_state::ustep()
         break;
     }
 
-    case TANG:
+    /*case TANG:
     {
         hw_req = decltype(hw_req)();
 
@@ -1599,7 +1599,7 @@ void cpu_state::ustep()
         hw_req.registers.push_back(&R(next[2]));
 
         break;
-    }
+    }*/
 
     case COUNT:
         throw std::runtime_error("Unreachable?");
@@ -1989,6 +1989,11 @@ void cpu_state::check_for_bad_files()
     }
 }
 
+void cpu_state::nullstep()
+{
+    step(nullptr, nullptr, nullptr, nullptr);
+}
+
 void cpu_tests()
 {
     assert(instructions::rnames.size() == instructions::COUNT);
@@ -2000,26 +2005,26 @@ void cpu_tests()
         test.add_line("COPY 7 T");
         test.add_line("ADDI X T X");
 
-        test.step();
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
+        test.nullstep();
 
         test.debug_state();
 
         test.add_line("COPY 0 X");
         test.add_line("COPY 0 T");
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
 
         test.add_line("MARK MY_LAB");
         test.add_line("ADDI X 1 X");
         test.add_line("JUMP MY_LAB");
 
-        test.step();
-        test.step();
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
+        test.nullstep();
+        test.nullstep();
 
         test.debug_state();
     }
@@ -2030,8 +2035,8 @@ void cpu_tests()
         test.add_line("COPY 53 X");
         test.add_line("TEST 54 > X");
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
         test.debug_state();
     }
 
@@ -2041,8 +2046,8 @@ void cpu_tests()
         test.add_line("COPY 53 X");
         test.add_line("TEST 54 = X");
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
         test.debug_state();
     }
 
@@ -2051,7 +2056,7 @@ void cpu_tests()
         //test.add({"RAND", "0", "15", "X"});
         test.add_line("RAND 0 15 X");
 
-        test.step();
+        test.nullstep();
 
         test.debug_state();
     }
@@ -2060,7 +2065,7 @@ void cpu_tests()
         cpu_state test;
         test.add_line("WARP 123");
 
-        test.step();
+        test.nullstep();
 
         assert(test.ports[(int)hardware::W_DRIVE].value == 123);
 
@@ -2097,18 +2102,18 @@ void cpu_tests()
         test.add_line("TEST EOF");
         test.add_line("WIPE");
 
-        test.step(); //make
-        test.step(); //eof
+        test.nullstep(); //make
+        test.nullstep(); //eof
 
         assert(test.context.register_states[(int)registers::TEST].value == 1);
 
-        test.step(); //rsiz
-        test.step(); //test
+        test.nullstep(); //rsiz
+        test.nullstep(); //test
 
         assert(test.context.register_states[(int)registers::TEST].value == 0);
 
-        test.step(); //copy
-        test.step(); //test
+        test.nullstep(); //copy
+        test.nullstep(); //test
 
         assert(test.context.register_states[(int)registers::TEST].value == 1);
 
@@ -2122,28 +2127,28 @@ void cpu_tests()
 
         test.add_line("SWIZ 8567 3214 X");
 
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 5678);
 
         test.add_line("SWIZ 1234 0003 X");
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 2);
 
         test.add_line("SWIZ 5678 3 X");
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 6);
 
         test.add_line("SWIZ 5678 32 X");
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == 67);
 
 
         test.add_line("SWIZ 5678 -32 X");
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == -67);
     }
@@ -2153,7 +2158,7 @@ void cpu_tests()
         cpu_state test;
         test.add_line("ADDI " + std::to_string(std::numeric_limits<int>::max()) + " 1 X0");
 
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == std::numeric_limits<int>::max());
     }
@@ -2163,7 +2168,7 @@ void cpu_tests()
         cpu_state test;
         test.add_line("ADDI " + std::to_string(std::numeric_limits<int>::lowest()) + " -1 X0");
 
-        test.step();
+        test.nullstep();
 
         assert(test.context.register_states[(int)registers::GENERAL_PURPOSE0].value == std::numeric_limits<int>::lowest());
     }
@@ -2182,25 +2187,25 @@ void cpu_tests()
 
         register_value& x0 = test.context.register_states[(int)registers::GENERAL_PURPOSE0];
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
 
         assert(x0.value == 0);
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
 
         assert(x0.value == 0);
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
 
         assert(test.files[test.context.held_file].file_pointer == 1);
 
         assert(x0.value == 1);
 
-        test.step();
-        test.step();
+        test.nullstep();
+        test.nullstep();
 
         assert(x0.value == 0);
     }
