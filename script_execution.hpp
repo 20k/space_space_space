@@ -408,6 +408,8 @@ struct custom_instruction
     std::vector<std::string> args;
 };
 
+///increasingly untenable to keep this divorced from ship systems
+///not convinced its worthwhile
 struct cpu_state : serialisable, owned
 {
     cpu_state();
