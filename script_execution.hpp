@@ -5,6 +5,7 @@
 #include <vector>
 #include <networking/serialisable_fwd.hpp>
 #include "audio.hpp"
+#include <networking/netinterpolate.hpp>
 
 namespace registers
 {
@@ -151,6 +152,8 @@ struct register_value : serialisable
     register_value& decode(cpu_state& state, cpu_stash& stash);
 
     SERIALISE_SIGNATURE();
+
+    ~register_value();
 };
 
 ///so extensions to exapunks syntax

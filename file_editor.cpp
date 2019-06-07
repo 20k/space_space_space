@@ -5,6 +5,7 @@
 #include <stdint.h>     // uint8_t, etc.
 #include <sstream>
 #include <iomanip>
+#include <math.h>
 
 #define _PRISizeT   "z"
 #define ImSnprintf  snprintf

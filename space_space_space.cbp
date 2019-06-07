@@ -234,6 +234,8 @@
 		<Unit filename="random.hpp" />
 		<Unit filename="script_execution.cpp" />
 		<Unit filename="script_execution.hpp" />
+		<Unit filename="serialisables.cpp" />
+		<Unit filename="serialisables.hpp" />
 		<Unit filename="ship_components.cpp" />
 		<Unit filename="ship_components.hpp" />
 		<Unit filename="stardust.cpp" />
