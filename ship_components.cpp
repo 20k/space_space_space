@@ -4823,6 +4823,11 @@ void check_audio_hardware(cpu_state& cpu, size_t my_pid)
     }
 }
 
+void check_hardware_requests(ship& s, playspace_manager& play, playspace* space, room* r, cpu_state& cpu)
+{
+
+}
+
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
     for(component& c : s.components)
@@ -4843,6 +4848,8 @@ void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* 
         check_audio_hardware(cpu, c._pid);
 
         update_alive_ids(cpu, ids);
+
+        check_hardware_requests(s, play, space, r, cpu);
 
         ///use ints
         /*if(cpu.ports[hardware::S_DRIVE].is_symbol())

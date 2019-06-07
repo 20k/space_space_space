@@ -46,7 +46,6 @@ std::vector<std::string> split(const std::string &s, char delim)
     return elems;
 }
 
-
 bool all_numeric(const std::string& str)
 {
     try

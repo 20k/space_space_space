@@ -151,9 +151,7 @@ struct register_value : serialisable
 
     register_value& decode(cpu_state& state, cpu_stash& stash);
 
-    SERIALISE_SIGNATURE_SIMPLE(register_value);
-
-    ~register_value();
+    SERIALISE_SIGNATURE_NOSMOOTH(register_value);
 };
 
 ///so extensions to exapunks syntax

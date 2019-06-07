@@ -148,5 +148,3 @@ void cpu_state::stop_rpc()
 {
     rpc("stop", *this);
 }
-
-register_value::~register_value(){}
