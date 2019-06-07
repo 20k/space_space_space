@@ -1701,7 +1701,7 @@ void cpu_state::ustep()
         ///ALWAYS FIRST
         hw_req.id = RN(next[0]).value;
         hw_req.has_request = true;
-        hw_req.type = TDST;
+        hw_req.type = TPOS;
         hw_req.registers.push_back(&R(next[1]));
         hw_req.registers.push_back(&R(next[2]));
 
