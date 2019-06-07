@@ -116,7 +116,7 @@ vec2f room::get_in_absolute(vec2f local)
     return (local * ROOM_POI_SCALE) + this->position;
 }
 
-void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void room::serialise(serialise_context& ctx, nlohmann::json& data, room* other)
 {
     DO_SERIALISE(friendly_id);
     DO_SERIALISE(name);
@@ -126,7 +126,7 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other
     DO_SERIALISE(poi_offset);
 }
 
-void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
 {
     DO_SERIALISE(name);
     DO_SERIALISE(position);
@@ -223,7 +223,7 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
-void playspace::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void playspace::serialise(serialise_context& ctx, nlohmann::json& data, playspace* other)
 {
     DO_SERIALISE(friendly_id);
     DO_SERIALISE(type);
@@ -498,7 +498,7 @@ void playspace::rem(entity* e)
     entity_manage->forget(e);
 }
 
-void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, playspace_manager* other)
 {
     DO_SERIALISE(spaces);
 }

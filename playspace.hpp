@@ -88,7 +88,7 @@ struct room : serialisable, owned
 
     entity_manager* entity_manage = nullptr;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_NOSMOOTH(room);
 
     void tick(double dt_s);
     void add(entity* e);
@@ -136,7 +136,7 @@ struct playspace : serialisable, owned
     room* make_room(vec2f where, float entity_rad, poi_type::type ptype);
     void delete_room(room* r);
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_NOSMOOTH(playspace);
 
     void tick(double dt_s);
     void init_default(int seed);
@@ -159,7 +159,7 @@ struct client_poi_data : serialisable
     std::string type;
     int offset = 0;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_NOSMOOTH(client_poi_data);
 };
 
 struct ship_network_data
@@ -185,7 +185,7 @@ struct playspace_manager : serialisable
         return e;
     }
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_NOSMOOTH(playspace_manager);
 
     void tick(double dt_s);
 
