@@ -4835,6 +4835,20 @@ void check_hardware_requests(ship& s, playspace_manager& play, playspace* space,
     if(!e_opt.has_value())
         return;
 
+    bool found = false;
+
+    for(auto& i : s.last_sample.renderables)
+    {
+        if(i.uid == e_opt.value()->_pid)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    if(!found)
+        return;
+
     vec2f dest_pos = e_opt.value()->r.position;
     vec2f to_dest = dest_pos - s.r.position;
 

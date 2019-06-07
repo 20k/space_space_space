@@ -849,7 +849,7 @@ void entity_manager::render_layer(camera& cam, sf::RenderWindow& window, int lay
 
 std::optional<entity*> entity_manager::collides_with_any(vec2f centre, vec2f dim, float angle)
 {
-    entity test;
+    entity test(temporary_owned{});
     test.r.init_rectangular(dim);
     test.r.position = centre;
     test.r.rotation = angle;
