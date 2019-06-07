@@ -3,7 +3,7 @@
 #include "serialisables.hpp"
 #include "script_execution.hpp"
 
-void register_value::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
     DO_SERIALISE(which);
     DO_SERIALISE(help);
@@ -30,13 +30,13 @@ void register_value::serialise(serialise_context& ctx, nlohmann::json& data, sel
         DO_SERIALISE(file_eof);
 }
 
-void instruction::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void instruction::serialise(serialise_context& ctx, nlohmann::json& data, instruction* other)
 {
     DO_SERIALISE(type);
     DO_SERIALISE(args);
 }
 
-void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void cpu_stash::serialise(serialise_context& ctx, nlohmann::json& data, cpu_stash* other)
 {
     DO_SERIALISE(held_file);
     DO_SERIALISE(register_states);
@@ -52,13 +52,13 @@ spair::spair()
 
 spair::spair(register_value f1, int s) : first(f1), second(s){}
 
-void spair::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void spair::serialise(serialise_context& ctx, nlohmann::json& data, spair* other)
 {
     DO_SERIALISE(first);
     DO_SERIALISE(second);
 }
 
-void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, cpu_xfer* other)
 {
     DO_SERIALISE(from);
     DO_SERIALISE(to);
@@ -67,7 +67,7 @@ void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(held_file);
 }
 
-void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, cpu_state* other)
 {
     DO_SERIALISE(audio);
     DO_SERIALISE(all_stash);
@@ -94,7 +94,7 @@ void cpu_state::serialise(serialise_context& ctx, nlohmann::json& data, self_t* 
     DO_RPC(stop);
 }
 
-void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, cpu_file* other)
 {
     DO_SERIALISE(name);
     DO_SERIALISE(data);
@@ -106,7 +106,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, self_t* o
     DO_SERIALISE(alive);
 }
 
-SERIALISE_BODY(cpu_move_args)
+SERIALISE_BODY_SIMPLE(cpu_move_args)
 {
     DO_SERIALISE(name);
     DO_SERIALISE(id);

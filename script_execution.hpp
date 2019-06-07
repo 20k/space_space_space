@@ -151,7 +151,7 @@ struct register_value : serialisable
 
     register_value& decode(cpu_state& state, cpu_stash& stash);
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(register_value);
 
     ~register_value();
 };
@@ -314,7 +314,7 @@ struct instruction : serialisable
         return fetch(idx);
     }
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(instruction);
 };
 
 struct cpu_file : serialisable
@@ -340,7 +340,7 @@ struct cpu_file : serialisable
     register_value& operator[](int idx);
     register_value& get_with_default(int idx, int val);
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(cpu_file);
 };
 
 struct spair : serialisable
@@ -351,7 +351,7 @@ struct spair : serialisable
     spair();
     spair(register_value f1, int s);
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(spair);
 };
 
 struct cpu_xfer : serialisable
@@ -361,7 +361,7 @@ struct cpu_xfer : serialisable
     bool is_fractiony = false;
     int held_file = -1;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(cpu_xfer);
 };
 
 struct cpu_stash : serialisable
@@ -377,7 +377,7 @@ struct cpu_stash : serialisable
 
     cpu_stash();
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(cpu_stash);
 };
 
 struct cpu_move_args : serialisable
@@ -392,7 +392,7 @@ struct cpu_move_args : serialisable
 
     instructions::type type = instructions::COUNT;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(cpu_move_args);
 };
 
 struct hardware_request : serialisable
@@ -461,7 +461,7 @@ struct cpu_state : serialisable, owned
     int label_to_pc(const std::string& label);
     int get_custom_instr_pc(const std::string& name);
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE_SIMPLE(cpu_state);
 
     void set_program(std::string str);
 
