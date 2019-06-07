@@ -160,7 +160,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add_on_use(component_info::LASER, 1, 1);
         p.subtype = "laser";
 
-        p.max_use_angle = M_PI/8;
+        p.max_use_angle = M_PI;
         p.base_volume = 0.8;
     }
 
@@ -341,6 +341,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         //p.set_internal_volume(1);
         p.base_volume = 1;
+        p.max_use_angle = M_PI;
 
         p.subtype = "mining";
     }
