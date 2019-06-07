@@ -5224,6 +5224,9 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
             }
         }
 
+        if(s.move_args.type == instructions::KEEP)
+            extra_lax_distance = 0;
+
         ///collision avoidance here
         if(to_dest.length() < s.move_args.lax_distance + extra_lax_distance)
         {
