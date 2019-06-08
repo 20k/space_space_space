@@ -221,6 +221,7 @@ ship blueprint::to_ship() const
     nship.is_ship = true;
     nship.blueprint_name = name;
     nship.blueprint_tags = tags;
+    nship.new_network_copy();
 
     return nship;
 }

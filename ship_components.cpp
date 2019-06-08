@@ -4638,7 +4638,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     alive_ids.push_back(s._pid);
 
-    if(dir.size() > 0)
+    if(dir.size() > 0 && s.is_ship)
     {
         std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
 
