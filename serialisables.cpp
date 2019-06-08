@@ -103,6 +103,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, cpu_file*
     DO_SERIALISE(owner_offset);
     DO_SERIALISE(is_hw);
     DO_SERIALISE(alive);
+    DO_SERIALISE(stored_in);
 }
 
 SERIALISE_BODY_SIMPLE(cpu_move_args)

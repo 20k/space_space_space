@@ -2033,6 +2033,12 @@ void ship::tick(double dt_s)
 
                 ///take one component out of storage, eject it into space
                 ///need to add it to the entity manager. Has a correct _pid so no worries there
+                ///ok, need to harvest cpu files which are inside this parent ship
+                ///so get root directory of ship before we remove
+                ///then harvest files before we remove
+                ///then strip the prefix of those files and add them back once we've spawnd the ship
+                ///would be a lot easier if we stored the files actually on the ship instead of the current 'outside' model
+                ///or actually if there was just a real directory system
                 if(c.has_tag(tag_info::TAG_EJECTOR))
                 {
                     std::optional<ship> first = c.remove_first_stored_item();

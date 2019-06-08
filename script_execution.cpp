@@ -316,6 +316,118 @@ register_value& cpu_file::get_with_default(int idx, int val)
     return data[idx];
 }
 
+std::string cpu_file::get_ext_name()
+{
+    std::string as_str = name.as_string();
+
+    auto post_split = split(as_str, '/');
+
+    if(post_split.size() == 0)
+        return "";
+
+    return post_split.back();
+}
+
+std::string cpu_file::get_fulldir_name()
+{
+    auto post_split = split(name.as_string(), '/');
+
+    if(post_split.size() <= 1)
+        return "";
+
+    std::string ret;
+
+    for(int i=0; i < (int)post_split.size() - 1; i++)
+    {
+        ret += post_split[i] + "/";
+    }
+
+    if(ret.size() > 0 && ret.back() == '/')
+        ret.pop_back();
+
+    return ret;
+}
+
+bool cpu_file::in_exact_directory(const std::string& full_dir)
+{
+    if(full_dir == "." || full_dir == "./" || full_dir == "")
+        return split(name.as_string(), '/').size() == 0;
+
+    return name.as_string() == (full_dir + "/" + get_ext_name());
+}
+
+bool cpu_file::in_sub_directory(const std::string& full_dir)
+{
+    if(in_exact_directory(full_dir))
+        return true;
+
+    return name.as_string().starts_with(full_dir);
+}
+
+namespace
+{
+    std::string make_component_dir_name(int base_id, int offset)
+    {
+        return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
+    }
+}
+
+void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_counts, std::string dir)
+{
+    std::string fulldir = fle.get_fulldir_name();
+
+    if(dir == fulldir)
+    {
+        fle.stored_in = s._pid;
+        return;
+    }
+
+    for(component& c : s.components)
+    {
+        int my_offset = type_counts[(int)c.base_id];
+        type_counts[(int)c.base_id]++;
+
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
+
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
+
+        if(fullname == fulldir)
+        {
+            fle.stored_in = c._pid;
+            return;
+        }
+
+        std::map<int, int> them_type_counts;
+        std::unordered_map<std::string, int> ships;
+
+        for(ship& ns : c.stored)
+        {
+            if(ns.is_ship)
+            {
+                int mcount = ships[ns.blueprint_name];
+
+                std::map<int, int> ship_type;
+                ships[ns.blueprint_name]++;
+
+                std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
+                set_cpu_file_stored_impl(fle, ns, ship_type, sname);
+            }
+            else
+                set_cpu_file_stored_impl(fle, ns, them_type_counts, fullname);
+        }
+    }
+}
+
+void set_cpu_file_stored(ship& s, cpu_file& fle)
+{
+    std::map<int, int> types;
+
+    set_cpu_file_stored_impl(fle, s, types, "");
+}
+
 std::string register_value::as_string() const
 {
     if(is_reg())
@@ -893,6 +1005,16 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         had_tx_pending = false;
     }*/
 
+    if(had_tx_pending && s)
+    {
+        for(int i=0; i < (int)files.size(); i++)
+        {
+            set_cpu_file_stored(*s, files[i]);
+        }
+
+        had_tx_pending = false;
+    }
+
     check_for_bad_files();
 
     if(inst.size() == 0)
@@ -1058,6 +1180,15 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         {
             throw std::runtime_error("MAKE takes 0 or 1 args");
         }
+
+        if(s)
+        {
+            set_cpu_file_stored(*s, files[context.held_file]);
+
+            if(files[context.held_file].stored_in == (size_t)-1)
+                throw std::runtime_error("Should be impossible, unstored file in [MAKE]");
+        }
+
         break;
     case RNAM:
         if(context.held_file == -1)
@@ -1078,6 +1209,14 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
             ///incase we rename the master virtual file
             update_master_virtual_file();
+
+            if(s)
+            {
+                set_cpu_file_stored(*s, files[context.held_file]);
+
+                if(files[context.held_file].stored_in == (size_t)-1)
+                    throw std::runtime_error("Should be impossible, unstored file in [RNAM]");
+            }
         }
 
         break;

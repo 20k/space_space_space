@@ -506,7 +506,7 @@ struct component : serialisable, owned
         if(!has(type))
             throw std::runtime_error("rip get");
 
-        const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
+        //const component_fixed_properties& fixed = get_component_fixed_props(base_id, current_scale);
 
         for(int i=0; i < (int)dyn_info.size(); i++)
         {

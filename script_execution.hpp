@@ -325,6 +325,7 @@ struct cpu_file : serialisable
     bool was_xferred = false;
     size_t owner = -1;
     size_t owner_offset = -1;
+    size_t stored_in = -1;
     bool alive = true;
     bool is_hw = false;
 
@@ -339,6 +340,12 @@ struct cpu_file : serialisable
     void clear();
     register_value& operator[](int idx);
     register_value& get_with_default(int idx, int val);
+
+    ///eg hi/hello gives hello
+    std::string get_ext_name();
+    std::string get_fulldir_name();
+    bool in_exact_directory(const std::string& full_dir);
+    bool in_sub_directory(const std::string& full_dir);
 
     SERIALISE_SIGNATURE_SIMPLE(cpu_file);
 };
