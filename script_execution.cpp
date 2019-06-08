@@ -1187,6 +1187,8 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
             if(files[context.held_file].stored_in == (size_t)-1)
                 throw std::runtime_error("Should be impossible, unstored file in [MAKE]");
+
+            std::cout << "EXT " << files[context.held_file].get_ext_name() << std::endl;
         }
 
         break;
@@ -2019,6 +2021,22 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
     files.push_back(fle);
 
     return &files.back();
+}
+
+void cpu_state::update_regular_files(const std::string& directoryname, size_t owner)
+{
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].owner == -1 && files[i].stored_in == owner)
+        {
+            std::string ext = files[i].get_ext_name();
+
+            if(directoryname != "")
+                files[i].name.set_label(directoryname + "/" + ext);
+            else
+                files[i].name.set_label(ext);
+        }
+    }
 }
 
 void cpu_state::remove_file(int held_id)

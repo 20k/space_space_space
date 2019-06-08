@@ -4648,6 +4648,8 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         }
     }
 
+    cpu.update_regular_files(dir, s._pid);
+
     for(component& c : s.components)
     {
         alive_ids.push_back(c._pid);
@@ -4666,6 +4668,8 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         }
 
         std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
+
+        cpu.update_regular_files(fullname, c._pid);
 
         if(opt_file.has_value())
         {
