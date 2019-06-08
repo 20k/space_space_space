@@ -105,10 +105,12 @@
 					<Add option="-O3" />
 					<Add option="-march=nehalem" />
 					<Add option="-ffast-math" />
+					<Add option="-ffat-lto-objects" />
 				</Compiler>
 				<Linker>
 					<Add option="-flto" />
 					<Add option="-s" />
+					<Add option="-fuse-linker-plugin" />
 				</Linker>
 			</Target>
 			<Target title="NoVecRelease">
