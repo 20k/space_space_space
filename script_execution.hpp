@@ -395,14 +395,6 @@ struct cpu_move_args : serialisable
     SERIALISE_SIGNATURE_SIMPLE(cpu_move_args);
 };
 
-/*struct hardware_request
-{
-    bool has_request = false;
-    instructions::type type = instructions::COUNT;
-    size_t id = -1;
-    std::vector<register_value*> registers;
-};*/
-
 struct custom_instruction
 {
     std::string name;
@@ -429,7 +421,6 @@ struct cpu_state : serialisable, owned
     std::vector<custom_instruction> custom;
 
     std::vector<instruction> inst;
-    //hardware_request hw_req;
 
     cpu_stash context;
 
