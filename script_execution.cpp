@@ -2037,7 +2037,7 @@ void cpu_state::update_regular_files(const std::string& directoryname, size_t ow
 {
     for(int i=0; i < (int)files.size(); i++)
     {
-        if(files[i].owner == -1 && files[i].stored_in == owner)
+        if(files[i].owner == (size_t)-1 && files[i].stored_in == owner)
         {
             std::string ext = files[i].get_ext_name();
 
