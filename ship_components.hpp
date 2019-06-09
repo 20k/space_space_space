@@ -378,6 +378,7 @@ struct component : serialisable, owned
     std::string short_name;
 
     cpu_state cpu_core;
+    std::string current_directory;
 
     ///?????????????????
     ///this will go to the house
@@ -456,6 +457,9 @@ struct component : serialisable, owned
         {
             DO_SERIALISE(cpu_core);
         }
+
+        DO_SERIALISE(current_directory);
+
         //DO_SERIALISE(activation_type);
         DO_RPC(set_activation_level);
         DO_RPC(set_use);
@@ -752,6 +756,7 @@ struct ship : heatable_entity
     std::shared_ptr<alt_radar_field> current_radar_field;
 
     std::vector<std::string> blueprint_tags;
+    std::string current_directory;
 
     ship();
 
@@ -873,6 +878,7 @@ struct ship : heatable_entity
         DO_SERIALISE(move_args);
         DO_SERIALISE(radar_frequency_composition);
         DO_SERIALISE(radar_intensity_composition);
+        DO_SERIALISE(current_directory);
     }
 
     virtual void pre_collide(entity& other) override;

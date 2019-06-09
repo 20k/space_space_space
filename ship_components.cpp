@@ -2039,8 +2039,29 @@ void ship::tick(double dt_s)
                 ///then strip the prefix of those files and add them back once we've spawnd the ship
                 ///would be a lot easier if we stored the files actually on the ship instead of the current 'outside' model
                 ///or actually if there was just a real directory system
-                if(c.has_tag(tag_info::TAG_EJECTOR))
+                if(c.has_tag(tag_info::TAG_EJECTOR) && c.stored.size() > 0)
                 {
+                    std::vector<cpu_file> files;
+
+                    for(component& tc : components)
+                    {
+                        if(tc.base_id != component_type::CPU)
+                            continue;
+
+                        std::string directory = c.stored[0].current_directory;
+
+                        auto found = tc.cpu_core.extract_files_in_directory(directory);
+
+                        files.insert(files.end(), found.begin(), found.end());
+                    }
+
+                    std::cout << "FOUND " << files.size() << " FILES " << std::endl;
+
+                    for(auto& i : files)
+                    {
+                        std::cout << "i.name " << i.name.as_string() << std::endl;
+                    }
+
                     std::optional<ship> first = c.remove_first_stored_item();
 
                     if(first.has_value())
@@ -2066,6 +2087,14 @@ void ship::tick(double dt_s)
                         spawned->spawned_by = _pid;
                         spawned->phys_drag = false;
                         spawned->current_radar_field = current_radar_field;
+
+                        for(component& tc : spawned->components)
+                        {
+                            if(tc.base_id != component_type::CPU)
+                                continue;
+
+                            tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
+                        }
                     }
                 }
 
@@ -4638,6 +4667,8 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     alive_ids.push_back(s._pid);
 
+    s.current_directory = dir;
+
     if(dir.size() > 0 && s.is_ship)
     {
         std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
@@ -4652,11 +4683,6 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     for(component& c : s.components)
     {
-        alive_ids.push_back(c._pid);
-
-        if(c.has_tag(tag_info::TAG_CPU))
-            continue;
-
         int my_offset = type_counts[(int)c.base_id];
         type_counts[(int)c.base_id]++;
 
@@ -4666,6 +4692,12 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
         {
             fullname = dir + "/" + fullname;
         }
+
+        alive_ids.push_back(c._pid);
+        c.current_directory = fullname;
+
+        if(c.has_tag(tag_info::TAG_CPU))
+            continue;
 
         std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
 

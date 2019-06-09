@@ -47,6 +47,7 @@ struct register_value : serialisable
 
     void make(const std::string& str);
     std::string as_string() const;
+    std::string as_uniform_string() const; ///merges symbol/label
 
     bool is_reg() const
     {
@@ -497,7 +498,9 @@ struct cpu_state : serialisable, owned
     std::optional<int> name_to_file_id(register_value& name);
     std::optional<int> get_grabbable_file(register_value& name);
 
+    std::optional<std::string> pid_to_file_directory(size_t stored_in);
     void check_for_bad_files();
+    std::vector<cpu_file> extract_files_in_directory(const std::string& directory); ///makes not relative, eg if we extract file hi/test from hi, we get test
 };
 
 void cpu_tests();

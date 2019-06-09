@@ -470,6 +470,14 @@ std::string register_value::as_string() const
     //throw std::runtime_error("Bad register val?");
 }
 
+std::string register_value::as_uniform_string() const
+{
+    if(is_symbol())
+        return symbol;
+
+    return as_string();
+}
+
 register_value& register_value::decode(cpu_state& state, cpu_stash& stash)
 {
     if(is_reg())
@@ -2135,11 +2143,22 @@ std::optional<int> cpu_state::get_grabbable_file(register_value& name)
     return std::nullopt;
 }
 
+std::optional<std::string> cpu_state::pid_to_file_directory(size_t stored_in)
+{
+    for(auto& i : files)
+    {
+        if(i.stored_in == stored_in)
+            return i.name.as_uniform_string();
+    }
+
+    return std::nullopt;
+}
+
 void cpu_state::check_for_bad_files()
 {
     for(int i=0; i < (int)files.size(); i++)
     {
-        if(files[i].owner != (size_t)-1 && !files[i].alive && !any_holds(i))
+        if(!files[i].alive && !any_holds(i))
         {
             remove_file(i);
             i--;
@@ -2178,6 +2197,43 @@ void cpu_state::check_for_bad_files()
             }
         }
     }
+}
+
+std::vector<cpu_file> cpu_state::extract_files_in_directory(const std::string& directory)
+{
+    std::vector<cpu_file> ret;
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        if(files[i].in_sub_directory(directory))
+        {
+            ret.push_back(files[i]);
+
+            files[i].alive = false;
+        }
+    }
+
+    for(cpu_file& fle : ret)
+    {
+        std::string lab = fle.name.as_uniform_string();
+
+        if(!lab.starts_with(directory))
+        {
+            throw std::runtime_error("Unsure how this happened but it did, label " + lab + " did not start with " + directory);
+        }
+
+        assert(lab.size() >= directory.size());
+
+        for(int i=0; i < (int)directory.size(); i++)
+        {
+            lab.erase(lab.begin());
+        }
+
+        if(lab.size() > 0 && lab.front() == '/')
+            lab.erase(lab.begin());
+    }
+
+    return files;
 }
 
 void cpu_state::nullstep()
