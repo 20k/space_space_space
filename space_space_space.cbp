@@ -230,6 +230,8 @@
 		<Unit filename="player.hpp" />
 		<Unit filename="playspace.cpp" />
 		<Unit filename="playspace.hpp" />
+		<Unit filename="prebaked_programs.cpp" />
+		<Unit filename="prebaked_programs.hpp" />
 		<Unit filename="radar_field.cpp" />
 		<Unit filename="radar_field.hpp" />
 		<Unit filename="random.cpp" />
