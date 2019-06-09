@@ -1361,6 +1361,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
         std::set<uint32_t> high_detail_entities;
         std::set<uint32_t> low_detail_entities;
         std::set<uint32_t> all_entities;
+        std::map<uint32_t, float> entity_intensities;
 
         for(alt_frequency_packet& packet : en.samples)
         {
@@ -1378,11 +1379,13 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
             {
                 high_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);
+                entity_intensities[search_entity] += intensity;
             }
             else if(intensity >= LOW_DETAIL)
             {
                 low_detail_entities.insert(search_entity);
                 all_entities.insert(search_entity);
+                entity_intensities[search_entity] += intensity;
             }
         }
 
@@ -1508,7 +1511,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         for(auto& i : renderables)
         {
-            s.renderables.push_back({i.first, i.second});
+            s.renderables.push_back({i.first, i.second, entity_intensities[i.first]});
         }
     }
 

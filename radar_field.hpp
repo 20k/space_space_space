@@ -193,6 +193,7 @@ struct alt_object_property : serialisable
     T property = T();
     std::vector<double> frequency;
     float cross_section = 1;
+    float summed_intensities = 0;
 
     alt_object_property()
     {
@@ -205,7 +206,7 @@ struct alt_object_property : serialisable
 
     }
 
-    alt_object_property(uint32_t _uid, T _property) : uid(_uid), property(_property)
+    alt_object_property(uint32_t _uid, T _property, float _summed_intensities) : uid(_uid), property(_property), summed_intensities(_summed_intensities)
     {
 
     }
@@ -218,6 +219,7 @@ struct alt_object_property : serialisable
         DO_SERIALISE(property);
         DO_SERIALISE(frequency);
         DO_SERIALISE(cross_section);
+        DO_SERIALISE(summed_intensities);
     }
 };
 

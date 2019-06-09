@@ -4479,19 +4479,21 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         int idist = (int)(cren.position - s.r.position).length();
         float angle = round(r2d((cren.position - s.r.position).angle()));
 
-        int items = 5;
+        int items = 6;
 
         fle.data[base + i * items + 0].set_int(pid);
         fle.data[base + i * items + 1].set_int(x);
         fle.data[base + i * items + 2].set_int(y);
         fle.data[base + i * items + 3].set_int(idist);
         fle.data[base + i * items + 4].set_int(angle);
+        fle.data[base + i * items + 5].set_int(s.last_sample.renderables[i].summed_intensities);
 
         fle.data[base + i * items + 0].help = "ID";
         fle.data[base + i * items + 1].help = "x";
         fle.data[base + i * items + 2].help = "y";
         fle.data[base + i * items + 3].help = "Distance";
         fle.data[base + i * items + 4].help = "Angle (degrees)";
+        fle.data[base + i * items + 5].help = "Emitted Intensity";
     }
 }
 

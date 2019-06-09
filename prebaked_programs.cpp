@@ -6,6 +6,10 @@ prebaked_program_manager::prebaked_program_manager()
         prebaked_program prog;
         prog.name = "Missile";
 
+        ///so
+        ///need to go through radar data and look for targets, aka pick random high heat target?
+        ///once a target has been picked, need to spam KEEP TARGET -100, and activate self destruct if the distance is too low
+        ///remember to blacklist any targets in the NOHIT file
         prog.program =
         R"(
 

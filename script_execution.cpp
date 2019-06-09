@@ -1403,8 +1403,8 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [WIPE]");
 
-        remove_file(context.held_file);
         drop_file();
+        remove_file(context.held_file);
         update_length_register();
         update_master_virtual_file();
         break;
