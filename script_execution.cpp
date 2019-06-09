@@ -358,10 +358,12 @@ bool cpu_file::in_exact_directory(const std::string& full_dir)
 
 bool cpu_file::in_sub_directory(const std::string& full_dir)
 {
+    //std::cout << "is " << name.as_uniform_string() << " in " << full_dir << " 1check " << in_exact_directory(full_dir) << " 2check " << name.as_uniform_string().starts_with(full_dir) << std::endl;
+
     if(in_exact_directory(full_dir))
         return true;
 
-    return name.as_string().starts_with(full_dir);
+    return name.as_uniform_string().starts_with(full_dir);
 }
 
 namespace
@@ -2207,6 +2209,9 @@ std::vector<cpu_file> cpu_state::extract_files_in_directory(const std::string& d
     {
         if(files[i].in_sub_directory(directory))
         {
+            if(files[i].name.as_uniform_string() == directory)
+                continue;
+
             ret.push_back(files[i]);
 
             files[i].alive = false;
@@ -2231,9 +2236,11 @@ std::vector<cpu_file> cpu_state::extract_files_in_directory(const std::string& d
 
         if(lab.size() > 0 && lab.front() == '/')
             lab.erase(lab.begin());
+
+        fle.name.set_label(lab);
     }
 
-    return files;
+    return ret;
 }
 
 void cpu_state::nullstep()

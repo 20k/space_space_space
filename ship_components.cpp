@@ -2055,13 +2055,6 @@ void ship::tick(double dt_s)
                         files.insert(files.end(), found.begin(), found.end());
                     }
 
-                    std::cout << "FOUND " << files.size() << " FILES " << std::endl;
-
-                    for(auto& i : files)
-                    {
-                        std::cout << "i.name " << i.name.as_string() << std::endl;
-                    }
-
                     std::optional<ship> first = c.remove_first_stored_item();
 
                     if(first.has_value())
