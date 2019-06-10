@@ -27,11 +27,11 @@ struct star_entity : asteroid
 
             alt_frequency_packet heat;
             heat.make(permanent_heat + emitted, HEAT_FREQ);
-            heat.restrict(r.rotation, M_PI/12);
+            heat.restrict(r.rotation, M_PI/24);
 
             current_radar_field->emit(heat, r.position, *this);
 
-            heat.restrict(r.rotation + M_PI, M_PI/12);
+            heat.restrict(r.rotation + M_PI, M_PI/24);
 
             current_radar_field->emit(heat, r.position, *this);
         }
