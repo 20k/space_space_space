@@ -799,24 +799,14 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         }
     }
 
-    //float awidth = packet.packet_wavefront_width / space_scaling;
-
-    float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * space_scaling * space_scaling;
-
-    float ivdistance = 1;
-
-    //float ivdistance = (awidth - distance_to_packet) / (awidth);
-    //float ivdistance = (packet.packet_wavefront_width - distance_to_packet) / (packet.packet_wavefront_width * packet.scale * space_scaling);
-    //float err = 0.01;
+    float my_distance_to_packet_sq = packet_len * space_scaling * space_scaling;
 
     float err = 1;
 
     if(my_distance_to_packet_sq > err*err)
-        return ivdistance * packet.get_max_intensity() / my_distance_to_packet_sq;
+        return packet.get_max_intensity() / my_distance_to_packet_sq;
     else
-        return ivdistance * packet.get_max_intensity() / (err * err);
-
-    assert(false);
+        return packet.get_max_intensity() / (err * err);
 }
 
 float alt_radar_field::get_intensity_at(vec2f pos)
