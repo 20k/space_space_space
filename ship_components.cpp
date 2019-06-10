@@ -2087,6 +2087,8 @@ void ship::tick(double dt_s)
                                 continue;
 
                             tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
+
+                            tc.cpu_core.free_running = true;
                         }
                     }
                 }
