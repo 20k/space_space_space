@@ -1790,6 +1790,12 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         break;
     }
 
+    case PAUS:
+    {
+        free_running = false;
+        break;
+    }
+
     case COUNT:
         throw std::runtime_error("Unreachable?");
     }

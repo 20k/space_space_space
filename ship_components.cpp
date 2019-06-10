@@ -4783,6 +4783,18 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 file[8].set_int(in_deg);
                 file[8].help = "Radar Send Angle (degrees) Hardware Mapped IO";
             }
+
+            if(c.has(component_info::SELF_DESTRUCT))
+            {
+                if(file[8].is_int() && file[8].value > 0)
+                {
+                    c.try_use = true;
+                }
+
+                ///no need to report success case
+                file[8].set_int(0);
+                file[8].help = "Activate Self Destruct Hardware Mapped IO";
+            }
         }
 
         std::map<int, int> them_type_counts;

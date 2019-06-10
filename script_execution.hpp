@@ -221,6 +221,7 @@ namespace instructions
         TDST,
         TPOS,
         TREL,
+        PAUS,
         COUNT,
     };
 
@@ -283,6 +284,7 @@ namespace instructions
         "TDST", ///distance
         "TPOS", ///position
         "TREL", ///relative position
+        "PAUS",
     };
 
     type fetch(const std::string& name);
