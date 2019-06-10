@@ -799,7 +799,7 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
         }
     }
 
-    float awidth = packet.packet_wavefront_width / space_scaling;
+    //float awidth = packet.packet_wavefront_width / space_scaling;
 
     float my_distance_to_packet_sq = (pos - packet.origin).squared_length() * space_scaling * space_scaling;
 
