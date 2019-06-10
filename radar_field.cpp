@@ -420,19 +420,15 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
     return std::nullopt;
 }
 
-std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>& packets, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive_packets)
+void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>& packets, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive_packets)
 {
-    std::vector<uint32_t> ret;
-
     ///right of course, remove_if leaves the elements in unspecified state
     ///its faster to iterate this twice and use erase remove than iterate once with stable partition
 
     auto packet_expired = [&](const alt_frequency_packet& in)
                            {
-                                return field.packet_expired(in);
+                               return in.dead;
                            };
-
-    std::set<uint32_t> expired;
 
     for(auto it = packets.begin(); it != packets.end(); it++)
     {
@@ -444,8 +440,6 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
             {
                 subtractive_packets.erase(f_it);
             }
-
-            expired.insert(it->id);
 
             #ifndef REVERSE_IGNORE
             auto ignore_it = field.ignore_map.find(it->id);
@@ -485,29 +479,11 @@ std::vector<uint32_t> clean_old_packets(alt_radar_field& field, std::vector<alt_
                 field.agg_ignore.erase(agg_it);
             }
 
-            ret.push_back(it->id);
+            it->dead = true;
         }
     }
 
-    /*for(entity* en : field.em->entities)
-    {
-        if(!en->is_heat)
-            continue;
-
-        heatable_entity* hen = (heatable_entity*)en;
-
-        if(hen->ignore_packets.size() == 0)
-            continue;
-
-        for(auto& i : expired)
-        {
-            hen->ignore_packets.erase(i);
-        }
-    }*/
-
     packets.erase(std::remove_if(packets.begin(), packets.end(), packet_expired), packets.end());
-
-    return ret;
 }
 
 void alt_radar_field::tick(entity_manager& em, double dt_s)

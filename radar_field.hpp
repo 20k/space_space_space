@@ -54,6 +54,7 @@ struct alt_frequency_packet
     std::vector<float> intensities;
     float summed_intensity = 0;
     bool is_hot = false;
+    bool dead = false;
 
     vec2f origin = {0,0};
 
