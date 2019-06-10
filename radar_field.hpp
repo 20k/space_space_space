@@ -305,6 +305,17 @@ struct heatable_entity : entity, heatable
     //std::unordered_map<uint32_t, hacky_clock> ignore_packets;
 };
 
+struct precise_aggregator : heatable_entity
+{
+    aggregate<int> agg;
+
+    precise_aggregator()
+    {
+        precise_harvestable = true;
+        aggregate_unconditionally = true;
+    }
+};
+
 struct alt_radar_field
 {
     uint32_t iteration_count = 5000;

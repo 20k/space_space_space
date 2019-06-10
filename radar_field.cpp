@@ -565,13 +565,15 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                                     }
                                 }
 
-                                aggregate<int> aggs;
+                                /*aggregate<int> aggs;
                                 aggs.pos = en->r.position;
                                 aggs.half_dim = en->r.approx_dim;
 
-                                aggs.recalculate_bounds();
+                                aggs.recalculate_bounds();*/
 
-                                if(aggs.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+                                precise_aggregator* prec = static_cast<precise_aggregator*>(en);
+
+                                if(prec->agg.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                                 {
                                     //agg_ignore[packet.id][en->_pid] = true;
 

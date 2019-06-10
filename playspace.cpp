@@ -27,7 +27,7 @@ struct room_entity : entity
     }
 };
 
-struct packet_harvester_type : heatable_entity
+struct packet_harvester_type : precise_aggregator
 {
     room* ren = nullptr;
 
@@ -53,6 +53,11 @@ struct packet_harvester_type : heatable_entity
         r.approx_dim = ren->entity_manage->collision.half_dim * ROOM_POI_SCALE;
 
         r.approx_dim = max(r.approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+
+        agg.pos = r.position;
+        agg.half_dim = r.approx_dim;
+
+        agg.recalculate_bounds();
 
         //r.init_rectangular(r.approx_dim);
 
