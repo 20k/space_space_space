@@ -190,6 +190,11 @@ void alt_radar_field::add_packet_raw(alt_frequency_packet freq, vec2f pos)
 
 void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity& en)
 {
+    float intensity_next_tick = freq.get_max_intensity() / (speed_of_light_per_tick * space_scaling);
+
+    if(intensity_next_tick < RADAR_CUTOFF)
+        return;
+
     freq.id = alt_frequency_packet::gid++;
     freq.emitted_by = en._pid;
 
