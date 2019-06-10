@@ -4486,7 +4486,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
         fle.data[base + i * items + 2].set_int(y);
         fle.data[base + i * items + 3].set_int(idist);
         fle.data[base + i * items + 4].set_int(angle);
-        fle.data[base + i * items + 5].set_int(s.last_sample.renderables[i].summed_intensities);
+        fle.data[base + i * items + 5].set_int(round(s.last_sample.renderables[i].summed_intensities * intensity_mult));
 
         fle.data[base + i * items + 0].help = "ID";
         fle.data[base + i * items + 1].help = "x";
