@@ -8,11 +8,19 @@
 
 struct star_entity : asteroid
 {
-    bool neutron = true;
+    bool neutron = false;
+    float n_width = M_PI/24;
 
     star_entity(std::shared_ptr<alt_radar_field> field) : asteroid(field)
     {
         r.rotation = randf_s(0, 2 * M_PI);
+    }
+
+    void make_neutron(std::minstd_rand& rng)
+    {
+        n_width = rand_det_s(rng, M_PI/12, M_PI/32);
+        angular_velocity = rand_det_s(rng, 2 * M_PI/10, 2 * M_PI / 40);
+        neutron = true;
     }
 
     virtual void tick(double dt_s) override
@@ -23,15 +31,13 @@ struct star_entity : asteroid
 
         if(neutron)
         {
-            angular_velocity = 2 * M_PI / 20;
-
             alt_frequency_packet heat;
             heat.make(permanent_heat + emitted, HEAT_FREQ);
-            heat.restrict(r.rotation, M_PI/24);
+            heat.restrict(r.rotation, n_width);
 
             current_radar_field->emit(heat, r.position, *this);
 
-            heat.restrict(r.rotation + M_PI, M_PI/24);
+            heat.restrict(r.rotation + M_PI, n_width);
 
             current_radar_field->emit(heat, r.position, *this);
         }
@@ -466,6 +472,7 @@ void playspace::init_default(int seed)
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
     sun->collides = false;
+    sun->make_neutron(rng);
 
     field->sun_id = sun->_pid;
 
