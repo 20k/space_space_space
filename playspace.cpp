@@ -12,7 +12,7 @@ struct star_entity : asteroid
 
     star_entity(std::shared_ptr<alt_radar_field> field) : asteroid(field)
     {
-
+        r.rotation = randf_s(0, 2 * M_PI);
     }
 
     virtual void tick(double dt_s) override
@@ -23,7 +23,7 @@ struct star_entity : asteroid
 
         if(neutron)
         {
-            angular_velocity = 2 * M_PI / 5;
+            angular_velocity = 2 * M_PI / 20;
 
             alt_frequency_packet heat;
             heat.make(permanent_heat + emitted, HEAT_FREQ);
@@ -31,7 +31,7 @@ struct star_entity : asteroid
 
             current_radar_field->emit(heat, r.position, *this);
 
-            heat.restrict(-r.rotation, M_PI/12);
+            heat.restrict(r.rotation + M_PI, M_PI/12);
 
             current_radar_field->emit(heat, r.position, *this);
         }

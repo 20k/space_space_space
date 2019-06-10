@@ -784,7 +784,7 @@ bool alt_radar_field::position_potentially_shadowed(vec2f pos, const alt_frequen
 
     if(f_it != subtractive.end())
     {
-        for(alt_frequency_packet& shadow : f_it->second)
+        for(const alt_frequency_packet& shadow : f_it->second)
         {
             vec2f shadow_vector = (pos - shadow.origin).norm();
 
