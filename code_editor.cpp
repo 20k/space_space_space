@@ -6,7 +6,7 @@
 
 void code_editor::render(cpu_state& cpu)
 {
-    ImGui::Begin("Code Editor");
+    ImGui::Begin(("Code Editor##" + std::to_string(cpu._pid)).c_str());
 
     int pc_loop = cpu.context.pc + 1;
 

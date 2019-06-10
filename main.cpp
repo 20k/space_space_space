@@ -26,6 +26,7 @@
 #include "script_execution.hpp"
 #include "code_editor.hpp"
 #include "audio.hpp"
+#include "prebaked_programs.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -277,15 +278,17 @@ void server_thread(std::atomic_bool& should_term)
 
     blueprint default_missile;
 
-    default_missile.overall_size = (1/15.);
+    default_missile.overall_size = (1/5.);
     default_missile.add_component_at(get_component_default(component_type::THRUSTER, 1), {50, 50}, 2);
-    default_missile.add_component_at(get_component_default(component_type::SENSOR, 1), {100, 100}, 1);
+    default_missile.add_component_at(get_component_default(component_type::SENSOR, 4), {100, 100}, 1);
+    default_missile.add_component_at(get_component_default(component_type::RADAR, 4), {100, 100}, 1);
     default_missile.add_component_at(get_component_default(component_type::POWER_GENERATOR, 1), {150, 150}, 3);
     default_missile.add_component_at(get_component_default(component_type::DESTRUCT, 1), {200, 200}, 1);
-    default_missile.add_component_at(get_component_default(component_type::MISSILE_CORE, 1), {250, 250}, 1);
+    //default_missile.add_component_at(get_component_default(component_type::MISSILE_CORE, 1), {250, 250}, 1);
     default_missile.add_component_at(get_component_default(component_type::HEAT_BLOCK, 1), {300, 300}, 2);
     default_missile.add_component_at(get_component_default(component_type::RADIATOR, 1), {350, 350}, 2);
     default_missile.add_component_at(get_component_default(component_type::CARGO_STORAGE, 1), {400, 400}, 4);
+    default_missile.add_component_at(get_component_default(component_type::CPU, 1), {400, 400}, 1);
     default_missile.name = "DEFAULT_MISSILE";
     default_missile.add_tag("missile");
 
@@ -339,9 +342,17 @@ void server_thread(std::atomic_bool& should_term)
 
     for(component& c : test_ship->components)
     {
+        ship mship = default_missile.to_ship();
+
         if(c.has_tag(tag_info::TAG_EJECTOR))
         {
-            ship mship = default_missile.to_ship();
+            for(component& c : mship.components)
+            {
+                if(c.base_id == component_type::CPU)
+                {
+                    c.cpu_core.set_program(fetch_program("missile").value().program);
+                }
+            }
 
             for(component& c : mship.components)
             {
@@ -401,7 +412,8 @@ void server_thread(std::atomic_bool& should_term)
             c.store(mat_3);
             c.store(mat_4);
 
-            c.store(default_missile.to_ship());
+            mship.new_network_copy();
+            c.store(mship);
         }
     }
 
@@ -1420,6 +1432,16 @@ int main()
                     ship_current_position = ship_proxy->r.position;
                     poi_cam.zoom = 1;
                 }
+            }
+            else
+            {
+                /*for(component& c : s.components)
+                {
+                    if(c.has_tag(tag_info::TAG_CPU))
+                    {
+                        editors[c._pid].render(c.cpu_core);
+                    }
+                }*/
             }
         }
 

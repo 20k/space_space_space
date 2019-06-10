@@ -1928,7 +1928,7 @@ void ship::tick(double dt_s)
     {
         if(c.has_tag(tag_info::TAG_MISSILE_BEHAVIOUR))
         {
-            tick_missile_behaviour(dt_s);
+            //tick_missile_behaviour(dt_s);
         }
     }
 
@@ -2069,7 +2069,7 @@ void ship::tick(double dt_s)
                         spawned->r.rotation = r.rotation;
                         //l->r.rotation = r.rotation + eangle;
                         //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
-                        spawned->velocity = velocity + ship_vector.norm() * 50;
+                        spawned->velocity = velocity + ship_vector.norm() * 10;
                         //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
                         spawned->phys_ignore.push_back(_pid);
                         //spawned->fired_by = id;
