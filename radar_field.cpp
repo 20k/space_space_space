@@ -140,6 +140,20 @@ alt_radar_field::alt_radar_field(vec2f in)
     target_dim = in;
 }
 
+void alt_radar_field::set_finite_stats(vec2f pos, vec2f dim)
+{
+    if(pos != finite_centre || dim != finite_bound)
+    {
+        finite_centre = pos;
+        finite_bound = dim;
+
+        precalculated_bounds.pos = finite_centre;
+        precalculated_bounds.half_dim = finite_bound;
+
+        precalculated_bounds.recalculate_bounds();
+    }
+}
+
 /*void alt_radar_field::add_packet(alt_frequency_packet freq, vec2f pos)
 {
     freq.origin = pos;
@@ -205,15 +219,11 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
     float dist_min = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
     float dist_max = dist_min + speed_of_light_per_tick;
 
+    //if(has_finite_bound && (iteration_count - packet.start_iteration) > 10)
+
     if(has_finite_bound)
     {
-        aggregate<int> aggs;
-        aggs.pos = finite_centre;
-        aggs.half_dim = finite_bound;
-
-        aggs.recalculate_bounds();
-
-        if(!aggs.intersects(packet.origin, dist_min, dist_max, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+        if(!precalculated_bounds.intersects(packet.origin, dist_min, dist_max, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
             return true;
     }
 

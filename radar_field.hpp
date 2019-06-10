@@ -12,6 +12,7 @@
 #include <networking/serialisable.hpp>
 #include "entity.hpp"
 #include "common_renderable.hpp"
+#include "aggregates.hpp"
 
 #define FREQUENCY_BUCKETS 100
 #define MIN_FREQ 1
@@ -331,8 +332,6 @@ struct alt_radar_field
     float space_scaling = 1;
 
     bool has_finite_bound = false;
-    vec2f finite_bound;
-    vec2f finite_centre;
 
     alt_radar_field(vec2f in);
 
@@ -363,6 +362,13 @@ struct alt_radar_field
     uint64_t get_sun_id();
     uint64_t sun_id = -1;
     int space = 0;
+
+    aggregate<int> precalculated_bounds;
+    void set_finite_stats(vec2f pos, vec2f dim);
+
+private:
+    vec2f finite_bound;
+    vec2f finite_centre;
 };
 
 /*inline

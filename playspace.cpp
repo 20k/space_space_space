@@ -518,11 +518,10 @@ void room::tick(double dt_s)
 
     /*field->finite_bound = entity_manage->collision.half_dim.largest_elem() * sqrt(2);*/
 
-    field->finite_bound = entity_manage->collision.half_dim;
+    vec2f bound = entity_manage->collision.half_dim;
+    bound = std::max(bound, (vec2f){30, 30});
 
-    field->finite_bound = std::max(field->finite_bound, (vec2f){30, 30});
-
-    field->finite_centre = entity_manage->collision.pos;
+    field->set_finite_stats(entity_manage->collision.pos, bound);
 
     //std::cout << "FCENTRE " << field->finite_centre << " RAD " << field->finite_bound << std::endl;
 
