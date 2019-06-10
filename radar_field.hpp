@@ -363,6 +363,7 @@ struct alt_radar_field
     float get_intensity_at(vec2f pos);
     float get_refl_intensity_at(vec2f pos);
     float get_intensity_at_of(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
+    bool  position_potentially_shadowed(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const;
 
     bool angle_valid(alt_frequency_packet& packet, float angle);
 

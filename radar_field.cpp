@@ -577,6 +577,15 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
                                 if(prec->agg.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                                 {
+                                    /*if(get_intensity_at_of(prec->agg.pos, packet, subtractive_packets) < RADAR_CUTOFF)
+                                    {
+                                        agg_ignore[packet.id].insert(en->_pid);
+                                        continue;
+                                    }*/
+
+                                    if(position_potentially_shadowed(prec->agg.pos, packet, subtractive_packets))
+                                        continue;
+
                                     //agg_ignore[packet.id][en->_pid] = true;
 
                                     agg_ignore[packet.id].insert(en->_pid);
@@ -763,6 +772,32 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     else
         return packet.get_max_intensity() / (err * err);
 }
+
+bool alt_radar_field::position_potentially_shadowed(vec2f pos, const alt_frequency_packet& packet, std::map<uint32_t, std::vector<alt_frequency_packet>>& subtractive) const
+{
+    vec2f packet_vector = (pos - packet.origin).norm();
+
+    if(!angle_lies_between_vectors_cos(packet_vector, packet.precalculated_start_angle, packet.cos_restrict_angle))
+        return true;
+
+    auto f_it = subtractive.find(packet.id);
+
+    if(f_it != subtractive.end())
+    {
+        for(alt_frequency_packet& shadow : f_it->second)
+        {
+            vec2f shadow_vector = (pos - shadow.origin).norm();
+
+            if(!angle_lies_between_vectors_cos(shadow_vector, shadow.precalculated_start_angle, shadow.cos_restrict_angle))
+                continue;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 float alt_radar_field::get_intensity_at(vec2f pos)
 {
