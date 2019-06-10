@@ -1061,6 +1061,7 @@ void server_thread(std::atomic_bool& should_term)
 
         double to_sleep = clamp(time_between_ticks_ms - elapsed_ms, 0, time_between_ticks_ms);
 
+        #ifndef PERF_TESTING
         sf::Clock sleep_clock;
 
         int slept = 0;
@@ -1074,6 +1075,7 @@ void server_thread(std::atomic_bool& should_term)
             if(sleep_clock.getElapsedTime().asMicroseconds() / 1000. >= round(to_sleep))
                 break;
         }
+        #endif // PERF_TESTING
 
         frame_pacing_clock.restart();
 

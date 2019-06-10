@@ -506,6 +506,9 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         float current_radius = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
         float next_radius = current_radius + speed_of_light_per_tick;
 
+        //if(!em.collision.intersects(packet.origin, current_radius,next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
+        //    continue;
+
         ///ok need to scale the entities radius
         ///shifted and scaled origins
         for(auto& coarse : em.collision.data)
@@ -594,6 +597,8 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
     std::cout << "num_hit_rects " << num_hit_rects << " max " << packets.size() * aggregates.aggregate.size() << std::endl;*/
 
     //exec_time.stop();
+
+    //profile_dumper packet_time("PACKET_TIME");
     #endif // 0
 
     //all_alt_aggregate_packets agg_packets = aggregate_packets(packets, 100, *this);
@@ -672,6 +677,7 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
 
     //pdump.dump();
     //pdump.stop();
+    //packet_time.stop();
     //profile_dumper::dump();
 
     //collideables.clear();
