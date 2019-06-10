@@ -201,8 +201,6 @@ void alt_radar_field::emit(alt_frequency_packet freq, vec2f pos, heatable_entity
     add_packet_raw(freq, pos);
 }
 
-//#define IGNORE_MAP
-
 void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id, const client_renderable& ren)
 {
     freq.id = alt_frequency_packet::gid++;
@@ -210,8 +208,6 @@ void alt_radar_field::emit_raw(alt_frequency_packet freq, vec2f pos, uint32_t id
 
     freq.cross_dim = ren.approx_dim;
     freq.cross_angle = ren.rotation;
-
-    //ignore(freq.id, id);
 
     add_packet_raw(freq, pos);
 }
@@ -243,14 +239,7 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
 void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
 {
-    #ifdef IGNORE_MAP
-    #ifndef REVERSE_IGNORE
-    ignore_map[packet_id][en._pid].restart();
-    #else
-    ignore_map[en._pid][packet_id].restart();
-    #endif // REVERSE_IGNORE
-    #endif // IGNORE_MAP
-    //en.ignore_packets[packet_id].restart();
+
 }
 
 void alt_frequency_packet::restrict(float offset, float angle)
@@ -294,19 +283,6 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
     if(len_sq < next_radius*next_radius && len_sq >= current_radius*current_radius)
     {
-        #ifdef IGNORE_MAP
-        #ifndef REVERSE_IGNORE
-        if(ignore_map[packet.id][collide._pid].should_ignore())
-            return std::nullopt;
-        #else
-        if(ignore_map[collide._pid][packet.id].should_ignore())
-            return std::nullopt;
-        #endif
-        #endif // IGNORE_MAP
-
-        /*if(collide.ignore_packets[packet.id].should_ignore())
-            return std::nullopt;*/
-
         float local_intensity = get_intensity_at_of(collide.r.position, packet, subtractive);
 
         if(local_intensity <= 0.0001)
@@ -408,9 +384,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         reflect.left_restrict = (vec2f){1, 0}.rot(reflect.start_angle - reflect.restrict_angle);
         reflect.right_restrict = (vec2f){1, 0}.rot(reflect.start_angle + reflect.restrict_angle);
 
-        #ifndef IGNORE_MAP
         reflect.start_iteration--; ///move it one further away than us because it can never intersect more than once
-        #endif // IGNORE_MAP
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
@@ -458,39 +432,6 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
             {
                 subtractive_packets.erase(f_it);
             }
-
-            #ifdef IGNORE_MAP
-            #ifndef REVERSE_IGNORE
-            auto ignore_it = field.ignore_map.find(it->id);
-
-            if(ignore_it != field.ignore_map.end())
-            {
-                field.ignore_map.erase(ignore_it);
-            }
-            #else // REVERSE_IGNORE
-
-            for(auto found_collide = field.ignore_map.begin(); found_collide != field.ignore_map.end();)
-            {
-                //'it' is collideable
-
-                auto found_packet = found_collide->second.find(it->id);
-
-                if(found_packet != found_collide->second.end())
-                {
-                    found_collide->second.erase(found_packet);
-                }
-
-                if(found_collide->second.size() == 0)
-                {
-                    found_collide = field.ignore_map.erase(found_collide);
-                }
-                else
-                {
-                    found_collide++;
-                }
-            }
-            #endif
-            #endif // IGNORE_MAP
 
             auto agg_it = field.agg_ignore.find(it->id);
 

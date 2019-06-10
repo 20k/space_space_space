@@ -201,13 +201,6 @@ void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, 
 
             me.field->subtractive_packets[pack.id] = vec;
         }
-
-        auto f_ignore = theirs.ignore_map.find(pack.id);
-
-        if(f_ignore != theirs.ignore_map.end())
-        {
-            me.field->ignore_map[pack.id] = f_ignore->second;
-        }
     }
 }
 
