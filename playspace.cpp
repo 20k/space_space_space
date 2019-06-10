@@ -6,6 +6,47 @@
 #include <SFML/System/Clock.hpp>
 #include <iostream>
 
+struct star_entity : asteroid
+{
+    bool neutron = true;
+
+    star_entity(std::shared_ptr<alt_radar_field> field) : asteroid(field)
+    {
+
+    }
+
+    virtual void tick(double dt_s) override
+    {
+        heatable_entity::tick(dt_s);
+
+        float emitted = latent_heat * HEAT_EMISSION_FRAC + permanent_heat;
+
+        if(neutron)
+        {
+            angular_velocity = 2 * M_PI / 5;
+
+            alt_frequency_packet heat;
+            heat.make(permanent_heat + emitted, HEAT_FREQ);
+            heat.restrict(r.rotation, M_PI/12);
+
+            current_radar_field->emit(heat, r.position, *this);
+
+            heat.restrict(-r.rotation, M_PI/12);
+
+            current_radar_field->emit(heat, r.position, *this);
+        }
+        else
+        {
+            alt_frequency_packet heat;
+            heat.make(permanent_heat + emitted, HEAT_FREQ);
+
+            current_radar_field->emit(heat, r.position, *this);
+        }
+
+        latent_heat -= emitted;
+    }
+};
+
 struct room_entity : entity
 {
     room* ren = nullptr;
@@ -419,7 +460,7 @@ void playspace::init_default(int seed)
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
-    asteroid* sun = entity_manage->make_new<asteroid>(field);
+    star_entity* sun = entity_manage->make_new<star_entity>(field);
     sun->init(3, 4);
     sun->r.position = {0, 0}; ///realspace
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
