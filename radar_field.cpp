@@ -121,7 +121,7 @@ void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissi
 
     float emitted = latent_heat * HEAT_EMISSION_FRAC;
 
-    if(permanent_heat + emitted >= RADAR_CUTOFF)
+    //if(permanent_heat + emitted >= RADAR_CUTOFF)
     {
         alt_frequency_packet heat;
         heat.make(permanent_heat + emitted, HEAT_FREQ);
@@ -129,8 +129,8 @@ void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissi
 
         radar.emit(heat, r.position, *this);
     }
-    else
-        return;
+    //else
+    //    return;
 
     latent_heat -= emitted;
 }
