@@ -185,7 +185,17 @@ void server_thread(std::atomic_bool& should_term)
     sys_2->init_default(10000);
     sys_2->name = "A-C";
 
+    playspace* sys_3 = playspace_manage.make_new();
+    sys_3->init_default(20000);
+    sys_3->name = "C-C";
+
+    playspace* sys_4 = playspace_manage.make_new();
+    sys_4->init_default(30000);
+    sys_4->name = "C-D";
+
     playspace_connect(sys_1, sys_2);
+    playspace_connect(sys_2, sys_3);
+    playspace_connect(sys_3, sys_4);
 
 
     //entity_manager entities;
