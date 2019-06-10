@@ -745,11 +745,9 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
     float next_distance = real_distance + speed_of_light_per_tick;
 
-    vec2f packet_vector = (pos - packet.origin).norm() * real_distance;
+    //vec2f packet_position = packet_vector + packet.origin;
 
-    vec2f packet_position = packet_vector + packet.origin;
-
-    float distance_to_packet = (pos - packet_position).length();
+    //float distance_to_packet = (pos - packet_position).length();
 
     //if(distance_to_packet > packet.packet_wavefront_width / space_scaling)
     //    return 0;
@@ -757,14 +755,16 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     //if(distance_to_packet > speed_of_light_per_tick / 2)
     //    return 0;
 
-    float packet_len = (pos - packet.origin).length();
+    float packet_len = (pos - packet.origin).squared_length();
 
-    if(packet_len < real_distance || packet_len >= next_distance)
+    if(packet_len < real_distance*real_distance || packet_len >= next_distance*next_distance)
         return 0;
+
+    vec2f packet_vector = (pos - packet.origin).norm();
 
     //float my_packet_angle = (pos - packet.origin).angle();
 
-    if(!angle_lies_between_vectors_cos(packet_vector.norm(), packet.precalculated_start_angle, packet.cos_restrict_angle))
+    if(!angle_lies_between_vectors_cos(packet_vector, packet.precalculated_start_angle, packet.cos_restrict_angle))
         return 0;
 
     auto f_it = subtractive.find(packet.id);
@@ -776,12 +776,12 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
             float shadow_real_distance = (iteration_count - shadow.start_iteration) * speed_of_light_per_tick;
             //float shadow_next_real_distance = shadow_real_distance * speed_of_light_per_tick;
 
-            vec2f shadow_vector = (pos - shadow.origin).norm() * shadow_real_distance;
-            vec2f shadow_position = shadow_vector + shadow.origin;
+            vec2f shadow_vector = (pos - shadow.origin).norm();
+            //vec2f shadow_position = shadow_vector + shadow.origin;
 
-            float distance_to_shadow = (pos - shadow_position).length();
+            //float distance_to_shadow = (pos - shadow_position).length();
 
-            if(!angle_lies_between_vectors_cos(shadow_vector.norm(), shadow.precalculated_start_angle, shadow.cos_restrict_angle))
+            if(!angle_lies_between_vectors_cos(shadow_vector, shadow.precalculated_start_angle, shadow.cos_restrict_angle))
                 continue;
 
             /*if(distance_to_shadow < shadow_next_real_distance && distance_to_shadow >= shadow_real_distance)
@@ -790,11 +790,11 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
                 continue;
             }*/
 
-            float sdist = (pos - shadow.origin).length();
+            float sdist = (pos - shadow.origin).squared_length();
 
             float shadow_next_distance = shadow_real_distance + speed_of_light_per_tick;
 
-            if(sdist >= shadow_real_distance && sdist < shadow_next_distance)
+            if(sdist >= shadow_real_distance*shadow_real_distance && sdist < shadow_next_distance*shadow_next_distance)
                 return 0;
         }
     }
