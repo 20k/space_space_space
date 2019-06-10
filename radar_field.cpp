@@ -449,7 +449,7 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
 
 void alt_radar_field::tick(entity_manager& em, double dt_s)
 {
-    profile_dumper pdump("newtick");
+    //profile_dumper pdump("newtick");
 
     //packets.insert(packets.end(), speculative_packets.begin(), speculative_packets.end());
 
