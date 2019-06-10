@@ -241,12 +241,13 @@ bool alt_radar_field::packet_expired(const alt_frequency_packet& packet)
 
 void alt_radar_field::ignore(uint32_t packet_id, heatable_entity& en)
 {
+    /*
     #ifndef REVERSE_IGNORE
     ignore_map[packet_id][en._pid].restart();
     #else
     ignore_map[en._pid][packet_id].restart();
     #endif // REVERSE_IGNORE
-
+    */
     //en.ignore_packets[packet_id].restart();
 }
 
@@ -291,6 +292,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
     if(len_sq < next_radius*next_radius && len_sq >= current_radius*current_radius)
     {
+        /*
         #ifndef REVERSE_IGNORE
         if(ignore_map[packet.id][collide._pid].should_ignore())
             return std::nullopt;
@@ -298,6 +300,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
         if(ignore_map[collide._pid][packet.id].should_ignore())
             return std::nullopt;
         #endif
+        */
 
         /*if(collide.ignore_packets[packet.id].should_ignore())
             return std::nullopt;*/
@@ -402,6 +405,7 @@ alt_radar_field::test_reflect_from(const alt_frequency_packet& packet, heatable_
 
         reflect.left_restrict = (vec2f){1, 0}.rot(reflect.start_angle - reflect.restrict_angle);
         reflect.right_restrict = (vec2f){1, 0}.rot(reflect.start_angle + reflect.restrict_angle);
+        reflect.start_iteration--; ///move it one further away than us because it can never intersect more than once
 
         //reflect.iterations = ceilf(((collide.pos - reflect.origin).length() + cross_section * 1.1) / speed_of_light_per_tick);
 
@@ -451,6 +455,7 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
                 subtractive_packets.erase(f_it);
             }
 
+            /*
             #ifndef REVERSE_IGNORE
             auto ignore_it = field.ignore_map.find(it->id);
 
@@ -481,6 +486,7 @@ void clean_old_packets(alt_radar_field& field, std::vector<alt_frequency_packet>
                 }
             }
             #endif
+            */
 
             auto agg_it = field.agg_ignore.find(it->id);
 
