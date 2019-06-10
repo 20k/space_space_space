@@ -2903,8 +2903,6 @@ void ship::handle_heat(double dt_s)
         alt_frequency_packet heat;
         heat.make(permanent_heat + heat_to_radiate * 100, HEAT_FREQ);
 
-        //heat.packet_wavefront_width *= ticks_between_emissions;
-
         radar.emit(heat, r.position, *this);
     }
 
@@ -2919,7 +2917,6 @@ void ship::handle_heat(double dt_s)
     alt_frequency_packet heat;
     heat.frequency = HEAT_FREQ;
     heat.intensity = permanent_heat + emitted;
-    heat.packet_wavefront_width *= ticks_between_emissions;
 
     radar.emit(heat, r.position, *this);
 

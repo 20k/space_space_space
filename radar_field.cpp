@@ -123,7 +123,6 @@ void heatable_entity::dissipate(alt_radar_field& radar, int ticks_between_emissi
 
     alt_frequency_packet heat;
     heat.make(permanent_heat + emitted, HEAT_FREQ);
-    heat.packet_wavefront_width *= ticks_between_emissions;
 
     radar.emit(heat, r.position, *this);
 
@@ -707,9 +706,6 @@ float alt_radar_field::get_intensity_at_of(vec2f pos, const alt_frequency_packet
     //vec2f packet_position = packet_vector + packet.origin;
 
     //float distance_to_packet = (pos - packet_position).length();
-
-    //if(distance_to_packet > packet.packet_wavefront_width / space_scaling)
-    //    return 0;
 
     //if(distance_to_packet > speed_of_light_per_tick / 2)
     //    return 0;

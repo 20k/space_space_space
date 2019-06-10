@@ -69,7 +69,6 @@ struct alt_frequency_packet
     vec2f left_restrict = (vec2f){1, 0};
     vec2f right_restrict = (vec2f){1, 0};
 
-    float packet_wavefront_width = 20;
     //float cross_section = 1;
     vec2f cross_dim = {0,0};
     float cross_angle = 0;
