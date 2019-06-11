@@ -984,7 +984,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         float real_distance = (iteration_count - packet.start_iteration) * speed_of_light_per_tick;
         float intens = 0;
 
-        float my_distance_to_packet_sq = real_distance * real_distance * packet.scale * packet.scale * space_scaling * space_scaling;
+        float my_distance_to_packet_sq = real_distance * real_distance * space_scaling * space_scaling;
 
         //float ivdistance = (packet.packet_wavefront_width - sqrtf(my_distance_to_packet_sq)) / (packet.packet_wavefront_width * packet.scale * space_scaling);
 
@@ -993,11 +993,11 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
         float err = 1;
 
         if(my_distance_to_packet_sq > err*err)
-            intens = ivdistance * packet.intensity / my_distance_to_packet_sq;
+            intens = ivdistance * packet.get_max_intensity() / my_distance_to_packet_sq;
         else
-            intens = ivdistance * packet.intensity / (err * err);
+            intens = ivdistance * packet.get_max_intensity() / (err * err);
 
-        float calc = 255 * intens/50;
+        float calc = 255 * intens/5;
 
         calc = clamp(calc, 0, 255);
 
@@ -1012,7 +1012,7 @@ void alt_radar_field::render(camera& cam, sf::RenderWindow& win)
 
         win.draw(shape);*/
 
-        render_partial_circle(win, cam.world_to_screen(packet.origin), packet.packet_wavefront_width / space_scaling, real_distance, packet.start_angle, packet.restrict_angle, sf::Color(255, 255, 255, calc));
+        render_partial_circle(win, cam.world_to_screen(packet.origin), 1 / space_scaling, real_distance, packet.start_angle, packet.restrict_angle, sf::Color(255, 255, 255, calc));
 
         /*for(alt_frequency_packet& shadow : subtractive_packets[packet.id])
         {
