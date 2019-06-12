@@ -301,28 +301,6 @@ void room_merge(room* r1, room* r2)
     r2->field->subtractive_packets.clear();
 }
 
-#if 0
-template<auto N>
-int get_nearest_cluster(const std::array<vec2f, N>& clusters, entity* e)
-{
-    int which_cluster = 0;
-    float min_dist = FLT_MAX;
-
-    for(int k = 0; k < (int)N; k++)
-    {
-        float len_sq = (e->r.position - clusters[k]).squared_length();
-
-        if(len_sq < min_dist)
-        {
-            min_dist = len_sq;
-            which_cluster = k;
-        }
-    }
-
-    return which_cluster;
-}
-#endif // 0
-
 void room_handle_split(playspace* play, room* r1)
 {
     ///so
@@ -332,7 +310,6 @@ void room_handle_split(playspace* play, room* r1)
         return;
 
     ///db scan
-    //std::map<entity*, int> set_membership;
     std::vector<std::pair<aggregate<entity*>, int>> aggs;
     int agg_count = 0;
 
@@ -347,12 +324,12 @@ void room_handle_split(playspace* play, room* r1)
 
         for(int i=0; i < (int)aggs.size(); i++)
         {
-            aggregate<entity*>& fagg = aggs[i].first;
+            aggregate<entity*>& found_agg = aggs[i].first;
 
-            if(rect_intersect(fagg.tl, fagg.br, tl, br))
+            if(rect_intersect(found_agg.tl, found_agg.br, tl, br))
             {
-                fagg.data.push_back(e);
-                fagg.complete_with_padding(minimum_distance);
+                found_agg.data.push_back(e);
+                found_agg.complete_with_padding(minimum_distance);
                 found = true;
                 //set_membership[e] = aggs[i].second;
                 break;
@@ -388,164 +365,35 @@ void room_handle_split(playspace* play, room* r1)
         }
     }
 
-    bool debug = false;
+    if(aggs.size() <= 1)
+        return;
 
-    for(entity* e : r1->entity_manage->entities)
+    std::sort(aggs.begin(), aggs.end(), [](auto& i1, auto& i2){return i1.first.data.size() > i2.first.data.size();});
+
+    for(int i=1; i < aggs.size(); i++)
     {
-        if(dynamic_cast<ship*>(e))
+        aggregate<entity*>& found_agg = aggs[i].first;
+
+        room* r2 = play->make_room(r1->get_in_absolute(found_agg.pos), 10, poi_type::DEAD_SPACE);
+
+        for(entity* e : found_agg.data)
         {
-            debug = true;
-            break;
-        }
-    }
+            ship* s = dynamic_cast<ship*>(e);
 
-    if(debug)
-    {
-        std::cout << "SET COUNT " << aggs.size() << std::endl;
-    }
-
-
-    return;
-
-    #if 0
-
-    ///KMEANS
-    constexpr int k_val = 2;
-    int iterations = 10;
-
-    float minimum_separation = 200;
-
-    std::array<vec2f, k_val> clusters;
-    std::array<int, k_val> counts;
-    std::array<int, k_val> last_counts;
-    std::array<vec2f, k_val> next_clusters;
-
-    std::minstd_rand rng(get_random_value());
-
-    for(int i=0; i < k_val; i++)
-    {
-        clusters[i] = rand_det(rng, r1->entity_manage->collision.tl, r1->entity_manage->collision.br);
-    }
-
-    for(int i=0; i < iterations; i++)
-    {
-        next_clusters = decltype(next_clusters)();
-
-        for(entity* e : r1->entity_manage->entities)
-        {
-            int which_cluster = get_nearest_cluster(clusters, e);
-
-            next_clusters[which_cluster] += e->r.position;
-            counts[which_cluster]++;
-        }
-
-        last_counts = counts;
-
-        for(int k=0; k < k_val; k++)
-        {
-            if(counts[k] > 0)
-                next_clusters[k] = next_clusters[k] / (float)counts[k];
-
-            counts[k] = 0;
-        }
-
-        clusters = next_clusters;
-    }
-
-    std::array<aggregate<entity*>, k_val> aggs;
-
-    for(entity* e : r1->entity_manage->entities)
-    {
-        int which = get_nearest_cluster(clusters, e);
-
-        aggs[which].data.push_back(e);
-    }
-
-    for(int k=0; k < k_val; k++)
-    {
-        aggs[k].complete();
-    }
-
-
-    if(debug)
-    {
-        for(int i=0; i < k_val; i++)
-        {
-            std::cout << "CLST " << clusters[i] << " LCNT " << last_counts[i] << std::endl;
-        }
-
-        //std::cout << clusters[0] << " c2 " << clusters[1] << std::endl;
-    }
-
-    return false;
-
-    /*static_assert(k_val == 2);
-
-
-    if(aggs[0].intersects(aggs[1]))
-        return false;
-
-    if(debug)
-        printf("DID NOT INTERSECT\n");
-
-    vec2f vector_distance = aggs[0].get_pos() - aggs[1].get_pos();
-
-    float diagonal_distances = aggs[0].get_dim().length() + aggs[1].get_dim().length();
-
-    if(vector_distance.length() - diagonal_distances >= minimum_separation)
-    {
-        printf("Should split\n");
-
-        return true;
-    }
-
-    return false;*/
-
-    /*int cdata_size = r1->entity_manage->collision.data.size();
-
-    if(cdata_size == 0)
-        return false;
-
-    int ccoarse = r1->entity_manage->iteration % cdata_size;
-
-    auto& to_check = r1->entity_manage->collision.data[ccoarse];
-
-    float minimum_separation = 200;
-
-    ///so check fine collideables against every other fine collideable
-    for(auto& trf : to_check.data)
-    {
-        for(auto& them_coarse : r1->entity_manage->collision.data)
-        {
-            for(auto& them_fine : them_coarse.data)
+            if(s)
             {
-                if(&them_fine == &trf)
-                    continue;
+                vec2f cpos = {s->move_args.x, s->move_args.y};
 
-                if(trf.intersects(them_fine))
-                    return false;
+                cpos = r2->get_in_local(r1->get_in_absolute(cpos));
 
-                vec2f vector_distance = trf.get_pos() - them_fine.get_pos();
-
-                float diagonal_distances = trf.get_dim().length() + them_fine.get_dim().length();
-
-                if(vector_distance.length() - diagonal_distances >= minimum_separation)
-                {
-                    return true;
-                }
+                s->move_args.x = cpos.x();
+                s->move_args.y = cpos.y();
             }
+
+            r1->rem(e);
+            r2->add(e);
         }
     }
-
-    return true;*/
-    #endif // 0
-}
-
-room* room_split(playspace* play, room* r1)
-{
-    //throw std::runtime_error("Unimplemented");
-
-    return nullptr;
 }
 
 void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
@@ -925,11 +773,6 @@ void playspace::tick(double dt_s)
     for(int i=0; i < (int)rooms.size(); i++)
     {
         room* r1 = rooms[i];
-
-        /*if(room_should_split(r1))
-        {
-            room_split(this, r1);
-        }*/
 
         room_handle_split(this, r1);
     }
