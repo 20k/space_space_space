@@ -263,9 +263,6 @@ void room_merge(room* r1, room* r2)
     auto e2 = r2->entity_manage->entities;
     auto e3 = r2->entity_manage->to_spawn;
 
-    r2->entity_manage->entities.clear();
-    r2->entity_manage->to_spawn.clear();
-
     auto transform_func = [&](entity* e)
     {
         ship* s = dynamic_cast<ship*>(e);
@@ -280,9 +277,8 @@ void room_merge(room* r1, room* r2)
             s->move_args.y = cpos.y();
         }
 
-        e->r.position = r1->get_in_local(r2->get_in_absolute(e->r.position));
-
-        r1->entity_manage->steal(e);
+        r2->rem(e);
+        r1->add(e);
     };
 
     for(auto& i : e2)
@@ -299,6 +295,9 @@ void room_merge(room* r1, room* r2)
 
     r2->field->packets.clear();
     r2->field->subtractive_packets.clear();
+
+    r2->entity_manage->entities.clear();
+    r2->entity_manage->to_spawn.clear();
 }
 
 #define MERGE_DIST 500
@@ -315,7 +314,7 @@ void room_handle_split(playspace* play, room* r1)
     std::vector<std::pair<aggregate<entity*>, int>> aggs;
     int agg_count = 0;
 
-    float minimum_distance = MERGE_DIST*2;
+    float minimum_distance = MERGE_DIST*3;
 
     for(entity* e : r1->entity_manage->entities)
     {
@@ -368,7 +367,7 @@ void room_handle_split(playspace* play, room* r1)
 
                     i--;
                     aggs.erase(aggs.begin() + j);
-                    //any_change = true;
+                    any_change = true;
                     break;
                 }
             }
@@ -380,7 +379,7 @@ void room_handle_split(playspace* play, room* r1)
 
     std::sort(aggs.begin(), aggs.end(), [](auto& i1, auto& i2){return i1.first.data.size() > i2.first.data.size();});
 
-    for(int i=1; i < aggs.size(); i++)
+    for(int i=1; i < (int)aggs.size(); i++)
     {
         aggregate<entity*>& found_agg = aggs[i].first;
 
@@ -746,6 +745,23 @@ void room::tick(double dt_s)
     //std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
+aggregate<int> get_room_aggregate_absolute(room* r1)
+{
+    aggregate<int> agg;
+
+    vec2f position = r1->get_in_absolute(r1->entity_manage->collision.pos);
+
+    vec2f approx_dim = r1->entity_manage->collision.half_dim * ROOM_POI_SCALE;
+    approx_dim = max(approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+
+    agg.pos = position;
+    agg.half_dim = approx_dim;
+
+    agg.recalculate_bounds();
+
+    return agg;
+}
+
 void playspace::tick(double dt_s)
 {
     /*std::vector<ship*> preships = entity_manage->fetch<ship>();
@@ -795,8 +811,10 @@ void playspace::tick(double dt_s)
             room* r1 = rooms[i];
             room* r2 = rooms[j];
 
-            //if(r1->packet_harvester->agg.intersects_with_bound(r2->packet_harvester->agg, MERGE_DIST))
-            if(r1->packet_harvester->agg.intersects(r2->packet_harvester->agg))
+            auto agg_1 = get_room_aggregate_absolute(r1);
+            auto agg_2 = get_room_aggregate_absolute(r2);
+
+            if(agg_1.intersects_with_bound(agg_2, MERGE_DIST * ROOM_POI_SCALE))
             {
                 room_merge(r1, r2);
             }
@@ -1278,7 +1296,7 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
     if(play == nullptr || r == nullptr)
         return false;
 
-    if(args.id != -1 && args.id != s._pid)
+    if(args.id != (size_t)-1 && args.id != s._pid)
     {
         std::optional<entity*> e = r->entity_manage->fetch(args.id);
 

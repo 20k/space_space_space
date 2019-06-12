@@ -197,7 +197,7 @@ struct aggregate
 
     bool intersects_with_bound(const aggregate<T>& agg, float bound)
     {
-        vec2f nhalf_dim = half_dim + (vec2f){bound/2, bound/2};
+        vec2f nhalf_dim = half_dim + (vec2f){bound, bound};
 
         vec2f ntl = pos - nhalf_dim;
         vec2f nbr = pos + nhalf_dim;
