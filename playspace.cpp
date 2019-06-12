@@ -374,7 +374,7 @@ void room_handle_split(playspace* play, room* r1)
     {
         aggregate<entity*>& found_agg = aggs[i].first;
 
-        room* r2 = play->make_room(r1->get_in_absolute(found_agg.pos), 10, poi_type::DEAD_SPACE);
+        room* r2 = play->make_room(r1->get_in_absolute(found_agg.pos), 5, poi_type::DEAD_SPACE);
 
         for(entity* e : found_agg.data)
         {
