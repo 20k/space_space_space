@@ -426,7 +426,22 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
     assert(packet_harvester);
 
-    import_radio_fast(*this, packet_harvester->samples, theirs, std::nullopt);
+    bool should_simulate = false;
+
+    for(entity* e : entity_manage->entities)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+
+        if(s)
+        {
+            should_simulate = true;
+            break;
+        }
+    }
+
+    if(should_simulate)
+        import_radio_fast(*this, packet_harvester->samples, theirs, std::nullopt);
+
     packet_harvester->samples.clear();
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
