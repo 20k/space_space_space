@@ -115,6 +115,8 @@ namespace playspace_type
 ///aka solar system
 struct playspace : serialisable, owned
 {
+    int iteration = 0;
+
     size_t friendly_id = -1;
     playspace_type::type type = playspace_type::SOLAR_SYSTEM;
     std::string name;

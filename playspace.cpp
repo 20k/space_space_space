@@ -795,9 +795,14 @@ void playspace::tick(double dt_s)
 
     pending_rooms.clear();
 
+    sf::Clock split_merge;
+
     ///split rooms
     for(int i=0; i < (int)rooms.size(); i++)
     {
+        if((iteration % (int)rooms.size()) != i)
+            continue;
+
         room* r1 = rooms[i];
 
         room_handle_split(this, r1);
@@ -806,6 +811,9 @@ void playspace::tick(double dt_s)
     ///merge rooms
     for(int i=0; i < (int)rooms.size(); i++)
     {
+        if((iteration % (int)rooms.size()) != i)
+            continue;
+
         for(int j=i+1; j < (int)rooms.size(); j++)
         {
             room* r1 = rooms[i];
@@ -833,6 +841,10 @@ void playspace::tick(double dt_s)
         }
     }
 
+    double sclock = split_merge.getElapsedTime().asMicroseconds()/1000.;
+
+    std::cout << "SCLOCK " << sclock << std::endl;
+
     for(room* r : rooms)
     {
         r->field->sun_id = field->sun_id;
@@ -854,6 +866,8 @@ void playspace::tick(double dt_s)
     }
 
     field->tick(*entity_manage, dt_s);
+
+    iteration++;
 
     //std::cout << "parent num " << field->packets.size() << std::endl;
 }
