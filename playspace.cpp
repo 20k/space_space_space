@@ -301,6 +301,7 @@ void room_merge(room* r1, room* r2)
     r2->field->subtractive_packets.clear();
 }
 
+#if 0
 template<auto N>
 int get_nearest_cluster(const std::array<vec2f, N>& clusters, entity* e)
 {
@@ -320,15 +321,93 @@ int get_nearest_cluster(const std::array<vec2f, N>& clusters, entity* e)
 
     return which_cluster;
 }
+#endif // 0
 
-bool room_should_split(room* r1)
+void room_handle_split(playspace* play, room* r1)
 {
     ///so
     ///can we orchestrate the entities of us into two separate rooms, such that there are no overlapping aggregates,
     ///with a certain distance between them?
-
     if(r1->entity_manage->entities.size() <= 1)
-        return false;
+        return;
+
+    ///db scan
+    //std::map<entity*, int> set_membership;
+    std::vector<std::pair<aggregate<entity*>, int>> aggs;
+    int agg_count = 0;
+
+    float minimum_distance = 1000;
+
+    for(entity* e : r1->entity_manage->entities)
+    {
+        bool found = false;
+
+        vec2f tl = e->r.position - e->r.approx_dim;
+        vec2f br = e->r.position + e->r.approx_dim;
+
+        for(int i=0; i < (int)aggs.size(); i++)
+        {
+            aggregate<entity*>& fagg = aggs[i].first;
+
+            if(rect_intersect(fagg.tl, fagg.br, tl, br))
+            {
+                fagg.data.push_back(e);
+                fagg.complete_with_padding(minimum_distance);
+                found = true;
+                //set_membership[e] = aggs[i].second;
+                break;
+            }
+        }
+
+        if(!found)
+        {
+            int next = agg_count++;
+
+            aggregate<entity*> nen;
+            nen.data.push_back(e);
+            nen.complete_with_padding(minimum_distance);
+
+            aggs.push_back({nen, next});
+            //set_membership[e] = next;
+        }
+    }
+
+    for(int i=0; i < (int)aggs.size(); i++)
+    {
+        for(int j=i+1; j < (int)aggs.size(); j++)
+        {
+            if(aggs[i].first.intersects(aggs[j].first))
+            {
+                aggs[i].first.data.insert(aggs[i].first.data.end(), aggs[j].first.data.begin(), aggs[j].first.data.end());
+                aggs[i].first.complete_with_padding(minimum_distance);
+
+                i--;
+                aggs.erase(aggs.begin() + j);
+                break;
+            }
+        }
+    }
+
+    bool debug = false;
+
+    for(entity* e : r1->entity_manage->entities)
+    {
+        if(dynamic_cast<ship*>(e))
+        {
+            debug = true;
+            break;
+        }
+    }
+
+    if(debug)
+    {
+        std::cout << "SET COUNT " << aggs.size() << std::endl;
+    }
+
+
+    return;
+
+    #if 0
 
     ///KMEANS
     constexpr int k_val = 2;
@@ -338,17 +417,20 @@ bool room_should_split(room* r1)
 
     std::array<vec2f, k_val> clusters;
     std::array<int, k_val> counts;
+    std::array<int, k_val> last_counts;
     std::array<vec2f, k_val> next_clusters;
 
     std::minstd_rand rng(get_random_value());
 
     for(int i=0; i < k_val; i++)
     {
-        clusters[i] = rand_det(rng, r1->position - r1->entity_manage->collision.get_dim()/2.f, r1->position + r1->entity_manage->collision.get_dim()/2.f);
+        clusters[i] = rand_det(rng, r1->entity_manage->collision.tl, r1->entity_manage->collision.br);
     }
 
     for(int i=0; i < iterations; i++)
     {
+        next_clusters = decltype(next_clusters)();
+
         for(entity* e : r1->entity_manage->entities)
         {
             int which_cluster = get_nearest_cluster(clusters, e);
@@ -357,10 +439,14 @@ bool room_should_split(room* r1)
             counts[which_cluster]++;
         }
 
+        last_counts = counts;
+
         for(int k=0; k < k_val; k++)
         {
             if(counts[k] > 0)
                 next_clusters[k] = next_clusters[k] / (float)counts[k];
+
+            counts[k] = 0;
         }
 
         clusters = next_clusters;
@@ -380,10 +466,27 @@ bool room_should_split(room* r1)
         aggs[k].complete();
     }
 
-    static_assert(k_val == 2);
+
+    if(debug)
+    {
+        for(int i=0; i < k_val; i++)
+        {
+            std::cout << "CLST " << clusters[i] << " LCNT " << last_counts[i] << std::endl;
+        }
+
+        //std::cout << clusters[0] << " c2 " << clusters[1] << std::endl;
+    }
+
+    return false;
+
+    /*static_assert(k_val == 2);
+
 
     if(aggs[0].intersects(aggs[1]))
         return false;
+
+    if(debug)
+        printf("DID NOT INTERSECT\n");
 
     vec2f vector_distance = aggs[0].get_pos() - aggs[1].get_pos();
 
@@ -396,7 +499,7 @@ bool room_should_split(room* r1)
         return true;
     }
 
-    return false;
+    return false;*/
 
     /*int cdata_size = r1->entity_manage->collision.data.size();
 
@@ -435,6 +538,7 @@ bool room_should_split(room* r1)
     }
 
     return true;*/
+    #endif // 0
 }
 
 room* room_split(playspace* play, room* r1)
@@ -822,10 +926,12 @@ void playspace::tick(double dt_s)
     {
         room* r1 = rooms[i];
 
-        if(room_should_split(r1))
+        /*if(room_should_split(r1))
         {
             room_split(this, r1);
-        }
+        }*/
+
+        room_handle_split(this, r1);
     }
 
     ///merge rooms
