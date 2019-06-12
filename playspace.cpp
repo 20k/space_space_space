@@ -285,6 +285,16 @@ void room_merge(room* r1, room* r2)
     r2->field->subtractive_packets.clear();
 }
 
+bool room_should_split(room* r1)
+{
+    return false;
+}
+
+room* room_split(playspace* play, room* r1)
+{
+    throw std::runtime_error("Unimplemented");
+}
+
 void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
 {
     DO_SERIALISE(name);
@@ -658,8 +668,18 @@ void playspace::tick(double dt_s)
 
     pending_rooms.clear();
 
-    ///MERGE ROOMY BOIS
+    ///split rooms
+    for(int i=0; i < (int)rooms.size(); i++)
+    {
+        room* r1 = rooms[i];
 
+        if(room_should_split(r1))
+        {
+            room* r2 = room_split(this, r1);
+        }
+    }
+
+    ///merge rooms
     for(int i=0; i < (int)rooms.size(); i++)
     {
         for(int j=i+1; j < (int)rooms.size(); j++)
