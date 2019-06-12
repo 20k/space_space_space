@@ -5,6 +5,7 @@
 #include "ship_components.hpp"
 #include <SFML/System/Clock.hpp>
 #include <iostream>
+#include "random.hpp"
 
 struct star_entity : asteroid
 {
@@ -300,14 +301,147 @@ void room_merge(room* r1, room* r2)
     r2->field->subtractive_packets.clear();
 }
 
+template<auto N>
+int get_nearest_cluster(const std::array<vec2f, N>& clusters, entity* e)
+{
+    int which_cluster = 0;
+    float min_dist = FLT_MAX;
+
+    for(int k = 0; k < (int)N; k++)
+    {
+        float len_sq = (e->r.position - clusters[k]).squared_length();
+
+        if(len_sq < min_dist)
+        {
+            min_dist = len_sq;
+            which_cluster = k;
+        }
+    }
+
+    return which_cluster;
+}
+
 bool room_should_split(room* r1)
 {
+    ///so
+    ///can we orchestrate the entities of us into two separate rooms, such that there are no overlapping aggregates,
+    ///with a certain distance between them?
+
+    if(r1->entity_manage->entities.size() <= 1)
+        return false;
+
+    ///KMEANS
+    constexpr int k_val = 2;
+    int iterations = 10;
+
+    float minimum_separation = 200;
+
+    std::array<vec2f, k_val> clusters;
+    std::array<int, k_val> counts;
+    std::array<vec2f, k_val> next_clusters;
+
+    std::minstd_rand rng(get_random_value());
+
+    for(int i=0; i < k_val; i++)
+    {
+        clusters[i] = rand_det(rng, r1->position - r1->entity_manage->collision.get_dim()/2.f, r1->position + r1->entity_manage->collision.get_dim()/2.f);
+    }
+
+    for(int i=0; i < iterations; i++)
+    {
+        for(entity* e : r1->entity_manage->entities)
+        {
+            int which_cluster = get_nearest_cluster(clusters, e);
+
+            next_clusters[which_cluster] += e->r.position;
+            counts[which_cluster]++;
+        }
+
+        for(int k=0; k < k_val; k++)
+        {
+            if(counts[k] > 0)
+                next_clusters[k] = next_clusters[k] / (float)counts[k];
+        }
+
+        clusters = next_clusters;
+    }
+
+    std::array<aggregate<entity*>, k_val> aggs;
+
+    for(entity* e : r1->entity_manage->entities)
+    {
+        int which = get_nearest_cluster(clusters, e);
+
+        aggs[which].data.push_back(e);
+    }
+
+    for(int k=0; k < k_val; k++)
+    {
+        aggs[k].complete();
+    }
+
+    static_assert(k_val == 2);
+
+    if(aggs[0].intersects(aggs[1]))
+        return false;
+
+    vec2f vector_distance = aggs[0].get_pos() - aggs[1].get_pos();
+
+    float diagonal_distances = aggs[0].get_dim().length() + aggs[1].get_dim().length();
+
+    if(vector_distance.length() - diagonal_distances >= minimum_separation)
+    {
+        printf("Should split\n");
+
+        return true;
+    }
+
     return false;
+
+    /*int cdata_size = r1->entity_manage->collision.data.size();
+
+    if(cdata_size == 0)
+        return false;
+
+    int ccoarse = r1->entity_manage->iteration % cdata_size;
+
+    auto& to_check = r1->entity_manage->collision.data[ccoarse];
+
+    float minimum_separation = 200;
+
+    ///so check fine collideables against every other fine collideable
+    for(auto& trf : to_check.data)
+    {
+        for(auto& them_coarse : r1->entity_manage->collision.data)
+        {
+            for(auto& them_fine : them_coarse.data)
+            {
+                if(&them_fine == &trf)
+                    continue;
+
+                if(trf.intersects(them_fine))
+                    return false;
+
+                vec2f vector_distance = trf.get_pos() - them_fine.get_pos();
+
+                float diagonal_distances = trf.get_dim().length() + them_fine.get_dim().length();
+
+                if(vector_distance.length() - diagonal_distances >= minimum_separation)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return true;*/
 }
 
 room* room_split(playspace* play, room* r1)
 {
-    throw std::runtime_error("Unimplemented");
+    //throw std::runtime_error("Unimplemented");
+
+    return nullptr;
 }
 
 void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
@@ -443,7 +577,7 @@ void playspace::delete_room(room* r)
 
     if(it != room_specific_cleanup.end())
     {
-        std::cout << "FOUND " << it->second.size() << std::endl;
+        //std::cout << "FOUND " << it->second.size() << std::endl;
 
         for(auto& i : it->second)
             i->cleanup = true;
