@@ -100,6 +100,8 @@ struct room : serialisable, owned
     void import_radio_waves_from(alt_radar_field& theirs);
 };
 
+void room_merge(room* r1, room* r2);
+
 namespace playspace_type
 {
     enum type

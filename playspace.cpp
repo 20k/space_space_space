@@ -178,14 +178,6 @@ void room::serialise(serialise_context& ctx, nlohmann::json& data, room* other)
     DO_SERIALISE(poi_offset);
 }
 
-void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
-{
-    DO_SERIALISE(name);
-    DO_SERIALISE(position);
-    DO_SERIALISE(poi_pid);
-    DO_SERIALISE(type);
-    DO_SERIALISE(offset);
-}
 
 struct transform_data
 {
@@ -194,20 +186,26 @@ struct transform_data
     uint32_t start_iteration = 0;
 };
 
-transform_data transform_space(const alt_frequency_packet& in, room& r, alt_radar_field& parent_field)
+transform_data transform_space(const alt_frequency_packet& in, room& my_room, alt_radar_field& parent_field, std::optional<room*> them)
 {
     //alt_frequency_packet ret = in;
 
     transform_data ret;
 
-    alt_radar_field& new_field = *r.field;
+    alt_radar_field& new_field = *my_room.field;
 
-    ret.origin = r.get_in_local(in.origin);
+    if(them == std::nullopt)
+        ret.origin = my_room.get_in_local(in.origin);
+    else
+        ret.origin = my_room.get_in_local(them.value()->get_in_absolute(in.origin));
 
     if(in.reflected_by != -1)
-        ret.reflected_position = r.get_in_local(in.reflected_position);
-
-    //uint32_t it_diff = (parent_field.iteration_count - ret.start_iteration) * ROOM_POI_SCALE;
+    {
+        if(them == std::nullopt)
+            ret.reflected_position = my_room.get_in_local(in.reflected_position);
+        else
+            ret.reflected_position = my_room.get_in_local(them.value()->get_in_absolute(in.origin));
+    }
 
     uint32_t it_diff = (parent_field.iteration_count - in.start_iteration);
 
@@ -223,11 +221,11 @@ transform_data transform_space(const alt_frequency_packet& in, room& r, alt_rada
     return ret;
 }
 
-void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs)
+void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, alt_radar_field& theirs, std::optional<room*> them)
 {
     for(const alt_frequency_packet& pack : pack)
     {
-        transform_data data = transform_space(pack, me, theirs);
+        transform_data data = transform_space(pack, me, theirs, them);
 
         alt_frequency_packet fixed_pack = pack;
         fixed_pack.origin = data.origin;
@@ -244,7 +242,7 @@ void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, 
 
             for(auto& i : vec)
             {
-                transform_data trans = transform_space(i, me, theirs);
+                transform_data trans = transform_space(i, me, theirs, them);
 
                 i.origin = trans.origin;
                 i.reflected_position = trans.reflected_position;
@@ -256,13 +254,53 @@ void import_radio_fast(room& me, const std::vector<alt_frequency_packet>& pack, 
     }
 }
 
+void room_merge(room* r1, room* r2)
+{
+    if(r1->ptype == poi_type::DEAD_SPACE && r2->ptype != poi_type::DEAD_SPACE)
+        return room_merge(r2, r1);
+
+    auto e2 = r2->entity_manage->entities;
+    auto e3 = r2->entity_manage->to_spawn;
+
+    r2->entity_manage->entities.clear();
+    r2->entity_manage->to_spawn.clear();
+
+    for(auto& i : e2)
+    {
+        i->r.position = r1->get_in_local(r2->get_in_absolute(i->r.position));
+
+        r1->entity_manage->steal(i);
+    }
+
+    for(auto& i : e3)
+    {
+        i->r.position = r1->get_in_local(r2->get_in_absolute(i->r.position));
+
+        r1->entity_manage->steal(i);
+    }
+
+    import_radio_fast(*r1, r2->field->packets, *r2->field, r2);
+
+    r2->field->packets.clear();
+    r2->field->subtractive_packets.clear();
+}
+
+void client_poi_data::serialise(serialise_context& ctx, nlohmann::json& data, client_poi_data* other)
+{
+    DO_SERIALISE(name);
+    DO_SERIALISE(position);
+    DO_SERIALISE(poi_pid);
+    DO_SERIALISE(type);
+    DO_SERIALISE(offset);
+}
+
 void room::import_radio_waves_from(alt_radar_field& theirs)
 {
     //sf::Clock clk;
 
     assert(packet_harvester);
 
-    import_radio_fast(*this, packet_harvester->samples, theirs);
+    import_radio_fast(*this, packet_harvester->samples, theirs, std::nullopt);
     packet_harvester->samples.clear();
 
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
@@ -472,7 +510,7 @@ void playspace::init_default(int seed)
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
     sun->reflectivity = 0;
     sun->collides = false;
-    sun->make_neutron(rng);
+    //sun->make_neutron(rng);
 
     field->sun_id = sun->_pid;
 
