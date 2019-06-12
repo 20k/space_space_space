@@ -658,6 +658,22 @@ void playspace::tick(double dt_s)
 
     pending_rooms.clear();
 
+    ///MERGE ROOMY BOIS
+
+    for(int i=0; i < (int)rooms.size(); i++)
+    {
+        for(int j=i+1; j < (int)rooms.size(); j++)
+        {
+            room* r1 = rooms[i];
+            room* r2 = rooms[j];
+
+            if(r1->packet_harvester->agg.intersects(r2->packet_harvester->agg))
+            {
+                room_merge(r1, r2);
+            }
+        }
+    }
+
     for(int i=0; i < (int)rooms.size(); i++)
     {
         if(rooms[i]->entity_manage->entities.size() == 0 && rooms[i]->entity_manage->to_spawn.size() == 0)
