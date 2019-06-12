@@ -331,8 +331,8 @@ void room_handle_split(playspace* play, room* r1)
             if(rect_intersect(found_agg.tl, found_agg.br, tl, br))
             {
                 ///conservative pad
-                vec2f ctl = e->r.position - e->r.approx_dim;
-                vec2f cbr = e->r.position + e->r.approx_dim;
+                //vec2f ctl = e->r.position - e->r.approx_dim;
+                //vec2f cbr = e->r.position + e->r.approx_dim;
 
                 found_agg.data.push_back(e);
 
