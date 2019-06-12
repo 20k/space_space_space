@@ -936,7 +936,7 @@ void entity_manager::partial_reaggregate()
                 {
                     auto& fine = coarse.data[fine_id];
 
-                    float dist = (e->r.position - fine.get_pos()).length();
+                    float dist = (e->r.position - fine.get_pos()).squared_length();
 
                     if(dist < min_dist)
                     {
