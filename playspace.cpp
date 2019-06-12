@@ -301,6 +301,8 @@ void room_merge(room* r1, room* r2)
     r2->field->subtractive_packets.clear();
 }
 
+#define MERGE_DIST 500
+
 void room_handle_split(playspace* play, room* r1)
 {
     ///so
@@ -313,7 +315,7 @@ void room_handle_split(playspace* play, room* r1)
     std::vector<std::pair<aggregate<entity*>, int>> aggs;
     int agg_count = 0;
 
-    float minimum_distance = 1000;
+    float minimum_distance = MERGE_DIST*2;
 
     for(entity* e : r1->entity_manage->entities)
     {
@@ -349,18 +351,26 @@ void room_handle_split(playspace* play, room* r1)
         }
     }
 
-    for(int i=0; i < (int)aggs.size(); i++)
-    {
-        for(int j=i+1; j < (int)aggs.size(); j++)
-        {
-            if(aggs[i].first.intersects(aggs[j].first))
-            {
-                aggs[i].first.data.insert(aggs[i].first.data.end(), aggs[j].first.data.begin(), aggs[j].first.data.end());
-                aggs[i].first.complete_with_padding(minimum_distance);
+    bool any_change = true;
 
-                i--;
-                aggs.erase(aggs.begin() + j);
-                break;
+    while(any_change)
+    {
+        any_change = false;
+
+        for(int i=0; i < (int)aggs.size(); i++)
+        {
+            for(int j=i+1; j < (int)aggs.size(); j++)
+            {
+                if(aggs[i].first.intersects(aggs[j].first))
+                {
+                    aggs[i].first.data.insert(aggs[i].first.data.end(), aggs[j].first.data.begin(), aggs[j].first.data.end());
+                    aggs[i].first.complete_with_padding(minimum_distance);
+
+                    i--;
+                    aggs.erase(aggs.begin() + j);
+                    //any_change = true;
+                    break;
+                }
             }
         }
     }
@@ -785,6 +795,7 @@ void playspace::tick(double dt_s)
             room* r1 = rooms[i];
             room* r2 = rooms[j];
 
+            //if(r1->packet_harvester->agg.intersects_with_bound(r2->packet_harvester->agg, MERGE_DIST))
             if(r1->packet_harvester->agg.intersects(r2->packet_harvester->agg))
             {
                 room_merge(r1, r2);
