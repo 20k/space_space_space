@@ -311,8 +311,7 @@ void room_handle_split(playspace* play, room* r1)
         return;
 
     ///db scan
-    std::vector<std::pair<aggregate<entity*>, int>> aggs;
-    int agg_count = 0;
+    std::vector<aggregate<entity*>> aggs;
 
     float minimum_distance = MERGE_DIST*3;
 
@@ -325,28 +324,24 @@ void room_handle_split(playspace* play, room* r1)
 
         for(int i=0; i < (int)aggs.size(); i++)
         {
-            aggregate<entity*>& found_agg = aggs[i].first;
+            aggregate<entity*>& found_agg = aggs[i];
 
             if(rect_intersect(found_agg.tl, found_agg.br, tl, br))
             {
                 found_agg.data.push_back(e);
                 found_agg.complete_with_padding(minimum_distance);
                 found = true;
-                //set_membership[e] = aggs[i].second;
                 break;
             }
         }
 
         if(!found)
         {
-            int next = agg_count++;
-
             aggregate<entity*> nen;
             nen.data.push_back(e);
             nen.complete_with_padding(minimum_distance);
 
-            aggs.push_back({nen, next});
-            //set_membership[e] = next;
+            aggs.push_back(nen);
         }
     }
 
@@ -360,10 +355,10 @@ void room_handle_split(playspace* play, room* r1)
         {
             for(int j=i+1; j < (int)aggs.size(); j++)
             {
-                if(aggs[i].first.intersects(aggs[j].first))
+                if(aggs[i].intersects(aggs[j]))
                 {
-                    aggs[i].first.data.insert(aggs[i].first.data.end(), aggs[j].first.data.begin(), aggs[j].first.data.end());
-                    aggs[i].first.complete_with_padding(minimum_distance);
+                    aggs[i].data.insert(aggs[i].data.end(), aggs[j].data.begin(), aggs[j].data.end());
+                    aggs[i].complete_with_padding(minimum_distance);
 
                     i--;
                     aggs.erase(aggs.begin() + j);
@@ -377,11 +372,11 @@ void room_handle_split(playspace* play, room* r1)
     if(aggs.size() <= 1)
         return;
 
-    std::sort(aggs.begin(), aggs.end(), [](auto& i1, auto& i2){return i1.first.data.size() > i2.first.data.size();});
+    std::sort(aggs.begin(), aggs.end(), [](auto& i1, auto& i2){return i1.data.size() > i2.data.size();});
 
     for(int i=1; i < (int)aggs.size(); i++)
     {
-        aggregate<entity*>& found_agg = aggs[i].first;
+        aggregate<entity*>& found_agg = aggs[i];
 
         room* r2 = play->make_room(r1->get_in_absolute(found_agg.pos), 5, poi_type::DEAD_SPACE);
 
