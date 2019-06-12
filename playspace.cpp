@@ -690,7 +690,7 @@ void playspace::tick(double dt_s)
 
         if(room_should_split(r1))
         {
-            room* r2 = room_split(this, r1);
+            room_split(this, r1);
         }
     }
 
