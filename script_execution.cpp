@@ -1151,8 +1151,13 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
                 return;
             break;
     case HOST:
-        ///get name of area
-        throw std::runtime_error("Unimplemented HOST");
+        ///name of ship
+
+        if(s == nullptr)
+            throw std::runtime_error("Host instruction can only be used if we are a ship");
+
+        R(next[0]).set_int(s->_pid);
+
         break;
     case MAKE:
         if(context.held_file != -1)
