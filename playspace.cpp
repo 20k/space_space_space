@@ -265,18 +265,33 @@ void room_merge(room* r1, room* r2)
     r2->entity_manage->entities.clear();
     r2->entity_manage->to_spawn.clear();
 
+    auto transform_func = [&](entity* e)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+
+        if(s)
+        {
+            vec2f cpos = {s->move_args.x, s->move_args.y};
+
+            cpos = r1->get_in_local(r2->get_in_absolute(cpos));
+
+            s->move_args.x = cpos.x();
+            s->move_args.y = cpos.y();
+        }
+
+        e->r.position = r1->get_in_local(r2->get_in_absolute(e->r.position));
+
+        r1->entity_manage->steal(e);
+    };
+
     for(auto& i : e2)
     {
-        i->r.position = r1->get_in_local(r2->get_in_absolute(i->r.position));
-
-        r1->entity_manage->steal(i);
+        transform_func(i);
     }
 
     for(auto& i : e3)
     {
-        i->r.position = r1->get_in_local(r2->get_in_absolute(i->r.position));
-
-        r1->entity_manage->steal(i);
+        transform_func(i);
     }
 
     import_radio_fast(*r1, r2->field->packets, *r2->field, r2);
