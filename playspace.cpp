@@ -319,8 +319,10 @@ void room_handle_split(playspace* play, room* r1)
     {
         bool found = false;
 
-        vec2f tl = e->r.position - e->r.approx_dim;
-        vec2f br = e->r.position + e->r.approx_dim;
+        vec2f dim_with_padding = e->r.approx_dim + (vec2f){minimum_distance, minimum_distance};
+
+        vec2f tl = e->r.position - dim_with_padding;
+        vec2f br = e->r.position + dim_with_padding;
 
         for(int i=0; i < (int)aggs.size(); i++)
         {
@@ -328,8 +330,17 @@ void room_handle_split(playspace* play, room* r1)
 
             if(rect_intersect(found_agg.tl, found_agg.br, tl, br))
             {
+                ///conservative pad
+                vec2f ctl = e->r.position - e->r.approx_dim;
+                vec2f cbr = e->r.position + e->r.approx_dim;
+
                 found_agg.data.push_back(e);
-                found_agg.complete_with_padding(minimum_distance);
+
+                ///???? unsure if this performance optimisation is valid
+                ///should be, but as its not a big problem atm i'm sitting on it
+                //if(!rect_intersect(found_agg.tl, found_agg.br, cbr, ctl))
+                    found_agg.complete();
+
                 found = true;
                 break;
             }
@@ -339,7 +350,7 @@ void room_handle_split(playspace* play, room* r1)
         {
             aggregate<entity*> nen;
             nen.data.push_back(e);
-            nen.complete_with_padding(minimum_distance);
+            nen.complete();
 
             aggs.push_back(nen);
         }
@@ -355,10 +366,10 @@ void room_handle_split(playspace* play, room* r1)
         {
             for(int j=i+1; j < (int)aggs.size(); j++)
             {
-                if(aggs[i].intersects(aggs[j]))
+                if(aggs[i].intersects_with_bound(aggs[j], minimum_distance))
                 {
                     aggs[i].data.insert(aggs[i].data.end(), aggs[j].data.begin(), aggs[j].data.end());
-                    aggs[i].complete_with_padding(minimum_distance);
+                    aggs[i].complete();
 
                     i--;
                     aggs.erase(aggs.begin() + j);
@@ -790,7 +801,7 @@ void playspace::tick(double dt_s)
 
     pending_rooms.clear();
 
-    sf::Clock split_merge;
+    //sf::Clock split_merge;
 
     ///split rooms
     for(int i=0; i < (int)rooms.size(); i++)
@@ -836,9 +847,8 @@ void playspace::tick(double dt_s)
         }
     }
 
-    double sclock = split_merge.getElapsedTime().asMicroseconds()/1000.;
-
-    std::cout << "SCLOCK " << sclock << std::endl;
+    //double sclock = split_merge.getElapsedTime().asMicroseconds()/1000.;
+    //std::cout << "SCLOCK " << sclock << std::endl;
 
     for(room* r : rooms)
     {
