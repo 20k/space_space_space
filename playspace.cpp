@@ -439,7 +439,10 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
         }
     }
 
+    #define FAST
+    #ifdef FAST
     if(should_simulate)
+    #endif // FAST
         import_radio_fast(*this, packet_harvester->samples, theirs, std::nullopt);
 
     packet_harvester->samples.clear();
@@ -515,7 +518,7 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
     {
         r->my_entity->r = client_renderable();
 
-        int n = 7;
+        /*int n = 7;
 
         for(int i=0; i < n; i++)
         {
@@ -529,7 +532,10 @@ room* playspace::make_room(vec2f where, float entity_rad, poi_type::type ptype)
         }
 
         r->my_entity->r.approx_rad = 4;
-        r->my_entity->r.approx_dim = {4, 4};
+        r->my_entity->r.approx_dim = {4, 4};*/
+
+        r->my_entity->r.init_rectangular({1, 0.5});
+        r->my_entity->r.rotation = where.angle() + M_PI/2;
     }
 
     r->my_entity->r.position = where;
@@ -655,7 +661,7 @@ void playspace::init_default(int seed)
 
     field->sun_id = sun->_pid;
 
-    int real_belts = 3;
+    /*int real_belts = 80;
 
     float min_rad = 100;
     float max_rad = 800;
@@ -675,29 +681,35 @@ void playspace::init_default(int seed)
 
             room* test_poi = make_room({pos.x(), pos.y()}, dim * ROOM_POI_SCALE, poi_type::ASTEROID_BELT);
 
-            make_asteroid_poi(rng, test_poi, dim, 80);
+            make_asteroid_poi(rng, test_poi, dim, 20);
         }
+    }*/
 
-        float cfrac = poi_angle + 0.01;
+    int belts = 1;
 
-        int max_num = 100;
+    float inner_belt_distance = rand_det_s(rng, 100, 400);
 
-        for(int idx = 0; idx < max_num; idx++)
+    ///inner belt
+    {
+        int num_in_belt = 100;
+        float belt_scatter = 0.2;
+
+        for(int i=0; i < (int)num_in_belt; i++)
         {
-            asteroid* a = drawables->make_new<asteroid>(field);
-            a->init(1, 2);
-            a->is_heat = false;
-            a->collides = false;
+            float poi_angle = ((float)i / num_in_belt) * 2 * M_PI + rand_det_s(rng, -M_PI/32, M_PI/32);
 
-            float ang = cfrac + idx * 2 * M_PI / max_num;
+            float rad = inner_belt_distance + rand_det_s(rng, -inner_belt_distance*belt_scatter, inner_belt_distance*belt_scatter);
 
-            float my_rad = rad + rand_det_s(rng, -rad * 0.1, rad * 0.1);
+            vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
 
-            vec2f pos = (vec2f){my_rad, 0}.rot(ang);
+            float dim = 400;
 
-            a->r.position = pos;
+            room* my_poi = make_room(pos, dim * ROOM_POI_SCALE, poi_type::ASTEROID_BELT);
+
+            make_asteroid_poi(rng, my_poi, dim, 20);
         }
     }
+
 
     drawables->force_spawn();
 }
@@ -845,7 +857,7 @@ void playspace::tick(double dt_s)
 
             if(agg_1.intersects_with_bound(agg_2, MERGE_DIST * ROOM_POI_SCALE))
             {
-                room_merge(r1, r2);
+                //room_merge(r1, r2);
             }
         }
     }

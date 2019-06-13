@@ -1756,7 +1756,7 @@ int main()
 
         if(render_mode == RENDER_LAYER_SSPACE)
         {
-            for(int i=0; i < (int)model.labels.size(); i++)
+            /*for(int i=0; i < (int)model.labels.size(); i++)
             {
                 client_poi_data& lab = model.labels[i];
 
@@ -1782,7 +1782,7 @@ int main()
                 ImGui::TextColored(col, str.c_str());
 
                 ImGui::End();
-            }
+            }*/
 
             for(client_poi_data& lab : model.labels)
             {
