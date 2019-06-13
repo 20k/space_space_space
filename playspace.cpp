@@ -698,7 +698,15 @@ void playspace::init_default(int seed)
         {
             float poi_angle = ((float)i / num_in_belt) * 2 * M_PI + rand_det_s(rng, -M_PI/32, M_PI/32);
 
-            float rad = inner_belt_distance + rand_det_s(rng, -inner_belt_distance*belt_scatter, inner_belt_distance*belt_scatter);
+            float scatter_frac = rand_det_s(rng, -1, 1);
+
+            scatter_frac = signum(scatter_frac) * pow(scatter_frac, 2);
+
+            float scatter_len = inner_belt_distance * belt_scatter * scatter_frac;
+
+            //scatter_len = signum(scatter_len) * pow(scatter_len, 2);
+
+            float rad = inner_belt_distance + scatter_len;
 
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
 
