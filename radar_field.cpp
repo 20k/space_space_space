@@ -552,6 +552,11 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                             }
                             else
                             {
+                                precise_aggregator* prec = static_cast<precise_aggregator*>(en);
+
+                                if(!prec->active)
+                                    continue;
+
                                 auto it_1 = agg_ignore.find(packet.id);
 
                                 if(it_1 != agg_ignore.end())
@@ -572,8 +577,6 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                                 aggs.half_dim = en->r.approx_dim;
 
                                 aggs.recalculate_bounds();*/
-
-                                precise_aggregator* prec = static_cast<precise_aggregator*>(en);
 
                                 if(prec->agg.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                                 {

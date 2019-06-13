@@ -307,6 +307,7 @@ struct heatable_entity : entity, heatable
 struct precise_aggregator : heatable_entity
 {
     aggregate<int> agg;
+    bool active = true;
 
     precise_aggregator()
     {

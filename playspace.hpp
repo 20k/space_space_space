@@ -80,6 +80,8 @@ struct room : serialisable, owned
     std::string name;
     vec2f position;
 
+    bool radar_active = true;
+
     entity* my_entity = nullptr;
     precise_aggregator* packet_harvester = nullptr;
     std::shared_ptr<alt_radar_field> field;

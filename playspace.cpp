@@ -97,6 +97,8 @@ struct packet_harvester_type : precise_aggregator
         if(cleanup)
             return;
 
+        active = ren->radar_active;
+
         r.position = ren->get_in_absolute(ren->entity_manage->collision.pos);
         r.approx_dim = ren->entity_manage->collision.half_dim * ROOM_POI_SCALE;
 
@@ -438,6 +440,8 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
             break;
         }
     }
+
+    radar_active = should_simulate;
 
     #define FAST
     #ifdef FAST
