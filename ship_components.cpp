@@ -6046,7 +6046,14 @@ void asteroid::init(float min_rad, float max_rad)
 
 void asteroid::tick(double dt_s)
 {
-    dissipate(*current_radar_field);
+    float emitted = latent_heat * HEAT_EMISSION_FRAC;
+
+    alt_frequency_packet heat;
+    heat.make(permanent_heat + emitted, HEAT_FREQ);
+
+    current_radar_field->emit(heat, r.position, *this);
+
+    latent_heat -= emitted;
 }
 
 struct transient_entity : entity
