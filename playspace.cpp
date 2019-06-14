@@ -752,9 +752,9 @@ void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, 
     DO_SERIALISE(spaces);
 }
 
-void room::tick(double dt_s)
+void room::tick(double dt_s, bool reaggregate)
 {
-    entity_manage->tick(dt_s);
+    entity_manage->tick(dt_s, reaggregate);
     entity_manage->cleanup();
 
     std::vector<ship*> ships = entity_manage->fetch<ship>();
@@ -889,13 +889,18 @@ void playspace::tick(double dt_s)
     //double sclock = split_merge.getElapsedTime().asMicroseconds()/1000.;
     //std::cout << "SCLOCK " << sclock << std::endl;
 
+    int rid = 0;
     for(room* r : rooms)
     {
         r->field->sun_id = field->sun_id;
 
         r->import_radio_waves_from(*field);
 
-        r->tick(dt_s);
+        bool agg = (iteration % (int)rooms.size()) == rid;
+
+        r->tick(dt_s, agg);
+
+        rid++;
     }
 
     entity_manage->tick(dt_s);

@@ -55,44 +55,30 @@ struct aggregate
         return half_dim * 2;
     }
 
-    vec2f calc_avg()
+    void calc_pos_half_dim()
     {
         vec2f fmin = {FLT_MAX, FLT_MAX};
         vec2f fmax = {-FLT_MAX, -FLT_MAX};
 
         if(data.size() == 0)
-            return {0,0};
+            return;
 
         for(auto& i : data)
         {
-            fmin = min(fmin, tget_pos(i) - tget_dim(i)/2.f);
-            fmax = max(fmax, tget_pos(i) + tget_dim(i)/2.f);
+            vec2f lpos = tget_pos(i);
+            vec2f ldim = tget_dim(i);
+
+            fmin = min(fmin, lpos - ldim/2.f);
+            fmax = max(fmax, lpos + ldim/2.f);
         }
 
-        return ((fmax + fmin) / 2.f);
-    }
-
-    vec2f calc_half_dim()
-    {
-        vec2f fmin = {FLT_MAX, FLT_MAX};
-        vec2f fmax = {-FLT_MAX, -FLT_MAX};
-
-        if(data.size() == 0)
-            return {0,0};
-
-        for(auto& i : data)
-        {
-            fmin = min(fmin, tget_pos(i) - tget_dim(i)/2.f);
-            fmax = max(fmax, tget_pos(i) + tget_dim(i)/2.f);
-        }
-
-        return ((fmax - fmin) / 2.f);
+        pos = (fmax + fmin) / 2.f;
+        half_dim = (fmax - fmin)/2.f;
     }
 
     void complete()
     {
-        pos = calc_avg();
-        half_dim = calc_half_dim();
+        calc_pos_half_dim();
 
         tl = pos - half_dim;
         tr = pos + (vec2f){half_dim.x(), -half_dim.y()};
@@ -102,8 +88,8 @@ struct aggregate
 
     void complete_with_padding(float pad)
     {
-        pos = calc_avg();
-        half_dim = calc_half_dim() + (vec2f){pad/2, pad/2};
+        calc_pos_half_dim();
+        half_dim += (vec2f){pad/2, pad/2};
 
         tl = pos - half_dim;
         tr = pos + (vec2f){half_dim.x(), -half_dim.y()};

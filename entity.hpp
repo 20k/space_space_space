@@ -150,6 +150,8 @@ struct entity_manager : serialisable
 
     bool use_aggregates = true;
     bool aggregates_dirty = true;
+    int last_aggregated = 0;
+    bool any_moving = false;
 
     all_aggregates<aggregate<entity*>> collision;
 
@@ -208,7 +210,7 @@ struct entity_manager : serialisable
 
     bool contains(entity* e);
 
-    void tick(double dt_s);
+    void tick(double dt_s, bool reaggregate = true);
 
     void render(camera& cam, sf::RenderWindow& window);
     void render_layer(camera& cam, sf::RenderWindow& window, int layer);
@@ -223,7 +225,7 @@ struct entity_manager : serialisable
     ///only fully reaggregate on a spawn for the moment?
     void handle_aggregates();
 
-    void partial_reaggregate();
+    void partial_reaggregate(bool move_entities);
 
     void debug_aggregates(camera& cam, sf::RenderWindow& window);
 

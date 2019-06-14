@@ -93,7 +93,7 @@ struct room : serialisable, owned
 
     SERIALISE_SIGNATURE_NOSMOOTH(room);
 
-    void tick(double dt_s);
+    void tick(double dt_s, bool reaggregate);
     void add(entity* e);
     void rem(entity* e);
 

@@ -602,7 +602,7 @@ bool entity_manager::contains(entity* e)
     return false;
 }
 
-void entity_manager::tick(double dt_s)
+void entity_manager::tick(double dt_s, bool reaggregate)
 {
     force_spawn();
 
@@ -630,7 +630,7 @@ void entity_manager::tick(double dt_s)
         if(aggregates_dirty)
             handle_aggregates();
         else
-            partial_reaggregate();
+            partial_reaggregate(reaggregate);
 
         aggregates_dirty = false;
 
@@ -707,12 +707,19 @@ void entity_manager::tick(double dt_s)
 
         #endif // ALL_RECTS
 
+        any_moving = false;
+
         #define HALF_RECTS
         #ifdef HALF_RECTS
         for(entity* e1 : entities)
         {
             if(!e1->collides)
                 continue;
+
+            if(e1->velocity == (vec2f){0,0})
+                continue;
+
+            any_moving = true;
 
             auto id = e1->_pid;
             auto ticks_between_collisions = e1->ticks_between_collisions;
@@ -901,36 +908,79 @@ void entity_manager::handle_aggregates()
     {
         collision.data.emplace_back(collect_aggregates(to_process.data, 10));
     }
+
+    collision.complete();
 }
 
-void entity_manager::partial_reaggregate()
+void entity_manager::partial_reaggregate(bool move_entities)
 {
     if(collision.data.size() == 0)
         return;
 
-    int ccoarse = iteration % collision.data.size();
+    if(!any_moving)
+        return;
 
-    auto& to_restrib = collision.data[ccoarse];
-
-    ///for fine in coarse
-    for(auto& trf : to_restrib.data)
+    if(move_entities)
     {
-        ///don't fully deplete
-        if(trf.data.size() == 1)
-            continue;
+        int ccoarse = (last_aggregated++) % collision.data.size();
 
-        ///for entities in fine
-        for(auto entity_it = trf.data.begin(); entity_it != trf.data.end();)
+        auto& to_restrib = collision.data[ccoarse];
+
+        ///for fine in coarse
+        for(auto& trf : to_restrib.data)
         {
-            entity* e = *entity_it;
+            ///don't fully deplete
+            if(trf.data.size() == 1)
+                continue;
 
-            float min_dist = FLT_MAX;
-            int nearest_fine = -1;
-            int nearest_coarse = -1;
-
-            for(int coarse_id = 0; coarse_id < (int)collision.data.size(); coarse_id++)
+            ///for entities in fine
+            for(auto entity_it = trf.data.begin(); entity_it != trf.data.end();)
             {
-                auto& coarse = collision.data[coarse_id];
+                entity* e = *entity_it;
+
+                float min_dist = FLT_MAX;
+                int nearest_fine = -1;
+                int nearest_coarse = -1;
+
+                /*for(int coarse_id = 0; coarse_id < (int)collision.data.size(); coarse_id++)
+                {
+                    auto& coarse = collision.data[coarse_id];
+
+                    for(int fine_id = 0; fine_id < (int)coarse.data.size(); fine_id++)
+                    {
+                        auto& fine = coarse.data[fine_id];
+
+                        float dist = (e->r.position - fine.get_pos()).squared_length();
+
+                        if(dist < min_dist)
+                        {
+                            min_dist = dist;
+                            nearest_fine = fine_id;
+                            nearest_coarse = coarse_id;
+                        }
+                    }
+                }*/
+
+                for(int coarse_id = 0; coarse_id < (int)collision.data.size(); coarse_id++)
+                {
+                    float dist = (collision.data[coarse_id].pos - e->r.position).squared_length();
+
+                    if(dist < min_dist)
+                    {
+                        min_dist = dist;
+                        nearest_coarse = coarse_id;
+                    }
+                }
+
+                if(nearest_coarse == -1)
+                {
+                    entity_it++;
+                    continue;
+                }
+
+                min_dist = FLT_MAX;
+
+                auto& coarse = collision.data[nearest_coarse];
 
                 for(int fine_id = 0; fine_id < (int)coarse.data.size(); fine_id++)
                 {
@@ -942,29 +992,26 @@ void entity_manager::partial_reaggregate()
                     {
                         min_dist = dist;
                         nearest_fine = fine_id;
-                        nearest_coarse = coarse_id;
                     }
                 }
-            }
 
-            if(nearest_coarse == -1 || nearest_fine == -1)
-            {
-                entity_it++;
-                continue;
-            }
+                if(nearest_fine == -1)
+                {
+                    entity_it++;
+                    continue;
+                }
 
-            if(&collision.data[nearest_coarse].data[nearest_fine] == &trf)
-            {
-                entity_it++;
-                continue;
-            }
+                if(&collision.data[nearest_coarse].data[nearest_fine] == &trf)
+                {
+                    entity_it++;
+                    continue;
+                }
 
-            entity_it = trf.data.erase(entity_it);
-            collision.data[nearest_coarse].data[nearest_fine].data.push_back(e);
+                entity_it = trf.data.erase(entity_it);
+                collision.data[nearest_coarse].data[nearest_fine].data.push_back(e);
+            }
         }
     }
-
-    collision.complete();
 
     for(auto& coarse : collision.data)
     {
@@ -975,6 +1022,8 @@ void entity_manager::partial_reaggregate()
 
         coarse.complete();
     }
+
+    collision.complete();
 }
 
 void entity_manager::debug_aggregates(camera& cam, sf::RenderWindow& window)
