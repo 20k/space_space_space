@@ -778,6 +778,10 @@ void room::tick(double dt_s, bool reaggregate)
 
     //std::cout << "FNAME " << name << std::endl;
 
+
+    //if(field->packets.size() != 0)
+    //    std::cout << "pfdnum " << field->packets.size() << std::endl;
+
     field->tick(*entity_manage, dt_s);
 
     /*for(alt_frequency_packet& pack : field->packets)
@@ -787,7 +791,8 @@ void room::tick(double dt_s, bool reaggregate)
         std::cout << "rad " << rad << std::endl;
     }*/
 
-    //std::cout << "fdnum " << field->packets.size() << std::endl;
+    //if(field->packets.size() != 0)
+    //    std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
 aggregate<int> get_room_aggregate_absolute(room* r1)

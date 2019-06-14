@@ -603,6 +603,11 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
         }
     }
 
+    /*if(packets.size() > 0)
+    {
+        printf("Hits %i\n", em.entities.size());
+    }*/
+
     /*std::cout << "hit " << num_hit << std::endl;
     std::cout << "hitp " << hitp.size() << std::endl;
     std::cout << "num_hit_rects " << num_hit_rects << " max " << packets.size() * aggregates.aggregate.size() << std::endl;*/
