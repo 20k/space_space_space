@@ -7,6 +7,23 @@
 #include <iostream>
 #include "random.hpp"
 
+aggregate<int> get_room_aggregate_absolute(room* r1)
+{
+    aggregate<int> agg;
+
+    vec2f position = r1->get_in_absolute(r1->entity_manage->collision.pos);
+
+    vec2f approx_dim = r1->entity_manage->collision.half_dim * ROOM_POI_SCALE;
+    approx_dim = max(approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+
+    agg.pos = position;
+    agg.half_dim = approx_dim;
+
+    agg.recalculate_bounds();
+
+    return agg;
+}
+
 struct star_entity : asteroid
 {
     bool neutron = false;
@@ -645,6 +662,38 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
     }
 }
 
+bool overlaps_any_merge(playspace* play, vec2f to_spawn_absolute, vec2f to_spawn_local_dim)
+{
+    aggregate<int> test_aggregate;
+    test_aggregate.half_dim = to_spawn_local_dim * ROOM_POI_SCALE;
+    test_aggregate.half_dim = max(test_aggregate.half_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+    test_aggregate.pos = to_spawn_absolute;
+
+    test_aggregate.recalculate_bounds();
+
+    auto all = play->all_rooms();
+
+    for(room* r1 : all)
+    {
+        /*vec2f position = r1->get_in_absolute(r1->entity_manage->collision.pos);
+
+        vec2f approx_dim = r1->entity_manage->collision.half_dim * ROOM_POI_SCALE;
+        approx_dim = max(approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
+
+        agg.pos = position;
+        agg.half_dim = approx_dim;
+
+        agg.recalculate_bounds();*/
+
+        auto agg = get_room_aggregate_absolute(r1);
+
+        if(test_aggregate.intersects_with_bound(agg, MERGE_DIST * ROOM_POI_SCALE))
+            return true;
+    }
+
+    return false;
+}
+
 void playspace::init_default(int seed)
 {
     std::minstd_rand rng;
@@ -727,6 +776,9 @@ void playspace::init_default(int seed)
 
             float dim = 400;
 
+            if(overlaps_any_merge(this, pos, dim))
+                continue;
+
             room* my_poi = make_room(pos, dim * ROOM_POI_SCALE, poi_type::ASTEROID_BELT);
 
             make_asteroid_poi(rng, my_poi, dim, 20);
@@ -806,23 +858,6 @@ void room::tick(double dt_s, bool reaggregate)
     //    std::cout << "fdnum " << field->packets.size() << std::endl;
 }
 
-aggregate<int> get_room_aggregate_absolute(room* r1)
-{
-    aggregate<int> agg;
-
-    vec2f position = r1->get_in_absolute(r1->entity_manage->collision.pos);
-
-    vec2f approx_dim = r1->entity_manage->collision.half_dim * ROOM_POI_SCALE;
-    approx_dim = max(approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
-
-    agg.pos = position;
-    agg.half_dim = approx_dim;
-
-    agg.recalculate_bounds();
-
-    return agg;
-}
-
 void playspace::tick(double dt_s)
 {
     /*std::vector<ship*> preships = entity_manage->fetch<ship>();
@@ -885,7 +920,7 @@ void playspace::tick(double dt_s)
 
             if(agg_1.intersects_with_bound(agg_2, MERGE_DIST * ROOM_POI_SCALE))
             {
-                //room_merge(r1, r2);
+                room_merge(r1, r2);
             }
         }
     }
