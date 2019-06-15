@@ -75,6 +75,7 @@ struct entity : serialisable, owned
     std::vector<size_t> phys_ignore;
 
     client_renderable r;
+    vec2f last_position;
 
     vec2f velocity = {0,0};
     vec2f control_force = {0,0};

@@ -618,9 +618,19 @@ void entity_manager::tick(double dt_s, bool reaggregate)
         e->tick_pre_phys(dt_s);
     }
 
+    any_moving = false;
+
     for(entity* e : last_entities)
     {
         e->tick_phys(dt_s);
+
+        ///done here because its the last bulk operation done
+        {
+            if(e->last_position != e->r.position)
+                any_moving = true;
+
+            e->last_position = e->r.position;
+        }
     }
 
     if(use_aggregates)
@@ -707,8 +717,6 @@ void entity_manager::tick(double dt_s, bool reaggregate)
 
         #endif // ALL_RECTS
 
-        any_moving = false;
-
         #define HALF_RECTS
         #ifdef HALF_RECTS
         for(entity* e1 : entities)
@@ -718,8 +726,6 @@ void entity_manager::tick(double dt_s, bool reaggregate)
 
             if(e1->velocity == (vec2f){0,0})
                 continue;
-
-            any_moving = true;
 
             auto id = e1->_pid;
             auto ticks_between_collisions = e1->ticks_between_collisions;
