@@ -121,6 +121,8 @@ struct packet_harvester_type : precise_aggregator
 
         r.approx_dim = max(r.approx_dim, (vec2f){25 * ROOM_POI_SCALE, 25 * ROOM_POI_SCALE});
 
+        r.approx_dim += (vec2f){50*ROOM_POI_SCALE, 50*ROOM_POI_SCALE};
+
         agg.pos = r.position;
         agg.half_dim = r.approx_dim;
 
@@ -832,6 +834,8 @@ void room::tick(double dt_s, bool reaggregate)
 
     vec2f bound = entity_manage->collision.half_dim;
     bound = std::max(bound, (vec2f){30, 30});
+
+    bound += (vec2f){80, 80};
 
     field->set_finite_stats(entity_manage->collision.pos, bound);
 
