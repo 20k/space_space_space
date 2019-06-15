@@ -689,28 +689,39 @@ void playspace::init_default(int seed)
         }
     }*/
 
-    int belts = 1;
-
-    float inner_belt_distance = rand_det_s(rng, 100, 400);
+    int belts = 5;
 
     ///inner belt
+    for(int belt_num = 0; belt_num < belts; belt_num++)
     {
-        int num_in_belt = 100;
-        float belt_scatter = 0.2;
+        float inner_belt_distance = rand_det_s(rng, 100, 600);
+
+        int num_in_belt = 5;
+        float belt_scatter = 0.2 * 0;
+        float uniform_scatter = 40;
+
+        float belt_offset = rand_det_s(rng, 0, M_PI*2);
+        float belt_angle = M_PI/4;
 
         for(int i=0; i < (int)num_in_belt; i++)
         {
-            float poi_angle = ((float)i / num_in_belt) * 2 * M_PI + rand_det_s(rng, -M_PI/32, M_PI/32);
+            //float poi_angle = ((float)i / num_in_belt) * 2 * M_PI + ;
+
+            float jitter = rand_det_s(rng, -M_PI/64, M_PI/64) * 0;
+            float rad_scatter = rand_det_s(rng, -uniform_scatter, uniform_scatter);
+
+            float poi_angle = ((float)i / num_in_belt) * belt_angle + jitter + belt_offset;
 
             float scatter_frac = rand_det_s(rng, -1, 1);
 
             scatter_frac = signum(scatter_frac) * pow(scatter_frac, 2);
 
-            float scatter_len = inner_belt_distance * belt_scatter * scatter_frac;
+            float scatter_len = inner_belt_distance * belt_scatter * scatter_frac + rad_scatter;
 
             //scatter_len = signum(scatter_len) * pow(scatter_len, 2);
 
             float rad = inner_belt_distance + scatter_len;
+            inner_belt_distance = rad;
 
             vec2f pos = (vec2f){rad, 0}.rot(poi_angle);
 
