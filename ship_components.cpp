@@ -1709,6 +1709,73 @@ void ship::handle_cleanup()
     }
 }
 
+void handle_manufacturing(ship& s, component& fac, double dt_s)
+{
+    for(auto id : fac.unchecked_blueprints)
+    {
+        if(s.persistent_data)
+        {
+            auto found = s.persistent_data->blueprint_manage.fetch(id);
+
+            if(found)
+            {
+                fac.manufacture_blueprint(*found.value(), s);
+            }
+        }
+    }
+
+    fac.unchecked_blueprints.clear();
+
+    if(fac.build_queue.size() > 0)
+    {
+        fac.build_queue[0].construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+
+        float front_cost = get_build_work(fac.build_queue.front());
+
+        while(fac.build_queue.size() > 0 && fac.build_queue[0].construction_amount >= front_cost)
+        {
+            ship spawn = fac.build_queue.front();
+
+            std::optional<component*> fc;
+
+            for(component& scomp : s.components)
+            {
+                if(scomp.base_id != component_type::CARGO_STORAGE)
+                    continue;
+
+                if(scomp.can_store(spawn))
+                {
+                    fc = &scomp;
+                    break;
+                }
+            }
+
+            if(fc)
+            {
+                fc.value()->store(spawn);
+
+                float extra = fac.build_queue[0].construction_amount - front_cost;
+
+                fac.build_queue.erase(fac.build_queue.begin());
+
+                if(fac.build_queue.size() > 0)
+                {
+                    fac.build_queue[0].construction_amount += extra;
+                }
+            }
+            else
+            {
+                fac.building = false;
+                break;
+            }
+        }
+    }
+    else
+    {
+        fac.building = false;
+    }
+}
+
 void ship::tick(double dt_s)
 {
     handle_cleanup();
@@ -1829,69 +1896,7 @@ void ship::tick(double dt_s)
     {
         if(c.has(component_info::MANUFACTURING))
         {
-            for(auto id : c.unchecked_blueprints)
-            {
-                if(persistent_data)
-                {
-                    auto found = persistent_data->blueprint_manage.fetch(id);
-
-                    if(found)
-                    {
-                        c.manufacture_blueprint(*found.value(), *this);
-                    }
-                }
-            }
-
-            c.unchecked_blueprints.clear();
-
-            if(c.build_queue.size() > 0)
-            {
-                c.build_queue[0].construction_amount += c.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
-
-                float front_cost = get_build_work(c.build_queue.front());
-
-                while(c.build_queue.size() > 0 && c.build_queue[0].construction_amount >= front_cost)
-                {
-                    ship spawn = c.build_queue.front();
-
-                    std::optional<component*> fc;
-
-                    for(component& scomp : components)
-                    {
-                        if(scomp.base_id != component_type::CARGO_STORAGE)
-                            continue;
-
-                        if(scomp.can_store(spawn))
-                        {
-                            fc = &scomp;
-                            break;
-                        }
-                    }
-
-                    if(fc)
-                    {
-                        fc.value()->store(spawn);
-
-                        float extra = c.build_queue[0].construction_amount - front_cost;
-
-                        c.build_queue.erase(c.build_queue.begin());
-
-                        if(c.build_queue.size() > 0)
-                        {
-                            c.build_queue[0].construction_amount += extra;
-                        }
-                    }
-                    else
-                    {
-                        c.building = false;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                c.building = false;
-            }
+            handle_manufacturing(*this, c, dt_s);
         }
 
         ///so: approaches
