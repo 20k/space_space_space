@@ -164,7 +164,7 @@ void server_thread(std::atomic_bool& should_term)
 
     cpu_tests();
 
-    //#define SERVER_VIEW
+    #define SERVER_VIEW
     #ifdef SERVER_VIEW
 
     sf::RenderWindow debug(sf::VideoMode(1200, 1200), "debug");
@@ -1057,6 +1057,7 @@ void server_thread(std::atomic_bool& should_term)
                     {
                         r->entity_manage->render(cam, debug);
                         r->field->render(cam, debug);
+                        r->entity_manage->debug_aggregates(cam, debug);
                         break;
                     }
                 }
@@ -1065,6 +1066,7 @@ void server_thread(std::atomic_bool& should_term)
                 {
                     play->entity_manage->render(cam, debug);
                     play->field->render(cam, debug);
+                    play->entity_manage->debug_aggregates(cam, debug);
                     break;
                 }
             }

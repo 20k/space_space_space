@@ -917,10 +917,10 @@ void entity_manager::partial_reaggregate(bool move_entities)
     if(collision.data.size() == 0)
         return;
 
-    if(!any_moving)
-        return;
+    //if(!any_moving)
+    //    return;
 
-    if(move_entities)
+    //if(move_entities)
     {
         int ccoarse = (last_aggregated++) % collision.data.size();
 
@@ -1030,18 +1030,6 @@ void entity_manager::debug_aggregates(camera& cam, sf::RenderWindow& window)
 {
     for(aggregate<aggregate<entity*>>& agg : collision.data)
     {
-        vec2f rpos = cam.world_to_screen(agg.pos, 1);
-
-        sf::RectangleShape shape;
-        shape.setSize({agg.half_dim.x()*2, agg.half_dim.y()*2});
-        shape.setPosition(rpos.x(), rpos.y());
-        shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineThickness(2);
-        shape.setOutlineColor(sf::Color::White);
-
-        window.draw(shape);
-
         for(aggregate<entity*>& subagg : agg.data)
         {
             vec2f rpos = cam.world_to_screen(subagg.pos, 1);
@@ -1056,7 +1044,32 @@ void entity_manager::debug_aggregates(camera& cam, sf::RenderWindow& window)
 
             window.draw(shape);
         }
+
+        vec2f rpos = cam.world_to_screen(agg.pos, 1);
+
+        sf::RectangleShape shape;
+        shape.setSize({agg.half_dim.x()*2, agg.half_dim.y()*2});
+        shape.setPosition(rpos.x(), rpos.y());
+        shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+        shape.setFillColor(sf::Color::Transparent);
+        shape.setOutlineThickness(2);
+        shape.setOutlineColor(sf::Color::White);
+
+        window.draw(shape);
     }
+
+
+    vec2f rpos = cam.world_to_screen(collision.pos, 1);
+
+    sf::RectangleShape shape;
+    shape.setSize({collision.half_dim.x()*2, collision.half_dim.y()*2});
+    shape.setPosition(rpos.x(), rpos.y());
+    shape.setOrigin(shape.getSize().x/2, shape.getSize().y/2);
+    shape.setFillColor(sf::Color::Transparent);
+    shape.setOutlineThickness(2);
+    shape.setOutlineColor(sf::Color::Blue);
+
+    window.draw(shape);
 }
 
 void entity_manager::cleanup()
