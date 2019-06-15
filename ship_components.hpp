@@ -355,6 +355,8 @@ std::vector<pending_transfer>& client_pending_transfers()
     return txf;
 }
 
+struct build_in_progress;
+
 struct component : serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
@@ -387,6 +389,7 @@ struct component : serialisable, owned
     double last_sat = 1;
     bool flows = false;
     bool cleanup = false;
+    bool is_build_holder = false; ///holds resources for a ship build
     //bool heat_sink = false;
 
     ///0 = solid, 1 = liquid
@@ -409,7 +412,7 @@ struct component : serialisable, owned
     std::optional<fixed_clock> bad_time;
 
     bool building = false;
-    std::vector<ship> build_queue;
+    std::vector<build_in_progress> build_queue;
 
     std::vector<size_t> unchecked_blueprints;
 
@@ -429,6 +432,7 @@ struct component : serialisable, owned
         DO_SERIALISE(short_name);
         DO_SERIALISE(last_sat);
         DO_SERIALISE(flows);
+        DO_SERIALISE(is_build_holder);
         DO_SERIALISE(phase);
         //DO_SERIALISE(heat_sink);
         //DO_SERIALISE(no_drain_on_full_production);
@@ -909,6 +913,24 @@ struct ship : heatable_entity
 private:
     double thrusters_active = 0;
 };
+
+struct build_in_progress : serialisable
+{
+    ship result;
+    size_t in_progress_pid = -1;
+
+    void make(const ship& fin)
+    {
+        result = fin;
+    }
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(result);
+        DO_SERIALISE(in_progress_pid);
+    }
+};
+
 
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)

@@ -1719,6 +1719,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             if(found)
             {
+                ///creates the ghost ship, is empty
                 fac.manufacture_blueprint(*found.value(), s);
             }
         }
@@ -1728,15 +1729,27 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
     if(fac.build_queue.size() > 0)
     {
-        fac.build_queue[0].construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+        build_in_progress& in_progress = fac.build_queue[0];
 
-        float front_cost = get_build_work(fac.build_queue.front());
+        ship* ship_placeholder = dynamic_cast<ship*>(find_by_id(s, in_progress.in_progress_pid));
 
-        while(fac.build_queue.size() > 0 && fac.build_queue[0].construction_amount >= front_cost)
+        if(ship_placeholder == nullptr)
         {
-            ship spawn = fac.build_queue.front();
+            fac.build_queue.erase(fac.build_queue.begin());
+            return;
+        }
 
-            std::optional<component*> fc;
+        ship_placeholder->construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+
+        float front_cost = get_build_work(fac.build_queue.front().result);
+
+        while(fac.build_queue.size() > 0 && ship_placeholder->construction_amount >= front_cost)
+        {
+            build_in_progress& next_in_progress = fac.build_queue[0];
+
+            ship spawn = next_in_progress.result;
+
+            /*std::optional<component*> fc;
 
             for(component& scomp : s.components)
             {
@@ -1748,9 +1761,14 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     fc = &scomp;
                     break;
                 }
-            }
+            }*/
 
-            if(fc)
+            ///so this is a fun one
+            *ship_placeholder = spawn;
+
+
+
+            /*if(fc)
             {
                 fc.value()->store(spawn);
 
@@ -1767,7 +1785,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
             {
                 fac.building = false;
                 break;
-            }
+            }*/
         }
     }
     else
@@ -3377,6 +3395,7 @@ void component::manufacture_blueprint_id(size_t blue_id)
 
 void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 {
+    #ifdef INSTANT
     std::vector<std::vector<material>> in_storage;
 
     for(component& lc : parent.components)
@@ -3444,6 +3463,68 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 
     building = true;
     build_queue.push_back(blue.to_ship());
+    #endif // INSTANT
+
+    ship blue_ship = blue.to_ship();
+
+    bool any_free_space = false;
+
+    component* which = nullptr;
+    float max_space = 0;
+
+    for(component& lc : parent.components)
+    {
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        float space = lc.get_internal_volume() - lc.get_stored_volume();
+
+        if(space > 0)
+        {
+            any_free_space = true;
+
+            if(space > max_space)
+            {
+                which = &lc;
+                max_space = space;
+            }
+        }
+    }
+
+    if(!any_free_space)
+        return;
+
+    ///should display a warning to the user
+    /*bool any = false;
+
+    for(component& lc : parent.components)
+    {
+        if(lc.base_id != component_type::CARGO_STORAGE)
+            continue;
+
+        if(blue_ship.get_my_volume() <= lc.get_internal_volume())
+        {
+            any = true;
+            break;
+        }
+    }*/
+
+    build_in_progress build;
+    build.make(blue_ship);
+
+    component new_comp = get_component_default(component_type::MATERIAL, 1);
+
+    new_comp.long_name = "(Unfinished) " + blue_ship.blueprint_name;
+
+    ship dummy_ship;
+    dummy_ship.components.push_back(new_comp);
+
+    which->stored.push_back(dummy_ship);
+
+    build.in_progress_pid = parent.components.back()._pid;
+
+    building = true;
+    build_queue.push_back(build);
 }
 
 void component::render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent)
@@ -3467,13 +3548,18 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
     {
         for(int i=0; i < (int)build_queue.size(); i++)
         {
-            float work = get_build_work(build_queue[i]);
+            float work = get_build_work(build_queue[i].result);
 
-            std::string str = build_queue[i].blueprint_name;
+            std::string str = build_queue[i].result.blueprint_name;
 
-            if(build_queue[i].construction_amount > 0)
+            ship* fship = dynamic_cast<ship*>(find_by_id(parent, build_queue[i].in_progress_pid));
+
+            if(fship != nullptr)
             {
-                str += " " + to_string_with(100 * build_queue[i].construction_amount / work) + "%%";
+                if(fship->construction_amount > 0)
+                {
+                    str += " " + to_string_with(100 * fship->construction_amount / work) + "%%";
+                }
             }
 
             ImGui::Text(str.c_str());
@@ -3535,7 +3621,12 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
             }
             else
             {
-                ImGui::Button("Insufficient Resources");
+                //ImGui::Button("Insufficient Resources");
+
+                if(ImGui::Button("Build (Insufficient Resources)"))
+                {
+                    manufacture_blueprint_id_rpc(blue._pid);
+                }
             }
 
             ImGui::SameLine();
