@@ -917,10 +917,10 @@ void entity_manager::partial_reaggregate(bool move_entities)
     if(collision.data.size() == 0)
         return;
 
-    //if(!any_moving)
-    //    return;
+    if(!any_moving)
+        return;
 
-    //if(move_entities)
+    if(move_entities)
     {
         int ccoarse = (last_aggregated++) % collision.data.size();
 
