@@ -253,10 +253,15 @@ void material_deplete(std::vector<material>& ms, float amount)
     }
 }
 
-void material_partial_deplete(std::vector<material>& store, std::vector<std::vector<material>>& deplete)
+std::vector<float> material_partial_deplete(std::vector<material>& store, std::vector<std::vector<material>>& deplete)
 {
-    for(auto& i : deplete)
+    std::vector<float> ret;
+    ret.resize(deplete.size());
+
+    for(int kk=0; kk < (int)deplete.size(); kk++)
     {
+        auto& i = deplete[kk];
+
         if(is_equivalent_material(store, i))
         {
             float vol_store = material_volume(store);
@@ -266,8 +271,12 @@ void material_partial_deplete(std::vector<material>& store, std::vector<std::vec
 
             material_deplete(store, vol_deplete);
             material_deplete(i, vol_deplete);
+
+            ret[kk] += vol_deplete;
         }
     }
+
+    return ret;
 }
 
 float material_volume(const std::vector<material>& m)

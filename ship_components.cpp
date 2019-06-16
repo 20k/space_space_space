@@ -1814,6 +1814,18 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         std::vector<std::vector<material>> already_drained;
         get_ship_cost(*ship_placeholder, already_drained);
 
+        float existing_cost = 0;
+
+        for(auto& i : already_drained)
+        {
+            for(auto& j : i)
+            {
+                existing_cost += j.dynamic_desc.volume;
+            }
+        }
+
+        printf("Found existing cost %f\n", existing_cost);
+
         float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
         bool all_sat = true;
@@ -1869,8 +1881,12 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             all_sat = false;
 
+            printf("TOTAL MOVEABLE %f\n", total_moveable);
+
             float to_move = clamp(total_requested_move, 0, total_moveable);
-            total_moveable -= to_move;
+            //total_moveable -= to_move;
+
+            printf("To move %f\n", to_move);
 
             std::vector<material> to_move_mats;
 
@@ -1900,6 +1916,8 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 continue;
 
             std::vector<std::vector<material>> mat_of_mats{to_move_mats};
+            std::vector<float> total_depleted;
+            total_depleted.resize(to_move_mats.size());
 
             for(component& lc : s.components)
             {
@@ -1909,14 +1927,66 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 lc.for_each_stored([&](component& c)
                 {
                     if(c.base_id == component_type::MATERIAL)
-                        material_partial_deplete(c.composition, mat_of_mats);
+                    {
+                        auto next = material_partial_deplete(c.composition, mat_of_mats);
+
+                        assert(next.size() == to_move_mats.size());
+
+                        for(int kk=0; kk < (int)next.size(); kk++)
+                        {
+                            total_depleted[kk] += next[kk];
+                        }
+                    }
                 });
             }
 
-            for(int i=0; i < which->size(); i++)
+            float real_deplete = 0;
+
+            for(auto& i : total_depleted)
             {
-                (*which)[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
+                real_deplete += i;
             }
+
+            total_moveable -= real_deplete;
+
+            std::vector<material> real_change;
+
+            for(int kk=0; kk < (int)total_depleted.size(); kk++)
+            {
+                material requested_deplete = to_move_mats[kk];
+
+                requested_deplete.dynamic_desc.volume = to_move_mats[kk].dynamic_desc.volume - mat_of_mats[0][kk].dynamic_desc.volume;
+
+                real_change.push_back(requested_deplete);
+            }
+
+            for(component& c : ship_placeholder->components)
+            {
+                if(is_equivalent_material(c.composition, real_change))
+                {
+                    material_merge(c.composition, real_change);
+                    break;
+                }
+            }
+
+
+            /*for(int i=0; i < which->size(); i++)
+            {
+                //(*which)[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
+
+
+
+                printf("Increased by %f\n", to_move_mats[i].dynamic_desc.volume);
+
+                //printf("FINV %f\n", (*which)[i].dynamic_desc.volume);
+            }*/
+
+            ///which isn't the right variable to dump this into
+
+            /*for(auto& i : to_move_mats)
+            {
+                printf("Depleted %f\n", i.dynamic_desc.volume);
+            }*/
         }
 
         ///work is just volumewise sum of mats required
