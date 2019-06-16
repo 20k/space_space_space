@@ -763,6 +763,8 @@ struct ship : heatable_entity
     //vec2f realspace_destination;
     //size_t realspace_pid_target = -1;
 
+    bool is_build_holder = false;
+
     std::optional<component*> get_component_from_id(uint64_t id);
 
     void handle_cleanup();
@@ -864,6 +866,7 @@ struct ship : heatable_entity
         DO_SERIALISE(radar_frequency_composition);
         DO_SERIALISE(radar_intensity_composition);
         DO_SERIALISE(current_directory);
+        DO_SERIALISE(is_build_holder);
     }
 
     virtual void pre_collide(entity& other) override;

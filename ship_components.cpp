@@ -1816,6 +1816,8 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
         float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
+        bool all_sat = true;
+
         for(int m1 = 0; m1 < (int)total_required_mats.size(); m1++)
         {
             std::vector<material>& base = total_required_mats[m1];
@@ -1864,6 +1866,8 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             if(total_requested_move <= 0.00001)
                 continue;
+
+            all_sat = false;
 
             float to_move = clamp(total_requested_move, 0, total_moveable);
             total_moveable -= to_move;
@@ -1924,7 +1928,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         //float front_cost = fac.build_queue.front()->result.get_cost();
         float front_cost =  get_build_work(fac.build_queue.front()->result.to_ship());
 
-        while(fac.build_queue.size() > 0 && ship_placeholder->construction_amount >= front_cost)
+        if(fac.build_queue.size() > 0 && all_sat)
         {
             build_in_progress& next_in_progress = *fac.build_queue[0];
 
@@ -2544,6 +2548,9 @@ void ship::tick(double dt_s)
     {
         for(ship& s : c.stored)
         {
+            if(s.is_build_holder)
+                continue;
+
             for(int kk=0; kk < s.components.size(); kk++)
             {
                 /*if(s.components[kk].get_my_volume() < 0.001 && s.components[kk].base_id == component_type::MATERIAL)
@@ -3699,6 +3706,8 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 
     ///clap of my arse etc
     ship dummy_ship;
+    dummy_ship.is_build_holder = true;
+    dummy_ship.is_ship = true;
     //dummy_ship.components.push_back(new_comp);
     //dummy_ship.is_build_holder = true;
 
