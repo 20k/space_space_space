@@ -1810,7 +1810,113 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
         std::vector<std::vector<material>> total_required_mats = in_progress.result.get_cost();
 
-        ship_placeholder->construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+        std::vector<std::vector<material>> already_drained;
+        get_ship_cost(*ship_placeholder, already_drained);
+
+        float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+
+        for(int m1 = 0; m1 < (int)total_required_mats.size(); m1++)
+        {
+            std::vector<material>& base = total_required_mats[m1];
+
+            std::vector<material>* which = nullptr;
+
+            for(int m2 = 0; m2 < (int)already_drained.size(); m2++)
+            {
+                std::vector<material>& sat = already_drained[m2];
+
+                if(is_equivalent_material(base, sat))
+                {
+                    which = &sat;
+                }
+            }
+
+            std::vector<float> remaining;
+            float total_requested_move = 0;
+
+            if(which == nullptr)
+            {
+                component new_comp = get_component_default(component_type::MATERIAL, 1);
+                new_comp.long_name = "(Unfinished) " + in_progress.result.name;
+                new_comp.is_build_holder = true;
+
+                for(const material& m : base)
+                {
+                    material nm = m;
+                    nm.dynamic_desc.volume = 0;
+
+                    new_comp.composition.push_back(nm);
+                }
+
+                ship_placeholder->components.push_back(new_comp);
+
+                which = &ship_placeholder->components.back().composition;
+            }
+
+            assert(which->size() == base.size());
+
+            for(int i=0; i < (int)which->size(); i++)
+            {
+                remaining.push_back(base[i].dynamic_desc.volume - (*which)[i].dynamic_desc.volume);
+                total_requested_move += remaining.back();
+            }
+
+            if(total_requested_move <= 0.00001)
+                continue;
+
+            float to_move = clamp(total_requested_move, 0, total_moveable);
+            total_moveable -= to_move;
+
+            std::vector<material> to_move_mats;
+
+            for(int i=0; i < (int)remaining.size(); i++)
+            {
+                material partial = base[i];
+                partial.dynamic_desc.volume = to_move * remaining[i] / total_requested_move;
+
+                to_move_mats.push_back(partial);
+            }
+
+            std::vector<std::vector<material>> in_storage;
+
+            for(component& lc : s.components)
+            {
+                if(lc.base_id != component_type::CARGO_STORAGE)
+                    continue;
+
+                lc.for_each_stored([&](component& c)
+                {
+                    if(c.base_id == component_type::MATERIAL)
+                        in_storage.push_back(c.composition);
+                });
+            }
+
+            if(!material_satisfies({to_move_mats}, in_storage))
+                continue;
+
+            std::vector<std::vector<material>> mat_of_mats{to_move_mats};
+
+            for(component& lc : s.components)
+            {
+                if(lc.base_id != component_type::CARGO_STORAGE)
+                    continue;
+
+                lc.for_each_stored([&](component& c)
+                {
+                    if(c.base_id == component_type::MATERIAL)
+                        material_partial_deplete(c.composition, mat_of_mats);
+                });
+            }
+
+            for(int i=0; i < which->size(); i++)
+            {
+                which->composition[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
+            }
+        }
+
+        ///work is just volumewise sum of mats required
+
+        //ship_placeholder->construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
         //float front_cost = get_build_work(fac.build_queue.front().result);
 
@@ -3586,14 +3692,28 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     build_in_progress build;
     build.make(blue);
 
-    component new_comp = get_component_default(component_type::MATERIAL, 1);
-
+    /*component new_comp = get_component_default(component_type::MATERIAL, 1);
     new_comp.long_name = "(Unfinished) " + blue.name;
+    new_comp.is_build_holder = true;*/
 
+    ///clap of my arse etc
     ship dummy_ship;
-    new_comp.is_build_holder = true;
-    dummy_ship.components.push_back(new_comp);
+    //dummy_ship.components.push_back(new_comp);
     //dummy_ship.is_build_holder = true;
+
+    /*ship dummy_ship;
+
+    std::vector<std::vector<material>> cost;
+    get_ship_cost(blue.to_ship(), cost);
+
+    for(int i=0; i < (int)cost.size(); i++)
+    {
+        component proxy_comp = get_component_default(component_type::MATERIAL, 1);
+        proxy_comp.long_name = "(Unfinished) Materials Placeholder";
+        proxy_comp.is_build_holder = true;
+
+        dummy_ship.components.push_back(proxy_comp);
+    }*/
 
     which->stored.push_back(dummy_ship);
 

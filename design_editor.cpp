@@ -259,6 +259,17 @@ void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out)
             get_ship_cost(cs, out);
         }
     }
+
+    for(auto& i : out)
+    {
+        auto sorter =
+        [](const material& one, const material& two)
+        {
+            return one.type < two.type;
+        };
+
+        std::sort(i.begin(), i.end(), sorter);
+    }
 }
 
 bool shares_blueprint(const ship& s1, const ship& s2)

@@ -196,6 +196,7 @@ struct design_editor
     float dragging_size = 1;
 };
 
+void get_ship_cost(const ship& s, std::vector<std::vector<material>>& out);
 void render_ship_cost(const ship& s, const std::vector<std::vector<material>>& mats);
 
 #endif // DESIGN_EDITOR_HPP_INCLUDED
