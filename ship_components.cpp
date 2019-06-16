@@ -16,6 +16,7 @@
 #include "colours.hpp"
 #include "script_execution.hpp"
 #include "ui_util.hpp"
+#include "material_info.hpp"
 
 struct build_in_progress : serialisable
 {
