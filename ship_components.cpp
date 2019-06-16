@@ -1824,8 +1824,6 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
             }
         }
 
-        printf("Found existing cost %f\n", existing_cost);
-
         float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
         bool all_sat = true;
@@ -1846,6 +1844,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
             }
         }
 
+        ///need to rework so it takes resources from a specific component
         for(int m1 = 0; m1 < (int)total_required_mats.size(); m1++)
         {
             std::vector<material>& base = total_required_mats[m1];
@@ -1897,14 +1896,10 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             all_sat = false;
 
-            printf("TOTAL MOVEABLE %f\n", total_moveable);
-
             float to_move = clamp(total_requested_move, 0, total_moveable);
             //total_moveable -= to_move;
 
             //to_move = clamp(to_move, 0, free_volume);
-
-            printf("To move %f\n", to_move);
 
             std::vector<material> to_move_mats;
 
@@ -1986,25 +1981,6 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     break;
                 }
             }
-
-
-            /*for(int i=0; i < which->size(); i++)
-            {
-                //(*which)[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
-
-
-
-                printf("Increased by %f\n", to_move_mats[i].dynamic_desc.volume);
-
-                //printf("FINV %f\n", (*which)[i].dynamic_desc.volume);
-            }*/
-
-            ///which isn't the right variable to dump this into
-
-            /*for(auto& i : to_move_mats)
-            {
-                printf("Depleted %f\n", i.dynamic_desc.volume);
-            }*/
         }
 
         ///work is just volumewise sum of mats required
