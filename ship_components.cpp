@@ -1910,7 +1910,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             for(int i=0; i < which->size(); i++)
             {
-                which->composition[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
+                (*which)[i].dynamic_desc.volume += to_move_mats[i].dynamic_desc.volume;
             }
         }
 
