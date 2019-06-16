@@ -2453,7 +2453,7 @@ void ship::tick(double dt_s)
                 if(to_remove.base_id == component_type::MATERIAL)
                 {
                     ///in the shitter, schedule to be removed
-                    if(to_remove.get_my_volume() < 0.001)
+                    if(to_remove.get_my_volume() < 0.001 && !to_remove.is_build_holder)
                     {
                         if(!to_remove.bad_time)
                             to_remove.bad_time = fixed_clock();
@@ -3591,11 +3591,13 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     new_comp.long_name = "(Unfinished) " + blue.name;
 
     ship dummy_ship;
+    new_comp.is_build_holder = true;
     dummy_ship.components.push_back(new_comp);
+    //dummy_ship.is_build_holder = true;
 
     which->stored.push_back(dummy_ship);
 
-    build.in_progress_pid = parent.components.back()._pid;
+    build.in_progress_pid = which->stored.back()._pid;
 
     building = true;
     build_queue.push_back(build);
