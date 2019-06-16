@@ -1830,6 +1830,22 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
         bool all_sat = true;
 
+        float free_volume = 0;
+
+        ///not taking into account that taken materials and
+        ///the ship itself are probably in the same cargo container
+        for(component& c : s.components)
+        {
+            for(ship& fs : c.stored)
+            {
+                if(&fs == ship_placeholder)
+                {
+                    free_volume = c.get_internal_volume() - c.get_stored_volume();
+                    break;
+                }
+            }
+        }
+
         for(int m1 = 0; m1 < (int)total_required_mats.size(); m1++)
         {
             std::vector<material>& base = total_required_mats[m1];
@@ -1885,6 +1901,8 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             float to_move = clamp(total_requested_move, 0, total_moveable);
             //total_moveable -= to_move;
+
+            //to_move = clamp(to_move, 0, free_volume);
 
             printf("To move %f\n", to_move);
 
