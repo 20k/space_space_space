@@ -357,6 +357,37 @@ std::vector<pending_transfer>& client_pending_transfers()
 
 struct build_in_progress;
 
+template<typename T>
+struct shared_wrapper : serialisable
+{
+    std::shared_ptr<T> ptr;
+
+    shared_wrapper()
+    {
+        ptr = std::make_shared<T>();
+    }
+
+    shared_wrapper(const T& in)
+    {
+        ptr = std::make_shared<T>(in);
+    }
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(ptr);
+    }
+
+    T* operator->()
+    {
+        return ptr.operator->();
+    }
+
+    T& operator*()
+    {
+        return *ptr;
+    }
+};
+
 struct component : serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
@@ -412,7 +443,7 @@ struct component : serialisable, owned
     std::optional<fixed_clock> bad_time;
 
     bool building = false;
-    std::vector<build_in_progress> build_queue;
+    std::vector<shared_wrapper<build_in_progress>> build_queue;
 
     std::vector<size_t> unchecked_blueprints;
 
@@ -420,57 +451,7 @@ struct component : serialisable, owned
     ///aka power gen
     //bool production_heat_scales = false;
 
-    SERIALISE_SIGNATURE()
-    {
-        //DO_SERIALISE(info);
-        //DO_SERIALISE(activate_requirements);
-        //DO_SERIALISE(tags);
-        DO_SERIALISE(dyn_info);
-        DO_SERIALISE(dyn_activate_requirements);
-        DO_SERIALISE(base_id);
-        DO_SERIALISE(long_name);
-        DO_SERIALISE(short_name);
-        DO_SERIALISE(last_sat);
-        DO_SERIALISE(flows);
-        DO_SERIALISE(is_build_holder);
-        DO_SERIALISE(phase);
-        //DO_SERIALISE(heat_sink);
-        //DO_SERIALISE(no_drain_on_full_production);
-        //DO_SERIALISE(complex_no_drain_on_full_production);
-        DO_SERIALISE(last_production_frac);
-        //DO_SERIALISE(max_use_angle);
-        //DO_SERIALISE(subtype);
-        //DO_SERIALISE(production_heat_scales);
-        //DO_SERIALISE(my_volume);
-        //DO_SERIALISE(internal_volume);
-        DO_SERIALISE(current_scale);
-        DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
-        //DO_SERIALISE(primary_type);
-        //DO_SERIALISE(id);
-        DO_SERIALISE(composition);
-        DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
-        DO_SERIALISE(activation_level);
-        DO_SERIALISE(last_could_use);
-        DO_SERIALISE(last_activation_successful);
-        DO_SERIALISE(building);
-        DO_SERIALISE(build_queue);
-        DO_SERIALISE(radar_offset_angle);
-        DO_SERIALISE(radar_restrict_angle);
-
-        if(base_id == component_type::CPU)
-        {
-            DO_SERIALISE(cpu_core);
-        }
-
-        DO_SERIALISE(current_directory);
-
-        //DO_SERIALISE(activation_type);
-        DO_RPC(set_activation_level);
-        DO_RPC(set_use);
-        DO_RPC(manufacture_blueprint_id);
-        DO_RPC(transfer_stored_from_to);
-        DO_RPC(transfer_stored_from_to_frac);
-    }
+    SERIALISE_SIGNATURE();
 
     FRIENDLY_RPC_NAME(manufacture_blueprint_id);
 
@@ -913,24 +894,6 @@ struct ship : heatable_entity
 private:
     double thrusters_active = 0;
 };
-
-struct build_in_progress : serialisable
-{
-    ship result;
-    size_t in_progress_pid = -1;
-
-    void make(const ship& fin)
-    {
-        result = fin;
-    }
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(result);
-        DO_SERIALISE(in_progress_pid);
-    }
-};
-
 
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)

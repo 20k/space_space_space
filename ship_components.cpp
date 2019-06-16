@@ -17,6 +17,75 @@
 #include "script_execution.hpp"
 #include "ui_util.hpp"
 
+struct build_in_progress : serialisable
+{
+    blueprint result;
+    size_t in_progress_pid = -1;
+
+    void make(const blueprint& fin)
+    {
+        result = fin;
+    }
+
+    SERIALISE_SIGNATURE()
+    {
+        DO_SERIALISE(result);
+        DO_SERIALISE(in_progress_pid);
+    }
+};
+
+SERIALISE_BODY(component)
+{
+    //DO_SERIALISE(info);
+    //DO_SERIALISE(activate_requirements);
+    //DO_SERIALISE(tags);
+    DO_SERIALISE(dyn_info);
+    DO_SERIALISE(dyn_activate_requirements);
+    DO_SERIALISE(base_id);
+    DO_SERIALISE(long_name);
+    DO_SERIALISE(short_name);
+    DO_SERIALISE(last_sat);
+    DO_SERIALISE(flows);
+    DO_SERIALISE(is_build_holder);
+    DO_SERIALISE(phase);
+    //DO_SERIALISE(heat_sink);
+    //DO_SERIALISE(no_drain_on_full_production);
+    //DO_SERIALISE(complex_no_drain_on_full_production);
+    DO_SERIALISE(last_production_frac);
+    //DO_SERIALISE(max_use_angle);
+    //DO_SERIALISE(subtype);
+    //DO_SERIALISE(production_heat_scales);
+    //DO_SERIALISE(my_volume);
+    //DO_SERIALISE(internal_volume);
+    DO_SERIALISE(current_scale);
+    DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
+    //DO_SERIALISE(primary_type);
+    //DO_SERIALISE(id);
+    DO_SERIALISE(composition);
+    DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
+    DO_SERIALISE(activation_level);
+    DO_SERIALISE(last_could_use);
+    DO_SERIALISE(last_activation_successful);
+    DO_SERIALISE(building);
+    DO_SERIALISE(build_queue);
+    DO_SERIALISE(radar_offset_angle);
+    DO_SERIALISE(radar_restrict_angle);
+
+    if(base_id == component_type::CPU)
+    {
+        DO_SERIALISE(cpu_core);
+    }
+
+    DO_SERIALISE(current_directory);
+
+    //DO_SERIALISE(activation_type);
+    DO_RPC(set_activation_level);
+    DO_RPC(set_use);
+    DO_RPC(manufacture_blueprint_id);
+    DO_RPC(transfer_stored_from_to);
+    DO_RPC(transfer_stored_from_to_frac);
+}
+
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
 ship::ship()
@@ -1729,7 +1798,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
     if(fac.build_queue.size() > 0)
     {
-        build_in_progress& in_progress = fac.build_queue[0];
+        build_in_progress& in_progress = *fac.build_queue[0];
 
         ship* ship_placeholder = dynamic_cast<ship*>(find_by_id(s, in_progress.in_progress_pid));
 
@@ -1739,15 +1808,20 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
             return;
         }
 
+        std::vector<std::vector<material>> total_required_mats = in_progress.result.get_cost();
+
         ship_placeholder->construction_amount += fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
 
-        float front_cost = get_build_work(fac.build_queue.front().result);
+        //float front_cost = get_build_work(fac.build_queue.front().result);
+
+        //float front_cost = fac.build_queue.front()->result.get_cost();
+        float front_cost =  get_build_work(fac.build_queue.front()->result.to_ship());
 
         while(fac.build_queue.size() > 0 && ship_placeholder->construction_amount >= front_cost)
         {
-            build_in_progress& next_in_progress = fac.build_queue[0];
+            build_in_progress& next_in_progress = *fac.build_queue[0];
 
-            ship spawn = next_in_progress.result;
+            ship spawn = next_in_progress.result.to_ship();
 
             /*std::optional<component*> fc;
 
@@ -3465,7 +3539,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     build_queue.push_back(blue.to_ship());
     #endif // INSTANT
 
-    ship blue_ship = blue.to_ship();
+    //ship blue_ship = blue.to_ship();
 
     bool any_free_space = false;
 
@@ -3510,11 +3584,11 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     }*/
 
     build_in_progress build;
-    build.make(blue_ship);
+    build.make(blue);
 
     component new_comp = get_component_default(component_type::MATERIAL, 1);
 
-    new_comp.long_name = "(Unfinished) " + blue_ship.blueprint_name;
+    new_comp.long_name = "(Unfinished) " + blue.name;
 
     ship dummy_ship;
     dummy_ship.components.push_back(new_comp);
@@ -3548,11 +3622,11 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
     {
         for(int i=0; i < (int)build_queue.size(); i++)
         {
-            float work = get_build_work(build_queue[i].result);
+            float work = get_build_work(build_queue[i]->result.to_ship());
 
-            std::string str = build_queue[i].result.blueprint_name;
+            std::string str = build_queue[i]->result.name;
 
-            ship* fship = dynamic_cast<ship*>(find_by_id(parent, build_queue[i].in_progress_pid));
+            ship* fship = dynamic_cast<ship*>(find_by_id(parent, build_queue[i]->in_progress_pid));
 
             if(fship != nullptr)
             {
