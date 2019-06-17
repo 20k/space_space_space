@@ -3816,6 +3816,13 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
             }
 
             ImGui::Text(str.c_str());
+
+            ImGui::SameLine();
+
+            if(ImGuiX::SimpleButton("(Cancel)"))
+            {
+                parent.cancel_building_rpc(this->_pid, build_queue[i]->in_progress_pid);
+            }
         }
 
         //ImGui::TreePop();
@@ -3825,6 +3832,10 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
     ImGui::NewLine();
 
+    ImGui::Text("Unfinished");
+
+    ImGui::Indent();
+
     for(component& pc : parent.components)
     {
         for(ship& s : pc.stored)
@@ -3833,25 +3844,30 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
             {
                 if(pids_going.find(s._pid) == pids_going.end())
                 {
+                    float work = get_build_work(s.original_blueprint->to_ship());
+
                     std::string sbutt = "Resume##a" + std::to_string(s._pid);
 
-                    if(ImGui::Button(sbutt.c_str()))
+                    std::string str = s.blueprint_name;
+
+                    str += " " + to_string_with(100 * s.construction_amount / work) + "%%";
+
+                    ImGui::Text(str.c_str());
+
+                    ImGui::SameLine();
+
+                    if(ImGuiX::SimpleButton("(Resume)"))
                     {
                         parent.resume_building_rpc(this->_pid, s._pid);
-                    }
-                }
-                else
-                {
-                    std::string sbutt = "Cancel##b" + std::to_string(s._pid);
-
-                    if(ImGui::Button(sbutt.c_str()))
-                    {
-                        parent.cancel_building_rpc(this->_pid, s._pid);
                     }
                 }
             }
         }
     }
+
+    ImGui::Unindent();
+
+    ImGui::NewLine();
 
     ImGui::Text("Blueprints");
 
