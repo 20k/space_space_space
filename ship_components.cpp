@@ -1982,8 +1982,10 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     drain_into_component->my_temperature = mix(drain_into_component->my_temperature, found_material_container->my_temperature, 1 - mix_fraction);
                 }
 
-                ///guaranteed < sum of raw fodder
+                ///to_take is guaranteed <= sum of raw fodder
                 std::vector<material> requested_drain = material_normalise(raw_fodder, to_take);
+
+                ship_placeholder->construction_amount += material_volume(requested_drain);
 
                 material_merge(*drain_into, requested_drain);
                 material_deplete(raw_fodder, to_take);
