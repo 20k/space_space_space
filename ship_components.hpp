@@ -767,8 +767,10 @@ struct ship : heatable_entity
     bool is_build_holder = false;
 
     void resume_building(size_t factory_component_pid, size_t object_pid);
+    void cancel_building(size_t factory_component_pid, size_t object_pid);
 
     FRIENDLY_RPC_NAME(resume_building);
+    FRIENDLY_RPC_NAME(cancel_building);
 
     std::optional<component*> get_component_from_id(uint64_t id);
 

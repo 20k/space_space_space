@@ -115,6 +115,7 @@ SERIALISE_BODY(ship)
     DO_SERIALISE(original_blueprint);
 
     DO_RPC(resume_building);
+    DO_RPC(cancel_building);
 }
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
@@ -1845,6 +1846,40 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
 
     found_comp->building = true;
     found_comp->build_queue.push_back(build);
+}
+
+void ship::cancel_building(size_t component_pid, size_t object_pid)
+{
+    component* found_comp = nullptr;
+
+    for(auto& i : components)
+    {
+        if(i._pid == component_pid)
+        {
+            found_comp = &i;
+        }
+    }
+
+    if(found_comp == nullptr)
+        return;
+
+    if(found_comp->base_id != component_type::FACTORY)
+        return;
+
+    for(int i=0; i < (int)found_comp->build_queue.size(); i++)
+    {
+        auto& build_item = found_comp->build_queue[i];
+
+        if(build_item->in_progress_pid == object_pid)
+        {
+            found_comp->build_queue.erase(found_comp->build_queue.begin() + i);
+            i--;
+            continue;
+        }
+    }
+
+    if(found_comp->build_queue.size() == 0)
+        found_comp->building = false;
 }
 
 void handle_manufacturing(ship& s, component& fac, double dt_s)
@@ -3731,6 +3766,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     dummy_ship.is_ship = true;
     ///if i change this string, remember to change the stripping in design_editor.cpp
     dummy_ship.blueprint_name = "UNFINISHED_" + blue.name;
+    dummy_ship.original_blueprint = blue;
 
     which->stored.push_back(dummy_ship);
 
@@ -3789,6 +3825,34 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
     ImGui::NewLine();
 
+    for(component& pc : parent.components)
+    {
+        for(ship& s : pc.stored)
+        {
+            if(s.is_ship && s.is_build_holder)
+            {
+                if(pids_going.find(s._pid) == pids_going.end())
+                {
+                    std::string sbutt = "Resume##a" + std::to_string(s._pid);
+
+                    if(ImGui::Button(sbutt.c_str()))
+                    {
+                        parent.resume_building_rpc(this->_pid, s._pid);
+                    }
+                }
+                else
+                {
+                    std::string sbutt = "Cancel##b" + std::to_string(s._pid);
+
+                    if(ImGui::Button(sbutt.c_str()))
+                    {
+                        parent.cancel_building_rpc(this->_pid, s._pid);
+                    }
+                }
+            }
+        }
+    }
+
     ImGui::Text("Blueprints");
 
     std::vector<std::vector<material>> in_storage;
@@ -3806,22 +3870,6 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
     }
 
     material_deduplicate(in_storage);
-
-    for(component& pc : parent.components)
-    {
-        for(ship& s : pc.stored)
-        {
-            if(s.is_ship && s.is_build_holder && pids_going.find(s._pid) == pids_going.end())
-            {
-                std::string sbutt = "Resume##a" + std::to_string(s._pid);
-
-                if(ImGui::Button(sbutt.c_str()))
-                {
-                    s.resume_building_rpc(this->_pid, s._pid);
-                }
-            }
-        }
-    }
 
     for(blueprint& blue : blueprint_manage.blueprints)
     {
@@ -6257,6 +6305,8 @@ void ship::new_network_copy()
         }
 
         c._pid = next_id;
+
+        original_blueprint = shared_wrapper<blueprint>(*original_blueprint);
 
         for(ship& s : c.stored)
         {
