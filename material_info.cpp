@@ -279,6 +279,21 @@ std::vector<float> material_partial_deplete(std::vector<material>& store, std::v
     return ret;
 }
 
+std::vector<material> material_normalise(std::vector<material> in, float sum)
+{
+    float vol = material_volume(in);
+
+    if(vol <= 0.00001)
+        return in;
+
+    for(int i=0; i < (int)in.size(); i++)
+    {
+        in[i].dynamic_desc.volume = in[i].dynamic_desc.volume * sum / vol;
+    }
+
+    return in;
+}
+
 float material_volume(const std::vector<material>& m)
 {
     float vol = 0;

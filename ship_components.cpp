@@ -1947,6 +1947,35 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 }
 
                 assert(drain_into->size() == raw_fodder.size());
+
+                ///so
+                ///take from raw fodder, put into drain_into
+                ///ensure we don't exceed maximum free space (already accounted for the corner cases so use directly)
+
+                float total_mat = material_volume(raw_fodder);
+
+                float to_take = total_moveable;
+
+                to_take = std::min(to_take, total_mat);
+                to_take = std::min(to_take, free_volume);
+
+                ///guaranteed < sum of raw fodder
+                std::vector<material> requested_drain = material_normalise(raw_fodder, to_take);
+
+                material_merge(*drain_into, requested_drain);
+                material_deplete(raw_fodder, to_take);
+
+                /*std::vector<float> remaining;
+                float total_required_move = 0;
+
+                for(int i=0; i < (int)which->size(); i++)
+                {
+                    remaining.push_back(base[i].dynamic_desc.volume - (*which)[i].dynamic_desc.volume);
+                    total_requested_move += remaining.back();
+                }
+
+                if(total_requested_move <= 0.00001)
+                    continue;*/
             }
 
         }

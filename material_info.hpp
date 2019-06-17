@@ -91,6 +91,8 @@ void material_deduplicate(std::vector<std::vector<material>>& in);
 void material_merge(std::vector<material>& into, std::vector<material> old);
 bool material_satisfies(const std::vector<std::vector<material>>& requirements, const std::vector<std::vector<material>>& available); ///must be deduplicated
 std::vector<float> material_partial_deplete(std::vector<material>& store, std::vector<std::vector<material>>& deplete);
+std::vector<material> material_normalise(std::vector<material> in, float sum);
+void material_deplete(std::vector<material>& ms, float amount);
 
 float material_volume(const std::vector<material>& m);
 
