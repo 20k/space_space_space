@@ -1814,18 +1814,145 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         std::vector<std::vector<material>> already_drained;
         get_ship_cost(*ship_placeholder, already_drained);
 
-        float existing_cost = 0;
+        std::vector<material>* material_unsat = nullptr;
 
-        for(auto& i : already_drained)
+        for(auto& material_vec : total_required_mats)
         {
-            for(auto& j : i)
+            bool sat = false;
+
+            for(auto& existing : already_drained)
             {
-                existing_cost += j.dynamic_desc.volume;
+                if(is_equivalent_material(material_vec, existing))
+                {
+                    if(material_satisfies({material_vec}, {existing}))
+                    {
+                        sat = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!sat)
+            {
+                material_unsat = &material_vec;
+                break;
             }
         }
 
-        float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+        bool all_sat = material_unsat == nullptr;
 
+        if(material_unsat)
+        {
+            float total_moveable = fac.get_produced()[component_info::MANUFACTURING] * dt_s / SIZE_TO_TIME;
+
+            component* found_parent = nullptr;
+            component* found_material_container = nullptr;
+
+            for(component& fcomp : s.components)
+            {
+                for(ship& stored : fcomp.stored)
+                {
+                    if(stored.is_ship)
+                        continue;
+
+                    for(component& storage_material : stored.components)
+                    {
+                        if(storage_material.base_id != component_type::MATERIAL)
+                            continue;
+
+                        if(is_equivalent_material(*material_unsat, storage_material.composition))
+                        {
+                            found_parent = &fcomp;
+                            found_material_container = &storage_material;
+                        }
+                    }
+                }
+            }
+
+            if(found_parent && found_material_container)
+            {
+                ///inaccurate (> max container volume) in the event that we're draining from the same cargo container
+                ///into itself
+                ///this is correct for this use case but confusing
+                float free_volume = 0;
+
+                ///not taking into account that taken materials and
+                ///the ship itself are probably in the same cargo container
+                for(component& c : s.components)
+                {
+                    for(ship& fs : c.stored)
+                    {
+                        if(&fs == ship_placeholder)
+                        {
+                            if(&c == found_parent)
+                            {
+                                ///same container
+                                free_volume = (c.get_internal_volume() - c.get_stored_volume()) + total_moveable;
+                            }
+                            else
+                            {
+                                ///different container
+                                free_volume = c.get_internal_volume() - c.get_stored_volume();
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                std::vector<material>& raw_fodder = found_material_container->composition;
+
+                std::vector<material>* drain_into = nullptr;
+
+                /*for(int m2 = 0; m2 < (int)already_drained.size(); m2++)
+                {
+                    std::vector<material>& sat = already_drained[m2];
+
+                    if(is_equivalent_material(base, sat))
+                    {
+                        which = &sat;
+                    }
+                }*/
+
+                ///so raw_fodder is the material that is raw fodder
+                ///material_unsat is the *type* of material that we want, but not the actual destination for it
+                for(component& c : ship_placeholder->components)
+                {
+                    assert(c.is_build_holder);
+
+                    if(is_equivalent_material(*material_unsat, c.composition))
+                    {
+                        drain_into = &c.composition;
+                        break;
+                    }
+                }
+
+                if(drain_into == nullptr)
+                {
+                    component new_comp = get_component_default(component_type::MATERIAL, 1);
+                    new_comp.long_name = "(Unfinished) " + in_progress.result.name;
+                    new_comp.is_build_holder = true;
+
+                    for(const material& m : raw_fodder)
+                    {
+                        material nm = m;
+                        nm.dynamic_desc.volume = 0;
+
+                        new_comp.composition.push_back(nm);
+                    }
+
+                    ship_placeholder->components.push_back(new_comp);
+
+                    drain_into = &ship_placeholder->components.back().composition;
+                }
+
+                assert(drain_into->size() == raw_fodder.size());
+            }
+
+        }
+
+
+        #if 0
         bool all_sat = true;
 
         float free_volume = 0;
@@ -1982,6 +2109,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 }
             }
         }
+        #endif // 0
 
         ///work is just volumewise sum of mats required
 
