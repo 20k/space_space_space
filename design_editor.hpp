@@ -107,6 +107,7 @@ float get_build_time_s(const ship& s, float build_power);
 float get_build_work(const ship& s);
 
 void clean_tag(std::string& in);
+void clean_blueprint_name(std::string& in);
 
 struct blueprint_manager : serialisable, owned
 {
@@ -145,6 +146,8 @@ struct blueprint_manager : serialisable, owned
         dirty = true;
 
         printf("UBlueprint\n");
+
+        clean_blueprint_name(print.name);
 
         print.overall_size = clamp(print.overall_size, 0.01, 100);
 

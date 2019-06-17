@@ -3929,6 +3929,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     ship dummy_ship;
     dummy_ship.is_build_holder = true;
     dummy_ship.is_ship = true;
+    dummy_ship.blueprint_name = "UNFINISHED_" + blue.name;
     //dummy_ship.components.push_back(new_comp);
     //dummy_ship.is_build_holder = true;
 

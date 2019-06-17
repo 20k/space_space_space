@@ -448,6 +448,15 @@ void clean_tag(std::string& in)
     }
 }
 
+void clean_blueprint_name(std::string& in)
+{
+    if(in.starts_with("UNFINISHED_"))
+    {
+        ///yeah heh so ok whatever this works
+        in.erase(in.begin());
+    }
+}
+
 void design_editor::render(sf::RenderWindow& win)
 {
     if(!open)
@@ -566,6 +575,8 @@ void design_editor::render(sf::RenderWindow& win)
     {
         cur.name.push_back(sname[i]);
     }
+
+    clean_blueprint_name(cur.name);
 
     ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.2f");
 
