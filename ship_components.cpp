@@ -1967,10 +1967,10 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 to_take = std::min(to_take, free_volume);
                 to_take = std::min(to_take, unsat_amount);
 
-                if(to_take > 0.0001f)
-                {
-                    float my_vol = material_volume(drain_into_component->composition);
+                float my_vol = material_volume(drain_into_component->composition);
 
+                if(my_vol + to_take > 0.00001)
+                {
                     float total_new_vol = my_vol + to_take;
 
                     float mix_fraction = (my_vol / total_new_vol);
