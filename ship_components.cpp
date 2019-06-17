@@ -1839,6 +1839,8 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
             return;
     }
 
+    fship.value()->is_build_holder = true;
+
     build_in_progress build;
     build.make(*fship.value()->original_blueprint);
 
