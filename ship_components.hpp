@@ -713,6 +713,7 @@ struct ship : heatable_entity
     float my_size = 0;
 
     std::string blueprint_name;
+    shared_wrapper<blueprint> original_blueprint;
 
     std::vector<component> components;
     std::vector<storage_pipe> pipes;
@@ -764,6 +765,10 @@ struct ship : heatable_entity
     //size_t realspace_pid_target = -1;
 
     bool is_build_holder = false;
+
+    void resume_building(size_t factory_component_pid, size_t object_pid);
+
+    FRIENDLY_RPC_NAME(resume_building);
 
     std::optional<component*> get_component_from_id(uint64_t id);
 
@@ -842,32 +847,7 @@ struct ship : heatable_entity
     float get_mass();
     float get_max_temperature();
 
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(construction_amount);
-        DO_SERIALISE(data_track);
-        DO_SERIALISE(network_owner);
-        DO_SERIALISE(components);
-        DO_SERIALISE(last_sat_percentage);
-        DO_SERIALISE(latent_heat);
-        DO_SERIALISE(pipes);
-        DO_SERIALISE(my_size);
-        DO_SERIALISE(is_ship);
-        DO_SERIALISE(blueprint_name);
-        DO_SERIALISE(has_s_power);
-        DO_SERIALISE(has_w_power);
-        DO_SERIALISE(room_type);
-        DO_SERIALISE(last_room_type);
-        DO_SERIALISE(current_room_pid);
-        DO_SERIALISE(travelling_in_realspace);
-        //DO_SERIALISE(realspace_destination);
-        //DO_SERIALISE(realspace_pid_target);
-        DO_SERIALISE(move_args);
-        DO_SERIALISE(radar_frequency_composition);
-        DO_SERIALISE(radar_intensity_composition);
-        DO_SERIALISE(current_directory);
-        DO_SERIALISE(is_build_holder);
-    }
+    SERIALISE_SIGNATURE();
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;

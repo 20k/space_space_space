@@ -87,6 +87,36 @@ SERIALISE_BODY(component)
     DO_RPC(transfer_stored_from_to_frac);
 }
 
+SERIALISE_BODY(ship)
+{
+    DO_SERIALISE(construction_amount);
+    DO_SERIALISE(data_track);
+    DO_SERIALISE(network_owner);
+    DO_SERIALISE(components);
+    DO_SERIALISE(last_sat_percentage);
+    DO_SERIALISE(latent_heat);
+    DO_SERIALISE(pipes);
+    DO_SERIALISE(my_size);
+    DO_SERIALISE(is_ship);
+    DO_SERIALISE(blueprint_name);
+    DO_SERIALISE(has_s_power);
+    DO_SERIALISE(has_w_power);
+    DO_SERIALISE(room_type);
+    DO_SERIALISE(last_room_type);
+    DO_SERIALISE(current_room_pid);
+    DO_SERIALISE(travelling_in_realspace);
+    //DO_SERIALISE(realspace_destination);
+    //DO_SERIALISE(realspace_pid_target);
+    DO_SERIALISE(move_args);
+    DO_SERIALISE(radar_frequency_composition);
+    DO_SERIALISE(radar_intensity_composition);
+    DO_SERIALISE(current_directory);
+    DO_SERIALISE(is_build_holder);
+    DO_SERIALISE(original_blueprint);
+
+    DO_RPC(resume_building);
+}
+
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
 ship::ship()
@@ -1777,6 +1807,44 @@ void ship::handle_cleanup()
             s.handle_cleanup();
         }
     }
+}
+
+void ship::resume_building(size_t component_pid, size_t object_pid)
+{
+    component* found_comp = nullptr;
+
+    for(auto& i : components)
+    {
+        if(i._pid == component_pid)
+        {
+            found_comp = &i;
+        }
+    }
+
+    if(found_comp == nullptr)
+        return;
+
+    std::optional<ship*> fship = fetch_ship_by_id(object_pid);
+
+    if(!fship)
+        return;
+
+    if(found_comp->base_id != component_type::FACTORY)
+        return;
+
+    for(auto& i : found_comp->build_queue)
+    {
+        if(i->in_progress_pid == object_pid)
+            return;
+    }
+
+    build_in_progress build;
+    build.make(*fship.value()->original_blueprint);
+
+    build.in_progress_pid = object_pid;
+
+    found_comp->building = true;
+    found_comp->build_queue.push_back(build);
 }
 
 void handle_manufacturing(ship& s, component& fac, double dt_s)
@@ -3689,6 +3757,8 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
     ImGui::Indent();
 
+    std::set<size_t> pids_going;
+
     //if(ImGui::TreeNodeEx("In Progress", ImGuiTreeNodeFlags_Leaf))
     {
         for(int i=0; i < (int)build_queue.size(); i++)
@@ -3701,6 +3771,8 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
             if(fship != nullptr)
             {
+                pids_going.insert(fship->_pid);
+
                 if(fship->construction_amount > 0)
                 {
                     str += " " + to_string_with(100 * fship->construction_amount / work) + "%%";
@@ -3734,6 +3806,30 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
     }
 
     material_deduplicate(in_storage);
+
+    for(component& pc : parent.components)
+    {
+        for(ship& s : pc.stored)
+        {
+            if(s.is_ship && s.is_build_holder && pids_going.find(s._pid) == pids_going.end())
+            {
+                std::string sbutt = "Resume##a" + std::to_string(s._pid);
+
+                if(ImGui::Button(sbutt.c_str()))
+                {
+                    for(component& rpc : parent.components)
+                    {
+                        ///WHAT
+                        if(rpc.base_id == component_type::FACTORY)
+                        {
+                            s.resume_building_rpc(rpc._pid, s._pid);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     for(blueprint& blue : blueprint_manage.blueprints)
     {
