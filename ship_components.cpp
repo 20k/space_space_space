@@ -3612,78 +3612,6 @@ void component::manufacture_blueprint_id(size_t blue_id)
 
 void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 {
-    #ifdef INSTANT
-    std::vector<std::vector<material>> in_storage;
-
-    for(component& lc : parent.components)
-    {
-        if(lc.base_id != component_type::CARGO_STORAGE)
-            continue;
-
-        lc.for_each_stored([&](component& c)
-        {
-            if(c.base_id == component_type::MATERIAL)
-                in_storage.push_back(c.composition);
-        });
-    }
-
-    std::vector<std::vector<material>> cost = blue.get_cost();
-
-    /*float total_volume = 0;
-
-    for(auto& i : cost)
-    {
-        total_volume += material_volume(cost);
-    }
-
-    float free_volume = (get_internal_volume() - get_stored_volume()) + total_volume - blue.to_ship.get_my_volume();
-
-    if(free_volume < 0)
-        return;*/
-
-    /*if(blue.to_ship().get_my_volume() > get_internal_volume())
-        return;*/
-
-    ship blue_ship = blue.to_ship();
-
-    bool any = false;
-
-    for(component& lc : parent.components)
-    {
-        if(lc.base_id != component_type::CARGO_STORAGE)
-            continue;
-
-        if(blue_ship.get_my_volume() <= lc.get_internal_volume())
-        {
-            any = true;
-            break;
-        }
-    }
-
-    if(any == false)
-        return;
-
-    if(!material_satisfies(cost, in_storage))
-        return;
-
-    for(component& lc : parent.components)
-    {
-        if(lc.base_id != component_type::CARGO_STORAGE)
-            continue;
-
-        lc.for_each_stored([&](component& c)
-        {
-            if(c.base_id == component_type::MATERIAL)
-                material_partial_deplete(c.composition, cost);
-        });
-    }
-
-    building = true;
-    build_queue.push_back(blue.to_ship());
-    #endif // INSTANT
-
-    //ship blue_ship = blue.to_ship();
-
     bool any_free_space = false;
 
     component* which = nullptr;
@@ -3729,32 +3657,12 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     build_in_progress build;
     build.make(blue);
 
-    /*component new_comp = get_component_default(component_type::MATERIAL, 1);
-    new_comp.long_name = "(Unfinished) " + blue.name;
-    new_comp.is_build_holder = true;*/
-
     ///clap of my arse etc
     ship dummy_ship;
     dummy_ship.is_build_holder = true;
     dummy_ship.is_ship = true;
     ///if i change this string, remember to change the stripping in design_editor.cpp
     dummy_ship.blueprint_name = "UNFINISHED_" + blue.name;
-    //dummy_ship.components.push_back(new_comp);
-    //dummy_ship.is_build_holder = true;
-
-    /*ship dummy_ship;
-
-    std::vector<std::vector<material>> cost;
-    get_ship_cost(blue.to_ship(), cost);
-
-    for(int i=0; i < (int)cost.size(); i++)
-    {
-        component proxy_comp = get_component_default(component_type::MATERIAL, 1);
-        proxy_comp.long_name = "(Unfinished) Materials Placeholder";
-        proxy_comp.is_build_holder = true;
-
-        dummy_ship.components.push_back(proxy_comp);
-    }*/
 
     which->stored.push_back(dummy_ship);
 
