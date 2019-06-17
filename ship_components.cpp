@@ -1816,14 +1816,20 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
         std::vector<material>* material_unsat = nullptr;
 
+        float unsat_amount = 0;
+
         for(auto& material_vec : total_required_mats)
         {
             bool sat = false;
+
+            float sat_amount = 0;
 
             for(auto& existing : already_drained)
             {
                 if(is_equivalent_material(material_vec, existing))
                 {
+                    sat_amount += material_volume(existing);
+
                     if(material_satisfies({material_vec}, {existing}))
                     {
                         sat = true;
@@ -1834,6 +1840,14 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             if(!sat)
             {
+                unsat_amount = material_volume(material_vec) - sat_amount;
+
+                if(unsat_amount < 0)
+                {
+                    printf("Unsat amount < 0?\n");
+                    unsat_amount = 0;
+                }
+
                 material_unsat = &material_vec;
                 break;
             }
@@ -1903,6 +1917,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                 std::vector<material>& raw_fodder = found_material_container->composition;
 
                 std::vector<material>* drain_into = nullptr;
+                component* drain_into_component = nullptr;
 
                 ///so raw_fodder is the material that is raw fodder
                 ///material_unsat is the *type* of material that we want, but not the actual destination for it
@@ -1913,6 +1928,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     if(is_equivalent_material(*material_unsat, c.composition))
                     {
                         drain_into = &c.composition;
+                        drain_into_component = &c;
                         break;
                     }
                 }
@@ -1934,6 +1950,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     ship_placeholder->components.push_back(new_comp);
 
                     drain_into = &ship_placeholder->components.back().composition;
+                    drain_into_component = &ship_placeholder->components.back();
                 }
 
                 assert(drain_into->size() == raw_fodder.size());
@@ -1948,6 +1965,22 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
                 to_take = std::min(to_take, total_mat);
                 to_take = std::min(to_take, free_volume);
+                to_take = std::min(to_take, unsat_amount);
+
+                if(to_take > 0.0001f)
+                {
+                    float my_vol = material_volume(drain_into_component->composition);
+
+                    float total_new_vol = my_vol + to_take;
+
+                    float mix_fraction = (my_vol / total_new_vol);
+
+                    mix_fraction = clamp(mix_fraction, 0, 1);
+
+                    ///?????
+                    //drain_into_component->my_temperature += (found_material_container->my_temperature - drain_into_component->my_temperature) * (1 - mix_fraction) * dt_s;
+                    drain_into_component->my_temperature = mix(drain_into_component->my_temperature, found_material_container->my_temperature, 1 - mix_fraction);
+                }
 
                 ///guaranteed < sum of raw fodder
                 std::vector<material> requested_drain = material_normalise(raw_fodder, to_take);
