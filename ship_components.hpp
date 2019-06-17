@@ -804,6 +804,8 @@ struct ship : heatable_entity
     void show_power();
     void show_manufacturing_windows(blueprint_manager& blueprint_manage);
 
+    bool any_building(size_t ship_id);
+
     float get_my_volume();
 
     template<typename T, typename U>

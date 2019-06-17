@@ -1065,6 +1065,18 @@ std::vector<material> component::remove_composition(float amount)
 
     std::vector<material> ret;
 
+    if(total < 0.0001 && amount > total)
+    {
+        ret = composition;
+
+        for(material& m : composition)
+        {
+            m.dynamic_desc.volume = 0;
+        }
+
+        return ret;
+    }
+
     if(total < 0.0001)
         return ret;
 
@@ -2728,6 +2740,39 @@ void ship::tick(double dt_s)
         }
     }
 
+    ///cleanup dead ships internally
+    for(component& c : components)
+    {
+        for(int i=0; i < (int)c.stored.size(); i++)
+        {
+            ship& s = c.stored[i];
+
+            auto held = s.sum<double>([](component& c)
+            {
+                return c.get_held();
+            });
+
+            auto capacity = s.sum<double>([](component& c)
+            {
+                return c.get_capacity();
+            });
+
+            if(held[component_info::HP] <= 0 && capacity[component_info::HP] > 0)
+            {
+                c.stored.erase(c.stored.begin() + i);
+                i--;
+                continue;
+            }
+
+            if(s.construction_amount > 0 && s.is_build_holder && s.get_my_volume() <= 0.001 && !any_building(s._pid))
+            {
+                c.stored.erase(c.stored.begin() + i);
+                i--;
+                continue;
+            }
+        }
+    }
+
     data_track_elapsed_s += dt_s;
 
     double time_between_datapoints_s = 0.1;
@@ -3811,9 +3856,9 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
             {
                 pids_going.insert(fship->_pid);
 
-                if(fship->construction_amount > 0)
+                if(fship->get_my_volume() > 0)
                 {
-                    str += " " + to_string_with(100 * fship->construction_amount / work) + "%%";
+                    str += " " + to_string_with(100 * fship->get_my_volume() / work) + "%%";
                 }
             }
 
@@ -4435,6 +4480,23 @@ void ship::show_power()
     }
 
     ImGui::End();
+}
+
+bool ship::any_building(size_t ship_id)
+{
+    for(component& c : components)
+    {
+        if(c.base_id != component_type::FACTORY)
+            continue;
+
+        for(auto& i : c.build_queue)
+        {
+            if(i->in_progress_pid == ship_id)
+                return true;
+        }
+    }
+
+    return false;
 }
 
 float ship::get_my_volume()
