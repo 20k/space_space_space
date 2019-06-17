@@ -3783,7 +3783,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
     std::string name = long_name + "##" + std::to_string(_pid);
 
-    ImGui::Begin(name.c_str(), &factory_view_open);
+    ImGui::Begin(name.c_str(), &factory_view_open, ImGuiWindowFlags_AlwaysAutoResize);
 
     render_inline_ui();
 

@@ -1828,7 +1828,11 @@ void cpu_state::reset()
 {
     auto program_backup = saved_program;
 
+    size_t old_pid = _pid;
+
     *this = cpu_state();
+
+    this->_pid = old_pid;
 
     saved_program = program_backup;
 
@@ -1990,7 +1994,11 @@ void cpu_state::set_program(std::string str)
 {
     try
     {
+        size_t old_pid = _pid;
+
         *this = cpu_state();
+
+        this->_pid = old_pid;
 
         if(str.size() > 10000)
             return;
