@@ -3817,15 +3817,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
                 if(ImGui::Button(sbutt.c_str()))
                 {
-                    for(component& rpc : parent.components)
-                    {
-                        ///WHAT
-                        if(rpc.base_id == component_type::FACTORY)
-                        {
-                            s.resume_building_rpc(rpc._pid, s._pid);
-                            break;
-                        }
-                    }
+                    s.resume_building_rpc(this->_pid, s._pid);
                 }
             }
         }
