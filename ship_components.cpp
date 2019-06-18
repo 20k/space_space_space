@@ -847,7 +847,10 @@ void component::store(const component& c, bool force_and_fixup)
     for(ship& existing : stored)
     {
         ///TODO: BIT HACKY THIS
-        if(existing.components.size() != 1)
+        /*if(existing.components.size() != 1)
+            continue;*/
+
+        if(existing.is_ship || existing.is_build_holder)
             continue;
 
         ///TODO: DOES NOT CORRECTLY HANDLE TEMPERATURE
@@ -3319,100 +3322,103 @@ std::vector<component> ship::handle_degredation(double dt_s)
 
     float phase_coeff = 1;
 
-    for(component& c : components)
+    if(!is_ship)
     {
-        ///???????
-        if(c.base_id != component_type::MATERIAL)
-            continue;
-
-        auto [dyn, fixed] = get_material_composite(c.composition);
-
-        float max_temp = fixed.melting_point;
-
-        ///when things are solid and above melting point, break into individual components of material
-        ///and store
-        ///storage function should automatically handle concatinating liquids together
-        if(c.my_temperature > max_temp && c.phase == 0)
+        for(component& c : components)
         {
-            float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
-
-            c.my_temperature = max_temp;
-
-            ///using specific heat here as a proxy to energy of.. make phase change
-            float liquify_volume = heat / fixed.specific_heat;
-
-            ///at a temperature difference of 1, it'll take 1 seconds to liquify one unit volume?
-            liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
-
-            auto removed = c.remove_composition(liquify_volume);
-
-            /*component next = get_component_default(component_type::MATERIAL, 1);
-
-            next.composition = removed;
-            next.my_temperature = c.my_temperature + 1;
-            next.phase = 1;
-
-            float total_to_add = 0;
-
-            ///I hate floating point numbers
-            for(material& m : next.composition)
-            {
-                m.dynamic_desc.volume *= 0.99;
-                total_to_add += m.dynamic_desc.volume;
-            }
-
-            if(total_to_add <= 0.0001)
+            ///???????
+            if(c.base_id != component_type::MATERIAL)
                 continue;
 
-            to_ret.push_back(next);*/
+            auto [dyn, fixed] = get_material_composite(c.composition);
 
-            for(const material& m : removed)
+            float max_temp = fixed.melting_point;
+
+            ///when things are solid and above melting point, break into individual components of material
+            ///and store
+            ///storage function should automatically handle concatinating liquids together
+            if(c.my_temperature > max_temp && c.phase == 0)
             {
-                component next = get_component_default(component_type::MATERIAL, 1);
+                float heat = fixed.specific_heat * (c.my_temperature - max_temp) * dyn.volume;
 
-                next.composition = {m};
+                c.my_temperature = max_temp;
+
+                ///using specific heat here as a proxy to energy of.. make phase change
+                float liquify_volume = heat / fixed.specific_heat;
+
+                ///at a temperature difference of 1, it'll take 1 seconds to liquify one unit volume?
+                liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
+
+                auto removed = c.remove_composition(liquify_volume);
+
+                /*component next = get_component_default(component_type::MATERIAL, 1);
+
+                next.composition = removed;
                 next.my_temperature = c.my_temperature + 1;
                 next.phase = 1;
 
+                float total_to_add = 0;
+
+                ///I hate floating point numbers
+                for(material& m : next.composition)
+                {
+                    m.dynamic_desc.volume *= 0.99;
+                    total_to_add += m.dynamic_desc.volume;
+                }
+
+                if(total_to_add <= 0.0001)
+                    continue;
+
+                to_ret.push_back(next);*/
+
+                for(const material& m : removed)
+                {
+                    component next = get_component_default(component_type::MATERIAL, 1);
+
+                    next.composition = {m};
+                    next.my_temperature = c.my_temperature + 1;
+                    next.phase = 1;
+
+                    to_ret.push_back(next);
+                }
+            }
+
+            ///ok so every liquid should be a separate component? Or do I just not use a
+            ///temperature system and manually create alloys or something? Not a huge fan of that idea
+            if(c.my_temperature < max_temp && c.phase == 1)
+            {
+                float heat = fixed.specific_heat * (max_temp - c.my_temperature) * dyn.volume;
+
+                c.my_temperature = max_temp;
+
+                float liquify_volume = heat / fixed.specific_heat;
+
+                liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
+
+                auto removed = c.remove_composition(liquify_volume);
+
+                component next = get_component_default(component_type::MATERIAL, 1);
+
+                next.composition = removed;
+                next.my_temperature = c.my_temperature - 1;
+                next.phase = 0;
+
+                next.long_name = c.long_name;
+                next.short_name = c.short_name;
+
+                float total_to_add = 0;
+
+                ///I hate floating point numbers
+                for(material& m : next.composition)
+                {
+                    total_to_add += m.dynamic_desc.volume;
+                }
+
+                if(total_to_add <= 0.0001)
+                    continue;
+
                 to_ret.push_back(next);
             }
-        }
-
-        ///ok so every liquid should be a separate component? Or do I just not use a
-        ///temperature system and manually create alloys or something? Not a huge fan of that idea
-        if(c.my_temperature < max_temp && c.phase == 1)
-        {
-            float heat = fixed.specific_heat * (max_temp - c.my_temperature) * dyn.volume;
-
-            c.my_temperature = max_temp;
-
-            float liquify_volume = heat / fixed.specific_heat;
-
-            liquify_volume = clamp(liquify_volume, 0, dyn.volume) * phase_coeff * dt_s;
-
-            auto removed = c.remove_composition(liquify_volume);
-
-            component next = get_component_default(component_type::MATERIAL, 1);
-
-            next.composition = removed;
-            next.my_temperature = c.my_temperature - 1;
-            next.phase = 0;
-
-            next.long_name = c.long_name;
-            next.short_name = c.short_name;
-
-            float total_to_add = 0;
-
-            ///I hate floating point numbers
-            for(material& m : next.composition)
-            {
-                total_to_add += m.dynamic_desc.volume;
-            }
-
-            if(total_to_add <= 0.0001)
-                continue;
-
-            to_ret.push_back(next);
         }
     }
 
