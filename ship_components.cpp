@@ -2743,9 +2743,12 @@ void ship::tick(double dt_s)
         }
     }
 
+
     ///cleanup dead ships internally
     for(component& c : components)
     {
+        std::vector<component> melted_extras;
+
         for(int i=0; i < (int)c.stored.size(); i++)
         {
             ship& s = c.stored[i];
@@ -2762,6 +2765,33 @@ void ship::tick(double dt_s)
 
             if(held[component_info::HP] <= 0 && capacity[component_info::HP] > 0)
             {
+                /*c.stored.erase(c.stored.begin() + i);
+                i--;
+                continue;*/
+
+                if(s.is_ship)
+                {
+                    std::vector<std::vector<material>> cost;
+                    get_ship_cost(s, cost);
+
+                    for(auto& i : cost)
+                    {
+                        component next = get_component_default(component_type::MATERIAL, 1);
+
+                        auto [dyn, fixed] = get_material_composite(i);
+
+                        next.composition = i;
+                        next.my_temperature = c.my_temperature;
+                        next.phase = next.my_temperature > fixed.melting_point ? 1 : 0;
+
+                        melted_extras.push_back(next);
+                    }
+                }
+                else ///??? heat damage not applied to materials, should be exempt from stuff
+                {
+
+                }
+
                 c.stored.erase(c.stored.begin() + i);
                 i--;
                 continue;
@@ -2773,6 +2803,11 @@ void ship::tick(double dt_s)
                 i--;
                 continue;
             }
+        }
+
+        for(auto& i : melted_extras)
+        {
+            c.store(i, true);
         }
     }
 
