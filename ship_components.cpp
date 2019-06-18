@@ -2964,6 +2964,47 @@ void heat_transfer(float heat_coeff, float dt_s, component& c, component& hs, fl
     }
 }
 
+void apply_heat_damage(ship& s, double dt_s)
+{
+    if(!s.is_ship)
+        return;
+
+    ///applies heat damage
+    for(component& c : s.components)
+    {
+        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
+
+        material_fixed_properties& fixed = props.second;
+
+        float current_temperature = c.get_my_temperature();
+
+        if(current_temperature >= fixed.melting_point)
+        {
+            float damage_max = fixed.melting_point * 2;
+            float damage_min = fixed.melting_point;
+
+            float damage_fraction = (current_temperature - damage_min) / (damage_max - damage_min);
+
+            damage_fraction = clamp(damage_fraction, 0, 1);
+
+            float real_damage = 1 * damage_fraction * dt_s;
+
+            if(c.has(component_info::HP))
+            {
+                does_dynamic& d = c.get_dynamic(component_info::HP);
+                const does_fixed& fix = c.get_fixed(component_info::HP);
+
+                apply_to_does(-real_damage, d, fix);
+            }
+        }
+
+        for(ship& ns : c.stored)
+        {
+            apply_heat_damage(ns, dt_s);
+        }
+    }
+}
+
 void ship::handle_heat(double dt_s)
 {
     std::vector<double> all_produced = sum<double>([](component& c)
@@ -3260,35 +3301,7 @@ void ship::handle_heat(double dt_s)
 
     latent_heat = 0;
 
-    ///applies heat damage
-    for(component& c : components)
-    {
-        std::pair<material_dynamic_properties, material_fixed_properties> props = get_material_composite(c.composition);
-
-        material_fixed_properties& fixed = props.second;
-
-        float current_temperature = c.get_my_temperature();
-
-        if(current_temperature >= fixed.melting_point)
-        {
-            float damage_max = fixed.melting_point * 2;
-            float damage_min = fixed.melting_point;
-
-            float damage_fraction = (current_temperature - damage_min) / (damage_max - damage_min);
-
-            damage_fraction = clamp(damage_fraction, 0, 1);
-
-            float real_damage = 1 * damage_fraction * dt_s;
-
-            if(c.has(component_info::HP))
-            {
-                does_dynamic& d = c.get_dynamic(component_info::HP);
-                const does_fixed& fix = c.get_fixed(component_info::HP);
-
-                apply_to_does(-real_damage, d, fix);
-            }
-        }
-    }
+    apply_heat_damage(*this, dt_s);
 
     {
         alt_radar_field& radar = *current_radar_field;

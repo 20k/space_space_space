@@ -210,6 +210,7 @@ void server_thread(std::atomic_bool& should_term)
         test_ship = entities.make_new<ship>();
         test_ship->network_owner = 0;
         test_ship->r.network_owner = 0;
+        test_ship->is_ship = true;
 
         sys_1->add(test_ship);
     }
