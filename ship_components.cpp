@@ -919,7 +919,7 @@ float component::get_hp_frac()
 
 float component::get_operating_efficiency()
 {
-     return std::min(last_sat, last_production_frac) * activation_level * get_hp_frac();
+    return std::min(last_sat, last_production_frac) * activation_level * get_hp_frac();
 }
 
 /*void component::scale(float size)
