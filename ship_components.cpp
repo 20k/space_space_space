@@ -3585,7 +3585,7 @@ struct aggregate_ship_info
     bool processed = false;
 };
 
-void component::render_inline_ui()
+void component::render_inline_ui(bool use_title)
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
 
@@ -3604,7 +3604,8 @@ void component::render_inline_ui()
 
     ImGui::BeginGroup();
 
-    ImGui::Text((long_name).c_str());
+    if(use_title)
+        ImGui::Text((long_name).c_str());
 
     std::map<std::string, aggregate_ship_info> aggregates;
 
@@ -4131,7 +4132,7 @@ void ship::show_resources(bool window)
 
         //ret += "Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored) + "\n";
 
-        ImGui::Text(("Stored: " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored)).c_str());
+        ImGui::Text((c.long_name + ": " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored)).c_str());
 
         if(ImGui::IsItemClicked(0))
         {
@@ -4156,7 +4157,7 @@ void ship::show_resources(bool window)
         if(!c.detailed_view_open)
             continue;
 
-        ImGui::Begin((std::string("Tcomp##") + std::to_string(c._pid)).c_str(), &c.detailed_view_open);
+        ImGui::Begin((c.long_name + "##" + std::to_string(c._pid)).c_str(), &c.detailed_view_open);
 
         c.render_inline_ui();
 
@@ -4222,9 +4223,9 @@ ImVec4 im4_mix(ImVec4 one, ImVec4 two, float a)
 
 void ship::show_power()
 {
-    std::string ppower = "Power##" + std::to_string(_pid);
+    std::string ppower = "Status##" + std::to_string(_pid);
 
-    ImGui::Begin(ppower.c_str());
+    ImGui::Begin(ppower.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
     std::vector<component*> ui_sorted;
 
@@ -4479,9 +4480,7 @@ void ship::show_power()
         }
     }
 
-    ImGui::NewLine();
-
-    for(auto id : storage_comps)
+    /*for(auto id : storage_comps)
     {
         auto c1 = get_component_from_id(id);
 
@@ -4491,6 +4490,35 @@ void ship::show_power()
         component& c = *c1.value();
 
         c.render_inline_ui();
+    }*/
+
+    for(component& c : components)
+    {
+        if(!c.is_storage())
+            continue;
+
+        const component_fixed_properties& fixed = c.get_fixed_props();
+
+        float max_stored = fixed.get_internal_volume(c.current_scale);
+        float cur_stored = c.get_stored_volume();
+
+        //ImGui::Text((c.long_name + ": " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored)).c_str());
+
+        /*if(ImGui::IsItemClicked(0))
+        {
+            c.detailed_view_open = !c.detailed_view_open;
+        }*/
+
+        if(ImGui::TreeNodeEx((c.long_name + "##" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
+        {
+            ImGui::Unindent();
+
+            c.render_inline_ui(false);
+
+            ImGui::Indent();
+
+            ImGui::TreePop();
+        }
     }
 
     for(component& c : components)

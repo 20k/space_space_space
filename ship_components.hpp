@@ -615,7 +615,7 @@ struct component : serialisable, owned
     void render_inline_stats();
     std::string phase_string();
     std::string get_render_long_name();
-    void render_inline_ui();
+    void render_inline_ui(bool use_title = true);
     void render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent);
 
     ///do not network
