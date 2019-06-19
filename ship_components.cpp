@@ -1528,18 +1528,15 @@ struct laser : projectile
     }
 };
 
-struct mining_laser : projectile
+struct laser_base : projectile
 {
     sf::Clock clk;
-
     ship* parent_ship = nullptr;
-    uint64_t parent_component = -1;
-
     float power = 0;
 
     std::shared_ptr<alt_radar_field> field;
 
-    mining_laser(std::shared_ptr<alt_radar_field>& _field) : field(_field)
+    laser_base(std::shared_ptr<alt_radar_field>& _field) : field(_field)
     {
         float SoL = field->speed_of_light_per_tick;
 
@@ -1550,9 +1547,6 @@ struct mining_laser : projectile
 
     virtual void tick(double dt_s) override
     {
-        ///lasers won't reflect
-        //projectile::tick(dt_s);
-
         if(parent_ship && parent_ship->cleanup)
             parent_ship = nullptr;
 
@@ -1570,6 +1564,24 @@ struct mining_laser : projectile
         em.make(10000, 3000);
 
         field->emit(em, r.position, *this);
+    }
+};
+
+struct mining_laser : laser_base
+{
+    uint64_t parent_component = -1;
+
+    mining_laser(std::shared_ptr<alt_radar_field>& _field) : laser_base(_field)
+    {
+
+    }
+
+    virtual void tick(double dt_s) override
+    {
+        ///lasers won't reflect
+        //projectile::tick(dt_s);
+
+        laser_base::tick(dt_s);
     }
 
     virtual void on_collide(entity_manager& em, entity& other) override
@@ -1638,6 +1650,43 @@ struct mining_laser : projectile
         ///or maybe we fire a counter laser back but it has to hit the ship to work (but kind of dodgy but does open up degrees of resource stealing)
 
         //assert(dynamic_cast<mining_laser*>(&other) == nullptr);
+    }
+};
+
+struct tractor_laser : laser_base
+{
+    tractor_laser(std::shared_ptr<alt_radar_field>& _field) : laser_base(_field)
+    {
+
+    }
+
+    virtual void tick(double dt_s) override
+    {
+        laser_base::tick(dt_s);
+    }
+
+    virtual void on_collide(entity_manager& em, entity& other) override
+    {
+        cleanup = true;
+
+        if(parent_ship == nullptr)
+            return;
+
+        ship* hit_ship = dynamic_cast<ship*>(&other);
+
+        if(hit_ship == nullptr)
+            return;
+
+        for(component& c : parent_ship->components)
+        {
+            if(c.base_id == component_type::CARGO_STORAGE)
+            {
+                float free = c.get_internal_volume() - c.get_stored_volume();
+
+
+                break;
+            }
+        }
     }
 };
 
