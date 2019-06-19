@@ -41,6 +41,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::FACTORY] = make_default("Factory", "FAC");
     ret[component_type::RADAR] = make_default("Radar", "RAD");
     ret[component_type::CPU] = make_default("CPU", "CPU");
+    ret[component_type::T_BEAM] = make_default("Tractor Beam", "T-B");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -83,6 +84,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::FACTORY].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::RADAR].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::CPU].add_composition_ratio({material_info::IRON}, {1});
+    ret[component_type::T_BEAM].add_composition_ratio({material_info::COPPER}, {1});
 
     ret[component_type::REFINERY].activation_level = 0;
 
@@ -395,6 +397,24 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
+    }
+
+    {
+        component_fixed_properties& p = ret[component_type::T_BEAM];
+
+        p.add(component_info::POWER, -1);
+        p.add(component_info::HP, 0, 1);
+        p.add(tag_info::TAG_WEAPON);
+        p.set_heat(1);
+        p.activation_type = component_info::TOGGLE_ACTIVATION;
+
+        p.add_on_use(component_info::POWER, -1, 0);
+        p.add_on_use(component_info::TRACTOR, 1, 0);
+
+        p.base_volume = 1;
+        p.max_use_angle = M_PI;
+
+        p.subtype = "tractor";
     }
 
     return ret;

@@ -38,6 +38,7 @@ namespace component_type
         FACTORY,
         RADAR,
         CPU,
+        T_BEAM, ///tractor beam
         COUNT,
     };
 
@@ -64,7 +65,8 @@ namespace component_type
         "REFINERY",
         "FACTORY",
         "RADAR",
-        "CPU"
+        "CPU",
+        "T_BEAM",
     };
 }
 

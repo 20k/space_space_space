@@ -64,6 +64,7 @@ namespace component_info
         MANUFACTURING,
         LASER,
         RADAR,
+        TRACTOR,
         COUNT
     };
 
@@ -91,6 +92,7 @@ namespace component_info
         "Manufacturing",
         "Laser",
         "Radar",
+        "Tractor",
     };
 
     enum activation_type
