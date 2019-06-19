@@ -1709,7 +1709,7 @@ struct tractor_laser : laser_base
                 return c.get_held();
             });
 
-            their_mass += get_mass_effect(other.mass, held[component_type::SHIELDS]) * their_mass;
+            their_mass += get_mass_effect(other.mass, held[component_type::SHIELDS]) * other.mass * 10;
         }
 
         for(component& c : parent_ship->components)
