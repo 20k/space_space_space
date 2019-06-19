@@ -3585,7 +3585,40 @@ struct aggregate_ship_info
     bool processed = false;
 };
 
-void component::render_inline_ui(bool use_title)
+void component::handle_drag_drop()
+{
+    if(ImGui::BeginDragDropTarget())
+    {
+        if(const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SHIPPY"))
+        {
+            if(!payload->Data)
+            {
+                throw std::runtime_error("Bad Payload");
+            }
+
+            drag_drop_data data;
+            memcpy(&data, payload->Data, sizeof(data));
+
+            if(data.type == drag_drop_info::UNIT)
+            {
+                transfer_stored_from_to_rpc(data.id, _pid);
+            }
+
+            if(data.type == drag_drop_info::FRACTIONAL)
+            {
+                pending_transfer tran;
+                tran.pid_ship = data.id;
+                tran.pid_component = _pid;
+
+                client_pending_transfers().push_back(tran);
+            }
+        }
+
+        ImGui::EndDragDropTarget();
+    }
+}
+
+void component::render_inline_ui(bool use_title, bool drag_drop)
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
 
@@ -3747,34 +3780,9 @@ void component::render_inline_ui(bool use_title)
 
     ImGui::EndGroup();
 
-    if(ImGui::BeginDragDropTarget())
+    if(drag_drop)
     {
-        if(const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SHIPPY"))
-        {
-            if(!payload->Data)
-            {
-                throw std::runtime_error("Bad Payload");
-            }
-
-            drag_drop_data data;
-            memcpy(&data, payload->Data, sizeof(data));
-
-            if(data.type == drag_drop_info::UNIT)
-            {
-                transfer_stored_from_to_rpc(data.id, _pid);
-            }
-
-            if(data.type == drag_drop_info::FRACTIONAL)
-            {
-                pending_transfer tran;
-                tran.pid_ship = data.id;
-                tran.pid_component = _pid;
-
-                client_pending_transfers().push_back(tran);
-            }
-        }
-
-        ImGui::EndDragDropTarget();
+        handle_drag_drop();
     }
 }
 
@@ -4425,10 +4433,6 @@ void ship::show_power()
         formatted_names.push_back(c1.value()->long_name);
     }
 
-    std::set<size_t> storage_comps;
-
-    //for(storage_pipe& pipe : pipes)
-
     for(storage_pipe& pipe : pipes)
     {
         auto c1 = get_component_from_id(pipe.id_1);
@@ -4458,8 +4462,6 @@ void ship::show_power()
             ImGui::Text((format(c.long_name, formatted_names) + " <-> ").c_str());
 
             //ImGui::SameLine();
-
-            storage_comps.insert(pipe.id_1);
         }
 
         if(c2 && !pipe.goes_to_space)
@@ -4469,8 +4471,6 @@ void ship::show_power()
             ImGui::SameLine();
 
             ImGui::Text(c.long_name.c_str());
-
-            storage_comps.insert(pipe.id_2);
         }
         else
         {
@@ -4480,17 +4480,6 @@ void ship::show_power()
         }
     }
 
-    /*for(auto id : storage_comps)
-    {
-        auto c1 = get_component_from_id(id);
-
-        if(!c1)
-            continue;
-
-        component& c = *c1.value();
-
-        c.render_inline_ui();
-    }*/
 
     for(component& c : components)
     {
@@ -4502,23 +4491,24 @@ void ship::show_power()
         float max_stored = fixed.get_internal_volume(c.current_scale);
         float cur_stored = c.get_stored_volume();
 
-        //ImGui::Text((c.long_name + ": " + to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored)).c_str());
+        std::string full_frac = to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored);
 
-        /*if(ImGui::IsItemClicked(0))
-        {
-            c.detailed_view_open = !c.detailed_view_open;
-        }*/
+        ImGui::BeginGroup();
 
-        if(ImGui::TreeNodeEx((c.long_name + "##" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
+        if(ImGui::TreeNodeEx((c.long_name + " " + full_frac + "###TN" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
         {
             ImGui::Unindent();
 
-            c.render_inline_ui(false);
+            c.render_inline_ui(false, false);
 
             ImGui::Indent();
 
             ImGui::TreePop();
         }
+
+        ImGui::EndGroup();
+
+        c.handle_drag_drop();
     }
 
     for(component& c : components)
