@@ -41,7 +41,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::FACTORY] = make_default("Factory", "FAC");
     ret[component_type::RADAR] = make_default("Radar", "RAD");
     ret[component_type::CPU] = make_default("CPU", "CPU");
-    ret[component_type::T_BEAM] = make_default("Tractor Beam", "T-B");
+    ret[component_type::T_BEAM] = make_default("Tractor", "T-B");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -339,7 +339,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.activation_type = component_info::TOGGLE_ACTIVATION;
 
         p.add_on_use(component_info::POWER, -1, 0);
-        p.add_on_use(component_info::MINING, 0.001, 0);
+        p.add_on_use(component_info::MINING, 1, 0);
 
         //p.set_internal_volume(1);
         p.base_volume = 1;

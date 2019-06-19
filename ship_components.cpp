@@ -2484,7 +2484,21 @@ void ship::tick(double dt_s)
                         l->parent_ship = this;
                         l->parent_component = c._pid;
 
-                        l->power = c.get_activate_fixed(component_info::MINING).capacity;
+                        l->power = c.get_activate_fixed(component_info::MINING).capacity * radar.time_between_ticks_s;
+                    }
+
+                    if(fixed.subtype == "tractor")
+                    {
+                        tractor_laser* l = parent->make_new<tractor_laser>(current_radar_field);
+                        l->r.position = r.position;
+                        l->r.rotation = evector.angle();
+                        ///speed of light is notionally a constant
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
+                        l->phys_ignore.push_back(_pid);
+
+                        l->parent_ship = this;
+
+                        l->power = c.get_activate_fixed(component_info::T_BEAM).capacity * radar.time_between_ticks_s;
                     }
 
                     alt_frequency_packet em;
