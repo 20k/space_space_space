@@ -1484,6 +1484,26 @@ void data_tracker::add(double sat, double held)
     add_to_vector(held, vheld, max_data);
 }
 
+float get_mass_effect(float mass, float quantity)
+{
+    if(mass <= 0.00001)
+        return 0;
+
+    ///example
+    ///we have shields with a value of 1
+    ///we have a ship with 1 mass
+    ///when shields have value > mass, we get positive mass effect
+    ///when shields have value < mass, we get diminishing returns
+
+    ///concrete example
+    ///say we have shields with a value of 5
+    ///and a ship with a mass of 4
+    ///we should get... 5/4 right
+    ///ok maybe its just fractional mass then?
+
+    return quantity / mass;
+}
+
 struct laser : projectile
 {
     sf::Clock clk;
@@ -1672,10 +1692,25 @@ struct tractor_laser : laser_base
         if(parent_ship == nullptr)
             return;
 
-        ship* hit_ship = dynamic_cast<ship*>(&other);
+        /*ship* hit_ship = dynamic_cast<ship*>(&other);
 
         if(hit_ship == nullptr)
-            return;
+            return;*/
+
+        float their_mass = other.mass;
+
+        ship* hit_ship = dynamic_cast<ship*>(&other);
+
+        if(hit_ship)
+        {
+            auto held = hit_ship->sum<double>(
+            [](component& c)
+            {
+                return c.get_held();
+            });
+
+            their_mass += get_mass_effect(other.mass, held[component_type::SHIELDS]) * their_mass;
+        }
 
         for(component& c : parent_ship->components)
         {
