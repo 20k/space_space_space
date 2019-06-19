@@ -4480,6 +4480,17 @@ void ship::show_power()
         }
     }
 
+    ImGui::NewLine();
+
+    std::vector<std::string> all_names;
+
+    for(component& c : components)
+    {
+        if(!c.is_storage())
+            continue;
+
+        all_names.push_back(c.long_name);
+    }
 
     for(component& c : components)
     {
@@ -4495,7 +4506,7 @@ void ship::show_power()
 
         ImGui::BeginGroup();
 
-        if(ImGui::TreeNodeEx((c.long_name + " " + full_frac + "###TN" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
+        if(ImGui::TreeNodeEx((format(c.long_name, all_names) + " " + full_frac + "###TN" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
         {
             ImGui::Unindent();
 
