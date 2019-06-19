@@ -1712,6 +1712,27 @@ struct tractor_laser : laser_base
             their_mass += get_mass_effect(other.mass, held[component_type::SHIELDS]) * other.mass * 10;
         }
 
+        float move_ability = 0;
+
+        if(their_mass > 0.0001)
+            move_ability = power/their_mass;
+
+        if(move_ability <= 0)
+            return;
+
+        float vlen = other.velocity.length();
+
+        //if(vlen > 0.0001)
+        {
+            float min_vel = vlen - move_ability;
+
+            float extra = min_vel < 0 ? fabs(min_vel) : 0;
+
+            vec2f to_me = (parent_ship->r.position - other.r.position);
+
+            other.velocity = other.velocity.norm() * min_vel + to_me.norm() * extra;
+        }
+
         for(component& c : parent_ship->components)
         {
             if(c.base_id == component_type::CARGO_STORAGE)
