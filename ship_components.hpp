@@ -871,7 +871,6 @@ struct ship : heatable_entity
     alt_radar_sample last_sample;
 
     sf::Clock spawn_clock;
-    void tick_missile_behaviour(double dt_s);
     uint64_t spawned_by = -1;
 
     bool is_ship = false;
