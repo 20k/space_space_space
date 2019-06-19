@@ -238,7 +238,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::CARGO_STORAGE, 1));
     test_ship->add(get_component_default(component_type::RADAR, 1));
     test_ship->add(get_component_default(component_type::CPU, 1));
-    test_ship->add(get_component_default(component_type::T_BEAM, 1));
+    //test_ship->add(get_component_default(component_type::T_BEAM, 1));
 
     #if 0
     {
@@ -466,6 +466,9 @@ void server_thread(std::atomic_bool& should_term)
 
     for(int i=0; i < (int)component_type::COUNT; i++)
     {
+        if(i == component_type::T_BEAM)
+            continue;
+
         default_research.components.push_back(get_component_default((component_type::type)i, 1));
     }
 
