@@ -1724,13 +1724,31 @@ struct tractor_laser : laser_base
 
         //if(vlen > 0.0001)
         {
-            float min_vel = vlen - move_ability;
+            vec2f to_me = (parent_ship->r.position - other.r.position).norm();
 
-            float extra = min_vel < 0 ? fabs(min_vel) : 0;
+            vec2f bad_component = projection(other.velocity, to_me.rot(M_PI/2));
 
-            vec2f to_me = (parent_ship->r.position - other.r.position);
+            float pre_len = bad_component.length();
 
-            other.velocity = other.velocity.norm() * min_vel + to_me.norm() * extra;
+            float post_len = pre_len - move_ability;
+
+            move_ability = post_len < 0 ? fabs(post_len) : 0;
+
+            if(post_len < 0)
+                post_len = 0;
+
+            vec2f change = bad_component.norm() * (post_len - pre_len);
+
+            vec2f extra = to_me * move_ability;
+
+            //float min_vel = vlen - move_ability;
+
+            /*float extra = min_vel < 0 ? fabs(min_vel) : 0;
+
+
+            other.velocity = other.velocity.norm() * min_vel + to_me.norm() * extra;*/
+
+            other.velocity += extra + change;
         }
 
         for(component& c : parent_ship->components)
@@ -2478,7 +2496,7 @@ void ship::tick(double dt_s)
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
-                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10;
                         l->phys_ignore.push_back(_pid);
 
                         l->parent_ship = this;
@@ -2493,12 +2511,12 @@ void ship::tick(double dt_s)
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
-                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s);
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10;
                         l->phys_ignore.push_back(_pid);
 
                         l->parent_ship = this;
 
-                        l->power = c.get_activate_fixed(component_info::T_BEAM).capacity * radar.time_between_ticks_s;
+                        l->power = c.get_activate_fixed(component_info::TRACTOR).capacity * radar.time_between_ticks_s;
                     }
 
                     alt_frequency_packet em;

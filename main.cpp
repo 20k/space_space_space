@@ -425,7 +425,7 @@ void server_thread(std::atomic_bool& should_term)
 
     //test_ship->r.position = {323.986694, 242.469727};
 
-    test_ship->r.position = {175, 250};
+    test_ship->r.position = {190, 230};
 
     //test_ship->r.position = {585, 400};
 

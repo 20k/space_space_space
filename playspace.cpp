@@ -334,7 +334,7 @@ void room_handle_split(playspace* play, room* r1)
     ///db scan
     std::vector<aggregate<entity*>> aggs;
 
-    float minimum_distance = MERGE_DIST*3;
+    float minimum_distance = MERGE_DIST*4;
 
     for(entity* e : r1->entity_manage->entities)
     {
