@@ -4102,7 +4102,7 @@ void ship::show_resources(bool window)
             //ImGui::DragFloat("", &p.flow_rate, 0.01f, -p.max_flow_rate, p.max_flow_rate);
 
             if(changed)
-                rpc("set_flow_rate", p, p.flow_rate);
+                p.set_flow_rate_rpc(p.flow_rate);
         }
 
         if(c1 && p.goes_to_space)
@@ -4115,7 +4115,7 @@ void ship::show_resources(bool window)
             bool changed = ImGuiX::SliderFloat("", &p.flow_rate, 0, p.max_flow_rate);
 
             if(changed)
-                rpc("set_flow_rate", p, p.flow_rate);
+                p.set_flow_rate_rpc(p.flow_rate);
         }
 
         ImGui::End();

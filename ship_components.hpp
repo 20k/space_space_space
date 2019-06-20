@@ -197,10 +197,11 @@ struct storage_pipe : serialisable, owned
 
         flow_rate = clamp(flow_rate, -max_flow_rate, max_flow_rate);
     }
+
+    DECLARE_FRIENDLY_RPC(set_flow_rate, float);
 };
 
 struct ship;
-
 
 template<typename C, typename T>
 void for_each_ship_hackery(const C& c, T t);

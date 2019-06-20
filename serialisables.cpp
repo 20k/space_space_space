@@ -304,6 +304,8 @@ SERIALISE_BODY(storage_pipe)
     DO_RPC(set_flow_rate);
 }
 
+DEFINE_FRIENDLY_RPC1(storage_pipe, set_flow_rate, float);
+
 SERIALISE_BODY(tag)
 {
     DO_SERIALISE(type);
