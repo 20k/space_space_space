@@ -8,7 +8,7 @@ struct ship;
 struct aoe_damage;
 struct radar_object;
 struct alt_radar_sample;
-struct common_renderable
+struct common_renderable;
 
 DECLARE_SERIALISE_FUNCTION(component);
 DECLARE_SERIALISE_FUNCTION(ship);

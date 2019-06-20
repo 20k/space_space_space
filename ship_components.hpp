@@ -376,7 +376,6 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     ///aka power gen
     //bool production_heat_scales = false;
 
-    FRIENDLY_RPC_NAME(manufacture_blueprint_id);
 
     const component_fixed_properties& get_fixed_props()
     {
@@ -385,6 +384,8 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
 
     void manufacture_blueprint_id(size_t print_id);
     void manufacture_blueprint(const blueprint& print, ship& parent);
+
+    DECLARE_FRIENDLY_RPC(manufacture_blueprint_id, size_t);
 
     double satisfied_percentage(double dt_s, const std::vector<double>& res);
     void apply(const std::vector<double>& efficiency, double dt_s, std::vector<double>& res);
@@ -547,8 +548,8 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
 
     void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
     void transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac);
-    FRIENDLY_RPC_NAME(transfer_stored_from_to);
-    FRIENDLY_RPC_NAME(transfer_stored_from_to_frac);
+    DECLARE_FRIENDLY_RPC(transfer_stored_from_to, size_t, size_t);
+    DECLARE_FRIENDLY_RPC(transfer_stored_from_to_frac, size_t, size_t, float);
 
     void set_activation_level(double level)
     {
@@ -675,8 +676,8 @@ struct ship : heatable_entity, free_function
     void resume_building(size_t factory_component_pid, size_t object_pid);
     void cancel_building(size_t factory_component_pid, size_t object_pid);
 
-    FRIENDLY_RPC_NAME(resume_building);
-    FRIENDLY_RPC_NAME(cancel_building);
+    DECLARE_FRIENDLY_RPC(resume_building, size_t, size_t);
+    DECLARE_FRIENDLY_RPC(cancel_building, size_t, size_t);
 
     std::optional<component*> get_component_from_id(uint64_t id);
 

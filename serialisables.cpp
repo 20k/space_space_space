@@ -386,3 +386,10 @@ DEFINE_SERIALISE_FUNCTION(common_renderable)
     DO_FSERIALISE(velocity);
     DO_FSERIALISE(is_unknown);
 }
+
+DEFINE_FRIENDLY_RPC1(component, manufacture_blueprint_id, size_t);
+DEFINE_FRIENDLY_RPC2(component, transfer_stored_from_to, size_t, size_t);
+DEFINE_FRIENDLY_RPC3(component, transfer_stored_from_to_frac, size_t, size_t, float);
+
+DEFINE_FRIENDLY_RPC2(ship, resume_building, size_t, size_t);
+DEFINE_FRIENDLY_RPC2(ship, cancel_building, size_t, size_t);

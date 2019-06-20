@@ -5,6 +5,7 @@
 #include "ship_components.hpp"
 #include <iostream>
 #include "serialisables.hpp"
+#include <networking/serialisable.hpp>
 
 #define MAX_COMPONENT_SHIP_AMOUNT 15.f
 
