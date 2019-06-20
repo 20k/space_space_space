@@ -4,6 +4,7 @@
 #include "script_execution.hpp"
 #include "ship_components.hpp"
 #include "design_editor.hpp"
+#include "material_info.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -303,7 +304,7 @@ SERIALISE_BODY(tag)
     DO_SERIALISE(type);
 }
 
-SERIALISE_BODY(does_dynamic)
+SERIALISE_BODY(does_fixed)
 {
     DO_SERIALISE(capacity);
     //DO_SERIALISE(held);
@@ -314,9 +315,30 @@ SERIALISE_BODY(does_dynamic)
     DO_SERIALISE(type);
 }
 
-SERIALISE_BODY(does_fixed)
+SERIALISE_BODY(does_dynamic)
 {
     DO_SERIALISE(held);
     DO_SERIALISE(last_use_s);
+    DO_SERIALISE(type);
+}
+
+SERIALISE_BODY(material_fixed_properties)
+{
+    DO_SERIALISE(specific_heat);
+    DO_SERIALISE(reflectivity);
+    DO_SERIALISE(melting_point);
+    DO_SERIALISE(specific_explosiveness);
+    DO_SERIALISE(density);
+}
+
+SERIALISE_BODY(material_dynamic_properties)
+{
+    //DO_SERIALISE(total_heat);
+    DO_SERIALISE(volume);
+}
+
+SERIALISE_BODY(material)
+{
+    DO_SERIALISE(dynamic_desc);
     DO_SERIALISE(type);
 }

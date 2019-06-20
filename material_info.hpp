@@ -1,7 +1,7 @@
 #ifndef MATERIAL_INFO_HPP_INCLUDED
 #define MATERIAL_INFO_HPP_INCLUDED
 
-#include <networking/serialisable.hpp>
+#include <networking/serialisable_fwd.hpp>
 
 struct material_fixed_properties;
 
@@ -46,14 +46,7 @@ struct material_fixed_properties : serialisable
     float specific_explosiveness = 0; ///damage per volume
     float density = 0;
 
-    SERIALISE_SIGNATURE(material_fixed_properties)
-    {
-        DO_SERIALISE(specific_heat);
-        DO_SERIALISE(reflectivity);
-        DO_SERIALISE(melting_point);
-        DO_SERIALISE(specific_explosiveness);
-        DO_SERIALISE(density);
-    }
+    SERIALISE_SIGNATURE(material_fixed_properties);
 };
 
 struct material_dynamic_properties : serialisable
@@ -61,11 +54,7 @@ struct material_dynamic_properties : serialisable
     //float total_heat = 0;
     float volume = 0;
 
-    SERIALISE_SIGNATURE(material_dynamic_properties)
-    {
-        //DO_SERIALISE(total_heat);
-        DO_SERIALISE(volume);
-    }
+    SERIALISE_SIGNATURE(material_dynamic_properties);
 };
 
 struct material : serialisable
@@ -73,11 +62,7 @@ struct material : serialisable
     material_dynamic_properties dynamic_desc;
     material_info::material_type type = material_info::COUNT;
 
-    SERIALISE_SIGNATURE(material)
-    {
-        DO_SERIALISE(dynamic_desc);
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE(material);
 };
 
 std::pair<material_dynamic_properties, material_fixed_properties> get_material_composite(const std::vector<material>& in);

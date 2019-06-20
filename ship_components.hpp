@@ -7,7 +7,6 @@
 #include <vec/vec.hpp>
 #include <optional>
 
-#include "entity.hpp"
 #include "radar_field.hpp"
 #include "material_info.hpp"
 #include "default_components.hpp"
@@ -131,16 +130,7 @@ struct does_fixed : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE(does_fixed)
-    {
-        DO_SERIALISE(capacity);
-        //DO_SERIALISE(held);
-        DO_SERIALISE(recharge);
-        DO_SERIALISE(recharge_unconditional);
-        DO_SERIALISE(time_between_use_s);
-        //DO_SERIALISE(last_use_s);
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE(does_fixed);
 
     does_fixed scale(float scale) const
     {
@@ -162,22 +152,14 @@ struct does_dynamic : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE(does_dynamic)
-    {
-        DO_SERIALISE(held);
-        DO_SERIALISE(last_use_s);
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE(does_dynamic);
 };
 
 struct tag : serialisable
 {
     tag_info::tag_type type = tag_info::TAG_NONE;
 
-    SERIALISE_SIGNATURE(tag)
-    {
-        DO_SERIALISE(type);
-    }
+    SERIALISE_SIGNATURE(tag);
 };
 
 struct storage_pipe : serialisable, owned
@@ -204,19 +186,7 @@ struct storage_pipe : serialisable, owned
     ///uh ok rpcs
     ///how doth implement
 
-    SERIALISE_SIGNATURE(storage_pipe)
-    {
-        DO_SERIALISE(id_1);
-        DO_SERIALISE(id_2);
-
-        DO_SERIALISE(flow_rate);
-        DO_SERIALISE(max_flow_rate);
-        DO_SERIALISE(goes_to_space);
-
-        DO_SERIALISE(transfer_work);
-
-        DO_RPC(set_flow_rate);
-    }
+    SERIALISE_SIGNATURE(storage_pipe);
 
     void set_flow_rate(float in)
     {
@@ -271,23 +241,7 @@ struct component_fixed_properties : serialisable
 
     float base_volume = 1;
 
-    SERIALISE_SIGNATURE(component_fixed_properties)
-    {
-        DO_SERIALISE(d_info);
-        DO_SERIALISE(d_activate_requirements);
-        DO_SERIALISE(tags);
-        DO_SERIALISE(no_drain_on_full_production);
-        DO_SERIALISE(complex_no_drain_on_full_production);
-        DO_SERIALISE(subtype);
-        DO_SERIALISE(activation_type);
-        DO_SERIALISE(internal_volume);
-        DO_SERIALISE(heat_sink);
-        DO_SERIALISE(production_heat_scales);
-        DO_SERIALISE(max_use_angle);
-        DO_SERIALISE(heat_produced_at_full_usage);
-        DO_SERIALISE(primary_type);
-        DO_SERIALISE(base_volume);
-    }
+    SERIALISE_SIGNATURE(component_fixed_properties);
 
     const does_fixed& get_info(component_info::does_type type) const
     {
@@ -421,8 +375,6 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     ///does heat scale depending on how much of the output is used?
     ///aka power gen
     //bool production_heat_scales = false;
-
-    SERIALISE_SIGNATURE(component);
 
     FRIENDLY_RPC_NAME(manufacture_blueprint_id);
 
@@ -649,25 +601,7 @@ struct data_tracker : serialisable, owned
 
     void add(double sat, double held);
 
-    SERIALISE_SIGNATURE(data_tracker)
-    {
-        DO_SERIALISE(vsat);
-        DO_SERIALISE(vheld);
-        DO_SERIALISE(max_data);
-
-        if(ctx.serialisation)
-        {
-            while((int)vsat.size() > max_data)
-            {
-                vsat.erase(vsat.begin());
-            }
-
-            while((int)vheld.size() > max_data)
-            {
-                vheld.erase(vheld.begin());
-            }
-        }
-    }
+    SERIALISE_SIGNATURE(data_tracker);
 };
 
 struct alt_radar_field;
@@ -822,8 +756,6 @@ struct ship : heatable_entity, free_function
     float get_max_velocity_thrust();
     float get_mass();
     float get_max_temperature();
-
-    SERIALISE_SIGNATURE(ship);
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
