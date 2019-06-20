@@ -3,18 +3,6 @@
 
 #include <networking/serialisable_fwd.hpp>
 
-struct component;
-struct ship;
-struct aoe_damage;
-struct radar_object;
-struct alt_radar_sample;
-struct common_renderable;
-struct build_in_progress;
-struct player_research;
-struct blueprint_node;
-struct blueprint;
-struct blueprint_manager;;
-
 DECLARE_SERIALISE_FUNCTION(component);
 DECLARE_SERIALISE_FUNCTION(ship);
 DECLARE_SERIALISE_FUNCTION(aoe_damage);
@@ -26,5 +14,16 @@ DECLARE_SERIALISE_FUNCTION(player_research);
 DECLARE_SERIALISE_FUNCTION(blueprint_node);
 DECLARE_SERIALISE_FUNCTION(blueprint);
 DECLARE_SERIALISE_FUNCTION(blueprint_manager);
+
+DECLARE_SERIALISE_FUNCTION(player_model);
+DECLARE_SERIALISE_FUNCTION(persistent_user_data);
+DECLARE_SERIALISE_FUNCTION(auth_data);
+DECLARE_SERIALISE_FUNCTION(system_descriptor);
+DECLARE_SERIALISE_FUNCTION(client_entities);
+DECLARE_SERIALISE_FUNCTION(client_fire);
+DECLARE_SERIALISE_FUNCTION(warp_info);
+DECLARE_SERIALISE_FUNCTION(poi_travel_info);
+DECLARE_SERIALISE_FUNCTION(client_room_object_data);
+DECLARE_SERIALISE_FUNCTION(client_input);
 
 #endif // SERIALISABLES_HPP_INCLUDED

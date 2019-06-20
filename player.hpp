@@ -14,7 +14,7 @@ struct common_renderable;
 
 ///i think the reason why the code is a mess is this inversion of ownership
 ///this needs to own everything about a player, ships etc
-struct player_model : serialisable, owned
+struct player_model : serialisable, owned, free_function
 {
     ///oh goodie raw pointers
     //entity* en = nullptr;
@@ -29,12 +29,6 @@ struct player_model : serialisable, owned
     void cleanup(vec2f my_pos);
 
     void tick(double dt_s);
-
-    SERIALISE_SIGNATURE(player_model)
-    {
-        //DO_SERIALISE(research);
-        //DO_SERIALISE(blueprint_manage);
-    }
 };
 
 /*struct player_model_manager
@@ -73,40 +67,22 @@ struct player_model : serialisable, owned
 
 #define DB_USER_ID 1
 
-struct persistent_user_data : serialisable, db_storable<persistent_user_data>
+struct persistent_user_data : serialisable, db_storable<persistent_user_data>, free_function
 {
     player_research research;
     blueprint_manager blueprint_manage;
-
-    SERIALISE_SIGNATURE(persistent_user_data)
-    {
-        DO_SERIALISE(research);
-        DO_SERIALISE(blueprint_manage);
-    }
 };
 
-struct auth_data : serialisable
+struct auth_data : serialisable, free_function
 {
     bool default_init = false;
-
-    SERIALISE_SIGNATURE(auth_data)
-    {
-        DO_SERIALISE(default_init);
-    }
 };
 
-struct system_descriptor : serialisable
+struct system_descriptor : serialisable, free_function
 {
     std::string name;
     vec2f position;
     size_t sys_pid = 0;
-
-    SERIALISE_SIGNATURE(system_descriptor)
-    {
-        DO_SERIALISE(name);
-        DO_SERIALISE(position);
-        DO_SERIALISE(sys_pid);
-    }
 };
 
 template<typename T>
@@ -152,66 +128,41 @@ struct data_model_manager
     }
 };
 
-struct client_entities : serialisable
+struct client_entities : serialisable, free_function
 {
     std::vector<client_renderable> entities;
 
     void render(camera& cam, sf::RenderWindow& win);
     void render_layer(camera& cam, sf::RenderWindow& win, int layer);
-
-    SERIALISE_SIGNATURE(client_entities)
-    {
-        DO_SERIALISE(entities);
-    }
 };
 
-struct client_fire : serialisable
+struct client_fire : serialisable, free_function
 {
     uint32_t weapon_offset = 0;
     float fire_angle = 0;
-
-    SERIALISE_SIGNATURE(client_fire)
-    {
-        DO_SERIALISE(weapon_offset);
-        DO_SERIALISE(fire_angle);
-    }
 };
 
-struct warp_info : serialisable
+struct warp_info : serialisable, free_function
 {
     size_t sys_pid = 0;
     bool should_warp = false;
-
-    SERIALISE_SIGNATURE(warp_info)
-    {
-        DO_SERIALISE(sys_pid);
-        DO_SERIALISE(should_warp);
-    }
 };
 
-struct poi_travel_info : serialisable
+struct poi_travel_info : serialisable, free_function
 {
     size_t poi_pid = 0;
     bool should_travel = false;
-
-    SERIALISE_SIGNATURE(poi_travel_info)
-    {
-        DO_SERIALISE(poi_pid);
-        DO_SERIALISE(should_travel);
-    }
 };
 
-struct client_room_object_data : serialisable
+struct client_room_object_data : serialisable, free_function
 {
     std::string name;
     vec2f position;
     size_t pid = 0;
     std::string type;
-
-    SERIALISE_SIGNATURE(client_room_object_data);
 };
 
-struct client_input : serialisable
+struct client_input : serialisable, free_function
 {
     vec2f direction = {0,0};
     float rotation = 0;
@@ -224,21 +175,6 @@ struct client_input : serialisable
     warp_info warp;
     poi_travel_info travel;
     std::vector<client_room_object_data> room_objects;
-
-    SERIALISE_SIGNATURE(client_input)
-    {
-        DO_SERIALISE(direction);
-        DO_SERIALISE(rotation);
-        DO_SERIALISE(fired);
-        DO_SERIALISE(ping);
-        DO_SERIALISE(mouse_world_pos);
-        DO_SERIALISE(rpcs);
-        DO_SERIALISE(to_poi_space);
-        DO_SERIALISE(to_fsd_space);
-        DO_SERIALISE(warp);
-        DO_SERIALISE(travel);
-        DO_SERIALISE(room_objects);
-    }
 };
 
 #endif // PLAYER_HPP_INCLUDED

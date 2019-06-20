@@ -8,6 +8,7 @@
 #include "aoe_damage.hpp"
 #include "radar_field.hpp"
 #include "design_editor.hpp"
+#include "player.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -433,3 +434,96 @@ DEFINE_SERIALISE_FUNCTION(blueprint_manager)
 
 DEFINE_FRIENDLY_RPC0(blueprint_manager, create_blueprint);
 DEFINE_FRIENDLY_RPC1(blueprint_manager, upload_blueprint, blueprint);
+
+
+DEFINE_SERIALISE_FUNCTION(player_model)
+{
+    SERIALISE_SETUP();
+}
+
+DEFINE_SERIALISE_FUNCTION(persistent_user_data)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(research);
+    DO_FSERIALISE(blueprint_manage);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(auth_data)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(default_init);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(system_descriptor)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(position);
+    DO_FSERIALISE(sys_pid);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(client_entities)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(entities);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(client_fire)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(weapon_offset);
+    DO_FSERIALISE(fire_angle);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(warp_info)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(sys_pid);
+    DO_FSERIALISE(should_warp);
+}
+
+DEFINE_SERIALISE_FUNCTION(poi_travel_info)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(poi_pid);
+    DO_FSERIALISE(should_travel);
+}
+
+DEFINE_SERIALISE_FUNCTION(client_room_object_data)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(position);
+    DO_FSERIALISE(pid);
+    DO_FSERIALISE(type);
+}
+
+DEFINE_SERIALISE_FUNCTION(client_input)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(direction);
+    DO_FSERIALISE(rotation);
+    DO_FSERIALISE(fired);
+    DO_FSERIALISE(ping);
+    DO_FSERIALISE(mouse_world_pos);
+    DO_FSERIALISE(rpcs);
+    DO_FSERIALISE(to_poi_space);
+    DO_FSERIALISE(to_fsd_space);
+    DO_FSERIALISE(warp);
+    DO_FSERIALISE(travel);
+    DO_FSERIALISE(room_objects);
+}

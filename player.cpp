@@ -1,13 +1,5 @@
 #include "player.hpp"
 
-SERIALISE_BODY(client_room_object_data)
-{
-    DO_SERIALISE(name);
-    DO_SERIALISE(position);
-    DO_SERIALISE(pid);
-    DO_SERIALISE(type);
-}
-
 void client_entities::render(camera& cam, sf::RenderWindow& win)
 {
     for(client_renderable& i : entities)
