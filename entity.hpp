@@ -34,7 +34,7 @@ struct client_renderable : serialisable
     uint32_t network_owner = -1;
     bool transient = false;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(client_renderable)
     {
         DO_SERIALISE(position);
         DO_SERIALISE(rotation);
@@ -123,7 +123,7 @@ struct entity : serialisable, owned
 
     virtual ~entity(){}
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(entity)
     {
         /*DO_SERIALISE(position);
         DO_SERIALISE(rotation);
@@ -232,7 +232,7 @@ struct entity_manager : serialisable
 
     void cleanup();
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(entity_manager)
     {
         DO_SERIALISE(entities);
     }

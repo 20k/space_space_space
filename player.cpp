@@ -1,6 +1,6 @@
 #include "player.hpp"
 
-void client_room_object_data::serialise(serialise_context& ctx, nlohmann::json& data, self_t* other)
+SERIALISE_BODY(client_room_object_data)
 {
     DO_SERIALISE(name);
     DO_SERIALISE(position);

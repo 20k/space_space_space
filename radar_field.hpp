@@ -212,7 +212,7 @@ struct alt_object_property : serialisable
 
     }
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(alt_object_property<T>)
     {
         DO_SERIALISE(id_e);
         DO_SERIALISE(id_r);
@@ -244,7 +244,7 @@ struct alt_radar_sample : serialisable
 
     bool fresh = false;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(alt_radar_sample)
     {
         DO_SERIALISE(location);
         DO_SERIALISE(frequencies);

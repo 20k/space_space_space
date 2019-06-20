@@ -28,7 +28,7 @@ struct build_in_progress : serialisable
         result = fin;
     }
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(build_in_progress)
     {
         DO_SERIALISE(result);
         DO_SERIALISE(in_progress_pid);

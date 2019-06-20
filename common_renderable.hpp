@@ -58,7 +58,7 @@ struct common_renderable : serialisable, uncertain
     client_renderable r;
     vec2f velocity = {0,0};
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(common_renderable)
     {
         DO_SERIALISE(type);
         DO_SERIALISE(r);

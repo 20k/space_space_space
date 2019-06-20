@@ -25,7 +25,7 @@ struct aoe_damage : entity
     virtual void tick(double dt_s) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(aoe_damage)
     {
         DO_SERIALISE(radius);
         DO_SERIALISE(max_radius);

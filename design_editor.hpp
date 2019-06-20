@@ -25,7 +25,7 @@ struct player_research : serialisable, owned
 
     void render(design_editor& edit, vec2f upper_size);
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(player_research)
     {
         DO_SERIALISE(components);
     }
@@ -57,7 +57,7 @@ struct blueprint_node : serialisable
 
     void render(design_editor& edit, blueprint& parent);
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(blueprint_node)
     {
         DO_SERIALISE(original);
         DO_SERIALISE(name);
@@ -92,7 +92,7 @@ struct blueprint : serialisable, owned
 
     std::string unbaked_tag;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(blueprint)
     {
         DO_SERIALISE(nodes);
         DO_SERIALISE(name);
@@ -114,7 +114,7 @@ struct blueprint_manager : serialisable, owned
     std::vector<blueprint> blueprints;
     bool dirty = false;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(blueprint_manager)
     {
         DO_SERIALISE(blueprints);
         DO_RPC(create_blueprint);

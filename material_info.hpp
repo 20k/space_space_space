@@ -46,7 +46,7 @@ struct material_fixed_properties : serialisable
     float specific_explosiveness = 0; ///damage per volume
     float density = 0;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(material_fixed_properties)
     {
         DO_SERIALISE(specific_heat);
         DO_SERIALISE(reflectivity);
@@ -61,7 +61,7 @@ struct material_dynamic_properties : serialisable
     //float total_heat = 0;
     float volume = 0;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(material_dynamic_properties)
     {
         //DO_SERIALISE(total_heat);
         DO_SERIALISE(volume);
@@ -73,7 +73,7 @@ struct material : serialisable
     material_dynamic_properties dynamic_desc;
     material_info::material_type type = material_info::COUNT;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(material)
     {
         DO_SERIALISE(dynamic_desc);
         DO_SERIALISE(type);

@@ -131,7 +131,7 @@ struct does_fixed : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(does_fixed)
     {
         DO_SERIALISE(capacity);
         //DO_SERIALISE(held);
@@ -162,7 +162,7 @@ struct does_dynamic : serialisable
 
     component_info::does_type type = component_info::COUNT;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(does_dynamic)
     {
         DO_SERIALISE(held);
         DO_SERIALISE(last_use_s);
@@ -174,7 +174,7 @@ struct tag : serialisable
 {
     tag_info::tag_type type = tag_info::TAG_NONE;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(tag)
     {
         DO_SERIALISE(type);
     }
@@ -204,7 +204,7 @@ struct storage_pipe : serialisable, owned
     ///uh ok rpcs
     ///how doth implement
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(storage_pipe)
     {
         DO_SERIALISE(id_1);
         DO_SERIALISE(id_2);
@@ -271,7 +271,7 @@ struct component_fixed_properties : serialisable
 
     float base_volume = 1;
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(component_fixed_properties)
     {
         DO_SERIALISE(d_info);
         DO_SERIALISE(d_activate_requirements);
@@ -359,7 +359,7 @@ std::vector<pending_transfer>& client_pending_transfers()
 
 struct build_in_progress;
 
-struct component : serialisable, owned
+struct component : serialisable, owned, rate_limited
 {
     component_type::type base_id = component_type::COUNT;
 
@@ -422,7 +422,7 @@ struct component : serialisable, owned
     ///aka power gen
     //bool production_heat_scales = false;
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE(component);
 
     FRIENDLY_RPC_NAME(manufacture_blueprint_id);
 
@@ -649,7 +649,7 @@ struct data_tracker : serialisable, owned
 
     void add(double sat, double held);
 
-    SERIALISE_SIGNATURE()
+    SERIALISE_SIGNATURE(data_tracker)
     {
         DO_SERIALISE(vsat);
         DO_SERIALISE(vheld);
@@ -823,7 +823,7 @@ struct ship : heatable_entity
     float get_mass();
     float get_max_temperature();
 
-    SERIALISE_SIGNATURE();
+    SERIALISE_SIGNATURE(ship);
 
     virtual void pre_collide(entity& other) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
