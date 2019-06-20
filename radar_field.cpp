@@ -1247,7 +1247,7 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
 
         uint32_t uid = en._pid;
 
-        #if 1
+        #if 0
         #define RECT
         #ifdef RECT
         if(consider.emitted_by == uid && consider.reflected_by != (uint32_t)-1 && consider.reflected_by != uid && intensity > HIGH_DETAIL)

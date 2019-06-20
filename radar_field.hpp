@@ -236,9 +236,9 @@ struct alt_radar_sample : serialisable
     /*std::vector<vec2f> echo_position;
     std::vector<uint32_t> echo_id; ///?*/
 
-    std::vector<alt_object_property<vec2f>> echo_pos;
-    std::vector<alt_object_property<vec2f>> echo_dir;
-    std::vector<alt_object_property<vec2f>> receive_dir;
+    //std::vector<alt_object_property<vec2f>> echo_pos;
+    //std::vector<alt_object_property<vec2f>> echo_dir;
+    //std::vector<alt_object_property<vec2f>> receive_dir;
     std::vector<alt_object_property<common_renderable>> renderables;
     //std::vector<alt_object_property<uncertain_renderable>> low_detail;
 
@@ -250,7 +250,7 @@ struct alt_radar_sample : serialisable
         DO_SERIALISE(frequencies);
         DO_SERIALISE(intensities);
 
-        DO_SERIALISE(echo_pos);
+        //DO_SERIALISE(echo_pos);
         /*DO_SERIALISE(echo_dir);
         DO_SERIALISE(receive_dir);*/
 
