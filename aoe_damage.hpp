@@ -5,7 +5,7 @@
 
 struct alt_radar_field;
 
-struct aoe_damage : entity
+struct aoe_damage : entity, free_function
 {
     float radius = 0;
     float max_radius = 0;
@@ -24,14 +24,6 @@ struct aoe_damage : entity
 
     virtual void tick(double dt_s) override;
     virtual void on_collide(entity_manager& em, entity& other) override;
-
-    SERIALISE_SIGNATURE(aoe_damage)
-    {
-        DO_SERIALISE(radius);
-        DO_SERIALISE(max_radius);
-        DO_SERIALISE(damage);
-        DO_SERIALISE(accumulated_time);
-    }
 };
 
 #endif // AOE_DAMAGE_HPP_INCLUDED

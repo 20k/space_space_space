@@ -1,6 +1,42 @@
 #include "entity.hpp"
 #include <SFML/Graphics.hpp>
 #include "camera.hpp"
+#include <networking/serialisable.hpp>
+
+SERIALISE_BODY(client_renderable)
+{
+    DO_SERIALISE(position);
+    DO_SERIALISE(rotation);
+    DO_SERIALISE(render_layer);
+
+    DO_SERIALISE(vert_dist);
+    DO_SERIALISE(vert_angle);
+    DO_SERIALISE(vert_cols);
+
+    DO_SERIALISE(approx_rad);
+    DO_SERIALISE(scale);
+    DO_SERIALISE(network_owner);
+}
+
+SERIALISE_BODY(entity)
+{
+    /*DO_SERIALISE(position);
+    DO_SERIALISE(rotation);
+
+    DO_SERIALISE(vert_dist);
+    DO_SERIALISE(vert_angle);
+    DO_SERIALISE(vert_cols);*/
+
+    DO_SERIALISE(r);
+    DO_SERIALISE(velocity);
+
+    //r.serialise(ctx, data);
+}
+
+SERIALISE_BODY(entity_manager)
+{
+    DO_SERIALISE(entities);
+}
 
 bool collides(entity& e1, entity& e2)
 {

@@ -5,8 +5,10 @@
 
 struct component;
 struct ship;
+struct aoe_damage;
 
 DECLARE_SERIALISE_FUNCTION(component);
 DECLARE_SERIALISE_FUNCTION(ship);
+DECLARE_SERIALISE_FUNCTION(aoe_damage);
 
 #endif // SERIALISABLES_HPP_INCLUDED

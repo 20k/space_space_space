@@ -5,6 +5,7 @@
 #include "ship_components.hpp"
 #include "design_editor.hpp"
 #include "material_info.hpp"
+#include "aoe_damage.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -341,4 +342,14 @@ SERIALISE_BODY(material)
 {
     DO_SERIALISE(dynamic_desc);
     DO_SERIALISE(type);
+}
+
+DEFINE_SERIALISE_FUNCTION(aoe_damage)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(radius);
+    DO_FSERIALISE(max_radius);
+    DO_FSERIALISE(damage);
+    DO_FSERIALISE(accumulated_time);
 }
