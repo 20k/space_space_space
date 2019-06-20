@@ -359,37 +359,6 @@ std::vector<pending_transfer>& client_pending_transfers()
 
 struct build_in_progress;
 
-template<typename T>
-struct shared_wrapper : serialisable
-{
-    std::shared_ptr<T> ptr;
-
-    shared_wrapper()
-    {
-        ptr = std::make_shared<T>();
-    }
-
-    shared_wrapper(const T& in)
-    {
-        ptr = std::make_shared<T>(in);
-    }
-
-    SERIALISE_SIGNATURE()
-    {
-        DO_SERIALISE(ptr);
-    }
-
-    T* operator->()
-    {
-        return ptr.operator->();
-    }
-
-    T& operator*()
-    {
-        return *ptr;
-    }
-};
-
 struct component : serialisable, owned
 {
     component_type::type base_id = component_type::COUNT;
@@ -445,7 +414,7 @@ struct component : serialisable, owned
     std::optional<fixed_clock> bad_time;
 
     bool building = false;
-    std::vector<shared_wrapper<build_in_progress>> build_queue;
+    std::vector<std::shared_ptr<build_in_progress>> build_queue;
 
     std::vector<size_t> unchecked_blueprints;
 
@@ -716,7 +685,7 @@ struct ship : heatable_entity
     float my_size = 0;
 
     std::string blueprint_name;
-    shared_wrapper<blueprint> original_blueprint;
+    std::shared_ptr<blueprint> original_blueprint;
 
     std::vector<component> components;
     std::vector<storage_pipe> pipes;

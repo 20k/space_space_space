@@ -1819,7 +1819,7 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
     build.in_progress_pid = object_pid;
 
     found_comp->building = true;
-    found_comp->build_queue.push_back(build);
+    found_comp->build_queue.push_back(std::make_shared<build_in_progress>(build));
 }
 
 void ship::cancel_building(size_t component_pid, size_t object_pid)
@@ -3847,14 +3847,14 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     dummy_ship.is_ship = true;
     ///if i change this string, remember to change the stripping in design_editor.cpp
     dummy_ship.blueprint_name = "UNFINISHED_" + blue.name;
-    dummy_ship.original_blueprint = blue;
+    dummy_ship.original_blueprint = std::make_shared<blueprint>(blue);
 
     which->stored.push_back(dummy_ship);
 
     build.in_progress_pid = which->stored.back()._pid;
 
     building = true;
-    build_queue.push_back(build);
+    build_queue.push_back(std::make_shared<build_in_progress>(build));
 }
 
 void component::render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent)
@@ -6440,7 +6440,7 @@ void ship::new_network_copy()
 
         c._pid = next_id;
 
-        original_blueprint = shared_wrapper<blueprint>(*original_blueprint);
+        original_blueprint = std::make_shared<blueprint>(*original_blueprint);
 
         for(ship& s : c.stored)
         {
