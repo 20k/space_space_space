@@ -102,6 +102,19 @@ struct blueprint : serialisable, owned
     }
 };
 
+struct build_in_progress : serialisable, free_function
+{
+    blueprint result;
+    size_t in_progress_pid = -1;
+
+    void make(const blueprint& fin)
+    {
+        result = fin;
+    }
+};
+
+DECLARE_SERIALISE_FUNCTION(build_in_progress);
+
 bool shares_blueprint(const ship& s1, const ship& s2);
 
 float get_build_time_s(const ship& s, float build_power);

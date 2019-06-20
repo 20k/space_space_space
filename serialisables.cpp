@@ -237,3 +237,86 @@ DEFINE_SERIALISE_FUNCTION(ship)
     DO_FRPC(resume_building);
     DO_FRPC(cancel_building);
 }
+
+DEFINE_SERIALISE_FUNCTION(build_in_progress)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(result);
+    DO_FSERIALISE(in_progress_pid);
+}
+
+SERIALISE_BODY(data_tracker)
+{
+    DO_SERIALISE(vsat);
+    DO_SERIALISE(vheld);
+    DO_SERIALISE(max_data);
+
+    if(ctx.serialisation)
+    {
+        while((int)vsat.size() > max_data)
+        {
+            vsat.erase(vsat.begin());
+        }
+
+        while((int)vheld.size() > max_data)
+        {
+            vheld.erase(vheld.begin());
+        }
+    }
+}
+
+SERIALISE_BODY(component_fixed_properties)
+{
+    DO_SERIALISE(d_info);
+    DO_SERIALISE(d_activate_requirements);
+    DO_SERIALISE(tags);
+    DO_SERIALISE(no_drain_on_full_production);
+    DO_SERIALISE(complex_no_drain_on_full_production);
+    DO_SERIALISE(subtype);
+    DO_SERIALISE(activation_type);
+    DO_SERIALISE(internal_volume);
+    DO_SERIALISE(heat_sink);
+    DO_SERIALISE(production_heat_scales);
+    DO_SERIALISE(max_use_angle);
+    DO_SERIALISE(heat_produced_at_full_usage);
+    DO_SERIALISE(primary_type);
+    DO_SERIALISE(base_volume);
+}
+
+SERIALISE_BODY(storage_pipe)
+{
+    DO_SERIALISE(id_1);
+    DO_SERIALISE(id_2);
+
+    DO_SERIALISE(flow_rate);
+    DO_SERIALISE(max_flow_rate);
+    DO_SERIALISE(goes_to_space);
+
+    DO_SERIALISE(transfer_work);
+
+    DO_RPC(set_flow_rate);
+}
+
+SERIALISE_BODY(tag)
+{
+    DO_SERIALISE(type);
+}
+
+SERIALISE_BODY(does_dynamic)
+{
+    DO_SERIALISE(capacity);
+    //DO_SERIALISE(held);
+    DO_SERIALISE(recharge);
+    DO_SERIALISE(recharge_unconditional);
+    DO_SERIALISE(time_between_use_s);
+    //DO_SERIALISE(last_use_s);
+    DO_SERIALISE(type);
+}
+
+SERIALISE_BODY(does_fixed)
+{
+    DO_SERIALISE(held);
+    DO_SERIALISE(last_use_s);
+    DO_SERIALISE(type);
+}

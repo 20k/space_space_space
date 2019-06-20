@@ -18,23 +18,6 @@
 #include "ui_util.hpp"
 #include "material_info.hpp"
 
-struct build_in_progress : serialisable
-{
-    blueprint result;
-    size_t in_progress_pid = -1;
-
-    void make(const blueprint& fin)
-    {
-        result = fin;
-    }
-
-    SERIALISE_SIGNATURE(build_in_progress)
-    {
-        DO_SERIALISE(result);
-        DO_SERIALISE(in_progress_pid);
-    }
-};
-
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
 ship::ship()
