@@ -7,6 +7,7 @@
 #include "material_info.hpp"
 #include "aoe_damage.hpp"
 #include "radar_field.hpp"
+#include "design_editor.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -393,3 +394,42 @@ DEFINE_FRIENDLY_RPC3(component, transfer_stored_from_to_frac, size_t, size_t, fl
 
 DEFINE_FRIENDLY_RPC2(ship, resume_building, size_t, size_t);
 DEFINE_FRIENDLY_RPC2(ship, cancel_building, size_t, size_t);
+
+DEFINE_SERIALISE_FUNCTION(player_research)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(components);
+}
+
+DEFINE_SERIALISE_FUNCTION(blueprint_node)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(original);
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(pos);
+    DO_FSERIALISE(size);
+}
+
+DEFINE_SERIALISE_FUNCTION(blueprint)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(nodes);
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(overall_size);
+    DO_FSERIALISE(tags);
+}
+
+DEFINE_SERIALISE_FUNCTION(blueprint_manager)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(blueprints);
+    DO_FRPC(create_blueprint);
+    DO_FRPC(upload_blueprint);
+}
+
+DEFINE_FRIENDLY_RPC0(blueprint_manager, create_blueprint);
+DEFINE_FRIENDLY_RPC1(blueprint_manager, upload_blueprint, blueprint);

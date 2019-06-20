@@ -17,6 +17,7 @@
 #include "script_execution.hpp"
 #include "ui_util.hpp"
 #include "material_info.hpp"
+#include "design_editor.hpp"
 
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 

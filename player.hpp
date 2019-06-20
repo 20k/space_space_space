@@ -8,6 +8,7 @@
 #include "design_editor.hpp"
 #include "radar_field.hpp"
 #include "playspace.hpp"
+#include <networking/serialisable.hpp>
 
 struct common_renderable;
 

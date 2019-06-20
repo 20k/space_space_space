@@ -5,7 +5,7 @@
 #include "ship_components.hpp"
 #include <iostream>
 #include "serialisables.hpp"
-#include <networking/serialisable.hpp>
+#include <networking/serialisable_fwd.hpp>
 
 #define MAX_COMPONENT_SHIP_AMOUNT 15.f
 
@@ -21,16 +21,11 @@ struct design_editor;
 struct material;
 
 ///?
-struct player_research : serialisable, owned
+struct player_research : serialisable, owned, free_function
 {
     std::vector<component> components;
 
     void render(design_editor& edit, vec2f upper_size);
-
-    SERIALISE_SIGNATURE(player_research)
-    {
-        DO_SERIALISE(components);
-    }
 
     void operator=(player_research&& other)
     {
@@ -44,7 +39,7 @@ struct player_research : serialisable, owned
 
 struct blueprint;
 
-struct blueprint_node : serialisable
+struct blueprint_node : serialisable, free_function
 {
     //static inline int gid = 0;
     //int id = gid++;
@@ -58,14 +53,6 @@ struct blueprint_node : serialisable
     bool cleanup = false;
 
     void render(design_editor& edit, blueprint& parent);
-
-    SERIALISE_SIGNATURE(blueprint_node)
-    {
-        DO_SERIALISE(original);
-        DO_SERIALISE(name);
-        DO_SERIALISE(pos);
-        DO_SERIALISE(size);
-    }
 };
 
 struct blueprint_render_state
@@ -74,7 +61,7 @@ struct blueprint_render_state
     bool is_hovered = false;
 };
 
-struct blueprint : serialisable, owned
+struct blueprint : serialisable, owned, free_function
 {
     std::vector<blueprint_node> nodes;
     std::string name;
@@ -93,14 +80,6 @@ struct blueprint : serialisable, owned
     void add_tag(const std::string& tg);
 
     std::string unbaked_tag;
-
-    SERIALISE_SIGNATURE(blueprint)
-    {
-        DO_SERIALISE(nodes);
-        DO_SERIALISE(name);
-        DO_SERIALISE(overall_size);
-        DO_SERIALISE(tags);
-    }
 };
 
 struct build_in_progress : serialisable, free_function
@@ -114,8 +93,6 @@ struct build_in_progress : serialisable, free_function
     }
 };
 
-DECLARE_SERIALISE_FUNCTION(build_in_progress);
-
 bool shares_blueprint(const ship& s1, const ship& s2);
 
 float get_build_time_s(const ship& s, float build_power);
@@ -124,17 +101,10 @@ float get_build_work(const ship& s);
 void clean_tag(std::string& in);
 void clean_blueprint_name(std::string& in);
 
-struct blueprint_manager : serialisable, owned
+struct blueprint_manager : serialisable, owned, free_function
 {
     std::vector<blueprint> blueprints;
     bool dirty = false;
-
-    SERIALISE_SIGNATURE(blueprint_manager)
-    {
-        DO_SERIALISE(blueprints);
-        DO_RPC(create_blueprint);
-        DO_RPC(upload_blueprint);
-    }
 
     std::optional<blueprint*> fetch(size_t id)
     {
@@ -186,8 +156,8 @@ struct blueprint_manager : serialisable, owned
         }
     }
 
-    FRIENDLY_RPC_NAME(create_blueprint);
-    FRIENDLY_RPC_NAME(upload_blueprint);
+    DECLARE_FRIENDLY_RPC(create_blueprint);
+    DECLARE_FRIENDLY_RPC(upload_blueprint, blueprint);
 };
 
 struct design_editor
