@@ -6,6 +6,7 @@
 #include "design_editor.hpp"
 #include "material_info.hpp"
 #include "aoe_damage.hpp"
+#include "radar_field.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -352,4 +353,36 @@ DEFINE_SERIALISE_FUNCTION(aoe_damage)
     DO_FSERIALISE(max_radius);
     DO_FSERIALISE(damage);
     DO_FSERIALISE(accumulated_time);
+}
+
+DEFINE_SERIALISE_FUNCTION(radar_object)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(uid);
+    DO_FSERIALISE(property);
+    DO_FSERIALISE(summed_intensities);
+}
+
+DEFINE_SERIALISE_FUNCTION(alt_radar_sample)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(location);
+    DO_FSERIALISE(frequencies);
+    DO_FSERIALISE(intensities);
+
+    DO_FSERIALISE(renderables);
+    DO_FSERIALISE(fresh);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(common_renderable)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(type);
+    DO_FSERIALISE(r);
+    DO_FSERIALISE(velocity);
+    DO_FSERIALISE(is_unknown);
 }

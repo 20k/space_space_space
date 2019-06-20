@@ -6577,7 +6577,7 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
         std::cout << e.property << std::endl;
     }*/
 
-    for(alt_object_property<common_renderable>& e : sample.renderables)
+    for(auto& e : sample.renderables)
     {
         uint32_t uid = e.uid;
 

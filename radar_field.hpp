@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <optional>
 #include "fixed_clock.hpp"
-#include <networking/serialisable.hpp>
+#include <networking/serialisable_fwd.hpp>
 #include "entity.hpp"
 #include "common_renderable.hpp"
 #include "aggregates.hpp"
@@ -185,6 +185,7 @@ struct hacky_clock
     }
 };
 
+#if 0
 template<typename T>
 struct alt_object_property : serialisable
 {
@@ -223,10 +224,25 @@ struct alt_object_property : serialisable
         DO_SERIALISE(summed_intensities);
     }
 };
+#endif // 0
+
+struct radar_object : serialisable, free_function
+{
+    uint32_t uid = -1;
+    common_renderable property;
+    float summed_intensities = 0;
+
+    radar_object(){}
+
+    radar_object(uint32_t _uid, const common_renderable& _property, float _summed_intensities) : uid(_uid), property(_property), summed_intensities(_summed_intensities)
+    {
+
+    }
+};
 
 bool frequency_in_range(float freq, const std::vector<double>& frequencies);
 
-struct alt_radar_sample : serialisable
+struct alt_radar_sample : serialisable, free_function
 {
     vec2f location;
 
@@ -239,28 +255,10 @@ struct alt_radar_sample : serialisable
     //std::vector<alt_object_property<vec2f>> echo_pos;
     //std::vector<alt_object_property<vec2f>> echo_dir;
     //std::vector<alt_object_property<vec2f>> receive_dir;
-    std::vector<alt_object_property<common_renderable>> renderables;
+    std::vector<radar_object> renderables;
     //std::vector<alt_object_property<uncertain_renderable>> low_detail;
 
     bool fresh = false;
-
-    SERIALISE_SIGNATURE(alt_radar_sample)
-    {
-        DO_SERIALISE(location);
-        DO_SERIALISE(frequencies);
-        DO_SERIALISE(intensities);
-
-        //DO_SERIALISE(echo_pos);
-        /*DO_SERIALISE(echo_dir);
-        DO_SERIALISE(receive_dir);*/
-
-        DO_SERIALISE(renderables);
-        //DO_SERIALISE(low_detail);
-        DO_SERIALISE(fresh);
-
-        /*DO_SERIALISE(echo_position);
-        DO_SERIALISE(echo_id);*/
-    }
 };
 
 struct player_model;
