@@ -151,7 +151,7 @@ void cpu_state::stop_rpc()
     rpc("stop", *this);
 }
 
-DECLARE_SERIALISE_FUNCTION(component)
+DEFINE_SERIALISE_FUNCTION(component)
 {
     SERIALISE_SETUP();
 
@@ -205,7 +205,7 @@ DECLARE_SERIALISE_FUNCTION(component)
     DO_FRPC(transfer_stored_from_to_frac);
 }
 
-DECLARE_SERIALISE_FUNCTION(ship)
+DEFINE_SERIALISE_FUNCTION(ship)
 {
     SERIALISE_SETUP();
 
