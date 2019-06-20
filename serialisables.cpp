@@ -9,6 +9,7 @@
 #include "radar_field.hpp"
 #include "design_editor.hpp"
 #include "player.hpp"
+#include "data_model.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -520,7 +521,6 @@ DEFINE_SERIALISE_FUNCTION(client_input)
     DO_FSERIALISE(fired);
     DO_FSERIALISE(ping);
     DO_FSERIALISE(mouse_world_pos);
-    DO_FSERIALISE(rpcs);
     DO_FSERIALISE(to_poi_space);
     DO_FSERIALISE(to_fsd_space);
     DO_FSERIALISE(warp);

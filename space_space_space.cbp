@@ -227,6 +227,7 @@
 		<Unit filename="code_editor.hpp" />
 		<Unit filename="colours.hpp" />
 		<Unit filename="common_renderable.hpp" />
+		<Unit filename="data_model.hpp" />
 		<Unit filename="default_components.cpp" />
 		<Unit filename="default_components.hpp" />
 		<Unit filename="deps/ImGuiColorTextEdit/TextEditor.cpp" />

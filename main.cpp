@@ -27,6 +27,7 @@
 #include "code_editor.hpp"
 #include "audio.hpp"
 #include "prebaked_programs.hpp"
+#include "data_model.hpp"
 
 bool skip_keyboard_input(bool has_focus)
 {
@@ -683,9 +684,9 @@ void server_thread(std::atomic_bool& should_term)
 
             std::optional<auth<auth_data>*> found_auth;
 
-            {
-                network_protocol proto;
+            network_protocol proto;
 
+            {
                 read_id = conn.reads_from(proto);
 
                 if(proto.type == network_mode::STEAM_AUTH)
@@ -828,10 +829,10 @@ void server_thread(std::atomic_bool& should_term)
                     }
                 }
 
-                if(read_data.rpcs.all_rpcs.size() > 0)
+                if(proto.rpcs.all_rpcs.size() > 0)
                 {
                     serialise_context ctx;
-                    ctx.inf = read_data.rpcs;
+                    ctx.inf = proto.rpcs;
                     ctx.exec_rpcs = true;
 
                     do_recurse(ctx, s);
@@ -877,10 +878,10 @@ void server_thread(std::atomic_bool& should_term)
                 }
             }
 
-            if(read_data.rpcs.all_rpcs.size() > 0)
+            if(proto.rpcs.all_rpcs.size() > 0)
             {
                 serialise_context ctx;
-                ctx.inf = read_data.rpcs;
+                ctx.inf = proto.rpcs;
                 ctx.exec_rpcs = true;
 
                 do_recurse(ctx, data.persistent_data);
@@ -1554,7 +1555,6 @@ int main()
         }
 
         cinput.mouse_world_pos = cam.screen_to_world(mpos);
-        cinput.rpcs = get_global_serialise_info();
 
         {
             ImGui::Begin("Star Systems", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -1818,6 +1818,7 @@ int main()
         get_global_serialise_info().all_rpcs.clear();
 
         nproto.data = serialise(cinput);
+        nproto.rpcs = get_global_serialise_info();
 
         conn.writes_to(nproto, -1);
 
