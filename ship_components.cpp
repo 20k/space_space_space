@@ -4353,7 +4353,7 @@ void ship::show_power()
         bool changed = ImGuiX::SliderFloat("##" + std::to_string(pipe._pid), &pipe.flow_rate, lbound, pipe.max_flow_rate);
 
         if(changed)
-            rpc("set_flow_rate", pipe, pipe.flow_rate);
+            pipe.set_flow_rate_rpc(pipe.flow_rate);
 
         ImGui::PopItemWidth();
 
