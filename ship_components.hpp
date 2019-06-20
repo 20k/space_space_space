@@ -359,7 +359,7 @@ std::vector<pending_transfer>& client_pending_transfers()
 
 struct build_in_progress;
 
-struct component : serialisable, owned, rate_limited
+struct component : serialisable, owned, rate_limited, free_function, smoothed
 {
     component_type::type base_id = component_type::COUNT;
 
@@ -679,7 +679,7 @@ struct playspace_manager;
 struct playspace;
 struct room;
 
-struct ship : heatable_entity
+struct ship : heatable_entity, free_function
 {
     size_t network_owner = 0;
     float my_size = 0;

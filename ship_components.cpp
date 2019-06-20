@@ -35,93 +35,12 @@ struct build_in_progress : serialisable
     }
 };
 
-SERIALISE_BODY(component)
-{
-    //DO_SERIALISE(info);
-    //DO_SERIALISE(activate_requirements);
-    //DO_SERIALISE(tags);
-    DO_SERIALISE(dyn_info);
-    DO_SERIALISE(dyn_activate_requirements);
-    DO_SERIALISE(base_id);
-    DO_SERIALISE(long_name);
-    DO_SERIALISE(short_name);
-    DO_SERIALISE(last_sat);
-    DO_SERIALISE(flows);
-    DO_SERIALISE(is_build_holder);
-    DO_SERIALISE(phase);
-    //DO_SERIALISE(heat_sink);
-    //DO_SERIALISE(no_drain_on_full_production);
-    //DO_SERIALISE(complex_no_drain_on_full_production);
-    DO_SERIALISE(last_production_frac);
-    //DO_SERIALISE(max_use_angle);
-    //DO_SERIALISE(subtype);
-    //DO_SERIALISE(production_heat_scales);
-    //DO_SERIALISE(my_volume);
-    //DO_SERIALISE(internal_volume);
-    DO_SERIALISE(current_scale);
-    DO_SERIALISE_RATELIMIT(stored, 0, ratelimits::STAGGER);
-    //DO_SERIALISE(primary_type);
-    //DO_SERIALISE(id);
-    DO_SERIALISE(composition);
-    DO_SERIALISE_SMOOTH(my_temperature, interpolation_mode::SMOOTH);
-    DO_SERIALISE(activation_level);
-    DO_SERIALISE(last_could_use);
-    DO_SERIALISE(last_activation_successful);
-    DO_SERIALISE(building);
-    DO_SERIALISE(build_queue);
-    DO_SERIALISE(radar_offset_angle);
-    DO_SERIALISE(radar_restrict_angle);
-
-    if(base_id == component_type::CPU)
-    {
-        DO_SERIALISE(cpu_core);
-    }
-
-    DO_SERIALISE(current_directory);
-
-    //DO_SERIALISE(activation_type);
-    DO_RPC(set_activation_level);
-    DO_RPC(set_use);
-    DO_RPC(manufacture_blueprint_id);
-    DO_RPC(transfer_stored_from_to);
-    DO_RPC(transfer_stored_from_to_frac);
-}
-
-SERIALISE_BODY(ship)
-{
-    DO_SERIALISE(construction_amount);
-    DO_SERIALISE(data_track);
-    DO_SERIALISE(network_owner);
-    DO_SERIALISE(components);
-    DO_SERIALISE(last_sat_percentage);
-    DO_SERIALISE(latent_heat);
-    DO_SERIALISE(pipes);
-    DO_SERIALISE(my_size);
-    DO_SERIALISE(is_ship);
-    DO_SERIALISE(blueprint_name);
-    DO_SERIALISE(has_s_power);
-    DO_SERIALISE(has_w_power);
-    DO_SERIALISE(room_type);
-    DO_SERIALISE(last_room_type);
-    DO_SERIALISE(current_room_pid);
-    DO_SERIALISE(travelling_in_realspace);
-    //DO_SERIALISE(realspace_destination);
-    //DO_SERIALISE(realspace_pid_target);
-    DO_SERIALISE(move_args);
-    DO_SERIALISE(radar_frequency_composition);
-    DO_SERIALISE(radar_intensity_composition);
-    DO_SERIALISE(current_directory);
-    DO_SERIALISE(is_build_holder);
-    DO_SERIALISE(original_blueprint);
-
-    DO_RPC(resume_building);
-    DO_RPC(cancel_building);
-}
-
 double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix);
 
 ship::ship()
 {
+    original_blueprint = std::make_shared<blueprint>();
+
     last_sat_percentage.resize(component_info::COUNT);
 
     for(auto& i : last_sat_percentage)
