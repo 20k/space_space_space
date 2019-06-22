@@ -10,6 +10,7 @@
 #include "design_editor.hpp"
 #include "player.hpp"
 #include "data_model.hpp"
+#include "access_permissions.hpp"
 
 void register_value::serialise(serialise_context& ctx, nlohmann::json& data, register_value* other)
 {
@@ -528,4 +529,11 @@ DEFINE_SERIALISE_FUNCTION(client_input)
     DO_FSERIALISE(warp);
     DO_FSERIALISE(travel);
     DO_FSERIALISE(room_objects);
+}
+
+DEFINE_SERIALISE_FUNCTION(access_permissions)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(access);
 }

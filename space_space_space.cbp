@@ -216,6 +216,7 @@
 		</Linker>
 		<Unit filename="ImGuiX.cpp" />
 		<Unit filename="ImGuiX.h" />
+		<Unit filename="access_permissions.hpp" />
 		<Unit filename="aggregates.hpp" />
 		<Unit filename="aoe_damage.cpp" />
 		<Unit filename="aoe_damage.hpp" />
