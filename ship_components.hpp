@@ -366,6 +366,8 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     float radar_offset_angle = 0;
     float radar_restrict_angle = M_PI;
 
+    access_permissions foreign_access;
+
     ///time this component has been nearly empty enough to remove
     std::optional<fixed_clock> bad_time;
 

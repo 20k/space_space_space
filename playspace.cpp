@@ -473,6 +473,52 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
+std::vector<std::pair<ship*, std::vector<component*>>> room::get_nearby_accessible_ships(ship& me)
+{
+    float accessible_range = 100;
+
+    std::vector<std::pair<ship*, std::vector<component*>>> ret;
+
+    bool found_me = false;
+
+    for(entity* e : entity_manage->entities)
+    {
+        ship* s = dynamic_cast<ship*>(e);
+
+        if(s == nullptr)
+            continue;
+
+        if(s == &me)
+        {
+            found_me = true;
+            continue;
+        }
+
+        if((me.r.position - s->r.position).length() > accessible_range)
+            continue;
+
+        std::vector<component*> access;
+
+        for(component& c : s->components)
+        {
+            if(c.foreign_access.allowed(me._pid))
+            {
+                access.push_back(&c);
+            }
+        }
+
+        if(access.size() > 0)
+        {
+            ret.push_back({s, access});
+        }
+    }
+
+    if(!found_me)
+        return std::vector<std::pair<ship*, std::vector<component*>>>();
+
+    return ret;
+}
+
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, playspace* other)
 {
     DO_SERIALISE(friendly_id);

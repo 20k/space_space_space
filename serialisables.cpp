@@ -196,6 +196,7 @@ DEFINE_SERIALISE_FUNCTION(component)
     DO_FSERIALISE(build_queue);
     DO_FSERIALISE(radar_offset_angle);
     DO_FSERIALISE(radar_restrict_angle);
+    DO_FSERIALISE(foreign_access);
 
     if(me->base_id == component_type::CPU)
     {

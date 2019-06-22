@@ -8,6 +8,7 @@
 
 struct entity;
 struct ship;
+struct component;
 struct entity_manager;
 struct alt_radar_field;
 
@@ -101,6 +102,8 @@ struct room : serialisable, owned
     vec2f get_in_absolute(vec2f local);
 
     void import_radio_waves_from(alt_radar_field& theirs);
+
+    std::vector<std::pair<ship*, std::vector<component*>>> get_nearby_accessible_ships(ship& me);
 };
 
 void room_merge(room* r1, room* r2);
