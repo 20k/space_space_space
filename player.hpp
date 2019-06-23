@@ -127,4 +127,10 @@ struct client_input : serialisable, free_function
     std::vector<client_room_object_data> room_objects;
 };
 
+struct nearby_ship_info : serialisable, free_function
+{
+    std::string name;
+    std::vector<component> components;
+};
+
 #endif // PLAYER_HPP_INCLUDED

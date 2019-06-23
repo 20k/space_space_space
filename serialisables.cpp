@@ -538,3 +538,11 @@ DEFINE_SERIALISE_FUNCTION(access_permissions)
 
     DO_FSERIALISE(access);
 }
+
+DEFINE_SERIALISE_FUNCTION(nearby_ship_info)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(name);
+    DO_FSERIALISE(components);
+}

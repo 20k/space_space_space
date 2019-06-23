@@ -103,7 +103,7 @@ struct room : serialisable, owned
 
     void import_radio_waves_from(alt_radar_field& theirs);
 
-    std::vector<std::pair<ship*, std::vector<component*>>> get_nearby_accessible_ships(ship& me);
+    std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me);
 };
 
 void room_merge(room* r1, room* r2);
