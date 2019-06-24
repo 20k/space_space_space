@@ -501,6 +501,9 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
 
         for(component& c : s->components)
         {
+            if(!c.is_storage())
+                continue;
+
             if(c.foreign_access.allowed(me._pid))
             {
                 access.push_back(c);

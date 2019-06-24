@@ -27,7 +27,7 @@ struct data_model : serialisable
     size_t controlled_ship_id = -1;
     std::vector<system_descriptor> connected_systems;
     vec2f room_position;
-    nearby_ship_info nearby_info;
+    std::vector<nearby_ship_info> nearby_info;
 
     SERIALISE_SIGNATURE(data_model<T>)
     {

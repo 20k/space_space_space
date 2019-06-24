@@ -130,6 +130,7 @@ struct client_input : serialisable, free_function
 struct nearby_ship_info : serialisable, free_function
 {
     std::string name;
+    size_t ship_id = -1;
     std::vector<component> components;
 };
 

@@ -544,5 +544,6 @@ DEFINE_SERIALISE_FUNCTION(nearby_ship_info)
     SERIALISE_SETUP();
 
     DO_FSERIALISE(name);
+    DO_FSERIALISE(ship_id);
     DO_FSERIALISE(components);
 }

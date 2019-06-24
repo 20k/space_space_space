@@ -936,6 +936,7 @@ void server_thread(std::atomic_bool& should_term)
 
             data.labels.clear();
             data.connected_systems.clear();
+            data.nearby_info.clear();
 
             if(s)
             {
@@ -956,6 +957,18 @@ void server_thread(std::atomic_bool& should_term)
                 if(play && found_room)
                 {
                     data.room_position = found_room->position;
+
+                    std::vector<std::pair<ship, std::vector<component>>> vis_info = found_room->get_nearby_accessible_ships(*s);
+
+                    for(auto& i : vis_info)
+                    {
+                        nearby_ship_info inf;
+                        inf.name = i.first.blueprint_name; ///TODO PROPER NAME
+                        inf.components = i.second;
+                        inf.ship_id = i.first._pid;
+
+                        data.nearby_info.push_back(inf);
+                    }
                 }
             }
 
@@ -1462,6 +1475,64 @@ int main()
                     editors[c._pid].render(c.cpu_core);
                 }
             }
+        }
+
+        if(model.nearby_info.size() > 0)
+        {
+            ImGui::Begin("Nearby Ships");
+
+            for(nearby_ship_info& ship_info : model.nearby_info)
+            {
+                std::string label = ship_info.name + "###" + std::to_string(ship_info.ship_id);
+
+                if(ImGui::TreeNode(label.c_str()))
+                {
+                    std::vector<std::string> all_names;
+
+                    for(component& c : ship_info.components)
+                    {
+                        if(!c.is_storage())
+                            continue;
+
+                        all_names.push_back(c.long_name);
+                    }
+
+                    for(component& c : ship_info.components)
+                    {
+                         if(!c.is_storage())
+                            continue;
+
+                        const component_fixed_properties& fixed = c.get_fixed_props();
+
+                        float max_stored = fixed.get_internal_volume(c.current_scale);
+                        float cur_stored = c.get_stored_volume();
+
+                        std::string full_frac = to_string_with_variable_prec(cur_stored) + "/" + to_string_with_variable_prec(max_stored);
+
+                        ImGui::BeginGroup();
+
+                        if(ImGui::TreeNodeEx((format(c.long_name, all_names) + " " + full_frac + "###TN" + std::to_string(c._pid)).c_str(), ImGuiTreeNodeFlags_None))
+                        {
+                            ImGui::Unindent();
+
+                            c.render_inline_ui(false, false);
+
+                            ImGui::Indent();
+
+                            ImGui::TreePop();
+                        }
+
+                        ImGui::EndGroup();
+
+                        c.handle_drag_drop();
+                    }
+
+                    ImGui::TreePop();
+                }
+
+            }
+
+            ImGui::End();
         }
 
         camera cam(sspace_cam.screen_size);
