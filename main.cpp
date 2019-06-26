@@ -877,6 +877,18 @@ void server_thread(std::atomic_bool& should_term)
                 {
                     playspace_manage.start_room_travel(*s, read_data.travel.poi_pid);
                 }
+
+                ///anti abuse check
+                if(read_data.transfers.size() < 50)
+                {
+                    auto [play, r] = playspace_manage.get_location_for(s);
+
+                    if(play == nullptr || r == nullptr)
+                        continue;
+
+                    for(auto& i : read_data.transfers)
+                        consume_transfer(r, i);
+                }
             }
 
             if(proto.rpcs.all_rpcs.size() > 0)
@@ -1516,7 +1528,7 @@ int main()
                         {
                             ImGui::Unindent();
 
-                            c.render_inline_ui(false, false);
+                            c.render_inline_ui(ship_info.ship_id, false, false);
 
                             ImGui::Indent();
 
@@ -1525,7 +1537,7 @@ int main()
 
                         ImGui::EndGroup();
 
-                        c.handle_drag_drop();
+                        c.handle_drag_drop(ship_info.ship_id);
                     }
 
                     ImGui::TreePop();

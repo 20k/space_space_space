@@ -539,12 +539,12 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     void add_composition_ratio(const std::vector<material_info::material_type>& type, const std::vector<double>& volume);
     std::vector<material> remove_composition(float amount);
 
-    void handle_drag_drop();
+    void handle_drag_drop(size_t parent_id);
     void render_inline_stats();
     std::string phase_string();
     std::string get_render_long_name();
-    void render_inline_ui(bool use_title = true, bool drag_drop = true);
-    void render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent);
+    void render_inline_ui(size_t parent_id, bool use_title = true, bool drag_drop = true);
+    void render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent);
 
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff
@@ -790,6 +790,8 @@ struct ship : heatable_entity, free_function
 private:
     double thrusters_active = 0;
 };
+
+void consume_transfer(room* r, pending_transfer& xfer);
 
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)

@@ -3489,7 +3489,7 @@ struct aggregate_ship_info
     bool processed = false;
 };
 
-void component::handle_drag_drop()
+void component::handle_drag_drop(size_t parent_id)
 {
     if(ImGui::BeginDragDropTarget())
     {
@@ -3507,6 +3507,7 @@ void component::handle_drag_drop()
             {
                 pending_transfer tran;
                 tran.pid_ship_from = data.id;
+                tran.pid_ship_to = parent_id;
                 tran.pid_component = _pid;
 
                 client_pending_transfers().push_back(tran);
@@ -3516,6 +3517,7 @@ void component::handle_drag_drop()
             {
                 pending_transfer tran;
                 tran.pid_ship_from = data.id;
+                tran.pid_ship_to = parent_id;
                 tran.pid_component = _pid;
                 tran.is_fractiony = true;
 
@@ -3527,7 +3529,7 @@ void component::handle_drag_drop()
     }
 }
 
-void component::render_inline_ui(bool use_title, bool drag_drop)
+void component::render_inline_ui(size_t parent_id, bool use_title, bool drag_drop)
 {
     /*std::string total = "Storage: " + to_string_with(get_stored_volume()) + "/" + to_string_with_variable_prec(internal_volume);
 
@@ -3691,7 +3693,7 @@ void component::render_inline_ui(bool use_title, bool drag_drop)
 
     if(drag_drop)
     {
-        handle_drag_drop();
+        handle_drag_drop(parent_id);
     }
 }
 
@@ -3766,7 +3768,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     build_queue.push_back(std::make_shared<build_in_progress>(build));
 }
 
-void component::render_manufacturing_window(blueprint_manager& blueprint_manage, ship& parent)
+void component::render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent)
 {
     if(!factory_view_open)
         return;
@@ -3775,7 +3777,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
     ImGui::Begin(name.c_str(), &factory_view_open, ImGuiWindowFlags_AlwaysAutoResize);
 
-    render_inline_ui();
+    render_inline_ui(parent_id);
 
     ///construction queue
 
@@ -4076,7 +4078,7 @@ void ship::show_resources(bool window)
 
         ImGui::Begin((c.long_name + "##" + std::to_string(c._pid)).c_str(), &c.detailed_view_open);
 
-        c.render_inline_ui();
+        c.render_inline_ui(_pid);
 
         ImGui::End();
     }
@@ -4099,8 +4101,8 @@ void ship::show_resources(bool window)
 
         if(c1 && c2 && !p.goes_to_space)
         {
-            c1.value()->render_inline_ui();
-            c2.value()->render_inline_ui();
+            c1.value()->render_inline_ui(_pid);
+            c2.value()->render_inline_ui(_pid);
 
             ///the problem with this is that its not being communicated back to the server
             bool changed = ImGuiX::SliderFloat("", &p.flow_rate, -p.max_flow_rate, p.max_flow_rate);
@@ -4112,7 +4114,7 @@ void ship::show_resources(bool window)
 
         if(c1 && p.goes_to_space)
         {
-            c1.value()->render_inline_ui();
+            c1.value()->render_inline_ui(_pid);
 
             ///have sun temperature here
             ImGui::Text("Space");
@@ -4419,7 +4421,7 @@ void ship::show_power()
         {
             ImGui::Unindent();
 
-            c.render_inline_ui(false, false);
+            c.render_inline_ui(_pid, false, false);
 
             ImGui::Indent();
 
@@ -4428,7 +4430,7 @@ void ship::show_power()
 
         ImGui::EndGroup();
 
-        c.handle_drag_drop();
+        c.handle_drag_drop(_pid);
     }
 
     for(component& c : components)
@@ -4489,7 +4491,7 @@ void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage)
     {
         if(c.has_tag(tag_info::TAG_FACTORY))
         {
-            c.render_manufacturing_window(blueprint_manage, *this);
+            c.render_manufacturing_window(_pid, blueprint_manage, *this);
         }
     }
 }
@@ -6188,6 +6190,84 @@ void ship::on_collide(entity_manager& em, entity& other)
         }
     }
 }*/
+
+    /*std::vector<pending_transfer> all_transfers;
+    this->consume_all_transfers(all_transfers);
+
+    std::vector<std::optional<ship>> removed_ships;
+
+    for(auto& i : all_transfers)
+    {
+        if(!i.is_fractiony)
+        {
+            removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
+        }
+        else
+        {
+            auto fetched = fetch_ship_by_id(i.pid_ship);
+
+            if(fetched)
+            {
+                removed_ships.push_back(fetched.value()->split_materially(i.fraction));
+            }
+            else
+            {
+                removed_ships.push_back(std::nullopt);
+            }
+        }
+    }
+
+    assert(removed_ships.size() == all_transfers.size());
+
+    for(int i=0; i < (int)removed_ships.size(); i++)
+    {
+        if(!removed_ships[i])
+            continue;
+
+        this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
+    }*/
+
+bool is_nearby_ship(ship* from, ship* to, size_t component_id, room* r)
+{
+    if(from == to)
+        return true;
+
+    std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to);
+
+    for(auto& i : found)
+    {
+        if(i.first._pid == from->_pid)
+        {
+            for(component& c : i.second)
+            {
+                if(c._pid == component_id)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+void consume_transfer(room* r, pending_transfer& xfer)
+{
+    auto ship_from_opt = r->entity_manage->fetch(xfer.pid_ship_from);
+    auto ship_to_opt = r->entity_manage->fetch(xfer.pid_ship_to);
+
+    if(!ship_from_opt || !ship_to_opt)
+        return;
+
+    ship* to_as_ship = dynamic_cast<ship*>(ship_to_opt.value());
+    ship* from_as_ship = dynamic_cast<ship*>(ship_from_opt.value());
+
+    if(!from_as_ship || !to_as_ship)
+        return;
+
+    if(!is_nearby_ship(from_as_ship, to_as_ship, xfer.pid_component, r))
+        return;
+}
 
 std::optional<ship*> ship::fetch_ship_by_id(size_t pid)
 {
