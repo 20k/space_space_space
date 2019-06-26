@@ -6301,42 +6301,6 @@ bool transfer_is_valid(ship& test_ship, ship& destination, pending_transfer& in)
     }
 }*/
 
-    /*std::vector<pending_transfer> all_transfers;
-    this->consume_all_transfers(all_transfers);
-
-    std::vector<std::optional<ship>> removed_ships;
-
-    for(auto& i : all_transfers)
-    {
-        if(!i.is_fractiony)
-        {
-            removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
-        }
-        else
-        {
-            auto fetched = fetch_ship_by_id(i.pid_ship);
-
-            if(fetched)
-            {
-                removed_ships.push_back(fetched.value()->split_materially(i.fraction));
-            }
-            else
-            {
-                removed_ships.push_back(std::nullopt);
-            }
-        }
-    }
-
-    assert(removed_ships.size() == all_transfers.size());
-
-    for(int i=0; i < (int)removed_ships.size(); i++)
-    {
-        if(!removed_ships[i])
-            continue;
-
-        this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
-    }*/
-
 bool has_ship_in_storage(size_t pid, std::vector<component>& components)
 {
     for(component& c : components)
@@ -6361,7 +6325,10 @@ bool has_ship_in_storage(size_t pid, std::vector<component>& components)
 std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
 {
     if(from_pid == to->_pid)
-        return true;
+        return {from_pid};
+
+    if(has_ship_in_storage(from_pid, to->components))
+        return {to->_pid};
 
     std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to);
 
@@ -6376,8 +6343,6 @@ std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
 
 bool consume_transfer(room* r, pending_transfer& xfer)
 {
-    printf("Try consume\n");
-
     auto ship_to_opt = r->entity_manage->fetch(xfer.pid_ship_to);
 
     if(!ship_to_opt)
