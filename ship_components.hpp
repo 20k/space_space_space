@@ -300,8 +300,9 @@ struct blueprint;
 
 struct pending_transfer
 {
-    size_t pid_ship = -1;
+    size_t pid_ship_from = -1;
     size_t pid_component = -1;
+    size_t pid_ship_to = -1;
     float fraction = 1;
     bool is_fractiony = false;
 };
@@ -332,7 +333,7 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     std::vector<does_dynamic> dyn_info;
     std::vector<does_dynamic> dyn_activate_requirements;
 
-    std::vector<pending_transfer> transfers;
+    //std::vector<pending_transfer> transfers;
 
     std::string long_name;
     std::string short_name;
@@ -550,10 +551,10 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     bool detailed_view_open = false;
     bool factory_view_open = false;
 
-    void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
+    /*void transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to);
     void transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac);
     DECLARE_FRIENDLY_RPC(transfer_stored_from_to, size_t, size_t);
-    DECLARE_FRIENDLY_RPC(transfer_stored_from_to_frac, size_t, size_t, float);
+    DECLARE_FRIENDLY_RPC(transfer_stored_from_to_frac, size_t, size_t, float);*/
 
     void set_activation_level(double level)
     {

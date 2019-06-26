@@ -112,6 +112,8 @@ struct client_room_object_data : serialisable, free_function
     std::string type;
 };
 
+struct pending_transfer;
+
 struct client_input : serialisable, free_function
 {
     vec2f direction = {0,0};
@@ -125,6 +127,8 @@ struct client_input : serialisable, free_function
     warp_info warp;
     poi_travel_info travel;
     std::vector<client_room_object_data> room_objects;
+
+    std::vector<pending_transfer> transfers;
 };
 
 struct nearby_ship_info : serialisable, free_function

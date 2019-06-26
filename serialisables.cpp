@@ -209,8 +209,8 @@ DEFINE_SERIALISE_FUNCTION(component)
     DO_FRPC(set_activation_level);
     DO_FRPC(set_use);
     DO_FRPC(manufacture_blueprint_id);
-    DO_FRPC(transfer_stored_from_to);
-    DO_FRPC(transfer_stored_from_to_frac);
+    /*DO_FRPC(transfer_stored_from_to);
+    DO_FRPC(transfer_stored_from_to_frac);*/
 }
 
 DEFINE_SERIALISE_FUNCTION(ship)
@@ -395,8 +395,8 @@ DEFINE_SERIALISE_FUNCTION(common_renderable)
 }
 
 DEFINE_FRIENDLY_RPC1(component, manufacture_blueprint_id, size_t);
-DEFINE_FRIENDLY_RPC2(component, transfer_stored_from_to, size_t, size_t);
-DEFINE_FRIENDLY_RPC3(component, transfer_stored_from_to_frac, size_t, size_t, float);
+/*DEFINE_FRIENDLY_RPC2(component, transfer_stored_from_to, size_t, size_t);
+DEFINE_FRIENDLY_RPC3(component, transfer_stored_from_to_frac, size_t, size_t, float);*/
 
 DEFINE_FRIENDLY_RPC2(ship, resume_building, size_t, size_t);
 DEFINE_FRIENDLY_RPC2(ship, cancel_building, size_t, size_t);

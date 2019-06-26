@@ -2527,7 +2527,7 @@ void ship::tick(double dt_s)
 
 
     ///pending transfers
-    {
+    /*{
         std::vector<pending_transfer> all_transfers;
         this->consume_all_transfers(all_transfers);
 
@@ -2563,7 +2563,7 @@ void ship::tick(double dt_s)
 
             this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
         }
-    }
+    }*/
 
     handle_heat(dt_s);
     handle_degredation(dt_s);
@@ -3505,14 +3505,19 @@ void component::handle_drag_drop()
 
             if(data.type == drag_drop_info::UNIT)
             {
-                transfer_stored_from_to_rpc(data.id, _pid);
+                pending_transfer tran;
+                tran.pid_ship_from = data.id;
+                tran.pid_component = _pid;
+
+                client_pending_transfers().push_back(tran);
             }
 
             if(data.type == drag_drop_info::FRACTIONAL)
             {
                 pending_transfer tran;
-                tran.pid_ship = data.id;
+                tran.pid_ship_from = data.id;
                 tran.pid_component = _pid;
+                tran.is_fractiony = true;
 
                 client_pending_transfers().push_back(tran);
             }
@@ -3926,7 +3931,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
     ImGui::End();
 }
 
-void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to)
+/*void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to)
 {
     transfers.push_back({pid_ship_from, pid_component_to});
 
@@ -3940,7 +3945,7 @@ void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_co
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
-}
+}*/
 
 void ship::show_resources(bool window)
 {
@@ -6081,7 +6086,7 @@ void ship::on_collide(entity_manager& em, entity& other)
     }
 }
 
-bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_transfer& i)
+/*bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_transfer& i)
 {
     auto ship_opt = s.fetch_ship_by_id(i.pid_ship);
     auto comp_opt = s.fetch_component_by_id(i.pid_component);
@@ -6133,9 +6138,9 @@ bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_t
     xfers.push_back(i);
 
     return true;
-}
+}*/
 
-void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
+/*void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 {
     for(component& c : components)
     {
@@ -6182,7 +6187,7 @@ void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
             s.consume_all_transfers(xfers);
         }
     }
-}
+}*/
 
 std::optional<ship*> ship::fetch_ship_by_id(size_t pid)
 {

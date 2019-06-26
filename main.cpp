@@ -1889,6 +1889,62 @@ int main()
 
         get_global_serialise_info().all_rpcs.clear();
 
+        std::vector<pending_transfer>& xfers = client_pending_transfers();
+
+        for(int i=0; i < (int)xfers.size(); i++)
+        {
+            if(xfers[i].is_fractiony)
+                continue;
+
+            cinput.transfers.push_back(xfers[i]);
+        }
+
+        for(int i=0; i < (int)xfers.size(); i++)
+        {
+            if(!xfers[i].is_fractiony)
+                continue;
+
+            bool open = true;
+
+            ImGui::Begin("Xfer", &open, ImGuiWindowFlags_AlwaysAutoResize);
+
+            ImGui::SliderFloat("Xfer %", &xfers[i].fraction, 0, 1);
+
+            if(ImGui::Button("Accept"))
+            {
+                open = false;
+                ///rpc
+
+                owned* ocomp = find_by_id(model, xfers[i].pid_component);
+
+                if(ocomp)
+                {
+                    component* c = dynamic_cast<component*>(ocomp);
+
+                    if(c)
+                    {
+                        cinput.transfers.push_back(xfers[i]);
+                    }
+                }
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button("Cancel"))
+            {
+                open = false;
+            }
+
+            ImGui::End();
+
+            if(!open)
+            {
+                xfers.erase(xfers.begin() + i);
+                i--;
+                continue;
+            }
+        }
+
         nproto.data = serialise(cinput);
         nproto.rpcs = get_global_serialise_info();
 
@@ -1941,51 +1997,6 @@ int main()
             //std::cout << "client ship " << model.ships[0]._pid << std::endl;
 
             //std::cout << "mnum " << model.ships[0].components.size() << std::endl;
-        }
-
-        std::vector<pending_transfer>& xfers = client_pending_transfers();
-
-        for(int i=0; i < (int)xfers.size(); i++)
-        {
-            bool open = true;
-
-            ImGui::Begin("Xfer", &open, ImGuiWindowFlags_AlwaysAutoResize);
-
-            ImGui::SliderFloat("Xfer %", &xfers[i].fraction, 0, 1);
-
-            if(ImGui::Button("Accept"))
-            {
-                open = false;
-                ///rpc
-
-                owned* ocomp = find_by_id(model, xfers[i].pid_component);
-
-                if(ocomp)
-                {
-                    component* c = dynamic_cast<component*>(ocomp);
-
-                    if(c)
-                    {
-                        c->transfer_stored_from_to_frac_rpc(xfers[i].pid_ship, xfers[i].pid_component, xfers[i].fraction);
-                    }
-                }
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button("Cancel"))
-            {
-                open = false;
-            }
-
-            ImGui::End();
-
-            if(!open)
-            {
-                xfers.erase(xfers.begin() + i);
-                i--;
-                continue;
-            }
         }
 
         render_radar_data(window, sample);
