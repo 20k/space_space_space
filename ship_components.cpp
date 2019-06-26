@@ -6196,67 +6196,60 @@ void ship::on_collide(entity_manager& em, entity& other)
     return true;
 }*/
 
-bool transfer_is_valid(std::vector<ship>& ships, ship& destination, pending_transfer& in)
+bool transfer_is_valid(ship& test_ship, ship& destination, pending_transfer& in)
 {
     auto destination_component = destination.fetch_component_by_id(in.pid_component);
 
     if(!destination_component.has_value())
         return false;
 
-    for(auto& test_ship : ships)
+    auto ship_to_steal = test_ship.fetch_ship_by_id(in.pid_ship_from);
+
+    if(!ship_to_steal.has_value())
+        return false;
+
+    if(in.is_fractiony)
     {
-        auto ship_to_steal = test_ship.fetch_ship_by_id(in.pid_ship_from);
+        component& store_in = destination_component.value();
+        ship* to_steal = ship_to_steal.value();
 
-        if(!ship_to_steal.has_value())
-            continue;
+        if(to_steal->is_ship)
+            return false;
 
-        if(in.is_fractiony)
+        float free_space = store_in.get_internal_volume() - store_in.get_stored_volume();
+
+        float requested_volume = to_steal->get_my_volume() * in.fraction;
+
+        if(free_space < requested_volume)
         {
-            component& store_in = destination_component.value();
-            ship* to_steal = ship_to_steal.value();
-
-            if(to_steal->is_ship)
+            if(requested_volume < 0.0001)
                 return false;
 
-            float free_space = store_in.get_internal_volume() - store_in.get_stored_volume();
+            float takeable_frac = free_space / to_steal->get_my_volume();
 
-            float requested_volume = to_steal->get_my_volume() * in.fraction;
-
-            if(free_space < requested_volume)
-            {
-                if(requested_volume < 0.0001)
-                    return false;
-
-                float takeable_frac = free_space / to_steal->get_my_volume();
-
-                in.fraction = clamp(takeable_frac, 0, 1);
-            }
-
-            if(in.fraction < 0.00001)
-                return false;
-
-            ship scopy = *to_steal;
-
-            std::optional<ship> psplit = scopy.split_materially(in.fraction);
-
-            if(!psplit)
-                return false;
-
-            if(!destination_component.value().can_store(psplit.value()))
-                return false;
-
-            return true;
+            in.fraction = clamp(takeable_frac, 0, 1);
         }
-        else
-        {
-            if(!destination_component.value().can_store(*ship_to_steal.value()))
-                return false;
 
-            return true;
-        }
+        if(in.fraction < 0.00001)
+            return false;
+
+        ship scopy = *to_steal;
+
+        std::optional<ship> psplit = scopy.split_materially(in.fraction);
+
+        if(!psplit)
+            return false;
+
+        if(!destination_component.value().can_store(psplit.value()))
+            return false;
+    }
+    else
+    {
+        if(!destination_component.value().can_store(*ship_to_steal.value()))
+            return false;
     }
 
-    return false;
+    return true;
 }
 
 /*void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
@@ -6365,56 +6358,75 @@ bool has_ship_in_storage(size_t pid, std::vector<component>& components)
 }
 
 ///from is the thing to steal
-bool stored_in_nearby_ship(ship* from, ship* to, room* r)
+std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
 {
-    if(from == to)
+    if(from_pid == to->_pid)
         return true;
 
     std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to);
 
     for(auto& i : found)
     {
-        if(has_ship_in_storage(from->_pid, i.second))
-            return true;
+        if(has_ship_in_storage(from_pid, i.second))
+            return {i.first._pid};
     }
 
-    return false;
+    return std::nullopt;
 }
 
 bool consume_transfer(room* r, pending_transfer& xfer)
 {
-    auto ship_from_opt = r->entity_manage->fetch(xfer.pid_ship_from);
     auto ship_to_opt = r->entity_manage->fetch(xfer.pid_ship_to);
 
-    if(!ship_from_opt || !ship_to_opt)
+    if(!ship_to_opt)
         return false;
 
-    ship* item_to_steal_as_ship = dynamic_cast<ship*>(ship_from_opt.value());
     ship* to_as_ship = dynamic_cast<ship*>(ship_to_opt.value());
 
-    if(!item_to_steal_as_ship || !to_as_ship)
+    if(!to_as_ship)
         return false;
 
-    if(!stored_in_nearby_ship(item_to_steal_as_ship, to_as_ship, r))
+    auto parent_ship_id = stored_in_nearby_ship(xfer.pid_ship_from, to_as_ship, r);
+
+    if(!parent_ship_id.has_value())
         return false;
 
-    std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to_as_ship);
+    auto parent_ship_opt = r->entity_manage->fetch(parent_ship_id.value());
 
-    std::vector<ship> ships;
+    if(!parent_ship_opt.has_value())
+        return false;
 
-    for(auto& i : found)
+    ship* parent_ship_as_ship = dynamic_cast<ship*>(parent_ship_opt.value());
+
+    assert(parent_ship_as_ship);
+
+    if(!transfer_is_valid(*parent_ship_as_ship, *to_as_ship, xfer))
+        return false;
+
+    std::optional<ship> removed_ship;
+
+    if(!xfer.is_fractiony)
     {
-        ships.push_back(i.first);
+        removed_ship = parent_ship_as_ship->remove_ship_by_id(xfer.pid_ship_from);
+    }
+    else
+    {
+        auto fetched = parent_ship_as_ship->fetch_ship_by_id(xfer.pid_ship_from);
+
+        if(fetched)
+        {
+            removed_ship = fetched.value()->split_materially(xfer.fraction);
+        }
+        else
+        {
+            removed_ship = std::nullopt;
+        }
     }
 
-    if(!transfer_is_valid(ships, *to_as_ship, xfer))
+    if(!removed_ship.has_value())
         return false;
 
-
-
-
-
-
+    to_as_ship->add_ship_to_component(removed_ship.value(), xfer.pid_component);
 
     return true;
 }
