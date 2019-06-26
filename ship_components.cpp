@@ -2234,7 +2234,7 @@ void ship::tick(double dt_s)
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
-                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10;
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10.f;
                         l->phys_ignore.push_back(_pid);
 
                         l->parent_ship = this;
@@ -2249,7 +2249,7 @@ void ship::tick(double dt_s)
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
-                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10;
+                        l->velocity = evector.norm() * (float)(radar.speed_of_light_per_tick / radar.time_between_ticks_s) / 10.f;
                         l->phys_ignore.push_back(_pid);
 
                         l->parent_ship = this;
