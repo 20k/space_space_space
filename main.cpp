@@ -1903,9 +1903,6 @@ int main()
 
         std::vector<pending_transfer>& xfers = client_pending_transfers();
 
-        if(xfers.size() > 0)
-            std::cout << "XFERS SIZE " << xfers.size() << std::endl;
-
         for(int i=0; i < (int)xfers.size(); i++)
         {
             if(xfers[i].is_fractiony)
