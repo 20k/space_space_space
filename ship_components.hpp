@@ -787,6 +787,8 @@ struct ship : heatable_entity, free_function
     std::optional<size_t> get_ship_id_by_directory(const std::string& str);
     std::optional<std::string> get_directory_name(ship& root, size_t pid);
 
+    void collect_cpu_transfers(std::vector<pending_transfer>& out);
+
 private:
     double thrusters_active = 0;
 };

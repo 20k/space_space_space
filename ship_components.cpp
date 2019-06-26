@@ -6142,6 +6142,60 @@ void ship::on_collide(entity_manager& em, entity& other)
     return true;
 }*/
 
+/*bool check_add_transfer(ship& s, std::vector<pending_transfer>& xfers, pending_transfer& i)
+{
+    auto ship_opt = s.fetch_ship_by_id(i.pid_ship);
+    auto comp_opt = s.fetch_component_by_id(i.pid_component);
+
+    if(!ship_opt.has_value() || !comp_opt.has_value())
+        return false;
+
+    if(i.is_fractiony)
+    {
+        component& comp = comp_opt.value();
+        ship* s = ship_opt.value();
+
+        if(s->is_ship)
+            return false;
+
+        float free_space = comp.get_internal_volume() - comp.get_stored_volume();
+
+        float requested_volume = s->get_my_volume() * i.fraction;
+
+        if(free_space < requested_volume)
+        {
+            if(requested_volume < 0.0001)
+                return false;
+
+            float takeable_frac = free_space / s->get_my_volume();
+
+            i.fraction = clamp(takeable_frac, 0, 1);
+        }
+
+        if(i.fraction < 0.00001)
+            return false;
+
+        ship scopy = *s;
+
+        std::optional<ship> psplit = scopy.split_materially(i.fraction);
+
+        if(!psplit)
+            return false;
+
+        if(!comp_opt.value().can_store(psplit.value()))
+            return false;
+    }
+    else
+    {
+        if(!comp_opt.value().can_store(*ship_opt.value()))
+            return false;
+    }
+
+    xfers.push_back(i);
+
+    return true;
+}*/
+
 /*void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
 {
     for(component& c : components)
@@ -6227,7 +6281,29 @@ void ship::on_collide(entity_manager& em, entity& other)
         this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
     }*/
 
-bool is_nearby_ship(ship* from, ship* to, size_t component_id, room* r)
+bool has_ship_in_storage(size_t pid,std::vector<component>& components)
+{
+    for(component& c : components)
+    {
+        for(ship& s : c.stored)
+        {
+            if(s._pid == pid)
+                return true;
+
+            ///not our ship, recurse
+            auto it = s.fetch_ship_by_id(pid);
+
+            if(it)
+                return true;
+        }
+
+    }
+
+    return false;
+}
+
+///from is the thing to steal
+bool stored_in_nearby_ship(ship* from, ship* to, room* r)
 {
     if(from == to)
         return true;
@@ -6236,16 +6312,8 @@ bool is_nearby_ship(ship* from, ship* to, size_t component_id, room* r)
 
     for(auto& i : found)
     {
-        if(i.first._pid == from->_pid)
-        {
-            for(component& c : i.second)
-            {
-                if(c._pid == component_id)
-                {
-                    return true;
-                }
-            }
-        }
+        if(has_ship_in_storage(from->_pid, i.second))
+            return true;
     }
 
     return false;
@@ -6259,14 +6327,16 @@ void consume_transfer(room* r, pending_transfer& xfer)
     if(!ship_from_opt || !ship_to_opt)
         return;
 
+    ship* item_to_steal_as_ship = dynamic_cast<ship*>(ship_from_opt.value());
     ship* to_as_ship = dynamic_cast<ship*>(ship_to_opt.value());
-    ship* from_as_ship = dynamic_cast<ship*>(ship_from_opt.value());
 
-    if(!from_as_ship || !to_as_ship)
+    if(!item_to_steal_as_ship || !to_as_ship)
         return;
 
-    if(!is_nearby_ship(from_as_ship, to_as_ship, xfer.pid_component, r))
+    if(!stored_in_nearby_ship(item_to_steal_as_ship, to_as_ship, r))
         return;
+
+
 }
 
 std::optional<ship*> ship::fetch_ship_by_id(size_t pid)
