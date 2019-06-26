@@ -793,7 +793,7 @@ private:
     double thrusters_active = 0;
 };
 
-void consume_transfer(room* r, pending_transfer& xfer);
+bool consume_transfer(room* r, pending_transfer& xfer);
 
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)
