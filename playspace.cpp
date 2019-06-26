@@ -510,7 +510,7 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
             }
         }
 
-        if(access.size() > 0)
+        //if(access.size() > 0)
         {
             ret.push_back({*s, access});
         }

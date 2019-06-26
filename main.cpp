@@ -212,6 +212,7 @@ void server_thread(std::atomic_bool& should_term)
         test_ship->network_owner = 0;
         test_ship->r.network_owner = 0;
         test_ship->is_ship = true;
+        test_ship->blueprint_name = "Default Ship";
 
         sys_1->add(test_ship);
     }
@@ -450,7 +451,7 @@ void server_thread(std::atomic_bool& should_term)
 
         sys_1->add(ts2);
 
-        ts2->r.position = {600, 400};
+        ts2->r.position = {200, 240};
     }
 
     std::minstd_rand rng;
