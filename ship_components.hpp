@@ -298,7 +298,7 @@ private:
 struct blueprint_manager;
 struct blueprint;
 
-struct pending_transfer
+struct pending_transfer : serialisable, free_function
 {
     size_t pid_ship_from = -1;
     size_t pid_component = -1;

@@ -127,7 +127,6 @@ struct client_input : serialisable, free_function
     warp_info warp;
     poi_travel_info travel;
     std::vector<client_room_object_data> room_objects;
-
     std::vector<pending_transfer> transfers;
 };
 

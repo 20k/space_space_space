@@ -6376,6 +6376,8 @@ std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
 
 bool consume_transfer(room* r, pending_transfer& xfer)
 {
+    printf("Try consume\n");
+
     auto ship_to_opt = r->entity_manage->fetch(xfer.pid_ship_to);
 
     if(!ship_to_opt)

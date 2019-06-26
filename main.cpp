@@ -1109,7 +1109,7 @@ void server_thread(std::atomic_bool& should_term)
 
         #endif // SERVER_VIEW
 
-        std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
+        //std::cout << "Whole frametime " << whole_frametime.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 
         //std::cout << "FULL FRAME " << tickclock.restart().asMicroseconds()/1000. << std::endl;
 
@@ -1903,12 +1903,19 @@ int main()
 
         std::vector<pending_transfer>& xfers = client_pending_transfers();
 
+        if(xfers.size() > 0)
+            std::cout << "XFERS SIZE " << xfers.size() << std::endl;
+
         for(int i=0; i < (int)xfers.size(); i++)
         {
             if(xfers[i].is_fractiony)
                 continue;
 
             cinput.transfers.push_back(xfers[i]);
+
+            xfers.erase(xfers.begin() + i);
+            i--;
+            continue;
         }
 
         for(int i=0; i < (int)xfers.size(); i++)

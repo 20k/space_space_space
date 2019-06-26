@@ -530,6 +530,7 @@ DEFINE_SERIALISE_FUNCTION(client_input)
     DO_FSERIALISE(warp);
     DO_FSERIALISE(travel);
     DO_FSERIALISE(room_objects);
+    DO_FSERIALISE(transfers);
 }
 
 DEFINE_SERIALISE_FUNCTION(access_permissions)
@@ -546,4 +547,16 @@ DEFINE_SERIALISE_FUNCTION(nearby_ship_info)
     DO_FSERIALISE(name);
     DO_FSERIALISE(ship_id);
     DO_FSERIALISE(components);
+}
+
+
+DEFINE_SERIALISE_FUNCTION(pending_transfer)
+{
+    SERIALISE_SETUP();
+
+    DO_FSERIALISE(pid_ship_from);
+    DO_FSERIALISE(pid_component);
+    DO_FSERIALISE(pid_ship_to);
+    DO_FSERIALISE(fraction);
+    DO_FSERIALISE(is_fractiony);
 }
