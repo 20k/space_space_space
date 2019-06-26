@@ -3928,7 +3928,7 @@ void component::render_manufacturing_window(blueprint_manager& blueprint_manage,
 
 void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_component_to)
 {
-    transfers.push_back({_pid, pid_ship_from, pid_component_to});
+    transfers.push_back({pid_ship_from, pid_component_to});
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());
@@ -3936,7 +3936,7 @@ void component::transfer_stored_from_to(size_t pid_ship_from, size_t pid_compone
 
 void component::transfer_stored_from_to_frac(size_t pid_ship_from, size_t pid_component_to, float frac)
 {
-    transfers.push_back({_pid, pid_ship_from, pid_component_to, frac, true});
+    transfers.push_back({pid_ship_from, pid_component_to, frac, true});
 
     while(transfers.size() > 100)
         transfers.erase(transfers.begin());

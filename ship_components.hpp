@@ -300,7 +300,6 @@ struct blueprint;
 
 struct pending_transfer
 {
-    size_t pid_ship_from = -1;
     size_t pid_ship = -1;
     size_t pid_component = -1;
     float fraction = 1;
