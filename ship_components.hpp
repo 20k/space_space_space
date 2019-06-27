@@ -767,7 +767,6 @@ struct ship : heatable_entity, free_function
     virtual void on_collide(entity_manager& em, entity& other) override;
 
     void consume_cpu_transfers(room* r);
-    //void consume_all_transfers(std::vector<pending_transfer>& xfers);
     std::optional<ship*> fetch_ship_by_id(size_t pid);
     std::optional<component> fetch_component_by_id(size_t pid);
     std::optional<ship> remove_ship_by_id(size_t pid);
@@ -783,10 +782,6 @@ struct ship : heatable_entity, free_function
     uint64_t spawned_by = -1;
 
     bool is_ship = false;
-
-    std::optional<size_t> get_component_id_by_directory(const std::string& str);
-    std::optional<size_t> get_ship_id_by_directory(const std::string& str);
-    std::optional<std::string> get_directory_name(ship& root, size_t pid);
 
     void collect_cpu_transfers(std::vector<pending_transfer>& out);
 
