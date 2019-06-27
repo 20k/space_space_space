@@ -42,6 +42,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::RADAR] = make_default("Radar", "RAD");
     ret[component_type::CPU] = make_default("CPU", "CPU");
     ret[component_type::T_BEAM] = make_default("Tractor", "T-B");
+    ret[component_type::SHIPYARD] = make_default("Shipyard", "SYD");
 
     for(int i=0; i < component_type::COUNT; i++)
     {
@@ -85,6 +86,7 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::RADAR].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::CPU].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::T_BEAM].add_composition_ratio({material_info::COPPER}, {1});
+    ret[component_type::SHIPYARD].add_composition_ratio({material_info::IRON}, {1});
 
     ret[component_type::REFINERY].activation_level = 0;
 
@@ -415,6 +417,20 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.max_use_angle = M_PI;
 
         p.subtype = "tractor";
+    }
+
+
+    {
+        component_fixed_properties& p  = ret[component_type::SHIPYARD];
+
+        p.add(component_info::HP, 0, 1);
+        p.add(component_info::POWER, -15); ///1.5 power plant to run on full tilt
+        p.add(component_info::MANUFACTURING, 1);
+        p.add(tag_info::TAG_FACTORY);
+        p.add(tag_info::TAG_EFACTORY);
+        p.set_heat(20);
+
+        p.activation_type = component_info::SLIDER_ACTIVATION;
     }
 
     return ret;

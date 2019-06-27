@@ -39,6 +39,7 @@ namespace component_type
         RADAR,
         CPU,
         T_BEAM, ///tractor beam
+        SHIPYARD, ///external factory
         COUNT,
     };
 
@@ -67,6 +68,7 @@ namespace component_type
         "RADAR",
         "CPU",
         "T_BEAM",
+        "SHIPYARD",
     };
 }
 
