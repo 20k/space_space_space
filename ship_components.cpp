@@ -2525,46 +2525,6 @@ void ship::tick(double dt_s)
 
     last_sat_percentage = all_sat;
 
-
-    ///pending transfers
-    /*{
-        std::vector<pending_transfer> all_transfers;
-        this->consume_all_transfers(all_transfers);
-
-        std::vector<std::optional<ship>> removed_ships;
-
-        for(auto& i : all_transfers)
-        {
-            if(!i.is_fractiony)
-            {
-                removed_ships.push_back(this->remove_ship_by_id(i.pid_ship));
-            }
-            else
-            {
-                auto fetched = fetch_ship_by_id(i.pid_ship);
-
-                if(fetched)
-                {
-                    removed_ships.push_back(fetched.value()->split_materially(i.fraction));
-                }
-                else
-                {
-                    removed_ships.push_back(std::nullopt);
-                }
-            }
-        }
-
-        assert(removed_ships.size() == all_transfers.size());
-
-        for(int i=0; i < (int)removed_ships.size(); i++)
-        {
-            if(!removed_ships[i])
-                continue;
-
-            this->add_ship_to_component(removed_ships[i].value(), all_transfers[i].pid_component);
-        }
-    }*/
-
     handle_heat(dt_s);
     handle_degredation(dt_s);
 
@@ -5732,6 +5692,57 @@ bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiatin
         return false;
 
     to_as_ship->add_ship_to_component(removed_ship.value(), xfer.pid_component);
+
+    /* std::vector<cpu_file> files;
+
+    for(component& tc : components)
+    {
+        if(tc.base_id != component_type::CPU)
+            continue;
+
+        std::string directory = c.stored[0].current_directory;
+
+        auto found = tc.cpu_core.extract_files_in_directory(directory);
+
+        files.insert(files.end(), found.begin(), found.end());
+    }
+
+    std::optional<ship> first = c.remove_first_stored_item();
+
+    if(first.has_value())
+    {
+        vec2f ship_vector = (vec2f){1, 0}.rot(r.rotation);
+
+        ship& to_produce = first.value();
+
+        ship* spawned = parent->take(to_produce);
+
+        spawned->r.position = r.position;
+        spawned->r.rotation = r.rotation;
+        //l->r.rotation = r.rotation + eangle;
+        //l->velocity = (vec2f){1, 0}.rot(r.rotation) * 50;
+        spawned->velocity = velocity + ship_vector.norm() * 10;
+        //l->velocity = velocity + (vec2f){1, 0}.rot(r.rotation + eangle) * 50;
+        spawned->phys_ignore.push_back(_pid);
+        //spawned->fired_by = id;
+
+        spawned->r.init_rectangular({1, 0.2});
+        spawned->network_owner = network_owner;
+        spawned->spawn_clock.restart();
+        spawned->spawned_by = _pid;
+        spawned->phys_drag = false;
+        spawned->current_radar_field = current_radar_field;
+
+        for(component& tc : spawned->components)
+        {
+            if(tc.base_id != component_type::CPU)
+                continue;
+
+            tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
+
+            tc.cpu_core.free_running = true;
+        }
+    }*/
 
     return true;
 }
