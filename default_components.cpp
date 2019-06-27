@@ -419,7 +419,6 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.subtype = "tractor";
     }
 
-
     {
         component_fixed_properties& p  = ret[component_type::SHIPYARD];
 
