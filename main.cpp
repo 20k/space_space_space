@@ -1899,7 +1899,6 @@ int main()
             }
         }
 
-        get_global_serialise_info().all_rpcs.clear();
 
         std::vector<pending_transfer>& xfers = client_pending_transfers();
 
@@ -1963,6 +1962,7 @@ int main()
 
         nproto.data = serialise(cinput);
         nproto.rpcs = get_global_serialise_info();
+        get_global_serialise_info().all_rpcs.clear();
 
         conn.writes_to(nproto, -1);
 
