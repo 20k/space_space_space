@@ -947,7 +947,7 @@ void set_cpu_file_stored(ship& s, cpu_file& fle)
     set_cpu_file_stored_impl(fle, s, types, "");
 
     if(fle.stored_in == -1)
-        fle.stored_in == s._pid;
+        fle.stored_in = s._pid;
 }
 
 std::string register_value::as_string() const
@@ -2419,7 +2419,7 @@ void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
     if(context.held_file == -1)
         throw std::runtime_error("BAD CHECK FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
 
-    if(me == nullptr)
+    if(me == nullptr || r == nullptr)
         return;
 
     cpu_file& fle = files[context.held_file];
@@ -2447,14 +2447,30 @@ void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
         if(!fle.in_exact_directory(check.name.as_uniform_string()))
             continue;
 
-        std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+        //std::vector<ship*> ships = r->entity_manage->fetch<ship>();
 
-        for(ship* s : ships)
+        auto nearby = r->get_nearby_accessible_ships(*me);
+
+        //for(ship* s : ships)
+
+        for(auto& near_info : nearby)
         {
-            if(s->_pid != check.root_ship_pid)
+            ship& s = near_info.first;
+
+            if(s._pid != check.root_ship_pid)
                 continue;
 
-            for(component& c : s->components)
+            std::optional<entity*> freal = r->entity_manage->fetch(s._pid);
+
+            if(!freal.has_value())
+                throw std::runtime_error("Something really out of whack in cpu state potentially move file");
+
+            ship* real_s = dynamic_cast<ship*>(freal.value());
+
+            if(real_s == nullptr)
+                throw std::runtime_error("Something super duper out of whack 2 in cpu state potentially move file");
+
+            for(component& c : real_s->components)
             {
                 if(c.base_id != component_type::CPU)
                     continue;
