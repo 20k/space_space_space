@@ -1465,6 +1465,9 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
     {
         update_all_ship_hardware(*s, *this, *play, space, r);
 
+        ///this step is very ordering dependent
+        ///do not move before update_all_ship_hardware
+        ///also unsure if its necessary anymore entirely but what can you do
         for(int i=0; i < (int)files.size(); i++)
         {
             set_cpu_file_stored(*s, files[i]);

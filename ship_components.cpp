@@ -2280,6 +2280,7 @@ void ship::tick(double dt_s)
                         if(tc.base_id != component_type::CPU)
                             continue;
 
+                        ///c.stored[0] is because its the first stored item
                         std::string directory = c.stored[0].current_directory;
 
                         auto found = tc.cpu_core.extract_files_in_directory(directory);
@@ -5691,7 +5692,49 @@ bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiatin
     if(!removed_ship.has_value())
         return false;
 
+    std::vector<cpu_file> files;
+
+    for(component& tc : removed_ship.value().components)
+    {
+        if(tc.base_id != component_type::CPU)
+            continue;
+
+        std::string directory = removed_ship.value().current_directory;
+
+        auto found = tc.cpu_core.extract_files_in_directory(directory);
+
+        files.insert(files.end(), found.begin(), found.end());
+
+        tc.cpu_core.had_tx_pending = true;
+    }
+
+    /*for(component& tc : removed_ship.value().components)
+    {
+        if(tc.base_id != component_type::CPU)
+            continue;
+
+        tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
+    }*/
+
+    ///kind of wrong
+    ///ok so what we need to do is find THEIR *REAL* ship, which is to_as_ship
+    ///find the component from it
+    ///find the directory of that component
+    ///then rename our file to directory + / + componentname
+
     to_as_ship->add_ship_to_component(removed_ship.value(), xfer.pid_component);
+
+    for(component& tc : to_as_ship->components)
+    {
+        if(tc.base_id != component_type::CPU)
+            continue;
+
+        tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
+        tc.cpu_core.had_tx_pending = true;
+
+        break;
+    }
+
 
     /* std::vector<cpu_file> files;
 
@@ -5733,15 +5776,6 @@ bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiatin
         spawned->phys_drag = false;
         spawned->current_radar_field = current_radar_field;
 
-        for(component& tc : spawned->components)
-        {
-            if(tc.base_id != component_type::CPU)
-                continue;
-
-            tc.cpu_core.files.insert(tc.cpu_core.files.end(), files.begin(), files.end());
-
-            tc.cpu_core.free_running = true;
-        }
     }*/
 
     return true;
