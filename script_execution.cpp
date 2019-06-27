@@ -1285,7 +1285,6 @@ cpu_state::cpu_state()
 
     update_length_register();
 
-    files.push_back(get_master_virtual_file());
     update_master_virtual_file();
 }
 
@@ -1466,15 +1465,6 @@ bool cpu_state::update_master_virtual_file()
             return false;
         }
     }
-
-    /*(for(auto& i : files)
-    {
-        if(i.name == val)
-        {
-            i = get_master_virtual_file();
-            return false;
-        }
-    }*/
 
     ///file not present
     files.push_back(get_master_virtual_file());
