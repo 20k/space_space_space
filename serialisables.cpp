@@ -215,9 +215,12 @@ DEFINE_SERIALISE_FUNCTION(component)
     DO_FRPC(set_activation_level);
     DO_FRPC(set_use);
     DO_FRPC(manufacture_blueprint_id);
+    DO_FRPC(change_access_permissions);
     /*DO_FRPC(transfer_stored_from_to);
     DO_FRPC(transfer_stored_from_to_frac);*/
 }
+
+DEFINE_FRIENDLY_RPC1(component, change_access_permissions, access_permissions::state);
 
 DEFINE_SERIALISE_FUNCTION(ship)
 {

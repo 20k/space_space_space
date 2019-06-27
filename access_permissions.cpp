@@ -17,8 +17,8 @@ void access_permissions::render_ui(component& parent)
     if(ImGuiX::SimpleButton(str.c_str()))
     {
         if(access == STATE_NONE)
-            access = STATE_ALL;
+            parent.change_access_permissions_rpc(STATE_ALL);
         else if(access == STATE_ALL)
-            access = STATE_NONE;
+            parent.change_access_permissions_rpc(STATE_NONE);
     }
 }

@@ -3700,6 +3700,12 @@ void component::render_inline_ui(size_t parent_id, bool use_title, bool drag_dro
     }
 }
 
+void component::change_access_permissions(access_permissions::state st)
+{
+    if(st == access_permissions::STATE_ALL || st == access_permissions::STATE_NONE)
+        foreign_access.access = st;
+}
+
 void component::manufacture_blueprint_id(size_t blue_id)
 {
     unchecked_blueprints.push_back(blue_id);
