@@ -460,6 +460,7 @@ struct cpu_state : serialisable, owned
     cpu_move_args my_move;
 
     cpu_file get_master_virtual_file();
+    cpu_file get_master_foreign_file();
     bool update_master_virtual_file();
 
     bool any_blocked();

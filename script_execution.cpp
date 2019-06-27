@@ -1446,6 +1446,26 @@ cpu_file cpu_state::get_master_virtual_file()
     return fle;
 }
 
+/*cpu_file cpu_state::get_master_foreign_file()
+{
+    cpu_file fle;
+
+    fle.data.clear();
+
+    fle.data.reserve(files.size());
+
+    for(int i=0; i < (int)files.size(); i++)
+    {
+        fle.data.push_back(files[i].name);
+    }
+
+    fle.name.set_label("FILES");
+
+    fle.ensure_eof();
+
+    return fle;
+}*/
+
 bool cpu_state::update_master_virtual_file()
 {
     register_value val;
