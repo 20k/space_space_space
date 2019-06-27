@@ -4907,6 +4907,8 @@ std::optional<size_t> ship::get_ship_id_by_directory(const std::string& str)
 
 void update_cpu_rules_and_hardware(ship& s, playspace_manager& play, playspace* space, room* r)
 {
+    s.consume_cpu_transfers(r);
+
     for(component& c : s.components)
     {
         if(!c.has_tag(tag_info::TAG_CPU))
@@ -5863,56 +5865,6 @@ bool transfer_is_valid(ship& test_ship, ship& destination, pending_transfer& in)
 
     return true;
 }
-
-/*void ship::consume_all_transfers(std::vector<pending_transfer>& xfers)
-{
-    for(component& c : components)
-    {
-        if(c.base_id == component_type::CPU)
-        {
-            for(cpu_xfer& cxfer : c.cpu_core.xfers)
-            {
-                pending_transfer equiv;
-
-                auto opt_ship = get_ship_id_by_directory(cxfer.from);
-                auto opt_comp = get_component_id_by_directory(cxfer.to);
-
-                if(opt_ship && opt_comp)
-                {
-                    pending_transfer equiv;
-                    equiv.pid_component = opt_comp.value();
-                    equiv.pid_ship = opt_ship.value();
-                    equiv.is_fractiony = cxfer.is_fractiony;
-                    equiv.fraction = cxfer.fraction;
-
-                    bool success = check_add_transfer(*this, xfers, equiv);
-
-                    c.cpu_core.context.register_states[(int)registers::TEST].set_int(success);
-
-                    assert(cxfer.held_file >= 0 && cxfer.held_file < (int)c.cpu_core.files.size());
-
-                    c.cpu_core.files[cxfer.held_file].was_xferred = true;
-                }
-            }
-
-            c.cpu_core.tx_pending = false;
-            c.cpu_core.xfers.clear();
-        }
-
-        for(pending_transfer& i : c.transfers)
-        {
-            check_add_transfer(*this, xfers, i);
-        }
-
-        c.transfers.clear();
-
-        for(ship& s : c.stored)
-        {
-            s.consume_all_transfers(xfers);
-        }
-    }
-}*/
-
 
 void ship::consume_cpu_transfers(room* r)
 {
