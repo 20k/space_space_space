@@ -248,7 +248,7 @@ void check_audio_hardware(cpu_state& cpu, size_t my_pid)
     }
 }
 
-void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids)
+void check_update_components_in_hardware(ship& s, std::vector<component>& visible_components, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids)
 {
     assert(component_type::COUNT == component_type::cpu_names.size());
 
@@ -268,7 +268,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
     cpu.update_regular_files(dir, s._pid);
 
-    for(component& c : s.components)
+    for(component& c : visible_components)
     {
         int my_offset = type_counts[(int)c.base_id];
         type_counts[(int)c.base_id]++;
@@ -405,11 +405,25 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
                 ships[ns.blueprint_name]++;
 
                 std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
-                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname, alive_ids);
+                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, ship_type, sname, alive_ids);
             }
             else
-                check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname, alive_ids);
+                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, them_type_counts, fullname, alive_ids);
         }
+    }
+}
+
+void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::vector<size_t>& alive_ids)
+{
+    if(!r)
+        return;
+
+    std::map<int, int> type_counts;
+    std::vector<std::pair<ship, std::vector<component>>> nearby = r->get_nearby_accessible_ships(s);
+
+    for(auto& i : nearby)
+    {
+        check_update_components_in_hardware(i.first, i.second, cpu, play, space, r, type_counts, "FOREIGN", alive_ids);
     }
 }
 
@@ -418,9 +432,10 @@ void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, 
     std::map<int, int> type_counts;
     std::vector<size_t> ids;
 
-    check_update_components_in_hardware(s, cpu, play, space, r, type_counts, "", ids);
+    check_update_components_in_hardware(s, s.components, cpu, play, space, r, type_counts, "", ids);
     dump_radar_data_into_cpu(cpu, s, play, space, r);
     check_audio_hardware(cpu, cpu._pid);
+    import_foreign_ships(s, cpu, play, space, r, ids);
 
     update_alive_ids(cpu, ids);
 }
