@@ -1610,8 +1610,6 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
             if(files[context.held_file].stored_in == (size_t)-1)
                 throw std::runtime_error("Should be impossible, unstored file in [MAKE]");
-
-            std::cout << "EXT " << files[context.held_file].get_ext_name() << std::endl;
         }
 
         break;
