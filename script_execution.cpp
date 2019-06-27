@@ -497,6 +497,13 @@ void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, play
 
     for(auto& i : nearby)
     {
+        ///if we dump files in, check_update_components will correct their directory
+        ///the main problem is that ideally we need to continually dump files, whereas the cpu expects files to be stateful
+        ///so. This is a bit of a problem
+        ///what I could do is copy all files off the other ship, just wholesale import everything into our ship
+        ///every file we drag in would be appended with FOREIGN/ID/ + name
+        ///got ship ids, can track alive ids
+
         check_update_components_in_hardware(i.first, i.second, cpu, play, space, r, type_counts, "FOREIGN", alive_ids, i.first._pid);
     }
 }
@@ -2384,6 +2391,8 @@ void cpu_state::potentially_move_file_to_foreign_ship(room* r)
                 c.cpu_core.files.push_back(mcopy);
                 c.cpu_core.had_tx_pending = true;
 
+                fle.alive = false;
+
                 break;
             }
 
@@ -2399,15 +2408,8 @@ void cpu_state::drop_file()
     if(context.held_file == -1)
         throw std::runtime_error("BAD DROP FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
 
-    int to_kill = context.held_file;
-
     files[context.held_file].file_pointer = 0;
     context.held_file = -1;
-
-    if(files[to_kill].name.as_uniform_string().starts_with("FOREIGN/"))
-    {
-        remove_file(to_kill);
-    }
 }
 
 void cpu_state::update_length_register()
