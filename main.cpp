@@ -449,9 +449,17 @@ void server_thread(std::atomic_bool& should_term)
         ts2->network_owner = 1;
         ts2->r.network_owner = 1;
 
+        for(component& c : ts2->components)
+        {
+            if(c.base_id == component_type::CARGO_STORAGE)
+            {
+                c.foreign_access.access = access_permissions::STATE_ALL;
+            }
+        }
+
         sys_1->add(ts2);
 
-        ts2->r.position = {200, 240};
+        ts2->r.position = {191, 230};
     }
 
     std::minstd_rand rng;
