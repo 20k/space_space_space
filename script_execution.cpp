@@ -945,6 +945,9 @@ void set_cpu_file_stored(ship& s, cpu_file& fle)
     std::map<int, int> types;
 
     set_cpu_file_stored_impl(fle, s, types, "");
+
+    if(fle.stored_in == -1)
+        fle.stored_in == s._pid;
 }
 
 std::string register_value::as_string() const
@@ -1729,7 +1732,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
             set_cpu_file_stored(*s, files[context.held_file]);
 
             if(files[context.held_file].stored_in == (size_t)-1)
-                files[context.held_file].stored_in = s->_pid;
+                throw std::runtime_error("BAD MAKE, ID -1 SHOULD BE IMPOSSIBLE");
         }
 
         break;
@@ -1758,7 +1761,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
                 set_cpu_file_stored(*s, files[context.held_file]);
 
                 if(files[context.held_file].stored_in == (size_t)-1)
-                    files[context.held_file].stored_in = s->_pid;
+                    throw std::runtime_error("BAD RNAM, ID -1 SHOULD BE IMPOSSIBLE");
             }
         }
 
@@ -2411,10 +2414,13 @@ void cpu_state::stop()
     free_running = false;
 }
 
-void cpu_state::potentially_move_file_to_foreign_ship(room* r)
+void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
 {
     if(context.held_file == -1)
         throw std::runtime_error("BAD CHECK FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
+
+    if(me == nullptr)
+        return;
 
     cpu_file& fle = files[context.held_file];
 
