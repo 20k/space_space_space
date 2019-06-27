@@ -256,17 +256,36 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
 
     s.current_directory = dir;
 
-    if(dir.size() > 0 && s.is_ship)
+    if(dir.size() > 0)
     {
-        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
-
-        if(opt_ship_file.has_value())
+        if(s.is_ship)
         {
-            enforce_is_ship(*opt_ship_file.value(), s._pid);
+            std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
+
+            if(opt_ship_file.has_value())
+            {
+                enforce_is_ship(*opt_ship_file.value(), s._pid);
+            }
+        }
+        else
+        {
+            int tc_offset = type_counts[component_type::MATERIAL]++;
+
+            std::string extra_name = component_type::cpu_names[component_type::MATERIAL] + "_" + std::to_string(tc_offset);
+
+            std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir + "/" + extra_name, s._pid, 0, true);
+
+            if(opt_ship_file.has_value())
+            {
+                enforce_is_ship(*opt_ship_file.value(), s._pid);
+            }
         }
     }
 
     cpu.update_regular_files(dir, s._pid);
+
+    if(!s.is_ship)
+        return;
 
     for(component& c : visible_components)
     {
@@ -409,6 +428,59 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
             }
             else
                 check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, them_type_counts, fullname, alive_ids);
+        }
+    }
+}
+
+void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_counts, std::string dir)
+{
+    std::string fulldir = fle.get_fulldir_name();
+
+    if(dir == fulldir)
+    {
+        fle.stored_in = s._pid;
+        return;
+    }
+
+    ///cannot store a file in a material
+    if(!s.is_ship)
+        return;
+
+    for(component& c : s.components)
+    {
+        int my_offset = type_counts[(int)c.base_id];
+        type_counts[(int)c.base_id]++;
+
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
+
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
+
+        if(fullname == fulldir)
+        {
+            fle.stored_in = c._pid;
+            return;
+        }
+
+        std::map<int, int> them_type_counts;
+        std::unordered_map<std::string, int> ships;
+
+        for(ship& ns : c.stored)
+        {
+            if(ns.is_ship)
+            {
+                int mcount = ships[ns.blueprint_name];
+
+                std::map<int, int> ship_type;
+                ships[ns.blueprint_name]++;
+
+                std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
+                set_cpu_file_stored_impl(fle, ns, ship_type, sname);
+            }
+            else
+                set_cpu_file_stored_impl(fle, ns, them_type_counts, fullname);
         }
     }
 }
@@ -795,55 +867,6 @@ bool cpu_file::in_sub_directory(const std::string& full_dir)
         return true;
 
     return name.as_uniform_string().starts_with(full_dir);
-}
-
-void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_counts, std::string dir)
-{
-    std::string fulldir = fle.get_fulldir_name();
-
-    if(dir == fulldir)
-    {
-        fle.stored_in = s._pid;
-        return;
-    }
-
-    for(component& c : s.components)
-    {
-        int my_offset = type_counts[(int)c.base_id];
-        type_counts[(int)c.base_id]++;
-
-        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
-
-        if(dir.size() > 0)
-        {
-            fullname = dir + "/" + fullname;
-        }
-
-        if(fullname == fulldir)
-        {
-            fle.stored_in = c._pid;
-            return;
-        }
-
-        std::map<int, int> them_type_counts;
-        std::unordered_map<std::string, int> ships;
-
-        for(ship& ns : c.stored)
-        {
-            if(ns.is_ship)
-            {
-                int mcount = ships[ns.blueprint_name];
-
-                std::map<int, int> ship_type;
-                ships[ns.blueprint_name]++;
-
-                std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
-                set_cpu_file_stored_impl(fle, ns, ship_type, sname);
-            }
-            else
-                set_cpu_file_stored_impl(fle, ns, them_type_counts, fullname);
-        }
-    }
 }
 
 void set_cpu_file_stored(ship& s, cpu_file& fle)
