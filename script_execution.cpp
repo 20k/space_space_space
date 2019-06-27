@@ -9,19 +9,21 @@
 #include "ship_components.hpp"
 #include "playspace.hpp"
 
-void enforce_is_ship(cpu_file& fle, size_t ship_pid)
+void enforce_is_ship(cpu_file& fle, size_t ship_pid, size_t root_pid)
 {
     fle.is_ship = true;
     fle.is_component = false;
     fle.ship_pid = ship_pid;
+    fle.root_ship_pid = root_pid;
 }
 
-void enforce_is_component(cpu_file& fle, size_t in_ship_pid, size_t component_pid)
+void enforce_is_component(cpu_file& fle, size_t in_ship_pid, size_t component_pid, size_t root_pid)
 {
     fle.is_ship = false;
     fle.is_component = true;
     fle.ship_pid = in_ship_pid;
     fle.component_pid = component_pid;
+    fle.root_ship_pid = root_pid;
 }
 
 void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, playspace* space, room* r)
@@ -248,7 +250,7 @@ void check_audio_hardware(cpu_state& cpu, size_t my_pid)
     }
 }
 
-void check_update_components_in_hardware(ship& s, std::vector<component>& visible_components, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids)
+void check_update_components_in_hardware(ship& s, std::vector<component>& visible_components, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids, size_t root_ship_pid)
 {
     assert(component_type::COUNT == component_type::cpu_names.size());
 
@@ -264,7 +266,7 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
 
             if(opt_ship_file.has_value())
             {
-                enforce_is_ship(*opt_ship_file.value(), s._pid);
+                enforce_is_ship(*opt_ship_file.value(), s._pid, root_ship_pid);
             }
         }
         else
@@ -277,12 +279,12 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
 
             if(opt_ship_file.has_value())
             {
-                enforce_is_ship(*opt_ship_file.value(), s._pid);
+                enforce_is_ship(*opt_ship_file.value(), s._pid, root_ship_pid);
             }
         }
     }
 
-    cpu.update_regular_files(dir, s._pid);
+    cpu.update_regular_files(dir, s._pid, root_ship_pid);
 
     if(!s.is_ship)
         return;
@@ -307,11 +309,11 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
 
         std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
 
-        cpu.update_regular_files(fullname, c._pid);
+        cpu.update_regular_files(fullname, c._pid, root_ship_pid);
 
         if(opt_file.has_value())
         {
-            enforce_is_component(*opt_file.value(), s._pid, c._pid);
+            enforce_is_component(*opt_file.value(), s._pid, c._pid, root_ship_pid);
 
             cpu_file& file = *opt_file.value();
 
@@ -424,10 +426,10 @@ void check_update_components_in_hardware(ship& s, std::vector<component>& visibl
                 ships[ns.blueprint_name]++;
 
                 std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
-                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, ship_type, sname, alive_ids);
+                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, ship_type, sname, alive_ids, root_ship_pid);
             }
             else
-                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, them_type_counts, fullname, alive_ids);
+                check_update_components_in_hardware(ns, ns.components, cpu, play, space, r, them_type_counts, fullname, alive_ids, root_ship_pid);
         }
     }
 }
@@ -495,7 +497,7 @@ void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, play
 
     for(auto& i : nearby)
     {
-        check_update_components_in_hardware(i.first, i.second, cpu, play, space, r, type_counts, "FOREIGN", alive_ids);
+        check_update_components_in_hardware(i.first, i.second, cpu, play, space, r, type_counts, "FOREIGN", alive_ids, i.first._pid);
     }
 }
 
@@ -504,7 +506,7 @@ void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, 
     std::map<int, int> type_counts;
     std::vector<size_t> ids;
 
-    check_update_components_in_hardware(s, s.components, cpu, play, space, r, type_counts, "", ids);
+    check_update_components_in_hardware(s, s.components, cpu, play, space, r, type_counts, "", ids, s._pid);
     dump_radar_data_into_cpu(cpu, s, play, space, r);
     check_audio_hardware(cpu, cpu._pid);
     import_foreign_ships(s, cpu, play, space, r, ids);
@@ -2334,13 +2336,78 @@ void cpu_state::stop()
     free_running = false;
 }
 
+void cpu_state::potentially_move_file_to_foreign_ship(room* r)
+{
+    if(context.held_file == -1)
+        throw std::runtime_error("BAD CHECK FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
+
+    cpu_file& fle = files[context.held_file];
+
+    if(fle.is_ship || fle.is_component)
+        return;
+
+    std::string str = fle.name.as_uniform_string();
+
+    if(!str.starts_with("FOREIGN/"))
+        return;
+
+    int search_str = std::string("FOREIGN/").size();
+
+    str.erase(0, search_str);
+
+    if(str.size() == 0)
+        return;
+
+    for(cpu_file& check : files)
+    {
+        if(!check.is_ship && !check.is_component)
+            continue;
+
+        if(!fle.in_exact_directory(check.name.as_uniform_string()))
+            continue;
+
+        std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+
+        for(ship* s : ships)
+        {
+            if(s->_pid != check.root_ship_pid)
+                continue;
+
+            for(component& c : s->components)
+            {
+                if(c.base_id != component_type::CPU)
+                    continue;
+
+                cpu_file mcopy = fle;
+                mcopy.name.set_label(str);
+
+                c.cpu_core.files.push_back(mcopy);
+                c.cpu_core.had_tx_pending = true;
+
+                break;
+            }
+
+            break;
+        }
+
+        return;
+    }
+}
+
 void cpu_state::drop_file()
 {
     if(context.held_file == -1)
         throw std::runtime_error("BAD DROP FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
 
+    int to_kill = context.held_file;
+
     files[context.held_file].file_pointer = 0;
     context.held_file = -1;
+
+    if(files[to_kill].name.as_uniform_string().starts_with("FOREIGN/"))
+    {
+        remove_file(to_kill);
+    }
 }
 
 void cpu_state::update_length_register()
@@ -2555,7 +2622,7 @@ std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string
     return &files.back();
 }
 
-void cpu_state::update_regular_files(const std::string& directoryname, size_t owner)
+void cpu_state::update_regular_files(const std::string& directoryname, size_t owner, size_t root_pid)
 {
     for(int i=0; i < (int)files.size(); i++)
     {
@@ -2567,6 +2634,8 @@ void cpu_state::update_regular_files(const std::string& directoryname, size_t ow
                 files[i].name.set_label(directoryname + "/" + ext);
             else
                 files[i].name.set_label(ext);
+
+            files[i].root_ship_pid = root_pid;
         }
     }
 }

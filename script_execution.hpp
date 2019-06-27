@@ -336,6 +336,7 @@ struct cpu_file : serialisable
     bool is_component = false;
     size_t ship_pid = -1;
     size_t component_pid = -1;
+    size_t root_ship_pid = -1; ///actual object
 
     cpu_file();
 
@@ -492,6 +493,7 @@ struct cpu_state : serialisable, owned
     void stop();
     void stop_rpc();
 
+    void potentially_move_file_to_foreign_ship(room* r);
     void drop_file();
 
     void upload_program_rpc(std::string str);
@@ -502,7 +504,7 @@ struct cpu_state : serialisable, owned
     std::optional<cpu_file*> get_file_by_name(const std::string& fullname);
     std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset, bool is_hw);
 
-    void update_regular_files(const std::string& directoryname, size_t owner);
+    void update_regular_files(const std::string& directoryname, size_t owner, size_t root_pid);
 
     void remove_file(int idx);
     bool any_holds(int idx);

@@ -119,6 +119,7 @@ void cpu_file::serialise(serialise_context& ctx, nlohmann::json& data, cpu_file*
     DO_SERIALISE(is_component);
     DO_SERIALISE(ship_pid);
     DO_SERIALISE(component_pid);
+    DO_SERIALISE(root_ship_pid);
 }
 
 SERIALISE_BODY_SIMPLE(cpu_move_args)
