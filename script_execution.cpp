@@ -9,6 +9,405 @@
 #include "ship_components.hpp"
 #include "playspace.hpp"
 
+void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, playspace* space, room* r)
+{
+    int bands = 128;
+
+    std::vector<int> rdata;
+    rdata.resize(bands);
+
+    alt_radar_sample& sam = s.last_sample;
+
+    std::optional<cpu_file*> opt_fle = cpu.get_create_capability_file("RADAR_DATA", s._pid, 1, true);
+
+    if(!opt_fle.has_value())
+        return;
+
+    cpu_file& fle = *opt_fle.value();
+
+    int max_radar_data = 128;
+    int max_write_radar_data = 128;
+    int max_connected_systems = 127;
+    int max_pois = 127;
+    int max_objects = 255;
+
+    float intensity_mult = 16;
+
+    fle.data.resize(max_radar_data + max_write_radar_data + max_connected_systems + max_pois + max_objects);
+    fle.ensure_eof();
+    cpu.update_length_register();
+
+    for(int i=0; i < (int)fle.len(); i++)
+    {
+        if(i >= max_radar_data && i < max_radar_data + max_write_radar_data)
+            continue;
+
+        fle.data[i].set_int(0);
+    }
+
+    int base = 0;
+
+    for(int i=0; i < (int)sam.frequencies.size(); i++)
+    {
+        float freq = round((sam.frequencies[i] - MIN_FREQ) / (MAX_FREQ - MIN_FREQ));
+        float intens = round(sam.intensities[i] * intensity_mult);
+
+        int ifreq = (int)freq;
+
+        ifreq = clamp(ifreq, 0, 127);
+        intens = clamp(intens, 0, 256 * intensity_mult - 1);
+
+        fle.data[base + ifreq].value += (int)intens;
+        fle.data[base + ifreq].help = "Intensity";
+    }
+
+    base += max_radar_data;
+
+    alt_frequency_packet to_send;
+
+    for(int i=0; i < (int)max_write_radar_data; i++)
+    {
+        if(fle.data[base + i].is_int() && fle.data[base + i].value > 0)
+        {
+            float intensity_to_send = clamp(fle.data[base + i].value / intensity_mult, 0, 256) / 256.f;
+            float frequency = (((float)i / max_write_radar_data) * (MAX_FREQ - MIN_FREQ)) + MIN_FREQ;
+
+            ///so intensity between 0 and 1
+            to_send.make(intensity_to_send, frequency);
+        }
+
+        fle.data[base + i].help = "Hardware Mapped IO for Frequecy bucket " + std::to_string(i);
+
+        ///if enabled, this makes the radar pulse instead of activate continuously
+        fle.data[base + i].set_int(0);
+    }
+
+    {
+        if(to_send.intensities.size() > 0 && to_send.summed_intensity > 0.001)
+        {
+            ///sum of intensities should at most be one
+            if(to_send.summed_intensity > 1)
+            {
+                float scale_frac = 1 / to_send.summed_intensity;
+
+                to_send.scale_by(scale_frac);
+            }
+
+            s.radar_frequency_composition = to_send.frequencies;
+            s.radar_intensity_composition = to_send.intensities;
+        }
+    }
+
+    base += max_write_radar_data;
+
+    std::vector<playspace*> connected = play.get_connected_systems_for(&s);
+
+    fle.data[base].set_int(connected.size());
+    fle.data[base].help = "Number of Connected Systems";
+
+    base++;
+
+    for(int i=0; i < (int)connected.size() && i < max_connected_systems/2; i++)
+    {
+        size_t pid = connected[i]->_pid;
+        std::string name = connected[i]->name;
+
+        fle.data[base + i*2 + 0].set_int(pid);
+        fle.data[base + i*2 + 1].set_symbol(name);
+
+        fle.data[base + i*2 + 0].help = "ID";
+        fle.data[base + i*2 + 1].help = "Name";
+    }
+
+    base += max_connected_systems;
+
+    std::vector<room*> pois = space->all_rooms();
+
+    fle.data[base].set_int(pois.size());
+    fle.data[base].help = "Number of POIs";
+
+    base++;
+
+    for(int i=0; i < (int)pois.size() && i < max_pois/3; i++)
+    {
+        size_t pid = pois[i]->_pid;
+        std::string type = poi_type::rnames[(int)pois[i]->ptype];
+        //std::string name = pois[i]->name;
+        int offset = pois[i]->poi_offset;
+
+        fle.data[base + i * 3 + 0].set_int(pid);
+        fle.data[base + i * 3 + 1].set_symbol(type);
+        fle.data[base + i * 3 + 2].set_int(offset);
+
+        fle.data[base + i * 3 + 0].help = "ID";
+        fle.data[base + i * 3 + 1].help = "Type";
+        fle.data[base + i * 3 + 2].help = "Offset";
+    }
+
+    base += max_pois;
+
+    fle.data[base].set_int(s.last_sample.renderables.size());
+    fle.data[base].help = "Number of Local Objects";
+
+    base++;
+
+    for(int i=0; i < (int)s.last_sample.renderables.size() && i < max_objects/4; i++)
+    {
+        size_t pid = s.last_sample.renderables[i].uid;
+        common_renderable& comm = s.last_sample.renderables[i].property;
+        client_renderable& cren = comm.r;
+
+        int x = round(cren.position.x());
+        int y = round(cren.position.y());
+
+        int idist = (int)(cren.position - s.r.position).length();
+        float angle = round(r2d((cren.position - s.r.position).angle()));
+
+        int items = 6;
+
+        fle.data[base + i * items + 0].set_int(pid);
+        fle.data[base + i * items + 1].set_int(x);
+        fle.data[base + i * items + 2].set_int(y);
+        fle.data[base + i * items + 3].set_int(idist);
+        fle.data[base + i * items + 4].set_int(angle);
+        fle.data[base + i * items + 5].set_int(round(s.last_sample.renderables[i].summed_intensities * intensity_mult));
+
+        fle.data[base + i * items + 0].help = "ID";
+        fle.data[base + i * items + 1].help = "x";
+        fle.data[base + i * items + 2].help = "y";
+        fle.data[base + i * items + 3].help = "Distance";
+        fle.data[base + i * items + 4].help = "Angle (degrees)";
+        fle.data[base + i * items + 5].help = "Emitted Intensity";
+    }
+}
+
+namespace
+{
+    std::string make_component_dir_name(int base_id, int offset)
+    {
+        return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
+    }
+}
+
+void update_alive_ids(cpu_state& cpu, const std::vector<size_t>& ids)
+{
+    for(int i=0; i < (int)cpu.files.size(); i++)
+    {
+        if(cpu.files[i].owner == (size_t)-1)
+            continue;
+
+        bool found = false;
+
+        for(int j=0; j < (int)ids.size(); j++)
+        {
+            if(cpu.files[i].owner == ids[j])
+            {
+                found = true;
+                break;
+            }
+        }
+
+        cpu.files[i].alive = found;
+    }
+}
+
+void check_audio_hardware(cpu_state& cpu, size_t my_pid)
+{
+    std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file("AUDIO", my_pid, 1, true);
+
+    if(opt_ship_file.has_value())
+    {
+        cpu_file& fle = *opt_ship_file.value();
+
+        for(int i=0; i < (int)fle.len(); i += 3)
+        {
+            float intens = fle[i + 0].value / 100.;
+            float freq = fle[i + 1].value;
+            int type = fle[i + 2].value;
+
+            cpu.audio.add(intens, freq, (waveform::type)type);
+        }
+
+        fle.data.clear();
+        fle.ensure_eof();
+    }
+}
+
+void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::map<int, int>& type_counts, std::string dir, std::vector<size_t>& alive_ids)
+{
+    assert(component_type::COUNT == component_type::cpu_names.size());
+
+    alive_ids.push_back(s._pid);
+
+    s.current_directory = dir;
+
+    if(dir.size() > 0 && s.is_ship)
+    {
+        std::optional<cpu_file*> opt_ship_file = cpu.get_create_capability_file(dir, s._pid, 0, true);
+
+        if(opt_ship_file.has_value())
+        {
+
+        }
+    }
+
+    cpu.update_regular_files(dir, s._pid);
+
+    for(component& c : s.components)
+    {
+        int my_offset = type_counts[(int)c.base_id];
+        type_counts[(int)c.base_id]++;
+
+        std::string fullname = make_component_dir_name((int)c.base_id, my_offset);
+
+        if(dir.size() > 0)
+        {
+            fullname = dir + "/" + fullname;
+        }
+
+        alive_ids.push_back(c._pid);
+        c.current_directory = fullname;
+
+        if(c.has_tag(tag_info::TAG_CPU))
+            continue;
+
+        std::optional<cpu_file*> opt_file = cpu.get_create_capability_file(fullname, c._pid, 0, true);
+
+        cpu.update_regular_files(fullname, c._pid);
+
+        if(opt_file.has_value())
+        {
+            cpu_file& file = *opt_file.value();
+
+            if(file.len() > 0 && file[0].is_int() && file[0].value >= 0)
+            {
+                c.set_activation_level(file[0].value / 100.);
+            }
+
+            file[0].set_int(-1);
+            file[0].help = "Set Activation Level Hardware Mapped IO";
+
+            file[1].set_int(c.activation_level * 100);
+            file[1].help = "Activation level %";
+
+            file[2].set_int(c.get_hp_frac() * 100);
+            file[2].help = "HP %";
+
+            file[3].set_int(c.get_operating_efficiency() * 100);
+            file[3].help = "Operating Efficiency %";
+
+            file[4].set_int(c.get_fixed_props().get_heat_produced_at_full_usage(c.current_scale) * 100);
+            file[4].help = "Max Heat Produced At 100% Operating Efficiency, * 100";
+
+            float max_power_draw = 0;
+
+            if(c.has(component_info::POWER))
+            {
+                max_power_draw = c.get_fixed(component_info::POWER).recharge;
+            }
+
+            file[5].set_int(max_power_draw);
+            file[5].help = "Max Power Draw";
+
+            file[6].set_int(c.get_my_temperature());
+            file[6].help = "Temperature (K)";
+
+            ///???
+            if(c.has_tag(tag_info::TAG_WEAPON))
+            {
+                file[7].set_int(c.last_could_use);
+                file[7].help = "Can be fired";
+
+                if(file[8].is_int() && file[8].value != INT_MIN)
+                {
+                    c.use_angle = d2r(file[8].value);
+                }
+
+                file[8].set_int(INT_MIN);
+                file[8].help = "Target Angle Hardware Mapped IO";
+
+                file[9].set_int(round(r2d(c.use_angle)));
+                file[9].help = "Current Weapon Angle";
+
+                if(file[10].is_int() && file[10].value > 0)
+                {
+                    c.try_use = true;
+                }
+
+                file[10].set_int(-1);
+                file[10].help = "Activate Weapon Hardware Mapped IO";
+
+                file[11].set_int(c.last_activation_successful);
+                file[11].help = "Was last activation successful?";
+            }
+
+            if(c.base_id == component_type::RADAR)
+            {
+                if(file[7].is_int() && file[7].value > 0)
+                {
+                    c.radar_offset_angle = d2r(file[7].value);
+                }
+
+                file[7].set_int(round(r2d(c.radar_offset_angle)));
+                file[7].help = "Radar Direction (degrees) Hardware Mapped IO";
+
+                if(file[8].is_int() && file[8].value > 0)
+                {
+                    c.radar_restrict_angle = d2r(file[8].value);
+                }
+
+                float in_deg = round(r2d(c.radar_restrict_angle));
+
+                file[8].set_int(in_deg);
+                file[8].help = "Radar Send Angle (degrees) Hardware Mapped IO";
+            }
+
+            if(c.has(component_info::SELF_DESTRUCT))
+            {
+                if(file[8].is_int() && file[8].value > 0)
+                {
+                    c.try_use = true;
+                }
+
+                ///no need to report success case
+                file[8].set_int(0);
+                file[8].help = "Activate Self Destruct Hardware Mapped IO";
+            }
+        }
+
+        std::map<int, int> them_type_counts;
+        std::unordered_map<std::string, int> ships;
+
+        for(ship& ns : c.stored)
+        {
+            if(ns.is_ship)
+            {
+                int mcount = ships[ns.blueprint_name];
+
+                std::map<int, int> ship_type;
+                ships[ns.blueprint_name]++;
+
+                std::string sname = fullname + "/" + ns.blueprint_name + "_" + std::to_string(mcount);
+                check_update_components_in_hardware(ns, cpu, play, space, r, ship_type, sname, alive_ids);
+            }
+            else
+                check_update_components_in_hardware(ns, cpu, play, space, r, them_type_counts, fullname, alive_ids);
+        }
+    }
+}
+
+void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r)
+{
+    std::map<int, int> type_counts;
+    std::vector<size_t> ids;
+
+    check_update_components_in_hardware(s, cpu, play, space, r, type_counts, "", ids);
+    dump_radar_data_into_cpu(cpu, s, play, space, r);
+    check_audio_hardware(cpu, cpu._pid);
+
+    update_alive_ids(cpu, ids);
+}
+
 void strip_whitespace(std::string& in)
 {
     while(in.size() > 0 && isspace(in[0]))
@@ -364,14 +763,6 @@ bool cpu_file::in_sub_directory(const std::string& full_dir)
         return true;
 
     return name.as_uniform_string().starts_with(full_dir);
-}
-
-namespace
-{
-    std::string make_component_dir_name(int base_id, int offset)
-    {
-        return component_type::cpu_names[(int)base_id] + "_" + std::to_string(offset) + "_HW";
-    }
 }
 
 void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_counts, std::string dir)
@@ -1297,6 +1688,11 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         register_value& to_grab = RNLS(next[0]);
 
+        if(s)
+        {
+            update_all_ship_hardware(*s, *this, *play, space, r);
+        }
+
         if(to_grab.is_label() && to_grab.label == "FILES")
         {
             update_master_virtual_file();
@@ -1401,6 +1797,12 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         drop_file();
         update_length_register();
+
+        if(s)
+        {
+            update_all_ship_hardware(*s, *this, *play, space, r);
+        }
+
         update_master_virtual_file(); ///in case we drop the master file, now's a good time to update it
         break;
 
@@ -1415,6 +1817,9 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         remove_file(held);
         update_length_register();
         update_master_virtual_file();
+
+        ///no need to update ship hardware, WIPE can't do anything
+
         break;
     }
 
