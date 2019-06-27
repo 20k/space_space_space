@@ -493,7 +493,7 @@ struct cpu_state : serialisable, owned
     void stop();
     void stop_rpc();
 
-    void potentially_move_file_to_foreign_ship(room* r, ship* me);
+    void potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, ship* me);
     void drop_file();
 
     void upload_program_rpc(std::string str);

@@ -1,6 +1,7 @@
 #include "script_execution.hpp"
 #include <assert.h>
 #include <iostream>
+#include <set>
 
 #include <sstream>
 #include <string>
@@ -487,7 +488,32 @@ void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_c
     }
 }
 
+void set_cpu_file_stored(ship& s, cpu_file& fle)
+{
+    std::map<int, int> types;
+
+    set_cpu_file_stored_impl(fle, s, types, "");
+
+    if(fle.stored_in == (size_t)-1)
+        fle.stored_in = s._pid;
+}
+
 void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, bool is_foreign = false);
+
+void get_all_ids(std::vector<component>& in, std::set<size_t>& out)
+{
+    for(component& c : in)
+    {
+        out.insert(c._pid);
+
+        for(ship& next : c.stored)
+        {
+            out.insert(next._pid);
+
+            get_all_ids(next.components, out);
+        }
+    }
+}
 
 void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::vector<size_t>& alive_ids)
 {
@@ -513,11 +539,11 @@ void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, play
             if(c.base_id != component_type::CPU)
                 continue;
 
-            std::map<int, int> ftype_counts;
-            std::vector<size_t> fids;
-
-            check_update_components_in_hardware(i.first, i.second, c.cpu_core, play, space, r, ftype_counts, "", fids, i.first._pid);
+            update_all_ship_hardware(i.first, c.cpu_core, play, space, r, true);
         }
+
+        std::set<size_t> visible;
+        get_all_ids(i.second, visible);
 
         for(component& c : i.first.components)
         {
@@ -533,6 +559,19 @@ void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, play
             {
                 if(theirs.root_ship_pid != i.first._pid)
                     continue;
+
+                if(theirs.is_ship || theirs.is_component)
+                {
+                    if(visible.count(theirs.ship_pid) == 0)
+                        continue;
+                }
+
+                ///regular file
+                if(!theirs.is_ship && !theirs.is_component)
+                {
+                    if(visible.count(theirs.stored_in) == 0)
+                        continue;
+                }
 
                 bool found = false;
 
@@ -581,6 +620,14 @@ void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, 
     }
 
     update_alive_ids(cpu, ids);
+
+    ///this step is very ordering dependent
+    ///do not move before update_all_ship_hardware
+    ///also unsure if its necessary anymore entirely but what can you do
+    for(int i=0; i < (int)cpu.files.size(); i++)
+    {
+        set_cpu_file_stored(s, cpu.files[i]);
+    }
 }
 
 void strip_whitespace(std::string& in)
@@ -938,16 +985,6 @@ bool cpu_file::in_sub_directory(const std::string& full_dir)
         return true;
 
     return name.as_uniform_string().starts_with(full_dir);
-}
-
-void set_cpu_file_stored(ship& s, cpu_file& fle)
-{
-    std::map<int, int> types;
-
-    set_cpu_file_stored_impl(fle, s, types, "");
-
-    if(fle.stored_in == (size_t)-1)
-        fle.stored_in = s._pid;
 }
 
 std::string register_value::as_string() const
@@ -1539,14 +1576,6 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
     {
         update_all_ship_hardware(*s, *this, *play, space, r);
 
-        ///this step is very ordering dependent
-        ///do not move before update_all_ship_hardware
-        ///also unsure if its necessary anymore entirely but what can you do
-        for(int i=0; i < (int)files.size(); i++)
-        {
-            set_cpu_file_stored(*s, files[i]);
-        }
-
         had_tx_pending = false;
     }
 
@@ -1954,6 +1983,11 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
     case DROP:
         if(context.held_file == -1)
             throw std::runtime_error("Not holding file [DROP]");
+
+        if(s)
+        {
+            potentially_move_file_to_foreign_ship(*play, space, r, s);
+        }
 
         drop_file();
         update_length_register();
@@ -2414,7 +2448,7 @@ void cpu_state::stop()
     free_running = false;
 }
 
-void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
+void cpu_state::potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, ship* me)
 {
     if(context.held_file == -1)
         throw std::runtime_error("BAD CHECK FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
@@ -2435,6 +2469,16 @@ void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
     int search_str = std::string("FOREIGN/").size();
 
     str.erase(0, search_str);
+
+    ///strip ship name
+    while(str.size() > 0 && str.front() != '/')
+    {
+        str.erase(str.begin());
+    }
+
+    /// remove /
+    if(str.size() > 0)
+        str.erase(str.begin());
 
     if(str.size() == 0)
         return;
@@ -2482,6 +2526,8 @@ void cpu_state::potentially_move_file_to_foreign_ship(room* r, ship* me)
                 c.cpu_core.had_tx_pending = true;
 
                 fle.alive = false;
+
+                update_all_ship_hardware(*real_s, c.cpu_core, play, space, r, false);
 
                 break;
             }
