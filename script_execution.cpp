@@ -487,6 +487,8 @@ void set_cpu_file_stored_impl(cpu_file& fle, ship& s, std::map<int, int>& type_c
     }
 }
 
+void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, bool is_foreign = false);
+
 void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, std::vector<size_t>& alive_ids)
 {
     if(!r)
@@ -504,19 +506,79 @@ void import_foreign_ships(ship& s, cpu_state& cpu, playspace_manager& play, play
         ///every file we drag in would be appended with FOREIGN/ID/ + name
         ///got ship ids, can track alive ids
 
-        check_update_components_in_hardware(i.first, i.second, cpu, play, space, r, type_counts, "FOREIGN", alive_ids, i.first._pid);
+        std::string extra_prefix = "FOREIGN/" + std::to_string(i.first._pid);
+
+        for(component& c : i.first.components)
+        {
+            if(c.base_id != component_type::CPU)
+                continue;
+
+            std::map<int, int> ftype_counts;
+            std::vector<size_t> fids;
+
+            check_update_components_in_hardware(i.first, i.second, c.cpu_core, play, space, r, ftype_counts, "", fids, i.first._pid);
+        }
+
+        for(component& c : i.first.components)
+        {
+            if(c.base_id != component_type::CPU)
+                continue;
+
+            std::vector<cpu_file> their_files = c.cpu_core.files;
+
+            for(cpu_file& i : their_files)
+                alive_ids.push_back(i.owner);
+
+            for(cpu_file& theirs : their_files)
+            {
+                if(theirs.root_ship_pid != i.first._pid)
+                    continue;
+
+                bool found = false;
+
+                for(int idx = 0; idx < (int)cpu.files.size(); idx++)
+                {
+                    if(cpu.context.held_file == idx)
+                        continue;
+
+                    ///not a foreign file
+                    if(cpu.files[idx].root_ship_pid != theirs.root_ship_pid)
+                        continue;
+
+                    if(cpu.files[idx].name.as_uniform_string() == extra_prefix + "/" + theirs.name.as_uniform_string())
+                    {
+                        cpu.files[idx] = theirs;
+                        cpu.files[idx].name.set_label(extra_prefix + "/" + theirs.name.as_uniform_string());
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(!found)
+                {
+                    cpu_file next = theirs;
+                    next.name.set_label(extra_prefix + "/" + theirs.name.as_uniform_string());
+
+                    cpu.files.push_back(next);
+                }
+            }
+        }
     }
 }
 
-void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r)
+void update_all_ship_hardware(ship& s, cpu_state& cpu, playspace_manager& play, playspace* space, room* r, bool is_foreign)
 {
     std::map<int, int> type_counts;
     std::vector<size_t> ids;
 
     check_update_components_in_hardware(s, s.components, cpu, play, space, r, type_counts, "", ids, s._pid);
-    dump_radar_data_into_cpu(cpu, s, play, space, r);
-    check_audio_hardware(cpu, cpu._pid);
-    import_foreign_ships(s, cpu, play, space, r, ids);
+
+    if(!is_foreign)
+    {
+        dump_radar_data_into_cpu(cpu, s, play, space, r);
+        check_audio_hardware(cpu, cpu._pid);
+        import_foreign_ships(s, cpu, play, space, r, ids);
+    }
 
     update_alive_ids(cpu, ids);
 }
