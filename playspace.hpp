@@ -5,6 +5,7 @@
 #include <vec/vec.hpp>
 #include <memory>
 #include <map>
+#include <optional>
 
 struct entity;
 struct ship;
@@ -103,7 +104,7 @@ struct room : serialisable, owned
 
     void import_radio_waves_from(alt_radar_field& theirs);
 
-    std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me);
+    std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access = std::nullopt);
 };
 
 void room_merge(room* r1, room* r2);

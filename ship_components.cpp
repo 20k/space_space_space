@@ -5623,7 +5623,7 @@ void ship::consume_cpu_transfers(room* r)
                 equiv.fraction = cxfer.fraction;
                 equiv.is_fractiony = cxfer.is_fractiony;
 
-                bool success = consume_transfer(r, equiv);
+                bool success = consume_transfer(r, equiv, this->_pid);
 
                 c.cpu_core.context.register_states[(int)registers::TEST].set_int(success);
 
@@ -5660,7 +5660,7 @@ bool has_ship_in_storage(size_t pid, std::vector<component>& components)
 }
 
 ///from is the thing to steal
-std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
+std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r, size_t pid_ship_initiating)
 {
     if(from_pid == to->_pid)
         return {from_pid};
@@ -5668,7 +5668,7 @@ std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
     if(has_ship_in_storage(from_pid, to->components))
         return {to->_pid};
 
-    std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to);
+    std::vector<std::pair<ship, std::vector<component>>> found = r->get_nearby_accessible_ships(*to, pid_ship_initiating);
 
     for(auto& i : found)
     {
@@ -5679,7 +5679,7 @@ std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r)
     return std::nullopt;
 }
 
-bool consume_transfer(room* r, pending_transfer& xfer)
+bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiating)
 {
     auto ship_to_opt = r->entity_manage->fetch(xfer.pid_ship_to);
 
@@ -5691,7 +5691,7 @@ bool consume_transfer(room* r, pending_transfer& xfer)
     if(!to_as_ship)
         return false;
 
-    auto parent_ship_id = stored_in_nearby_ship(xfer.pid_ship_from, to_as_ship, r);
+    auto parent_ship_id = stored_in_nearby_ship(xfer.pid_ship_from, to_as_ship, r, pid_ship_initiating);
 
     if(!parent_ship_id.has_value())
         return false;

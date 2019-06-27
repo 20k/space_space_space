@@ -473,7 +473,7 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
-std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible_ships(ship& me)
+std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access)
 {
     float accessible_range = 100;
 
@@ -504,7 +504,12 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
             if(!c.is_storage())
                 continue;
 
-            if(c.foreign_access.allowed(me._pid))
+            bool has_access = false;
+
+            if(unconditional_access.has_value() && unconditional_access.value() == s->_pid)
+                has_access = true;
+
+            if(has_access || c.foreign_access.allowed(me._pid))
             {
                 access.push_back(c);
             }

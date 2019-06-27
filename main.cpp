@@ -895,7 +895,9 @@ void server_thread(std::atomic_bool& should_term)
                         continue;
 
                     for(auto& i : read_data.transfers)
-                        consume_transfer(r, i);
+                    {
+                        consume_transfer(r, i, s->_pid);
+                    }
                 }
             }
 

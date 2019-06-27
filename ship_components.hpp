@@ -785,13 +785,11 @@ struct ship : heatable_entity, free_function
 
     bool is_ship = false;
 
-    void collect_cpu_transfers(std::vector<pending_transfer>& out);
-
 private:
     double thrusters_active = 0;
 };
 
-bool consume_transfer(room* r, pending_transfer& xfer);
+bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiating);
 
 template<typename C, typename T>
 void for_each_ship_hackery(C& c, T t)
