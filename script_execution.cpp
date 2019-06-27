@@ -1675,9 +1675,31 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
             cpu_file& file = files[context.held_file];
 
+            if(!file.is_ship)
+                throw std::runtime_error("Only a ship or materials can be [TXFR]'d");
+
+            std::string to_name = E(next[0]).as_string();
+
+            std::optional<cpu_file*> destination_file = get_file_by_name(to_name);
+
+            if(!destination_file.has_value())
+                throw std::runtime_error("No destination component with the name " + to_name + " [TXFR]");
+
+            if(!destination_file.value()->is_component)
+                throw std::runtime_error("Destination named " + to_name + " must be component in [TXFR]");
+
+            size_t pid_of_ship_to_be_moved = file.ship_pid;
+
             cpu_xfer xf;
-            xf.from = file.name.as_string();
-            xf.to = E(next[0]).as_string();
+            /*xf.from = file.name.as_string();
+            xf.to = E(next[0]).as_string();*/
+
+            xf.pid_ship_from = pid_of_ship_to_be_moved;
+            xf.pid_ship_to = destination_file.value()->ship_pid;
+            xf.pid_component = destination_file.value()->component_pid;
+            xf.is_fractiony = false;
+            xf.fraction = 1;
+
             xf.held_file = context.held_file;
             xfers.push_back(xf);
             ///so
@@ -2441,6 +2463,20 @@ void cpu_state::set_program(std::string str)
         last_error = err.what();
         free_running = false;
     }
+}
+
+std::optional<cpu_file*> cpu_state::get_file_by_name(const std::string& fullname)
+{
+    for(auto& i : files)
+    {
+        if(i.name.is_label() && i.name.label == fullname)
+            return &i;
+
+        if(i.name.is_symbol() && i.name.symbol == fullname)
+            return &i;
+    }
+
+    return std::nullopt;
 }
 
 std::optional<cpu_file*> cpu_state::get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset, bool is_hw)

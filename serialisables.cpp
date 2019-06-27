@@ -69,10 +69,11 @@ void spair::serialise(serialise_context& ctx, nlohmann::json& data, spair* other
 
 void cpu_xfer::serialise(serialise_context& ctx, nlohmann::json& data, cpu_xfer* other)
 {
-    DO_SERIALISE(from);
-    DO_SERIALISE(to);
-    DO_SERIALISE(fraction);
+    DO_SERIALISE(pid_ship_from);
+    DO_SERIALISE(pid_ship_to);
+    DO_SERIALISE(pid_component);
     DO_SERIALISE(is_fractiony);
+    DO_SERIALISE(fraction);
     DO_SERIALISE(held_file);
 }
 

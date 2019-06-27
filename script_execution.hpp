@@ -371,9 +371,12 @@ struct spair : serialisable
 
 struct cpu_xfer : serialisable
 {
-    std::string from, to;
+    size_t pid_ship_from = -1;
+    size_t pid_component = -1;
+    size_t pid_ship_to = -1;
     float fraction = 1;
     bool is_fractiony = false;
+
     int held_file = -1;
 
     SERIALISE_SIGNATURE_SIMPLE(cpu_xfer);
@@ -496,6 +499,7 @@ struct cpu_state : serialisable, owned
     void update_length_register();
     void update_f_register();
 
+    std::optional<cpu_file*> get_file_by_name(const std::string& fullname);
     std::optional<cpu_file*> get_create_capability_file(const std::string& filename, size_t owner, size_t owner_offset, bool is_hw);
 
     void update_regular_files(const std::string& directoryname, size_t owner);
