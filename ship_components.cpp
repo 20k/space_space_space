@@ -3551,6 +3551,9 @@ void component::render_inline_ui(size_t parent_id, bool use_title, bool drag_dro
     if(use_title)
         ImGui::Text((long_name).c_str());
 
+    if(get_internal_volume() > 0)
+        foreign_access.render_ui(*this);
+
     std::map<std::string, aggregate_ship_info> aggregates;
 
     for(ship& s : stored)

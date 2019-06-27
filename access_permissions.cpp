@@ -4,12 +4,15 @@
 
 void access_permissions::render_ui(component& parent)
 {
+    ImGui::Text("Public:");
+    ImGui::SameLine();
+
     std::string str;
 
     if(access == STATE_NONE)
-        str = "(N)";
+        str += "(N)";
     if(access == STATE_ALL)
-        str = "(Y)";
+        str += "(Y)";
 
     if(ImGuiX::SimpleButton(str.c_str()))
     {
