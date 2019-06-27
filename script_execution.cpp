@@ -1690,6 +1690,9 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
             cpu_file fle;
             fle.name.set_int(get_next_persistent_id());
 
+            if(s)
+                fle.root_ship_pid = s->_pid;
+
             files.push_back(fle);
 
             context.held_file = (int)files.size() - 1;
@@ -1707,6 +1710,9 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
             cpu_file fle;
             fle.name = name;
+
+            if(s)
+                fle.root_ship_pid = s->_pid;
 
             files.push_back(fle);
 
