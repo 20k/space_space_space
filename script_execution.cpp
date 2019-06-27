@@ -1348,11 +1348,11 @@ register_bundle check_environ(cpu_state& st, cpu_stash& stash, register_value& i
 #define DEC(x) x.decode(*this)
 
 #define R(x) DEC(RA(CHECK(x), RA))
-#define RN(x) RA(DEC(RA(CHECK(x), RN)), N)
-#define RNS(x) RA(DEC(RA(CHECK(x), RNS)), NS)
-#define RNLS(x) RA(DEC(RA(CHECK(x), RNLS)), NLS)
-#define RLS(x) RA(DEC(RA(CHECK(x), RLS)), LS)
-#define RS(x) RA(DEC(RA(CHECK(x), RS)), S)
+#define RN(x) RA(DEC(RA(CHECK(x), RAN)), N)
+#define RNS(x) RA(DEC(RA(CHECK(x), RANS)), NS)
+#define RNLS(x) RA(DEC(RA(CHECK(x), RANLS)), NLS)
+#define RLS(x) RA(DEC(RA(CHECK(x), RALS)), LS)
+#define RS(x) RA(DEC(RA(CHECK(x), RAS)), S)
 #define E(x) DEC(RA(CHECK(x), RLANS))
 #define L(x) DEC(RA(CHECK(x), L))
 
@@ -1729,7 +1729,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
             set_cpu_file_stored(*s, files[context.held_file]);
 
             if(files[context.held_file].stored_in == (size_t)-1)
-                throw std::runtime_error("Should be impossible, unstored file in [MAKE]");
+                files[context.held_file].stored_in = s->_pid;
         }
 
         break;
@@ -1758,7 +1758,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
                 set_cpu_file_stored(*s, files[context.held_file]);
 
                 if(files[context.held_file].stored_in == (size_t)-1)
-                    throw std::runtime_error("Should be impossible, unstored file in [RNAM]");
+                    files[context.held_file].stored_in = s->_pid;
             }
         }
 

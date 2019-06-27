@@ -77,14 +77,19 @@ void iaddi(register_value& r1, register_value& r2, register_value& r3)
     NUM(r2);
 
     r3.set_int(r1.value + r2.value);*/
+        //r3.set_int(r1.value + r2.value);
 
-    if(r1.which != r2.which)
+    if(r1.is_label() && r2.is_symbol())
+        r3.set_label(r1.label + r2.as_uniform_string());
+
+    else if(r1.is_symbol() && r2.is_label())
+        r3.set_label(r1.as_uniform_string() + r2.label);
+
+    else if(r1.which != r2.which)
         throw std::runtime_error("ADDI arguments must be of same type, got " + r1.as_string() + " and " + r2.as_string());
 
-    if(r1.is_int())
+    else if(r1.is_int())
         r3.set_int(saturating_op(r1.value, r2.value, std::plus<int64_t>{}));
-
-        //r3.set_int(r1.value + r2.value);
 
     else if(r1.is_label())
         r3.set_label(r1.label + r2.label);
