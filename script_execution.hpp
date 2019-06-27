@@ -332,6 +332,11 @@ struct cpu_file : serialisable
     bool alive = true;
     bool is_hw = false;
 
+    bool is_ship = false;
+    bool is_component = false;
+    size_t ship_pid = -1;
+    size_t component_pid = -1;
+
     cpu_file();
 
     int len();

@@ -9,6 +9,21 @@
 #include "ship_components.hpp"
 #include "playspace.hpp"
 
+void enforce_is_ship(cpu_file& fle, size_t ship_pid)
+{
+    fle.is_ship = true;
+    fle.is_component = false;
+    fle.ship_pid = ship_pid;
+}
+
+void enforce_is_component(cpu_file& fle, size_t in_ship_pid, size_t component_pid)
+{
+    fle.is_ship = false;
+    fle.is_component = true;
+    fle.ship_pid = in_ship_pid;
+    fle.component_pid = component_pid;
+}
+
 void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, playspace* space, room* r)
 {
     int bands = 128;
@@ -247,7 +262,7 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
         if(opt_ship_file.has_value())
         {
-
+            enforce_is_ship(*opt_ship_file.value(), s._pid);
         }
     }
 
@@ -277,6 +292,8 @@ void check_update_components_in_hardware(ship& s, cpu_state& cpu, playspace_mana
 
         if(opt_file.has_value())
         {
+            enforce_is_component(*opt_file.value(), s._pid, c._pid);
+
             cpu_file& file = *opt_file.value();
 
             if(file.len() > 0 && file[0].is_int() && file[0].value >= 0)
