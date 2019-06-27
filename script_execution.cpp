@@ -1425,6 +1425,8 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
     if(had_tx_pending && s)
     {
+        update_all_ship_hardware(*s, *this, *play, space, r);
+
         for(int i=0; i < (int)files.size(); i++)
         {
             set_cpu_file_stored(*s, files[i]);
