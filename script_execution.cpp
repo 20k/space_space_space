@@ -946,7 +946,7 @@ void set_cpu_file_stored(ship& s, cpu_file& fle)
 
     set_cpu_file_stored_impl(fle, s, types, "");
 
-    if(fle.stored_in == -1)
+    if(fle.stored_in == (size_t)-1)
         fle.stored_in = s._pid;
 }
 
