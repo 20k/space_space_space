@@ -3,6 +3,8 @@
 
 #include <networking/serialisable_fwd.hpp>
 
+struct component;
+
 struct access_permissions : serialisable, free_function
 {
     enum state
@@ -19,6 +21,8 @@ struct access_permissions : serialisable, free_function
     {
         return access == state::STATE_ALL;
     }
+
+    void render_ui(component& parent);
 };
 
 #endif // ACCESS_PERMISSIONS_HPP_INCLUDED
