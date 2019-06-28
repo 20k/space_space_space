@@ -3738,7 +3738,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     build_queue.push_back(std::make_shared<build_in_progress>(build));
 }
 
-void component::render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent)
+void component::render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent, std::vector<ship>& nearby_unfinished)
 {
     if(!factory_view_open)
         return;
@@ -3766,6 +3766,17 @@ void component::render_manufacturing_window(size_t parent_id, blueprint_manager&
             std::string str = build_queue[i]->result.name;
 
             ship* fship = dynamic_cast<ship*>(find_by_id(parent, build_queue[i]->in_progress_pid));
+
+            if(fship == nullptr)
+            {
+                for(auto& fs : nearby_unfinished)
+                {
+                    if(build_queue[i]->in_progress_pid == fs._pid)
+                    {
+                        fship = &fs;
+                    }
+                }
+            }
 
             if(fship != nullptr)
             {
@@ -3798,21 +3809,35 @@ void component::render_manufacturing_window(size_t parent_id, blueprint_manager&
 
     ImGui::Indent();
 
-    for(component& pc : parent.components)
     {
-        for(ship& s : pc.stored)
+        std::vector<ship*> check_resumable;
+
+        for(component& pc : parent.components)
         {
-            if(s.is_ship && s.is_build_holder)
+            for(ship& s : pc.stored)
             {
-                if(pids_going.find(s._pid) == pids_going.end())
+                check_resumable.push_back(&s);
+            }
+        }
+
+        for(auto& i : nearby_unfinished)
+        {
+            check_resumable.push_back(&i);
+        }
+
+        for(ship* s : check_resumable)
+        {
+            if(s->is_ship && s->is_build_holder)
+            {
+                if(pids_going.find(s->_pid) == pids_going.end())
                 {
-                    float work = get_build_work(s.original_blueprint->to_ship());
+                    float work = get_build_work(s->original_blueprint->to_ship());
 
-                    std::string sbutt = "Resume##a" + std::to_string(s._pid);
+                    std::string sbutt = "Resume##a" + std::to_string(s->_pid);
 
-                    std::string str = s.blueprint_name;
+                    std::string str = s->blueprint_name;
 
-                    str += " " + to_string_with(100 * s.construction_amount / work) + "%%";
+                    str += " " + to_string_with(100 * s->construction_amount / work) + "%%";
 
                     ImGui::Text(str.c_str());
 
@@ -3820,7 +3845,7 @@ void component::render_manufacturing_window(size_t parent_id, blueprint_manager&
 
                     if(ImGuiX::SimpleButton("(Resume)"))
                     {
-                        parent.resume_building_rpc(this->_pid, s._pid);
+                        parent.resume_building_rpc(this->_pid, s->_pid);
                     }
                 }
             }
@@ -4455,13 +4480,13 @@ std::vector<double> ship::get_capacity()
            });
 }
 
-void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage)
+void ship::show_manufacturing_windows(blueprint_manager& blueprint_manage, std::vector<ship>& nearby_unfinished)
 {
     for(component& c : components)
     {
         if(c.has_tag(tag_info::TAG_FACTORY))
         {
-            c.render_manufacturing_window(_pid, blueprint_manage, *this);
+            c.render_manufacturing_window(_pid, blueprint_manage, *this, nearby_unfinished);
         }
     }
 }

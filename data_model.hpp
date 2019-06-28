@@ -28,6 +28,7 @@ struct data_model : serialisable
     std::vector<system_descriptor> connected_systems;
     vec2f room_position;
     std::vector<nearby_ship_info> nearby_info;
+    std::vector<ship> nearby_unfinished_blueprints;
 
     SERIALISE_SIGNATURE(data_model<T>)
     {
@@ -42,6 +43,7 @@ struct data_model : serialisable
         DO_SERIALISE(connected_systems);
         DO_SERIALISE(room_position);
         DO_SERIALISE(nearby_info);
+        DO_SERIALISE(nearby_unfinished_blueprints);
     }
 };
 

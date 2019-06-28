@@ -960,6 +960,7 @@ void server_thread(std::atomic_bool& should_term)
             data.labels.clear();
             data.connected_systems.clear();
             data.nearby_info.clear();
+            data.nearby_unfinished_blueprints.clear();
 
             if(s)
             {
@@ -992,6 +993,12 @@ void server_thread(std::atomic_bool& should_term)
 
                         data.nearby_info.push_back(inf);
                     }
+
+
+                    std::vector<ship*> unfinished = found_room->get_nearby_unfinished_ships(*s);
+
+                    for(ship* i : unfinished)
+                        data.nearby_unfinished_blueprints.push_back(*i);
                 }
             }
 
@@ -1993,7 +2000,7 @@ int main()
 
             s.show_power();
 
-            s.show_manufacturing_windows(design.server_blueprint_manage);
+            s.show_manufacturing_windows(design.server_blueprint_manage, model.nearby_unfinished_blueprints);
 
             /*if(s._pid == model.controlled_ship_id && s.has_s_power && s.room_type == space_type::REAL_SPACE)
             {

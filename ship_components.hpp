@@ -547,7 +547,7 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
     std::string phase_string();
     std::string get_render_long_name();
     void render_inline_ui(size_t parent_id, bool use_title = true, bool drag_drop = true);
-    void render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent);
+    void render_manufacturing_window(size_t parent_id, blueprint_manager& blueprint_manage, ship& parent, std::vector<ship>& nearby_unfinished);
 
     ///do not network
     ///needs some adjustments to the network, need to fix ownership n stuff
@@ -717,7 +717,7 @@ struct ship : heatable_entity, free_function
     //std::string show_components();
     void show_resources(bool window = true);
     void show_power();
-    void show_manufacturing_windows(blueprint_manager& blueprint_manage);
+    void show_manufacturing_windows(blueprint_manager& blueprint_manage, std::vector<ship>& nearby_unfinished);
 
     bool any_building(size_t ship_id);
 
