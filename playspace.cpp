@@ -473,15 +473,13 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
-std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access)
+std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
 {
-    float accessible_range = 100;
-
-    std::vector<std::pair<ship, std::vector<component>>> ret;
+    std::vector<ship*> ret;
 
     bool found_me = false;
 
-    for(entity* e : entity_manage->entities)
+    for(entity* e : r.entity_manage->entities)
     {
         ship* s = dynamic_cast<ship*>(e);
 
@@ -494,9 +492,26 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
             continue;
         }
 
-        if((me.r.position - s->r.position).length() > accessible_range)
+        if((me.r.position - s->r.position).length() > range)
             continue;
 
+        ret.push_back(s);
+    }
+
+    if(!found_me)
+        return std::vector<ship*>();
+
+    return ret;
+}
+
+std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access)
+{
+    std::vector<std::pair<ship, std::vector<component>>> ret;
+
+    std::vector<ship*> found_ships = get_nearby_ships(*this, me, 100);
+
+    for(ship* s : found_ships)
+    {
         std::vector<component> access;
 
         for(component& c : s->components)
@@ -515,15 +530,11 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
             }
         }
 
-        ///basically here for stealth reasons
         if(access.size() > 0)
         {
             ret.push_back({*s, access});
         }
     }
-
-    if(!found_me)
-        return std::vector<std::pair<ship, std::vector<component>>>();
 
     return ret;
 }
