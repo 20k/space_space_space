@@ -504,6 +504,23 @@ std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
     return ret;
 }
 
+std::vector<ship*> room::get_nearby_unfinished_ships(ship& me)
+{
+    std::vector<ship*> ships = get_nearby_ships(*this, me, 100);
+
+    std::vector<ship*> ret;
+
+    for(ship* s : ships)
+    {
+        if(s->is_ship && s->is_build_holder)
+        {
+            ret.push_back(s);
+        }
+    }
+
+    return ret;
+}
+
 std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access)
 {
     std::vector<std::pair<ship, std::vector<component>>> ret;
