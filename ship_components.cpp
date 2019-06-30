@@ -3784,6 +3784,8 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
         spawned->phys_drag = true;
         spawned->current_radar_field = parent.current_radar_field;
         build.in_progress_pid = spawned->_pid;
+
+        assert(spawned->is_build_holder && spawned->is_ship);
     }
 
     building = true;
