@@ -1729,8 +1729,6 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
 
     found_comp->building = true;
     found_comp->build_queue.push_back(std::make_shared<build_in_progress>(build));
-
-    printf("Resumed\n");
 }
 
 void ship::cancel_building(size_t component_pid, size_t object_pid)
