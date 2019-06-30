@@ -479,13 +479,10 @@ std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
 
     bool found_me = false;
 
-    for(entity* e : r.entity_manage->entities)
+    std::vector<ship*> srch = r.entity_manage->fetch<ship>();
+
+    for(ship* s : srch)
     {
-        ship* s = dynamic_cast<ship*>(e);
-
-        if(s == nullptr)
-            continue;
-
         if(s == &me)
         {
             found_me = true;
