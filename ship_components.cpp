@@ -1912,6 +1912,11 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
                     }
                 }
 
+                if(fac.has_tag(tag_info::TAG_EFACTORY))
+                {
+                    free_volume = 9999999999;
+                }
+
                 std::vector<material>& raw_fodder = found_material_container->composition;
 
                 std::vector<material>* drain_into = nullptr;
