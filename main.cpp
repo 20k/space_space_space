@@ -237,6 +237,7 @@ void server_thread(std::atomic_bool& should_term)
     test_ship->add(get_component_default(component_type::MINING_LASER, 1));
     test_ship->add(get_component_default(component_type::REFINERY, 1));
     test_ship->add(get_component_default(component_type::FACTORY, 1));
+    test_ship->add(get_component_default(component_type::SHIPYARD, 1));
     test_ship->add(get_component_default(component_type::CARGO_STORAGE, 1));
     test_ship->add(get_component_default(component_type::RADAR, 1));
     test_ship->add(get_component_default(component_type::CPU, 1));

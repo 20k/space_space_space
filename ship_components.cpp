@@ -3692,32 +3692,43 @@ void component::manufacture_blueprint_id(size_t blue_id)
 
 void component::manufacture_blueprint(const blueprint& blue, ship& parent)
 {
-    bool any_free_space = false;
+    if(has_tag(tag_info::TAG_EFACTORY) && parent.my_room == nullptr)
+        return;
 
     component* which = nullptr;
-    float max_space = 0;
 
-    for(component& lc : parent.components)
+    if(!has_tag(tag_info::TAG_EFACTORY))
     {
-        if(lc.base_id != component_type::CARGO_STORAGE)
-            continue;
+        bool any_free_space = false;
 
-        float space = lc.get_internal_volume() - lc.get_stored_volume();
+        float max_space = 0;
 
-        if(space > 0)
+        for(component& lc : parent.components)
         {
-            any_free_space = true;
+            if(lc.base_id != component_type::CARGO_STORAGE)
+                continue;
 
-            if(space > max_space)
+            float space = lc.get_internal_volume() - lc.get_stored_volume();
+
+            if(space > 0)
             {
-                which = &lc;
-                max_space = space;
+                any_free_space = true;
+
+                if(space > max_space)
+                {
+                    which = &lc;
+                    max_space = space;
+                }
             }
         }
+
+        if(!any_free_space)
+            return;
+
+        if(!which)
+            return;
     }
 
-    if(!any_free_space)
-        return;
 
     ///should display a warning to the user
     /*bool any = false;
@@ -3745,9 +3756,29 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     dummy_ship.blueprint_name = "UNFINISHED_" + blue.name;
     dummy_ship.original_blueprint = std::make_shared<blueprint>(blue);
 
-    which->stored.push_back(dummy_ship);
+    if(!has_tag(tag_info::TAG_EFACTORY))
+    {
+        which->stored.push_back(dummy_ship);
+        build.in_progress_pid = which->stored.back()._pid;
+    }
+    else
+    {
+        ///spawn me in real space
+        ship* spawned = parent.parent->take(dummy_ship);
 
-    build.in_progress_pid = which->stored.back()._pid;
+        spawned->r.position = parent.r.position + (vec2f){40, 0}.rot(parent.r.rotation);
+        spawned->r.rotation = parent.r.rotation;
+        spawned->velocity = parent.velocity;
+        spawned->phys_ignore.push_back(_pid);
+
+        spawned->r.init_rectangular({1, 0.2});
+        spawned->network_owner = parent.network_owner;
+        spawned->spawn_clock.restart();
+        spawned->spawned_by = _pid;
+        spawned->phys_drag = true;
+        spawned->current_radar_field = parent.current_radar_field;
+        build.in_progress_pid = spawned->_pid;
+    }
 
     building = true;
     build_queue.push_back(std::make_shared<build_in_progress>(build));
