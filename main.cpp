@@ -457,6 +457,7 @@ void server_thread(std::atomic_bool& should_term)
             if(c.base_id == component_type::CARGO_STORAGE)
             {
                 c.foreign_access.access = access_permissions::STATE_ALL;
+                c.foreign_access.allow_docking = true;
             }
         }
 

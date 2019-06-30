@@ -222,6 +222,7 @@ DEFINE_SERIALISE_FUNCTION(component)
 }
 
 DEFINE_FRIENDLY_RPC1(component, change_access_permissions, access_permissions::state);
+DEFINE_FRIENDLY_RPC1(component, change_docking_permissions, bool);
 
 DEFINE_SERIALISE_FUNCTION(ship)
 {
@@ -548,6 +549,7 @@ DEFINE_SERIALISE_FUNCTION(access_permissions)
     SERIALISE_SETUP();
 
     DO_FSERIALISE(access);
+    DO_FSERIALISE(allow_docking);
 }
 
 DEFINE_SERIALISE_FUNCTION(nearby_ship_info)

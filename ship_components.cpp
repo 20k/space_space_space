@@ -3706,6 +3706,11 @@ void component::change_access_permissions(access_permissions::state st)
         foreign_access.access = st;
 }
 
+void component::change_docking_permissions(bool allow)
+{
+    foreign_access.allow_docking = allow;
+}
+
 void component::manufacture_blueprint_id(size_t blue_id)
 {
     unchecked_blueprints.push_back(blue_id);

@@ -370,7 +370,9 @@ struct component : serialisable, owned, rate_limited, free_function, smoothed
 
     access_permissions foreign_access;
     void change_access_permissions(access_permissions::state st);
+    void change_docking_permissions(bool allow);
     DECLARE_FRIENDLY_RPC(change_access_permissions, access_permissions::state);
+    DECLARE_FRIENDLY_RPC(change_docking_permissions, bool);
 
     ///time this component has been nearly empty enough to remove
     std::optional<fixed_clock> bad_time;

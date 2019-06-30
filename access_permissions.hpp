@@ -16,10 +16,16 @@ struct access_permissions : serialisable, free_function
     };
 
     state access = state::STATE_NONE;
+    bool allow_docking = false;
 
     bool allowed(size_t ship_id)
     {
         return access == state::STATE_ALL;
+    }
+
+    bool can_dock(size_t ship_id)
+    {
+        return allowed(ship_id) && allow_docking;
     }
 
     void render_ui(component& parent);

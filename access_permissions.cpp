@@ -21,4 +21,19 @@ void access_permissions::render_ui(component& parent)
         else if(access == STATE_ALL)
             parent.change_access_permissions_rpc(STATE_NONE);
     }
+
+    if(parent.base_id == component_type::CARGO_STORAGE)
+    {
+        ImGui::SameLine();
+
+        ImGui::Text("Docking:");
+
+        ImGui::SameLine();
+
+        if(allow_docking && ImGuiX::SimpleButton("(D)"))
+            parent.change_docking_permissions_rpc(!allow_docking);
+
+        if(!allow_docking && ImGuiX::SimpleButton("(N)"))
+            parent.change_docking_permissions_rpc(!allow_docking);
+    }
 }
