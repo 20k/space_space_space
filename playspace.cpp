@@ -902,6 +902,14 @@ void playspace_manager::serialise(serialise_context& ctx, nlohmann::json& data, 
 
 void room::tick(double dt_s, bool reaggregate)
 {
+    for(auto& i : entity_manage->entities)
+    {
+        if(ship* s = dynamic_cast<ship*>(i); s != nullptr)
+        {
+            s->my_room = this;
+        }
+    }
+
     entity_manage->tick(dt_s, reaggregate);
     entity_manage->cleanup();
 
@@ -1039,6 +1047,14 @@ void playspace::tick(double dt_s)
         r->tick(dt_s, agg);
 
         rid++;
+    }
+
+    for(auto& i : entity_manage->entities)
+    {
+        if(ship* s = dynamic_cast<ship*>(i); s != nullptr)
+        {
+            s->my_room = nullptr;
+        }
     }
 
     entity_manage->tick(dt_s);

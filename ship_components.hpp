@@ -785,6 +785,7 @@ struct ship : heatable_entity, free_function
     uint64_t spawned_by = -1;
 
     bool is_ship = false;
+    room* my_room = nullptr;
 
 private:
     double thrusters_active = 0;
