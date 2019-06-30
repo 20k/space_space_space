@@ -5436,6 +5436,9 @@ double apply_to_does(double amount, does_dynamic& d, const does_fixed& fix)
 
 void ship::take_damage(double amount, bool internal_damage, bool base)
 {
+    if(components.size() == 0)
+        return;
+
     int max_breakup = 5;
     int cur_breakup = 0;
 
