@@ -452,11 +452,15 @@ void server_thread(std::atomic_bool& should_term)
 
         for(component& c : ts2->components)
         {
+            c.scale(10);
+
             if(c.base_id == component_type::CARGO_STORAGE)
             {
                 c.foreign_access.access = access_permissions::STATE_ALL;
             }
         }
+
+        ts2->my_size = 100;
 
         sys_1->add(ts2);
 
