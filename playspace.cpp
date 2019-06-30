@@ -1334,6 +1334,11 @@ void playspace_manager::exit_room(entity* e)
                 r->rem(e);
                 play->add(e);
 
+                if(ship* s = dynamic_cast<ship*>(e); s != nullptr)
+                {
+                    s->my_room = nullptr;
+                }
+
                 return;
             }
         }
@@ -1358,6 +1363,11 @@ void playspace_manager::enter_room(entity* e, room* r)
         return;
 
     r->add(e);
+
+    if(ship* s = dynamic_cast<ship*>(e); s != nullptr)
+    {
+        s->my_room = r;
+    }
 
     std::cout << "entered room\n";
 }
