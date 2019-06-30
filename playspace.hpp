@@ -105,6 +105,7 @@ struct room : serialisable, owned
     void import_radio_waves_from(alt_radar_field& theirs);
 
     std::vector<ship*> get_nearby_unfinished_ships(ship& me);
+    std::optional<ship*> get_nearby_unfinished_ship(ship& me, size_t ship_pid);
     std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access = std::nullopt);
 };
 

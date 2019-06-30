@@ -1701,12 +1701,17 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
     if(found_comp == nullptr)
         return;
 
-    std::optional<ship*> fship = fetch_ship_by_id(object_pid);
-
-    if(!fship)
+    if(found_comp->base_id != component_type::FACTORY)
         return;
 
-    if(found_comp->base_id != component_type::FACTORY)
+    std::optional<ship*> fship = fetch_ship_by_id(object_pid);
+
+    if(!fship && my_room && found_comp->has_tag(tag_info::TAG_EFACTORY))
+    {
+        fship = my_room->get_nearby_unfinished_ship(*this, object_pid);
+    }
+
+    if(!fship)
         return;
 
     for(auto& i : found_comp->build_queue)
@@ -1783,6 +1788,16 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         build_in_progress& in_progress = *fac.build_queue[0];
 
         ship* ship_placeholder = dynamic_cast<ship*>(find_by_id(s, in_progress.in_progress_pid));
+
+        if(ship_placeholder == nullptr && s.my_room && fac.has_tag(tag_info::TAG_EFACTORY))
+        {
+            auto ship_opt = s.my_room->get_nearby_unfinished_ship(s, in_progress.in_progress_pid);
+
+            if(ship_opt.has_value())
+            {
+                ship_placeholder = ship_opt.value();
+            }
+        }
 
         if(ship_placeholder == nullptr)
         {

@@ -504,6 +504,19 @@ std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
     return ret;
 }
 
+std::optional<ship*> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
+{
+    std::vector<ship*> near = get_nearby_ships(*this, me, 100);
+
+    for(auto& i : near)
+    {
+        if(i->_pid == ship_pid)
+            return i;
+    }
+
+    return std::nullopt;
+}
+
 std::vector<ship*> room::get_nearby_unfinished_ships(ship& me)
 {
     std::vector<ship*> ships = get_nearby_ships(*this, me, 100);
