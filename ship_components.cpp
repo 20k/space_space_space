@@ -1704,6 +1704,12 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
     if(found_comp->base_id != component_type::FACTORY)
         return;
 
+    for(auto& i : found_comp->build_queue)
+    {
+        if(i->in_progress_pid == object_pid)
+            return;
+    }
+
     std::optional<ship*> fship = fetch_ship_by_id(object_pid);
 
     if(!fship && my_room && found_comp->has_tag(tag_info::TAG_EFACTORY))
@@ -1714,12 +1720,6 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
     if(!fship)
         return;
 
-    for(auto& i : found_comp->build_queue)
-    {
-        if(i->in_progress_pid == object_pid)
-            return;
-    }
-
     fship.value()->is_build_holder = true;
 
     build_in_progress build;
@@ -1729,6 +1729,8 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
 
     found_comp->building = true;
     found_comp->build_queue.push_back(std::make_shared<build_in_progress>(build));
+
+    printf("Resumed\n");
 }
 
 void ship::cancel_building(size_t component_pid, size_t object_pid)
@@ -1793,14 +1795,18 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         {
             auto ship_opt = s.my_room->get_nearby_unfinished_ship(s, in_progress.in_progress_pid);
 
+            printf("Looking for opt\n");
+
             if(ship_opt.has_value())
             {
                 ship_placeholder = ship_opt.value();
+                printf("Has opt\n");
             }
         }
 
         if(ship_placeholder == nullptr)
         {
+            printf("Did not find\n");
             fac.build_queue.erase(fac.build_queue.begin());
             return;
         }

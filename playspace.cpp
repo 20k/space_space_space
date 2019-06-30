@@ -499,14 +499,14 @@ std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
     }
 
     if(!found_me)
-        return std::vector<ship*>();
+        throw std::runtime_error("Attempted to query room that ship is not in");
 
     return ret;
 }
 
 std::optional<ship*> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
 {
-    std::vector<ship*> near = get_nearby_ships(*this, me, 100);
+    std::vector<ship*> near = get_nearby_unfinished_ships(me);
 
     for(auto& i : near)
     {
