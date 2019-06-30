@@ -692,6 +692,8 @@ void playspace::delete_room(room* r)
         room_specific_cleanup.erase(it);
     }
 
+    assert(r->entity_manage->fetch<ship>().size() == 0);
+
     delete r;
 }
 
