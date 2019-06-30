@@ -505,8 +505,6 @@ std::optional<ship*> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
 {
     std::vector<ship*> near = get_nearby_unfinished_ships(me);
 
-    std::cout << "NEAR SIZE " << near.size() << std::endl;
-
     for(auto& i : near)
     {
         if(i->_pid == ship_pid)

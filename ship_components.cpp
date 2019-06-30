@@ -1795,18 +1795,14 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
         {
             auto ship_opt = s.my_room->get_nearby_unfinished_ship(s, in_progress.in_progress_pid);
 
-            printf("Looking for opt\n");
-
             if(ship_opt.has_value())
             {
                 ship_placeholder = ship_opt.value();
-                printf("Has opt\n");
             }
         }
 
         if(ship_placeholder == nullptr)
         {
-            printf("Did not find\n");
             fac.build_queue.erase(fac.build_queue.begin());
             return;
         }
@@ -3821,7 +3817,7 @@ void component::render_manufacturing_window(size_t parent_id, blueprint_manager&
 
             ship* fship = dynamic_cast<ship*>(find_by_id(parent, build_queue[i]->in_progress_pid));
 
-            if(fship == nullptr)
+            if(fship == nullptr && has_tag(tag_info::TAG_EFACTORY))
             {
                 for(auto& fs : nearby_unfinished)
                 {
@@ -3874,9 +3870,12 @@ void component::render_manufacturing_window(size_t parent_id, blueprint_manager&
             }
         }
 
-        for(auto& i : nearby_unfinished)
+        if(has_tag(tag_info::TAG_EFACTORY))
         {
-            check_resumable.push_back(&i);
+            for(auto& i : nearby_unfinished)
+            {
+                check_resumable.push_back(&i);
+            }
         }
 
         for(ship* s : check_resumable)
