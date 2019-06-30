@@ -2002,7 +2002,26 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
             ship spawn = next_in_progress.result.to_ship();
 
             ///so this is a fun one
-            *ship_placeholder = spawn;
+            ///problem is we're spawning stuff improperly if its a real ship in space
+            //*ship_placeholder = spawn;
+
+            ship_placeholder->blueprint_name = spawn.blueprint_name;
+            ship_placeholder->original_blueprint = spawn.original_blueprint;
+            ship_placeholder->components = spawn.components;
+            ship_placeholder->pipes = spawn.pipes;
+            ship_placeholder->construction_amount = spawn.construction_amount;
+            ship_placeholder->blueprint_tags = spawn.blueprint_tags;
+            ship_placeholder->my_size = spawn.my_size;
+
+            ship_placeholder->is_build_holder = false;
+
+            for(component& tc : ship_placeholder->components)
+            {
+                if(tc.base_id != component_type::CPU)
+                    continue;
+
+                tc.cpu_core.free_running = true;
+            }
         }
     }
     else
