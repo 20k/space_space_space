@@ -169,6 +169,14 @@ struct entity_manager : serialisable
             }
         }
 
+        for(auto& i : to_spawn)
+        {
+            if(dynamic_cast<T*>(i))
+            {
+                ret.push_back((T*)i);
+            }
+        }
+
         return ret;
     }
 
