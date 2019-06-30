@@ -1701,7 +1701,7 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
     if(found_comp == nullptr)
         return;
 
-    if(found_comp->base_id != component_type::FACTORY)
+    if(!found_comp->has_tag(tag_info::TAG_FACTORY))
         return;
 
     for(auto& i : found_comp->build_queue)
@@ -1748,7 +1748,7 @@ void ship::cancel_building(size_t component_pid, size_t object_pid)
     if(found_comp == nullptr)
         return;
 
-    if(found_comp->base_id != component_type::FACTORY)
+    if(!found_comp->has_tag(tag_info::TAG_FACTORY))
         return;
 
     for(int i=0; i < (int)found_comp->build_queue.size(); i++)
@@ -4500,7 +4500,7 @@ bool ship::any_building(size_t ship_id)
 {
     for(component& c : components)
     {
-        if(c.base_id != component_type::FACTORY)
+        if(!c.has_tag(tag_info::TAG_FACTORY))
             continue;
 
         for(auto& i : c.build_queue)
