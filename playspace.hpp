@@ -184,6 +184,13 @@ struct ship_network_data
 
 struct cpu_move_args;
 
+struct ship_location_data
+{
+    ship* s = nullptr;
+    playspace* play = nullptr;
+    room* r = nullptr;
+};
+
 struct playspace_manager : serialisable
 {
     std::vector<playspace*> spaces;
@@ -222,6 +229,8 @@ struct playspace_manager : serialisable
     //bool start_realspace_travel(ship& s, vec2f coord);
 
     bool start_realspace_travel(ship& s, const cpu_move_args& args);
+
+    std::map<uint64_t, ship_location_data> get_locations_for(const std::vector<uint64_t>& users);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED
