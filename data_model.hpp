@@ -22,7 +22,6 @@ struct data_model : serialisable
     std::vector<client_poi_data> labels;
     alt_radar_sample sample;
     uint32_t client_network_id = 0;
-    player_model networked_model;
     persistent_user_data persistent_data;
     size_t controlled_ship_id = -1;
     std::vector<system_descriptor> connected_systems;
@@ -37,7 +36,6 @@ struct data_model : serialisable
         DO_SERIALISE(labels);
         DO_SERIALISE(sample);
         DO_SERIALISE(client_network_id);
-        DO_SERIALISE(networked_model);
         DO_SERIALISE(persistent_data);
         DO_SERIALISE(controlled_ship_id);
         DO_SERIALISE(connected_systems);

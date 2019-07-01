@@ -12,51 +12,6 @@
 
 struct common_renderable;
 
-///i think the reason why the code is a mess is this inversion of ownership
-///this needs to own everything about a player, ships etc
-struct player_model : serialisable, owned, free_function
-{
-    uint32_t network_id = -1;
-    std::map<uint32_t, common_renderable> renderables;
-
-    void cleanup(vec2f my_pos);
-    void tick(double dt_s);
-};
-
-/*struct player_model_manager
-{
-    std::vector<player_model*> models;
-
-    player_model* make_new(uint32_t network_id)
-    {
-        player_model* m = new player_model;
-        m->network_id = network_id;
-
-        models.push_back(m);
-
-        return m;
-    }
-
-    std::optional<player_model*> fetch_by_network_id(uint32_t network_id)
-    {
-        for(player_model* m : models)
-        {
-            if(m->network_id == network_id)
-                return m;
-        }
-
-        return std::nullopt;
-    }
-
-    void tick(double dt_s)
-    {
-        for(auto& i : models)
-        {
-            i->tick(dt_s);
-        }
-    }
-};*/
-
 struct auth_data : serialisable, free_function
 {
     bool default_init = false;

@@ -451,12 +451,6 @@ DEFINE_SERIALISE_FUNCTION(blueprint_manager)
 DEFINE_FRIENDLY_RPC0(blueprint_manager, create_blueprint);
 DEFINE_FRIENDLY_RPC1(blueprint_manager, upload_blueprint, blueprint);
 
-
-DEFINE_SERIALISE_FUNCTION(player_model)
-{
-    SERIALISE_SETUP();
-}
-
 DEFINE_SERIALISE_FUNCTION(persistent_user_data)
 {
     SERIALISE_SETUP();

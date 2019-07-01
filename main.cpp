@@ -640,12 +640,8 @@ void server_thread(std::atomic_bool& should_term)
         #endif // SERVER_VIEW
 
         //radar.tick(entities, used_frametime_dt);
-        //player_manage.tick(frametime_dt);
+        //player_manage.tick(frametime_dt)
 
-        for(auto& i : data_manage.data)
-        {
-            i.second.networked_model.tick(used_frametime_dt);
-        }
 
         iterations++;
 
@@ -697,8 +693,6 @@ void server_thread(std::atomic_bool& should_term)
                 if(found_auth.has_value() && proto.type == network_mode::STEAM_AUTH)
                 {
                     data_model<ship*>& data = data_manage.fetch_by_id(read_id);
-
-                    player_model& fmodel = data.networked_model;
 
                     {
                         db_read tx(get_db(), DB_USER_ID);
@@ -752,8 +746,6 @@ void server_thread(std::atomic_bool& should_term)
             last_mouse_pos[read_id] = read_data.mouse_world_pos;
 
             data_model<ship*>& data = data_manage.fetch_by_id(read_id);
-
-            player_model& mod = data.networked_model;
 
             //std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
 
