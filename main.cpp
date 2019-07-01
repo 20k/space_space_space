@@ -930,7 +930,7 @@ void server_thread(std::atomic_bool& should_term)
         {
             auto found_auth = auth_manage.fetch(i);
 
-            if(found_auth.has_value())
+            if(!found_auth.has_value())
                 continue;
 
             if(!found_auth.value()->data.default_init)
