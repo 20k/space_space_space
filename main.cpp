@@ -1357,7 +1357,7 @@ int main()
 
             for(ship& s : model.ships)
             {
-                if(s._pid == !model.controlled_ship_id)
+                if(s._pid != model.controlled_ship_id)
                     continue;
 
                 for(component& c : s.components)
