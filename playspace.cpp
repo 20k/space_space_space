@@ -1847,7 +1847,7 @@ void playspace_manager::undock(const std::vector<uint64_t>& in)
                 spawned->r.rotation = s->r.rotation;
 
                 spawned->velocity = s->velocity;
-                spawned->phys_ignore.push_back(s->_pid);
+                //spawned->phys_ignore.push_back(s->_pid);
 
                 spawned->phys_drag = true;
                 spawned->current_radar_field = r->field;

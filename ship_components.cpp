@@ -3798,7 +3798,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
         spawned->r.position = parent.r.position + (vec2f){40, 0}.rot(parent.r.rotation);
         spawned->r.rotation = parent.r.rotation;
         spawned->velocity = parent.velocity;
-        spawned->phys_ignore.push_back(_pid);
+        //spawned->phys_ignore.push_back(_pid);
 
         spawned->r.init_rectangular({1, 0.2});
         spawned->network_owner = parent.network_owner;
