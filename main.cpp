@@ -452,7 +452,7 @@ void server_thread(std::atomic_bool& should_term)
 
         for(component& c : ts2->components)
         {
-            c.scale(10);
+            c.scale(100);
 
             if(c.base_id == component_type::CARGO_STORAGE)
             {
@@ -461,7 +461,7 @@ void server_thread(std::atomic_bool& should_term)
             }
         }
 
-        ts2->my_size = 100;
+        ts2->my_size = 1000;
 
         sys_1->add(ts2);
 
@@ -475,6 +475,8 @@ void server_thread(std::atomic_bool& should_term)
 
     for(int i=0; i < 10; i++)
         test_ship->take_damage(2);*/
+
+    std::cout << "TSV " << test_ship->get_my_volume() << std::endl;
 
     data_model_manager<ship*> data_manage;
 
@@ -1512,14 +1514,16 @@ int main()
 
                         if(c.foreign_access.can_dock(model.controlled_ship_id))
                         {
-                            if(ImGuiX::SimpleButton("(Dock)"))
-                            {
-                                cinput.try_dock = true;
-                                cinput.dock_to_ship = ship_info.ship_id;
-                            }
+                            any_dock = true;
                         }
 
                         ImGui::EndGroup();
+
+                        if(any_dock && ImGuiX::SimpleButton("(Dock)"))
+                        {
+                            cinput.try_dock = true;
+                            cinput.dock_to_ship = ship_info.ship_id;
+                        }
 
                         c.handle_drag_drop(ship_info.ship_id);
                     }
