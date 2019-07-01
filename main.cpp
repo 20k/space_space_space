@@ -899,8 +899,15 @@ void server_thread(std::atomic_bool& should_term)
             {
                 data.sample = s->last_sample;
                 data.controlled_ship_id = s->_pid;
+                data.last_controlled_ship_id = s->_pid;
 
                 //data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
+            }
+            else
+            {
+                data.sample = alt_radar_sample();
+                data.controlled_ship_id = -1;
+                ///keep last controlled ship
             }
 
             ship_network_data network_ships = playspace_manage.get_network_data_for(s, i);
@@ -1444,6 +1451,8 @@ int main()
             }
         }
 
+        client_input cinput;
+
         if(model.nearby_info.size() > 0)
         {
             ImGui::Begin("Nearby Ships");
@@ -1463,6 +1472,8 @@ int main()
 
                         all_names.push_back(c.long_name);
                     }
+
+                    bool any_dock = false;
 
                     for(component& c : ship_info.components)
                     {
@@ -1489,6 +1500,15 @@ int main()
                             ImGui::TreePop();
                         }
 
+                        if(c.foreign_access.can_dock(model.controlled_ship_id))
+                        {
+                            if(ImGuiX::SimpleButton("(Dock)"))
+                            {
+                                cinput.try_dock = true;
+                                cinput.dock_to_ship = ship_info.ship_id;
+                            }
+                        }
+
                         ImGui::EndGroup();
 
                         c.handle_drag_drop(ship_info.ship_id);
@@ -1496,7 +1516,6 @@ int main()
 
                     ImGui::TreePop();
                 }
-
             }
 
             ImGui::End();
@@ -1519,8 +1538,6 @@ int main()
 
         network_protocol nproto;
         nproto.type = network_mode::DATA;
-
-        client_input cinput;
 
         float forward_vel = 0;
 

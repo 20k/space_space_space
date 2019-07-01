@@ -567,6 +567,53 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
     return ret;
 }
 
+bool room::try_dock_to(size_t child, size_t parent)
+{
+    if(child == parent)
+        return false;
+
+    ship* child_ship = nullptr;
+    ship* parent_ship = nullptr;
+
+    std::vector<ship*> ships = entity_manage->fetch<ship>();
+
+    for(auto& i : ships)
+    {
+        if(i->_pid == child)
+        {
+            child_ship = i;
+        }
+
+        if(i->_pid == parent)
+        {
+            parent_ship = i;
+        }
+    }
+
+    if(child_ship == nullptr || parent_ship == nullptr)
+        return false;
+
+    if((child_ship->r.position - parent_ship->r.position).length() > 100)
+        return false;
+
+    ship scopy = *child_ship;
+
+    for(component& c : parent_ship->components)
+    {
+        if(!c.foreign_access.can_dock(child))
+            continue;
+
+        if(!c.can_store(scopy))
+            continue;
+
+        c.store(scopy);
+        child_ship->cleanup = true;
+        return true;
+    }
+
+    return false;
+}
+
 void playspace::serialise(serialise_context& ctx, nlohmann::json& data, playspace* other)
 {
     DO_SERIALISE(friendly_id);
@@ -1737,4 +1784,35 @@ std::map<uint64_t, ship_location_data> playspace_manager::get_locations_for(cons
     }
 
     return ret;
+}
+
+std::optional<ship*> playspace_manager::get_docked_ship(size_t ship_pid)
+{
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+
+            for(ship* s : ships)
+            {
+                auto s_opt = s->fetch_ship_by_id(ship_pid);
+
+                if(s_opt)
+                    return s_opt;
+            }
+        }
+
+        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+
+        for(ship* s : ships)
+        {
+            auto s_opt = s->fetch_ship_by_id(ship_pid);
+
+            if(s_opt)
+                return s_opt;
+        }
+    }
+
+    return std::nullopt;
 }

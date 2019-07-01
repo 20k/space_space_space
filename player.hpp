@@ -74,6 +74,8 @@ struct client_input : serialisable, free_function
     poi_travel_info travel;
     std::vector<client_room_object_data> room_objects;
     std::vector<pending_transfer> transfers;
+    bool try_dock = false;
+    size_t dock_to_ship = -1;
 };
 
 struct nearby_ship_info : serialisable, free_function

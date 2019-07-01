@@ -107,6 +107,8 @@ struct room : serialisable, owned
     std::vector<ship*> get_nearby_unfinished_ships(ship& me);
     std::optional<ship*> get_nearby_unfinished_ship(ship& me, size_t ship_pid);
     std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access = std::nullopt);
+
+    bool try_dock_to(size_t child, size_t parent);
 };
 
 void room_merge(room* r1, room* r2);
@@ -231,6 +233,7 @@ struct playspace_manager : serialisable
     bool start_realspace_travel(ship& s, const cpu_move_args& args);
 
     std::map<uint64_t, ship_location_data> get_locations_for(const std::vector<uint64_t>& users);
+    std::optional<ship*> get_docked_ship(uint64_t ship_pid);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

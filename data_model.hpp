@@ -24,6 +24,7 @@ struct data_model : serialisable
     uint32_t client_network_id = 0;
     persistent_user_data persistent_data;
     size_t controlled_ship_id = -1;
+    size_t last_controlled_ship_id = -1; ///not networked
     std::vector<system_descriptor> connected_systems;
     vec2f room_position;
     std::vector<nearby_ship_info> nearby_info;

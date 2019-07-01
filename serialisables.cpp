@@ -536,6 +536,8 @@ DEFINE_SERIALISE_FUNCTION(client_input)
     DO_FSERIALISE(travel);
     DO_FSERIALISE(room_objects);
     DO_FSERIALISE(transfers);
+    DO_FSERIALISE(try_dock);
+    DO_FSERIALISE(dock_to_ship);
 }
 
 DEFINE_SERIALISE_FUNCTION(access_permissions)
