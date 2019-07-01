@@ -832,12 +832,22 @@ void server_thread(std::atomic_bool& should_term)
                 {
                     auto [play, r] = playspace_manage.get_location_for(s);
 
-                    if(play == nullptr || r == nullptr)
-                        continue;
-
-                    for(auto& i : read_data.transfers)
+                    if(play && r)
                     {
-                        consume_transfer(r, i, s->_pid);
+                        for(auto& i : read_data.transfers)
+                        {
+                            consume_transfer(r, i, s->_pid);
+                        }
+                    }
+                }
+
+                if(read_data.try_dock)
+                {
+                    auto [play, r] = playspace_manage.get_location_for(s);
+
+                    if(play && r)
+                    {
+                        r->try_dock_to(s->_pid, read_data.dock_to_ship);
                     }
                 }
             }
