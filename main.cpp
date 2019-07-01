@@ -502,8 +502,6 @@ void server_thread(std::atomic_bool& should_term)
     default_research.components.push_back(crew);
     default_research.components.push_back(destruct);*/
 
-    //player_model_manager player_manage;
-
     /*int num_asteroids = 10;
 
     for(int i=0; i < num_asteroids; i++)
@@ -746,8 +744,6 @@ void server_thread(std::atomic_bool& should_term)
             last_mouse_pos[read_id] = read_data.mouse_world_pos;
 
             data_model<ship*>& data = data_manage.fetch_by_id(read_id);
-
-            //std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
 
             ship* s = all_ship_info[read_id].s;
 
@@ -1026,21 +1022,6 @@ void server_thread(std::atomic_bool& should_term)
                     c.cpu_core.audio = shared_audio();
                 }
             }
-
-            /*if(player_model)
-            {
-                for(auto it = player_model->renderables.begin(); it != player_model->renderables.end();)
-                {
-                    if(it->second.r.transient)
-                    {
-                        it = player_model->renderables.erase(it);
-                    }
-                    else
-                    {
-                        it++;
-                    }
-                }
-            }*/
         }
 
         stagger_id++;
