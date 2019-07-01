@@ -16,18 +16,10 @@ struct common_renderable;
 ///this needs to own everything about a player, ships etc
 struct player_model : serialisable, owned, free_function
 {
-    ///oh goodie raw pointers
-    //entity* en = nullptr;
     uint32_t network_id = -1;
-
     std::map<uint32_t, common_renderable> renderables;
 
-    entity* controlled_ship = nullptr;
-    //player_research research;
-    //blueprint_manager blueprint_manage;
-
     void cleanup(vec2f my_pos);
-
     void tick(double dt_s);
 };
 
@@ -76,7 +68,6 @@ struct system_descriptor : serialisable, free_function
     vec2f position;
     size_t sys_pid = 0;
 };
-
 
 struct client_entities : serialisable, free_function
 {

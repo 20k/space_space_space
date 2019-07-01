@@ -6,6 +6,7 @@
 #include <SFML/System/Clock.hpp>
 #include <iostream>
 #include "random.hpp"
+#include <set>
 
 aggregate<int> get_room_aggregate_absolute(room* r1)
 {
@@ -1701,3 +1702,39 @@ bool playspace_manager::start_realspace_travel(ship& s, vec2f coord)
 }
 #endif // 0
 
+std::map<uint64_t, ship_location_data> playspace_manager::get_locations_for(const std::vector<uint64_t>& users)
+{
+    std::map<uint64_t, ship_location_data> ret;
+    std::set<uint64_t> user_set;
+
+    for(auto& i : users)
+        user_set.insert(i);
+
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+
+            for(ship* s : ships)
+            {
+                if(user_set.contains(s->network_owner))
+                {
+                    ret[s->network_owner] = {s, play, r};
+                }
+            }
+        }
+
+        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+
+        for(ship* s : ships)
+        {
+            if(user_set.contains(s->network_owner))
+            {
+                ret[s->network_owner] = {s, play, nullptr};
+            }
+        }
+    }
+
+    return ret;
+}

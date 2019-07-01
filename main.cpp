@@ -579,17 +579,6 @@ void server_thread(std::atomic_bool& should_term)
         double tclock_time = tickclock.getElapsedTime().asMicroseconds() / 1000.;
         //std::cout << "tclock " << tclock_time << std::endl;
 
-        for(auto& i : data_manage.backup)
-        {
-            player_model* mod = &i.second.networked_model;
-
-            if(mod->controlled_ship == nullptr)
-                continue;
-
-            if(mod->controlled_ship->cleanup)
-                mod->controlled_ship = nullptr;
-        }
-
         for(auto& m : data_manage.backup)
         {
             for(int i=0; i < (int)m.second.ships.size(); i++)
@@ -674,6 +663,8 @@ void server_thread(std::atomic_bool& should_term)
             conn.pop_new_client();
         }
 
+        std::map<uint64_t, ship_location_data> all_ship_info = playspace_manage.get_locations_for(conn.clients());
+
         while(conn.has_read())
         {
             nlohmann::json network_json;
@@ -716,35 +707,6 @@ void server_thread(std::atomic_bool& should_term)
                     }
 
                     data.persistent_data.research.merge_into_me(default_research);
-
-                    ///holy crap this is inefficient
-                    std::vector<ship*> s1;
-
-                    for(playspace* space : playspace_manage.spaces)
-                    {
-                        auto s2 = space->entity_manage->fetch<ship>();
-
-                        for(auto& i : s2)
-                            s1.push_back(i);
-
-                        for(room* r : space->rooms)
-                        {
-                            auto s3 = r->entity_manage->fetch<ship>();
-
-                            for(auto& i : s3)
-                                s1.push_back(i);
-                        }
-                    }
-
-                    for(ship* s : s1)
-                    {
-                        if(s->network_owner == read_id)
-                        {
-                            s->persistent_data = &data.persistent_data;
-
-                            fmodel.controlled_ship = s;
-                        }
-                    }
                 }
 
                 if(found_auth.has_value() && !found_auth.value()->data.default_init)
@@ -795,10 +757,12 @@ void server_thread(std::atomic_bool& should_term)
 
             //std::optional<player_model*> mod_opt = player_manage.fetch_by_network_id(read.id);
 
-            ship* s = dynamic_cast<ship*>(mod.controlled_ship);
+            ship* s = all_ship_info[read_id].s;
 
             if(s && s->network_owner == read_id)
             {
+                s->persistent_data = &data.persistent_data;
+
                 ///acceleration etc
                 {
                     double time = (control_elapsed[read_id].restart().asMicroseconds() / 1000.) / 1000.;
@@ -922,7 +886,10 @@ void server_thread(std::atomic_bool& should_term)
 
         #define SEE_ONLY_REAL
 
+
         auto clients = conn.clients();
+
+        all_ship_info = playspace_manage.get_locations_for(clients);
 
         ///migrate radar ticking into playspace
         ///come up with solution to radar locality (aka globalness)
@@ -938,7 +905,7 @@ void server_thread(std::atomic_bool& should_term)
 
             data_model<ship*>& data = data_manage.fetch_by_id(i);
 
-            ship* s = dynamic_cast<ship*>(data.networked_model.controlled_ship);
+            ship* s = all_ship_info[i].s;
 
             if(s)
             {
