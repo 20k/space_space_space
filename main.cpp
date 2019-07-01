@@ -671,24 +671,6 @@ void server_thread(std::atomic_bool& should_term)
 
         while(conn.has_new_client())
         {
-            /*
-            uint32_t pid = conn.has_new_client().value();
-            data_model<ship*>& data = data_manage.fetch_by_id(pid);
-
-            player_model& fmodel = data.networked_model;
-
-            std::vector<ship*> ships = entities.fetch<ship>();
-
-            for(ship* s : ships)
-            {
-                if(s->network_owner == pid)
-                {
-                    s->model = &fmodel;
-
-                    fmodel.controlled_ship = s;
-                }
-            }*/
-
             conn.pop_new_client();
         }
 
