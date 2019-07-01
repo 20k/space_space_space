@@ -234,6 +234,7 @@ struct playspace_manager : serialisable
 
     std::map<uint64_t, ship_location_data> get_locations_for(const std::vector<uint64_t>& users);
     std::optional<ship*> get_docked_ship(uint64_t ship_pid);
+    void undock(const std::vector<uint64_t>& in);
 };
 
 #endif // PLAYSPACE_HPP_INCLUDED

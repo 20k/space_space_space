@@ -25,6 +25,7 @@ struct data_model : serialisable
     persistent_user_data persistent_data;
     size_t controlled_ship_id = -1;
     size_t last_controlled_ship_id = -1; ///not networked
+    bool is_docked = false;
     std::vector<system_descriptor> connected_systems;
     vec2f room_position;
     std::vector<nearby_ship_info> nearby_info;
@@ -39,6 +40,7 @@ struct data_model : serialisable
         DO_SERIALISE(client_network_id);
         DO_SERIALISE(persistent_data);
         DO_SERIALISE(controlled_ship_id);
+        DO_SERIALISE(is_docked);
         DO_SERIALISE(connected_systems);
         DO_SERIALISE(room_position);
         DO_SERIALISE(nearby_info);

@@ -538,6 +538,7 @@ DEFINE_SERIALISE_FUNCTION(client_input)
     DO_FSERIALISE(transfers);
     DO_FSERIALISE(try_dock);
     DO_FSERIALISE(dock_to_ship);
+    DO_FSERIALISE(undock);
 }
 
 DEFINE_SERIALISE_FUNCTION(access_permissions)

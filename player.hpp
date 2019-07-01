@@ -76,6 +76,7 @@ struct client_input : serialisable, free_function
     std::vector<pending_transfer> transfers;
     bool try_dock = false;
     size_t dock_to_ship = -1;
+    bool undock = false;
 };
 
 struct nearby_ship_info : serialisable, free_function

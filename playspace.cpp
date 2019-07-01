@@ -1816,3 +1816,67 @@ std::optional<ship*> playspace_manager::get_docked_ship(size_t ship_pid)
 
     return std::nullopt;
 }
+
+void playspace_manager::undock(const std::vector<uint64_t>& in)
+{
+    if(in.size() == 0)
+        return;
+
+    /*std::set<uint64_t> lookup;
+
+    for(auto& i : in)
+        lookup.insert(i);*/
+
+    auto check = [&](room* r, ship* s)
+    {
+        for(auto& id : in)
+        {
+            auto s_opt = s->remove_ship_by_id(id);
+
+            if(s_opt)
+            {
+                ship& to_spawn = s_opt.value();
+
+                uint64_t old_id = to_spawn._pid;
+
+                ship* spawned = r->entity_manage->take(to_spawn);
+
+                spawned->_pid = old_id;
+
+                spawned->r.position = s->r.position + (vec2f){40, 0}.rot(s->r.rotation);
+                spawned->r.rotation = s->r.rotation;
+
+                spawned->velocity = s->velocity;
+                spawned->phys_ignore.push_back(s->_pid);
+
+                spawned->phys_drag = true;
+                spawned->current_radar_field = r->field;
+            }
+        }
+    };
+
+    for(playspace* play : spaces)
+    {
+        for(room* r : play->rooms)
+        {
+            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+
+            for(ship* s : ships)
+            {
+                /*auto s_opt = s->fetch_ship_by_id(ship_pid);
+
+                if(s_opt)
+                    return s_opt;*/
+
+                check(r, s);
+            }
+        }
+
+        /*std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+
+        for(ship* s : ships)
+        {
+            check(s);
+        }*/
+    }
+}

@@ -661,6 +661,8 @@ void server_thread(std::atomic_bool& should_term)
 
         std::map<uint64_t, ship_location_data> all_ship_info = playspace_manage.get_locations_for(conn.clients());
 
+        std::vector<uint64_t> undock_requests;
+
         while(conn.has_read())
         {
             nlohmann::json network_json;
@@ -748,6 +750,11 @@ void server_thread(std::atomic_bool& should_term)
             data_model<ship*>& data = data_manage.fetch_by_id(read_id);
 
             ship* s = all_ship_info[read_id].s;
+
+            if(s == nullptr && read_data.undock)
+            {
+                undock_requests.push_back(data.last_controlled_ship_id);
+            }
 
             if(s && s->network_owner == read_id)
             {
@@ -876,6 +883,8 @@ void server_thread(std::atomic_bool& should_term)
         if(key.isKeyPressed(sf::Keyboard::P))
             std::cout << "test ship " << test_ship->r.position << std::endl;
 
+        playspace_manage.undock(undock_requests);
+
         /*for(component& c : test_ship->components)
         {
             if(c._pid == 24)
@@ -912,6 +921,7 @@ void server_thread(std::atomic_bool& should_term)
                 data.sample = s->last_sample;
                 data.controlled_ship_id = s->_pid;
                 data.last_controlled_ship_id = s->_pid;
+                data.is_docked = false;
 
                 //data.sample = radar.sample_for(s->r.position, *s, entities, true, s->get_radar_strength());
             }
@@ -920,6 +930,15 @@ void server_thread(std::atomic_bool& should_term)
                 data.sample = alt_radar_sample();
                 data.controlled_ship_id = -1;
                 ///keep last controlled ship
+
+                if(playspace_manage.get_docked_ship(data.last_controlled_ship_id))
+                {
+                    data.is_docked = true;
+                }
+                else
+                {
+                    data.is_docked = false;
+                }
             }
 
             ship_network_data network_ships = playspace_manage.get_network_data_for(s, i);
@@ -1943,6 +1962,18 @@ int main()
                 i--;
                 continue;
             }
+        }
+
+        if(model.is_docked)
+        {
+            ImGui::Begin("Docking UI");
+
+            if(ImGuiX::SimpleButton("(Undock)"))
+            {
+                cinput.undock = true;
+            }
+
+            ImGui::End();
         }
 
         nproto.data = serialise(cinput);
