@@ -717,6 +717,7 @@ void server_thread(std::atomic_bool& should_term)
 
                     data.persistent_data.research.merge_into_me(default_research);
 
+                    ///holy crap this is inefficient
                     std::vector<ship*> s1;
 
                     for(playspace* space : playspace_manage.spaces)
@@ -927,6 +928,14 @@ void server_thread(std::atomic_bool& should_term)
         ///come up with solution to radar locality (aka globalness)
         for(auto& i : clients)
         {
+            auto found_auth = auth_manage.fetch(i);
+
+            if(found_auth.has_value())
+                continue;
+
+            if(!found_auth.value()->data.default_init)
+                continue;
+
             data_model<ship*>& data = data_manage.fetch_by_id(i);
 
             ship* s = dynamic_cast<ship*>(data.networked_model.controlled_ship);
