@@ -2410,6 +2410,28 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
         break;
     }
 
+    case DOCK:
+    {
+        if(!play || !s)
+            throw std::runtime_error("No playspace manager or no ship");
+
+        auto [p, r] = play->get_location_for(s);
+
+        if(p && r)
+        {
+            r->try_dock_to(s->_pid, RN(next[0]).value);
+        }
+
+        break;
+    }
+
+    case LEAV:
+    {
+        throw std::runtime_error("Currently impossible for this to ever be useful as a cpu cannot run while docked");
+
+        break;
+    }
+
     case COUNT:
         throw std::runtime_error("Unreachable?");
     }

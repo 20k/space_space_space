@@ -222,6 +222,8 @@ namespace instructions
         TPOS,
         TREL,
         PAUS,
+        DOCK,
+        LEAV, ///undock
         COUNT,
     };
 
@@ -285,6 +287,8 @@ namespace instructions
         "TPOS", ///position
         "TREL", ///relative position
         "PAUS",
+        "DOCK",
+        "LEAV",
     };
 
     type fetch(const std::string& name);
