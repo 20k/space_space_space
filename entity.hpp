@@ -148,7 +148,6 @@ struct entity_manager : serialisable
 
         to_spawn.push_back(e);
         e->parent = this;
-        e->_pid = get_next_persistent_id();
 
         return e;
     }

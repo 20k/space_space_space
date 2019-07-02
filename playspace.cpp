@@ -1837,11 +1837,7 @@ void playspace_manager::undock(const std::vector<uint64_t>& in)
             {
                 ship& to_spawn = s_opt.value();
 
-                uint64_t old_id = to_spawn._pid;
-
                 ship* spawned = r->entity_manage->take(to_spawn);
-
-                spawned->_pid = old_id;
 
                 spawned->r.position = s->r.position + (vec2f){40, 0}.rot(s->r.rotation);
                 spawned->r.rotation = s->r.rotation;
