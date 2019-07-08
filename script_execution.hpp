@@ -469,8 +469,8 @@ struct cpu_state : serialisable, owned
 
     bool any_blocked();
 
-    void ustep(ship* s, playspace_manager* play, playspace* space, room* r);
-    void step(ship* s, playspace_manager* play, playspace* space, room* r);
+    void ustep(std::shared_ptr<ship> s, playspace_manager* play, playspace* space, room* r);
+    void step(std::shared_ptr<ship> s, playspace_manager* play, playspace* space, room* r);
     void nullstep();
 
     void debug_state();
@@ -498,7 +498,7 @@ struct cpu_state : serialisable, owned
     void stop();
     void stop_rpc();
 
-    void potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, ship* me);
+    void potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, std::shared_ptr<ship> me);
     void drop_file();
 
     void upload_program_rpc(std::string str);

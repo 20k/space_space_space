@@ -22,3 +22,6 @@
 [submodule "deps/ImGuiColorTextEdit"]
 	path = deps/ImGuiColorTextEdit
 	url = https://github.com/BalazsJako/ImGuiColorTextEdit
+[submodule "deps/nentity"]
+	path = deps/nentity
+	url = https://github.com/20k/nentity

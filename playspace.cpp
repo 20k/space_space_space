@@ -150,15 +150,15 @@ room::~room()
     delete entity_manage;
 }
 
-void room::add(entity* e)
+void room::add(std::shared_ptr<entity> e)
 {
-    if(auto s = dynamic_cast<ship*>(e); s != nullptr)
+    if(auto s = std::dynamic_pointer_cast<ship>(e); s != nullptr)
     {
         s->current_radar_field = field;
         s->room_type = space_type::REAL_SPACE;
     }
 
-    if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
+    if(auto a = std::dynamic_pointer_cast<asteroid>(e); a != nullptr)
     {
         a->current_radar_field = field;
     }
@@ -171,7 +171,7 @@ void room::add(entity* e)
     entity_manage->steal(e);
 }
 
-void room::rem(entity* e)
+void room::rem(std::shared_ptr<entity> e)
 {
     if(entity_manage->contains(e))
     {
@@ -285,9 +285,9 @@ void room_merge(room* r1, room* r2)
     auto e2 = r2->entity_manage->entities;
     auto e3 = r2->entity_manage->to_spawn;
 
-    auto transform_func = [&](entity* e)
+    auto transform_func = [&](std::shared_ptr<entity>& e)
     {
-        ship* s = dynamic_cast<ship*>(e);
+        ship* s = dynamic_cast<ship*>(e.get());
 
         if(s)
         {
@@ -333,11 +333,11 @@ void room_handle_split(playspace* play, room* r1)
         return;
 
     ///db scan
-    std::vector<aggregate<entity*>> aggs;
+    std::vector<aggregate<std::shared_ptr<entity>>> aggs;
 
     float minimum_distance = MERGE_DIST*4;
 
-    for(entity* e : r1->entity_manage->entities)
+    for(std::shared_ptr<entity> e : r1->entity_manage->entities)
     {
         bool found = false;
 
@@ -348,7 +348,7 @@ void room_handle_split(playspace* play, room* r1)
 
         for(int i=0; i < (int)aggs.size(); i++)
         {
-            aggregate<entity*>& found_agg = aggs[i];
+            aggregate<std::shared_ptr<entity>>& found_agg = aggs[i];
 
             if(rect_intersect(found_agg.tl, found_agg.br, tl, br))
             {
@@ -370,7 +370,7 @@ void room_handle_split(playspace* play, room* r1)
 
         if(!found)
         {
-            aggregate<entity*> nen;
+            aggregate<std::shared_ptr<entity>> nen;
             nen.data.push_back(e);
             nen.complete();
 
@@ -409,13 +409,13 @@ void room_handle_split(playspace* play, room* r1)
 
     for(int i=1; i < (int)aggs.size(); i++)
     {
-        aggregate<entity*>& found_agg = aggs[i];
+        aggregate<std::shared_ptr<entity>>& found_agg = aggs[i];
 
         room* r2 = play->make_room(r1->get_in_absolute(found_agg.pos), 5, poi_type::DEAD_SPACE);
 
-        for(entity* e : found_agg.data)
+        for(std::shared_ptr<entity> e : found_agg.data)
         {
-            ship* s = dynamic_cast<ship*>(e);
+            ship* s = dynamic_cast<ship*>(e.get());
 
             if(s)
             {
@@ -450,9 +450,9 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
 
     bool should_simulate = false;
 
-    for(entity* e : entity_manage->entities)
+    for(std::shared_ptr<entity>& e: entity_manage->entities)
     {
-        ship* s = dynamic_cast<ship*>(e);
+        ship* s = dynamic_cast<ship*>(e.get());
 
         if(s)
         {
@@ -474,17 +474,17 @@ void room::import_radio_waves_from(alt_radar_field& theirs)
     //std::cout << "import time " << clk.getElapsedTime().asMicroseconds() / 1000. << std::endl;
 }
 
-std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
+std::vector<std::shared_ptr<ship>> get_nearby_ships(room& r, ship& me, float range)
 {
-    std::vector<ship*> ret;
+    std::vector<std::shared_ptr<ship>> ret;
 
     bool found_me = false;
 
-    std::vector<ship*> srch = r.entity_manage->fetch<ship>();
+    std::vector<std::shared_ptr<ship>> srch = r.entity_manage->fetch<ship>();
 
-    for(ship* s : srch)
+    for(std::shared_ptr<ship>& s : srch)
     {
-        if(s == &me)
+        if(s.get() == &me)
         {
             found_me = true;
             continue;
@@ -502,9 +502,9 @@ std::vector<ship*> get_nearby_ships(room& r, ship& me, float range)
     return ret;
 }
 
-std::optional<ship*> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
+std::optional<std::shared_ptr<ship>> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
 {
-    std::vector<ship*> near = get_nearby_unfinished_ships(me);
+    std::vector<std::shared_ptr<ship>> near = get_nearby_unfinished_ships(me);
 
     for(auto& i : near)
     {
@@ -515,13 +515,13 @@ std::optional<ship*> room::get_nearby_unfinished_ship(ship& me, size_t ship_pid)
     return std::nullopt;
 }
 
-std::vector<ship*> room::get_nearby_unfinished_ships(ship& me)
+std::vector<std::shared_ptr<ship>> room::get_nearby_unfinished_ships(ship& me)
 {
-    std::vector<ship*> ships = get_nearby_ships(*this, me, 100);
+    std::vector<std::shared_ptr<ship>> ships = get_nearby_ships(*this, me, 100);
 
-    std::vector<ship*> ret;
+    std::vector<std::shared_ptr<ship>> ret;
 
-    for(ship* s : ships)
+    for(std::shared_ptr<ship>& s : ships)
     {
         if(s->is_ship && s->is_build_holder)
         {
@@ -536,9 +536,9 @@ std::vector<std::pair<ship, std::vector<component>>> room::get_nearby_accessible
 {
     std::vector<std::pair<ship, std::vector<component>>> ret;
 
-    std::vector<ship*> found_ships = get_nearby_ships(*this, me, 100);
+    std::vector<std::shared_ptr<ship>> found_ships = get_nearby_ships(*this, me, 100);
 
-    for(ship* s : found_ships)
+    for(std::shared_ptr<ship>& s : found_ships)
     {
         std::vector<component> access;
 
@@ -575,18 +575,18 @@ bool room::try_dock_to(size_t child, size_t parent)
     ship* child_ship = nullptr;
     ship* parent_ship = nullptr;
 
-    std::vector<ship*> ships = entity_manage->fetch<ship>();
+    std::vector<std::shared_ptr<ship>> ships = entity_manage->fetch<ship>();
 
     for(auto& i : ships)
     {
         if(i->_pid == child)
         {
-            child_ship = i;
+            child_ship = i.get();
         }
 
         if(i->_pid == parent)
         {
-            parent_ship = i;
+            parent_ship = i.get();
         }
     }
 
@@ -754,7 +754,7 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
 
         bool cont = false;
 
-        for(entity* e : r->entity_manage->entities)
+        for(std::shared_ptr<entity>& e : r->entity_manage->entities)
         {
             if((e->r.position - found_pos).length() < 10)
             {
@@ -793,7 +793,7 @@ void make_asteroid_poi(std::minstd_rand& rng, room* r, float dim, int num_astero
         piecewise_linear(val, sizes[3], sizes[4], 0.95, 1, rval);
 
 
-        asteroid* a = r->entity_manage->make_new<asteroid>(r->field);
+        std::shared_ptr<asteroid> a = r->entity_manage->make_new<asteroid>(r->field);
         a->init(val.x(), val.y());
         a->r.position = found_pos; ///poispace
         a->ticks_between_collisions = 2;
@@ -849,7 +849,7 @@ void playspace::init_default(int seed)
 
     float intensity = STANDARD_SUN_HEAT_INTENSITY;
 
-    star_entity* sun = entity_manage->make_new<star_entity>(field);
+    std::shared_ptr<star_entity> sun = entity_manage->make_new<star_entity>(field);
     sun->init(3, 4);
     sun->r.position = {0, 0}; ///realspace
     sun->permanent_heat = intensity * (1/ROOM_POI_SCALE) * (1/ROOM_POI_SCALE);
@@ -934,15 +934,15 @@ void playspace::init_default(int seed)
     drawables->force_spawn();
 }
 
-void playspace::add(entity* e)
+void playspace::add(std::shared_ptr<entity> e)
 {
-    if(auto s = dynamic_cast<ship*>(e); s != nullptr)
+    if(auto s = std::dynamic_pointer_cast<ship>(e); s != nullptr)
     {
         s->current_radar_field = field;
         s->room_type = space_type::S_SPACE;
     }
 
-    if(auto a = dynamic_cast<asteroid*>(e); a != nullptr)
+    if(auto a = std::dynamic_pointer_cast<asteroid>(e); a != nullptr)
     {
         a->current_radar_field = field;
     }
@@ -950,7 +950,7 @@ void playspace::add(entity* e)
     entity_manage->steal(e);
 }
 
-void playspace::rem(entity* e)
+void playspace::rem(std::shared_ptr<entity> e)
 {
     entity_manage->forget(e);
 }
@@ -964,7 +964,7 @@ void room::tick(double dt_s, bool reaggregate)
 {
     for(auto& i : entity_manage->entities)
     {
-        if(ship* s = dynamic_cast<ship*>(i); s != nullptr)
+        if(auto s = std::dynamic_pointer_cast<ship>(i); s != nullptr)
         {
             s->my_room = this;
         }
@@ -973,9 +973,9 @@ void room::tick(double dt_s, bool reaggregate)
     entity_manage->tick(dt_s, reaggregate);
     entity_manage->cleanup();
 
-    std::vector<ship*> ships = entity_manage->fetch<ship>();
+    std::vector<std::shared_ptr<ship>> ships = entity_manage->fetch<ship>();
 
-    for(ship* s : ships)
+    for(std::shared_ptr<ship> s : ships)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
         s->samples.clear();
@@ -1111,7 +1111,7 @@ void playspace::tick(double dt_s)
 
     for(auto& i : entity_manage->entities)
     {
-        if(ship* s = dynamic_cast<ship*>(i); s != nullptr)
+        if(auto s = std::dynamic_pointer_cast<ship>(i); s != nullptr)
         {
             s->my_room = nullptr;
         }
@@ -1120,9 +1120,9 @@ void playspace::tick(double dt_s)
     entity_manage->tick(dt_s);
     entity_manage->cleanup();
 
-    std::vector<ship*> ships = entity_manage->fetch<ship>();
+    std::vector<std::shared_ptr<ship>> ships = entity_manage->fetch<ship>();
 
-    for(ship* s : ships)
+    for(std::shared_ptr<ship>& s : ships)
     {
         s->last_sample = field->sample_for(s->r.position, *s, *entity_manage, true, s->get_sensor_strength());
         s->samples.clear();
@@ -1160,18 +1160,18 @@ void playspace_manager::tick(double dt_s)
 
         for(room* r : all)
         {
-            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+            std::vector<std::shared_ptr<ship>> ships = r->entity_manage->fetch<ship>();
 
-            for(ship* s : ships)
+            for(std::shared_ptr<ship>& s : ships)
             {
                 s->check_space_rules(dt_s, *this, play, r);
                 s->step_cpus(*this, play, r);
             }
         }
 
-        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+        std::vector<std::shared_ptr<ship>> ships = play->entity_manage->fetch<ship>();
 
-        for(ship* s : ships)
+        for(std::shared_ptr<ship>& s : ships)
         {
             s->check_space_rules(dt_s, *this, play, nullptr);
             s->step_cpus(*this, play, nullptr);
@@ -1184,17 +1184,17 @@ void playspace_manager::tick(double dt_s)
     }
 }
 
-void accumulate_entities(const std::vector<entity*>& entities, ship_network_data& ret, size_t id, bool get_room_entity, bool is_poi)
+void accumulate_entities(const std::vector<std::shared_ptr<entity>>& entities, ship_network_data& ret, size_t id, bool get_room_entity, bool is_poi)
 {
     #define SEE_ONLY_REAL
 
-    for(entity* e : entities)
+    for(const std::shared_ptr<entity>& e : entities)
     {
         if(e->cleanup)
             continue;
 
-        ship* s = dynamic_cast<ship*>(e);
-        room_entity* rem = dynamic_cast<room_entity*>(e);
+        std::shared_ptr<ship> s = std::dynamic_pointer_cast<ship>(e);
+        std::shared_ptr<room_entity> rem = std::dynamic_pointer_cast<room_entity>(e);
 
         if(s)
         {
@@ -1227,7 +1227,7 @@ void accumulate_entities(const std::vector<entity*>& entities, ship_network_data
     }
 }
 
-ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
+ship_network_data playspace_manager::get_network_data_for(std::shared_ptr<entity> e, size_t id)
 {
     ship_network_data ret;
 
@@ -1344,7 +1344,7 @@ ship_network_data playspace_manager::get_network_data_for(entity* e, size_t id)
     return ret;
 }
 
-std::optional<room*> playspace_manager::get_nearby_room(entity* e)
+std::optional<room*> playspace_manager::get_nearby_room(std::shared_ptr<entity> e)
 {
     for(playspace* play : spaces)
     {
@@ -1379,7 +1379,7 @@ std::optional<room*> playspace_manager::get_nearby_room(entity* e)
     return std::nullopt;
 }
 
-void playspace_manager::exit_room(entity* e)
+void playspace_manager::exit_room(std::shared_ptr<entity> e)
 {
     for(playspace* play : spaces)
     {
@@ -1394,7 +1394,7 @@ void playspace_manager::exit_room(entity* e)
                 r->rem(e);
                 play->add(e);
 
-                if(ship* s = dynamic_cast<ship*>(e); s != nullptr)
+                if(auto s = std::dynamic_pointer_cast<ship>(e); s != nullptr)
                 {
                     s->my_room = nullptr;
                 }
@@ -1405,7 +1405,7 @@ void playspace_manager::exit_room(entity* e)
     }
 }
 
-void playspace_manager::enter_room(entity* e, room* r)
+void playspace_manager::enter_room(std::shared_ptr<entity> e, room* r)
 {
     bool found = false;
 
@@ -1424,7 +1424,7 @@ void playspace_manager::enter_room(entity* e, room* r)
 
     r->add(e);
 
-    if(ship* s = dynamic_cast<ship*>(e); s != nullptr)
+    if(auto s = std::dynamic_pointer_cast<ship>(e); s != nullptr)
     {
         s->my_room = r;
     }
@@ -1432,7 +1432,7 @@ void playspace_manager::enter_room(entity* e, room* r)
     std::cout << "entered room\n";
 }
 
-std::pair<playspace*, room*> playspace_manager::get_location_for(entity* e)
+std::pair<playspace*, room*> playspace_manager::get_location_for(std::shared_ptr<entity> e)
 {
     for(playspace* play : spaces)
     {
@@ -1455,7 +1455,7 @@ std::pair<playspace*, room*> playspace_manager::get_location_for(entity* e)
     return {nullptr, nullptr};
 }
 
-std::vector<playspace*> playspace_manager::get_connected_systems_for(entity* e)
+std::vector<playspace*> playspace_manager::get_connected_systems_for(std::shared_ptr<entity> e)
 {
     auto [play, room] = get_location_for(e);
 
@@ -1523,7 +1523,7 @@ bool playspace_manager::start_warp_travel(ship& s, size_t pid)
 
     if(sys_opt)
     {
-        auto [my_sys, my_room] = get_location_for(&s);
+        auto [my_sys, my_room] = get_location_for(s.shared_from_this());
 
         if(my_sys && playspaces_connected(my_sys, sys_opt.value()) && !s.travelling_to_poi)
         {
@@ -1543,7 +1543,7 @@ bool playspace_manager::start_warp_travel(ship& s, size_t pid)
 bool playspace_manager::start_room_travel(ship& s, size_t pid)
 {
     std::optional<std::pair<playspace*, room*>> room_opt = get_room_from_id(pid);
-    auto [play, my_room] = get_location_for(&s);
+    auto [play, my_room] = get_location_for(s.shared_from_this());
 
     if(room_opt && play && my_room && play == room_opt.value().first && my_room != room_opt.value().second && s.has_s_power)
     {
@@ -1578,14 +1578,14 @@ bool playspace_manager::start_realspace_travel(ship& s, const cpu_move_args& arg
     if(!can_fly)
         return false;*/
 
-    auto [play, r] = get_location_for(&s);
+    auto [play, r] = get_location_for(s.shared_from_this());
 
     if(play == nullptr || r == nullptr)
         return false;
 
     if(args.id != (size_t)-1 && args.id != s._pid)
     {
-        std::optional<entity*> e = r->entity_manage->fetch(args.id);
+        std::optional<std::shared_ptr<entity>> e = r->entity_manage->fetch(args.id);
 
         ///check that its in the same room as me
         if(!e.has_value())
@@ -1761,9 +1761,9 @@ std::map<uint64_t, ship_location_data> playspace_manager::get_locations_for(cons
     {
         for(room* r : play->rooms)
         {
-            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+            std::vector<std::shared_ptr<ship>> ships = r->entity_manage->fetch<ship>();
 
-            for(ship* s : ships)
+            for(std::shared_ptr<ship>& s : ships)
             {
                 if(user_set.contains(s->network_owner))
                 {
@@ -1772,9 +1772,9 @@ std::map<uint64_t, ship_location_data> playspace_manager::get_locations_for(cons
             }
         }
 
-        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+        std::vector<std::shared_ptr<ship>> ships = play->entity_manage->fetch<ship>();
 
-        for(ship* s : ships)
+        for(std::shared_ptr<ship>& s : ships)
         {
             if(user_set.contains(s->network_owner))
             {
@@ -1792,9 +1792,9 @@ std::optional<ship*> playspace_manager::get_docked_ship(size_t ship_pid)
     {
         for(room* r : play->rooms)
         {
-            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+            std::vector<std::shared_ptr<ship>> ships = r->entity_manage->fetch<ship>();
 
-            for(ship* s : ships)
+            for(std::shared_ptr<ship> s : ships)
             {
                 auto s_opt = s->fetch_ship_by_id(ship_pid);
 
@@ -1803,9 +1803,9 @@ std::optional<ship*> playspace_manager::get_docked_ship(size_t ship_pid)
             }
         }
 
-        std::vector<ship*> ships = play->entity_manage->fetch<ship>();
+        std::vector<std::shared_ptr<ship>> ships = play->entity_manage->fetch<ship>();
 
-        for(ship* s : ships)
+        for(std::shared_ptr<ship> s : ships)
         {
             auto s_opt = s->fetch_ship_by_id(ship_pid);
 
@@ -1827,7 +1827,7 @@ void playspace_manager::undock(const std::vector<uint64_t>& in)
     for(auto& i : in)
         lookup.insert(i);*/
 
-    auto check = [&](room* r, ship* s)
+    auto check = [&](room* r, std::shared_ptr<ship> s)
     {
         for(auto& id : in)
         {
@@ -1837,7 +1837,7 @@ void playspace_manager::undock(const std::vector<uint64_t>& in)
             {
                 ship& to_spawn = s_opt.value();
 
-                ship* spawned = r->entity_manage->take(to_spawn);
+                std::shared_ptr<ship> spawned = r->entity_manage->take(to_spawn);
 
                 spawned->r.position = s->r.position + (vec2f){40, 0}.rot(s->r.rotation);
                 spawned->r.rotation = s->r.rotation;
@@ -1855,9 +1855,9 @@ void playspace_manager::undock(const std::vector<uint64_t>& in)
     {
         for(room* r : play->rooms)
         {
-            std::vector<ship*> ships = r->entity_manage->fetch<ship>();
+            std::vector<std::shared_ptr<ship>> ships = r->entity_manage->fetch<ship>();
 
-            for(ship* s : ships)
+            for(std::shared_ptr<ship> s : ships)
             {
                 /*auto s_opt = s->fetch_ship_by_id(ship_pid);
 

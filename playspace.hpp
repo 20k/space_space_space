@@ -84,8 +84,8 @@ struct room : serialisable, owned
 
     bool radar_active = true;
 
-    entity* my_entity = nullptr;
-    precise_aggregator* packet_harvester = nullptr;
+    std::shared_ptr<entity> my_entity;
+    std::shared_ptr<precise_aggregator> packet_harvester;
     std::shared_ptr<alt_radar_field> field;
 
     room();
@@ -96,16 +96,16 @@ struct room : serialisable, owned
     SERIALISE_SIGNATURE_NOSMOOTH(room);
 
     void tick(double dt_s, bool reaggregate);
-    void add(entity* e);
-    void rem(entity* e);
+    void add(std::shared_ptr<entity> e);
+    void rem(std::shared_ptr<entity> e);
 
     vec2f get_in_local(vec2f absolute);
     vec2f get_in_absolute(vec2f local);
 
     void import_radio_waves_from(alt_radar_field& theirs);
 
-    std::vector<ship*> get_nearby_unfinished_ships(ship& me);
-    std::optional<ship*> get_nearby_unfinished_ship(ship& me, size_t ship_pid);
+    std::vector<std::shared_ptr<ship>> get_nearby_unfinished_ships(ship& me);
+    std::optional<std::shared_ptr<ship>> get_nearby_unfinished_ship(ship& me, size_t ship_pid);
     std::vector<std::pair<ship, std::vector<component>>> get_nearby_accessible_ships(ship& me, std::optional<size_t> unconditional_access = std::nullopt);
 
     bool try_dock_to(size_t child, size_t parent);
@@ -141,7 +141,7 @@ struct playspace : serialisable, owned
     entity_manager* entity_manage = nullptr;
     entity_manager* drawables = nullptr;
 
-    std::map<size_t, std::vector<entity*>> room_specific_cleanup;
+    std::map<size_t, std::vector<std::shared_ptr<entity>>> room_specific_cleanup;
 
     playspace();
     ~playspace();
@@ -156,8 +156,8 @@ struct playspace : serialisable, owned
     void tick(double dt_s);
     void init_default(int seed);
 
-    void add(entity* e);
-    void rem(entity* e);
+    void add(std::shared_ptr<entity> e);
+    void rem(std::shared_ptr<entity> e);
 };
 
 void playspace_connect(playspace* p1, playspace* p2);
@@ -179,7 +179,7 @@ struct client_poi_data : serialisable
 
 struct ship_network_data
 {
-    std::vector<ship*> ships;
+    std::vector<std::shared_ptr<ship>> ships;
     std::vector<client_renderable> renderables;
     std::vector<client_poi_data> pois;
 };
@@ -188,7 +188,7 @@ struct cpu_move_args;
 
 struct ship_location_data
 {
-    ship* s = nullptr;
+    std::shared_ptr<ship> s;
     playspace* play = nullptr;
     room* r = nullptr;
 };
@@ -211,14 +211,14 @@ struct playspace_manager : serialisable
 
     void tick(double dt_s);
 
-    ship_network_data get_network_data_for(entity* e, size_t id);
+    ship_network_data get_network_data_for(std::shared_ptr<entity> e, size_t id);
 
-    std::optional<room*> get_nearby_room(entity* e);
-    void exit_room(entity* e);
-    void enter_room(entity* e, room* r);
+    std::optional<room*> get_nearby_room(std::shared_ptr<entity> e);
+    void exit_room(std::shared_ptr<entity> e);
+    void enter_room(std::shared_ptr<entity> e, room* r);
 
-    std::pair<playspace*, room*> get_location_for(entity* e);
-    std::vector<playspace*> get_connected_systems_for(entity* e);
+    std::pair<playspace*, room*> get_location_for(std::shared_ptr<entity> e);
+    std::vector<playspace*> get_connected_systems_for(std::shared_ptr<entity> e);
     std::optional<playspace*> get_playspace_from_id(size_t pid);
     std::optional<std::pair<playspace*, room*>> get_room_from_id(size_t pid);
 

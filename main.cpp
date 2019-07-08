@@ -203,7 +203,7 @@ void server_thread(std::atomic_bool& should_term)
     //entity_manager entities;
     //alt_radar_field& radar = get_radar_field();
 
-    ship* test_ship;
+    std::shared_ptr<ship> test_ship;
 
     {
         entity_manager entities;
@@ -445,7 +445,7 @@ void server_thread(std::atomic_bool& should_term)
     {
         entity_manager entities;
 
-        ship* ts2 = entities.make_new<ship>(*test_ship);
+        std::shared_ptr<ship> ts2 = entities.make_new<ship>(*test_ship);
         ts2->new_network_copy();
         ts2->network_owner = 1;
         ts2->r.network_owner = 1;
@@ -478,7 +478,7 @@ void server_thread(std::atomic_bool& should_term)
 
     std::cout << "TSV " << test_ship->get_my_volume() << std::endl;
 
-    data_model_manager<ship*> data_manage;
+    data_model_manager<std::shared_ptr<ship>> data_manage;
 
     player_research default_research;
 
@@ -694,7 +694,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 if(found_auth.has_value() && proto.type == network_mode::STEAM_AUTH)
                 {
-                    data_model<ship*>& data = data_manage.fetch_by_id(read_id);
+                    data_model<std::shared_ptr<ship>>& data = data_manage.fetch_by_id(read_id);
 
                     {
                         db_read tx(get_db(), DB_USER_ID);
@@ -708,7 +708,7 @@ void server_thread(std::atomic_bool& should_term)
                 if(found_auth.has_value() && !found_auth.value()->data.default_init)
                 {
                     uint32_t pid = read_id;
-                    data_model<ship*>& data = data_manage.fetch_by_id(pid);
+                    data_model<std::shared_ptr<ship>>& data = data_manage.fetch_by_id(pid);
 
                     persistent_user_data& user_data = data.persistent_data;
 
@@ -747,9 +747,9 @@ void server_thread(std::atomic_bool& should_term)
 
             last_mouse_pos[read_id] = read_data.mouse_world_pos;
 
-            data_model<ship*>& data = data_manage.fetch_by_id(read_id);
+            data_model<std::shared_ptr<ship>>& data = data_manage.fetch_by_id(read_id);
 
-            ship* s = all_ship_info[read_id].s;
+            std::shared_ptr<ship> s = all_ship_info[read_id].s;
 
             if(s == nullptr && read_data.undock)
             {
@@ -912,9 +912,9 @@ void server_thread(std::atomic_bool& should_term)
             if(!found_auth.value()->data.default_init)
                 continue;
 
-            data_model<ship*>& data = data_manage.fetch_by_id(i);
+            data_model<std::shared_ptr<ship>>& data = data_manage.fetch_by_id(i);
 
-            ship* s = all_ship_info[i].s;
+            std::shared_ptr<ship>& s = all_ship_info[i].s;
 
             if(s)
             {
@@ -985,9 +985,9 @@ void server_thread(std::atomic_bool& should_term)
                     }
 
 
-                    std::vector<ship*> unfinished = found_room->get_nearby_unfinished_ships(*s);
+                    std::vector<std::shared_ptr<ship>> unfinished = found_room->get_nearby_unfinished_ships(*s);
 
-                    for(ship* i : unfinished)
+                    for(std::shared_ptr<ship>& i : unfinished)
                         data.nearby_unfinished_blueprints.push_back(*i);
                 }
             }
@@ -1044,7 +1044,7 @@ void server_thread(std::atomic_bool& should_term)
 
                 //std::cout << "full data " << cb.size() << std::endl;
 
-                data_manage.backup[i] = data_model<ship*>();
+                data_manage.backup[i] = data_model<std::shared_ptr<ship>>();
                 serialisable_clone(data, data_manage.backup[i]);
 
                 //conn.writes_to(model, i);
@@ -1233,7 +1233,7 @@ int main()
     entity_manager drawables;
     drawables.use_aggregates = false;
 
-    entity* ship_proxy = entities.make_new<entity>();
+    std::shared_ptr<entity> ship_proxy = entities.make_new<entity>();
 
     stardust_manager star_manage(poi_cam, entities);
 

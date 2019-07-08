@@ -118,7 +118,7 @@ void dump_radar_data_into_cpu(cpu_state& cpu, ship& s, playspace_manager& play, 
 
     base += max_write_radar_data;
 
-    std::vector<playspace*> connected = play.get_connected_systems_for(&s);
+    std::vector<playspace*> connected = play.get_connected_systems_for(s.shared_from_this());
 
     fle.data[base].set_int(connected.size());
     fle.data[base].help = "Number of Connected Systems";
@@ -1534,7 +1534,7 @@ struct f_register_helper
     }
 };
 
-void cpu_state::step(ship* s, playspace_manager* play, playspace* space, room* r)
+void cpu_state::step(std::shared_ptr<ship> s, playspace_manager* play, playspace* space, room* r)
 {
     try
     {
@@ -1547,7 +1547,7 @@ void cpu_state::step(ship* s, playspace_manager* play, playspace* space, room* r
     }
 }
 
-bool entity_visible_to(entity* e, ship& s)
+bool entity_visible_to(const std::shared_ptr<entity>& e, ship& s)
 {
     for(auto& i : s.last_sample.renderables)
     {
@@ -1558,7 +1558,7 @@ bool entity_visible_to(entity* e, ship& s)
     return false;
 }
 
-void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* r)
+void cpu_state::ustep(std::shared_ptr<ship> s, playspace_manager* play, playspace* space, room* r)
 {
     if(waiting_for_hardware_feedback || tx_pending)
         return;
@@ -2339,7 +2339,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         size_t id = RN(next[0]).value;
 
-        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+        std::optional<std::shared_ptr<entity>> e_opt = r->entity_manage->fetch(id);
 
         if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
             break;
@@ -2357,7 +2357,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         size_t id = RN(next[0]).value;
 
-        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+        std::optional<std::shared_ptr<entity>> e_opt = r->entity_manage->fetch(id);
 
         if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
             break;
@@ -2375,7 +2375,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         size_t id = RN(next[0]).value;
 
-        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+        std::optional<std::shared_ptr<entity>> e_opt = r->entity_manage->fetch(id);
 
         if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
             break;
@@ -2392,7 +2392,7 @@ void cpu_state::ustep(ship* s, playspace_manager* play, playspace* space, room* 
 
         size_t id = RN(next[0]).value;
 
-        std::optional<entity*> e_opt = r->entity_manage->fetch(id);
+        std::optional<std::shared_ptr<entity>> e_opt = r->entity_manage->fetch(id);
 
         if(!e_opt.has_value() || !entity_visible_to(e_opt.value(), *s))
             break;
@@ -2480,7 +2480,7 @@ void cpu_state::stop()
     free_running = false;
 }
 
-void cpu_state::potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, ship* me)
+void cpu_state::potentially_move_file_to_foreign_ship(playspace_manager& play, playspace* space, room* r, std::shared_ptr<ship> me)
 {
     if(context.held_file == -1)
         throw std::runtime_error("BAD CHECK FILE SHOULD NOT HAPPEN IN HERE BUT ITS OK");
@@ -2536,12 +2536,12 @@ void cpu_state::potentially_move_file_to_foreign_ship(playspace_manager& play, p
             if(s._pid != check.root_ship_pid)
                 continue;
 
-            std::optional<entity*> freal = r->entity_manage->fetch(s._pid);
+            std::optional<std::shared_ptr<entity>> freal = r->entity_manage->fetch(s._pid);
 
             if(!freal.has_value())
                 throw std::runtime_error("Something really out of whack in cpu state potentially move file");
 
-            ship* real_s = dynamic_cast<ship*>(freal.value());
+            ship* real_s = dynamic_cast<ship*>(freal.value().get());
 
             if(real_s == nullptr)
                 throw std::runtime_error("Something super duper out of whack 2 in cpu state potentially move file");

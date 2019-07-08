@@ -518,10 +518,12 @@ void alt_radar_field::tick(entity_manager& em, double dt_s)
                 {
                     if(fine.intersects(packet.origin, current_radius, next_radius, packet.precalculated_start_angle, packet.restrict_angle, packet.left_restrict, packet.right_restrict))
                     {
-                        for(entity* collide : fine.data)
+                        for(std::shared_ptr<entity>& scollide : fine.data)
                         {
-                            if(!collide->is_heat)
+                            if(!scollide->is_heat)
                                 continue;
+
+                            entity* collide = scollide.get();
 
                             heatable_entity* en = static_cast<heatable_entity*>(collide);
 
@@ -1383,11 +1385,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                 client_renderable rs;
                 entity* found = nullptr;
 
-                std::optional<entity*> found_entity = entities.fetch(id);
+                std::optional<std::shared_ptr<entity>> found_entity = entities.fetch(id);
 
                 if(found_entity)
                 {
-                    found = found_entity.value();
+                    found = found_entity.value().get();
                     rs = found->r;
                 }
 
@@ -1445,11 +1447,11 @@ alt_radar_sample alt_radar_field::sample_for(vec2f pos, heatable_entity& en, ent
                 client_renderable rs;
                 entity* found = nullptr;
 
-                std::optional<entity*> found_entity = entities.fetch(id);
+                std::optional<std::shared_ptr<entity>> found_entity = entities.fetch(id);
 
                 if(found_entity)
                 {
-                    found = found_entity.value();
+                    found = found_entity.value().get();
                     rs = found->r;
                 }
 

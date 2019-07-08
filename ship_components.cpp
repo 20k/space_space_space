@@ -1714,7 +1714,12 @@ void ship::resume_building(size_t component_pid, size_t object_pid)
 
     if(!fship && my_room && found_comp->has_tag(tag_info::TAG_EFACTORY))
     {
-        fship = my_room->get_nearby_unfinished_ship(*this, object_pid);
+        auto shared_opt = my_room->get_nearby_unfinished_ship(*this, object_pid);
+
+        if(shared_opt)
+        {
+            fship = shared_opt.value().get();
+        }
     }
 
     if(!fship)
@@ -1795,7 +1800,7 @@ void handle_manufacturing(ship& s, component& fac, double dt_s)
 
             if(ship_opt.has_value())
             {
-                ship_placeholder = ship_opt.value();
+                ship_placeholder = ship_opt.value().get();
             }
         }
 
@@ -2248,7 +2253,7 @@ void ship::tick(double dt_s)
 
                     if(fixed.subtype == "laser")
                     {
-                        laser* l = parent->make_new<laser>(current_radar_field);
+                        std::shared_ptr<laser> l = parent->make_new<laser>(current_radar_field);
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
@@ -2269,7 +2274,7 @@ void ship::tick(double dt_s)
                     ///actually I really like that - sol to target, sol transport back as packets
                     if(fixed.subtype == "mining")
                     {
-                        mining_laser* l = parent->make_new<mining_laser>(current_radar_field);
+                        std::shared_ptr<mining_laser> l = parent->make_new<mining_laser>(current_radar_field);
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
@@ -2284,7 +2289,7 @@ void ship::tick(double dt_s)
 
                     if(fixed.subtype == "tractor")
                     {
-                        tractor_laser* l = parent->make_new<tractor_laser>(current_radar_field);
+                        std::shared_ptr<tractor_laser> l = parent->make_new<tractor_laser>(current_radar_field);
                         l->r.position = r.position;
                         l->r.rotation = evector.angle();
                         ///speed of light is notionally a constant
@@ -2335,7 +2340,7 @@ void ship::tick(double dt_s)
 
                         ship& to_produce = first.value();
 
-                        ship* spawned = parent->take(to_produce);
+                        std::shared_ptr<ship> spawned = parent->take(to_produce);
 
                         spawned->r.position = r.position;
                         spawned->r.rotation = r.rotation;
@@ -2430,7 +2435,7 @@ void ship::tick(double dt_s)
                         if(parent == nullptr)
                             throw std::runtime_error("Broken");
 
-                        aoe_damage* aoe = parent->make_new<aoe_damage>(current_radar_field);
+                        std::shared_ptr<aoe_damage> aoe = parent->make_new<aoe_damage>(current_radar_field);
 
                         aoe->max_radius = radius;
                         aoe->damage = total_power;
@@ -3793,7 +3798,7 @@ void component::manufacture_blueprint(const blueprint& blue, ship& parent)
     else
     {
         ///spawn me in real space
-        ship* spawned = parent.parent->take(dummy_ship);
+        std::shared_ptr<ship> spawned = parent.parent->take(dummy_ship);
 
         spawned->r.position = parent.r.position + (vec2f){40, 0}.rot(parent.r.rotation);
         spawned->r.rotation = parent.r.rotation;
@@ -4729,7 +4734,7 @@ void ship_drop_to(ship& s, playspace_manager& play, playspace* space, room* r, b
 
         room* new_poi = space->make_room(s.r.position, 5, poi_type::DEAD_SPACE);
 
-        play.enter_room(&s, new_poi);
+        play.enter_room(s.shared_from_this(), new_poi);
 
         if(disruptive)
         {
@@ -4763,7 +4768,7 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 {
     if(s.room_type == space_type::REAL_SPACE)
     {
-        play.exit_room(&s);
+        play.exit_room(s.shared_from_this());
         //on_leave_room(s, play);
         return;
     }
@@ -4802,18 +4807,18 @@ void handle_fsd_movement(double dt_s, playspace_manager& play, ship& s)
 
         if(dest)
         {
-            play.enter_room(&s, dest.value().second);
+            play.enter_room(s.shared_from_this(), dest.value().second);
 
             //on_leave_sspace(s, play);
             //on_enter_room(s, play, dest.value().first, dest.value().second);
         }
         else
         {
-            auto [nplay, r] = play.get_location_for(&s);
+            auto [nplay, r] = play.get_location_for(s.shared_from_this());
 
             room* new_poi = nplay->make_room(s.r.position, 5, poi_type::DEAD_SPACE);
 
-            play.enter_room(&s, new_poi);
+            play.enter_room(s.shared_from_this(), new_poi);
 
             //on_leave_sspace(s, nplay);
             //on_enter_room(s, play, nplay, new_poi);
@@ -5056,7 +5061,7 @@ vec2f get_control_force(vec2f target, vec2f my_velocity, vec2f my_position, doub
 
 void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspace* space, room* r)
 {
-    std::optional<entity*> target = std::nullopt;
+    std::optional<std::shared_ptr<entity>> target = std::nullopt;
 
     //vec2f dest = s.realspace_destination;
 
@@ -5071,7 +5076,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
 
     if(s.move_args.id != (size_t)-1)
     {
-        std::optional<entity*> e = r->entity_manage->fetch(s.move_args.id);
+        std::optional<std::shared_ptr<entity>> e = r->entity_manage->fetch(s.move_args.id);
 
         ///check that its in the same room as me
         if(e.has_value())
@@ -5258,7 +5263,7 @@ void ship_cpu_pathfinding(double dt_s, ship& s, playspace_manager& play, playspa
         vec2f avoid_force = {0,0};
 
         ///colliding with all entities!!! not just stuff in sensor range!
-        if(std::optional<entity*> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
+        if(std::optional<std::shared_ptr<entity>> coll = r->entity_manage->collides_with_any(centre, (vec2f){search_distance/4, 10}, to_dest.angle()); coll.has_value() && (coll.value()->_pid != s.move_args.id || s.move_args.id == (size_t)-1))
         {
             vec2f my_travel_direction = s.velocity;
             vec2f my_position = s.r.position;
@@ -5384,15 +5389,15 @@ void ship::check_space_rules(double dt_s, playspace_manager& play, playspace* sp
         ///leaving this here for future correctness in case i allow warping from fsd space
         if(r != nullptr)
         {
-            r->rem(this);
+            r->rem(shared_from_this());
         }
 
         deplete_w(*this);
-        space->rem(this);
-        dest.value()->add(this);
+        space->rem(shared_from_this());
+        dest.value()->add(shared_from_this());
 
         room* nr = dest.value()->make_room(this->r.position, 5, poi_type::DEAD_SPACE);
-        play.enter_room(this, nr);
+        play.enter_room(shared_from_this(), nr);
         travelling_in_realspace = false;
         velocity = {0,0};
 
@@ -5439,7 +5444,7 @@ void ship::step_cpus(playspace_manager& play, playspace* space, room* r)
             continue;
 
         if(c.cpu_core.free_running || c.cpu_core.should_step)
-            c.cpu_core.step(this, &play, space, r);
+            c.cpu_core.step(std::static_pointer_cast<ship>(shared_from_this()), &play, space, r);
     }
 }
 
@@ -5729,7 +5734,7 @@ bool has_ship_in_storage(size_t pid, std::vector<component>& components)
 }
 
 ///from is the thing to steal
-std::optional<size_t> stored_in_nearby_ship(size_t from_pid, ship* to, room* r, size_t pid_ship_initiating)
+std::optional<size_t> stored_in_nearby_ship(size_t from_pid, const std::shared_ptr<ship>& to, room* r, size_t pid_ship_initiating)
 {
     if(from_pid == to->_pid)
         return {from_pid};
@@ -5755,7 +5760,7 @@ bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiatin
     if(!ship_to_opt)
         return false;
 
-    ship* to_as_ship = dynamic_cast<ship*>(ship_to_opt.value());
+    std::shared_ptr<ship> to_as_ship = std::dynamic_pointer_cast<ship>(ship_to_opt.value());
 
     if(!to_as_ship)
         return false;
@@ -5770,7 +5775,7 @@ bool consume_transfer(room* r, pending_transfer& xfer, size_t pid_ship_initiatin
     if(!parent_ship_opt.has_value())
         return false;
 
-    ship* parent_ship_as_ship = dynamic_cast<ship*>(parent_ship_opt.value());
+    std::shared_ptr<ship> parent_ship_as_ship = std::dynamic_pointer_cast<ship>(parent_ship_opt.value());
 
     assert(parent_ship_as_ship);
 
@@ -6266,7 +6271,7 @@ struct transient_entity : entity
     }
 };
 
-void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entity* ship_proxy)
+void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, std::shared_ptr<entity>& ship_proxy)
 {
     if(!sample.fresh)
         return;
@@ -6293,9 +6298,9 @@ void tick_radar_data(entity_manager& transients, alt_radar_sample& sample, entit
 
         auto entities = transients.fetch<transient_entity>();
 
-        transient_entity* next = nullptr;
+        std::shared_ptr<transient_entity> next = nullptr;
 
-        for(transient_entity* transient : entities)
+        for(std::shared_ptr<transient_entity>& transient : entities)
         {
             if(uid == transient->uid && transient->echo_type == 3)
             {

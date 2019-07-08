@@ -1,6 +1,7 @@
 #include "aoe_damage.hpp"
 #include "ship_components.hpp"
 #include "radar_field.hpp"
+#include <memory>
 
 aoe_damage::aoe_damage(std::shared_ptr<alt_radar_field> _field)
 {
@@ -38,11 +39,11 @@ void aoe_damage::tick(double dt_s)
 
         alt_pack.make(damage * 100, HEAT_FREQ);
 
-        std::optional<entity*> en = parent->fetch(emitted_by);
+        std::optional<std::shared_ptr<entity>> en = parent->fetch(emitted_by);
 
-        if(en && dynamic_cast<heatable_entity*>(en.value()))
+        if(en && std::dynamic_pointer_cast<heatable_entity>(en.value()))
         {
-            heatable_entity* hen = (heatable_entity*)en.value();
+            auto hen = std::dynamic_pointer_cast<heatable_entity>(en.value());
             radar.ignore(alt_frequency_packet::gid, *hen);
         }
 

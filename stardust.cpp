@@ -14,7 +14,7 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
         vec2f rpos = rand_det(rng, min_dist, max_dist);
         float z_level = rand_det_s(rng, 1, 5);
 
-        entity* em = manage.make_new<stardust>();
+        std::shared_ptr<entity> em = manage.make_new<stardust>();
 
         em->r.position = rpos;
         em->r.init_rectangular({0.1, 0.1});
@@ -31,7 +31,7 @@ stardust_manager::stardust_manager(camera& cam, entity_manager& manage)
         vec2f rpos = rand_det(rng, min_dist, max_dist);
         //float z_level = rand_det_s(rng, 1, 5);
 
-        entity* em = manage.make_new<stardust>();
+        std::shared_ptr<entity> em = manage.make_new<stardust>();
 
         em->r.position = rpos;
         em->r.init_rectangular({0.1, 0.1});
