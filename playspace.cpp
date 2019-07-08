@@ -1227,7 +1227,7 @@ void accumulate_entities(const std::vector<std::shared_ptr<entity>>& entities, s
     }
 }
 
-ship_network_data playspace_manager::get_network_data_for(std::shared_ptr<entity> e, size_t id)
+ship_network_data playspace_manager::get_network_data_for(const std::shared_ptr<entity>& e, size_t id)
 {
     ship_network_data ret;
 
@@ -1344,7 +1344,7 @@ ship_network_data playspace_manager::get_network_data_for(std::shared_ptr<entity
     return ret;
 }
 
-std::optional<room*> playspace_manager::get_nearby_room(std::shared_ptr<entity> e)
+std::optional<room*> playspace_manager::get_nearby_room(const std::shared_ptr<entity>& e)
 {
     for(playspace* play : spaces)
     {
@@ -1379,7 +1379,7 @@ std::optional<room*> playspace_manager::get_nearby_room(std::shared_ptr<entity> 
     return std::nullopt;
 }
 
-void playspace_manager::exit_room(std::shared_ptr<entity> e)
+void playspace_manager::exit_room(const std::shared_ptr<entity>& e)
 {
     for(playspace* play : spaces)
     {
@@ -1405,7 +1405,7 @@ void playspace_manager::exit_room(std::shared_ptr<entity> e)
     }
 }
 
-void playspace_manager::enter_room(std::shared_ptr<entity> e, room* r)
+void playspace_manager::enter_room(const std::shared_ptr<entity>& e, room* r)
 {
     bool found = false;
 
@@ -1432,7 +1432,7 @@ void playspace_manager::enter_room(std::shared_ptr<entity> e, room* r)
     std::cout << "entered room\n";
 }
 
-std::pair<playspace*, room*> playspace_manager::get_location_for(std::shared_ptr<entity> e)
+std::pair<playspace*, room*> playspace_manager::get_location_for(const std::shared_ptr<entity>& e)
 {
     for(playspace* play : spaces)
     {
@@ -1455,7 +1455,7 @@ std::pair<playspace*, room*> playspace_manager::get_location_for(std::shared_ptr
     return {nullptr, nullptr};
 }
 
-std::vector<playspace*> playspace_manager::get_connected_systems_for(std::shared_ptr<entity> e)
+std::vector<playspace*> playspace_manager::get_connected_systems_for(const std::shared_ptr<entity>& e)
 {
     auto [play, room] = get_location_for(e);
 

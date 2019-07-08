@@ -211,14 +211,14 @@ struct playspace_manager : serialisable
 
     void tick(double dt_s);
 
-    ship_network_data get_network_data_for(std::shared_ptr<entity> e, size_t id);
+    ship_network_data get_network_data_for(const std::shared_ptr<entity>& e, size_t id);
 
-    std::optional<room*> get_nearby_room(std::shared_ptr<entity> e);
-    void exit_room(std::shared_ptr<entity> e);
-    void enter_room(std::shared_ptr<entity> e, room* r);
+    std::optional<room*> get_nearby_room(const std::shared_ptr<entity>& e);
+    void exit_room(const std::shared_ptr<entity>& e);
+    void enter_room(const std::shared_ptr<entity>& e, room* r);
 
-    std::pair<playspace*, room*> get_location_for(std::shared_ptr<entity> e);
-    std::vector<playspace*> get_connected_systems_for(std::shared_ptr<entity> e);
+    std::pair<playspace*, room*> get_location_for(const std::shared_ptr<entity>& e);
+    std::vector<playspace*> get_connected_systems_for(const std::shared_ptr<entity>& e);
     std::optional<playspace*> get_playspace_from_id(size_t pid);
     std::optional<std::pair<playspace*, room*>> get_room_from_id(size_t pid);
 
