@@ -61,6 +61,47 @@ struct blueprint_render_state
     bool is_hovered = false;
 };
 
+namespace blueprint_info
+{
+    inline
+    std::vector<float> sizes
+    {
+        0.25,
+        0.5,
+        0.75,
+        1,
+        2,
+        3,
+        5,
+        8,
+        10,
+        12,
+        15,
+        20,
+        25,
+        30
+    };
+
+    inline
+    std::vector<std::string> names
+    {
+        "Missile",
+        "Torpedo",
+        "Scout",
+        "Fighter",
+        "Corvette",
+        "Frigate",
+        "Cruiser",
+        "Battlecruiser",
+        "Capital",
+        "Supercapital",
+        "Carrier",
+        "Supercarrier",
+        "Destroyer",
+        "Titan",
+    };
+}
+
 struct blueprint : serialisable, owned, free_function
 {
     std::vector<blueprint_node> nodes;
