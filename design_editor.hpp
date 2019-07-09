@@ -91,13 +91,13 @@ namespace blueprint_info
         "Fighter",
         "Corvette",
         "Frigate",
+        "Destroyer",
         "Cruiser",
         "Battlecruiser",
         "Capital",
         "Supercapital",
         "Carrier",
         "Supercarrier",
-        "Destroyer",
         "Titan",
     };
 }
