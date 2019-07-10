@@ -283,7 +283,9 @@ void server_thread(std::atomic_bool& should_term)
 
     blueprint default_missile;
 
-    default_missile.overall_size = (1/15.);
+    //default_missile.overall_size = (1/15.);
+
+    default_missile.size_offset = 0;
     default_missile.add_component_at(get_component_default(component_type::THRUSTER, 1), {50, 50}, 2);
     default_missile.add_component_at(get_component_default(component_type::SENSOR, 4), {100, 100}, 1);
     default_missile.add_component_at(get_component_default(component_type::RADAR, 4), {100, 100}, 1);

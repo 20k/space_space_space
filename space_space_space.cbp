@@ -191,6 +191,7 @@
 			<Add directory="deps/freetype2/include/freetype" />
 			<Add directory="deps/freetype2/include" />
 			<Add directory="deps/liblmdb" />
+			<Add directory="deps/nentity" />
 		</Compiler>
 		<Linker>
 			<Add option="-lsfml-graphics-s" />
@@ -218,13 +219,10 @@
 		<Unit filename="ImGuiX.h" />
 		<Unit filename="access_permissions.cpp" />
 		<Unit filename="access_permissions.hpp" />
-		<Unit filename="aggregates.hpp" />
 		<Unit filename="aoe_damage.cpp" />
 		<Unit filename="aoe_damage.hpp" />
 		<Unit filename="audio.cpp" />
 		<Unit filename="audio.hpp" />
-		<Unit filename="camera.cpp" />
-		<Unit filename="camera.hpp" />
 		<Unit filename="code_editor.cpp" />
 		<Unit filename="code_editor.hpp" />
 		<Unit filename="colours.hpp" />
@@ -245,6 +243,11 @@
 		<Unit filename="deps/nauth/steam_api.cpp" />
 		<Unit filename="deps/nauth/steam_auth.cpp" />
 		<Unit filename="deps/ndb/db_storage.cpp" />
+		<Unit filename="deps/nentity/aggregates.hpp" />
+		<Unit filename="deps/nentity/camera.cpp" />
+		<Unit filename="deps/nentity/camera.hpp" />
+		<Unit filename="deps/nentity/entity.cpp" />
+		<Unit filename="deps/nentity/entity.hpp" />
 		<Unit filename="deps/networking/netinterpolate.hpp" />
 		<Unit filename="deps/networking/networking.cpp" />
 		<Unit filename="deps/networking/networking.hpp" />
@@ -254,8 +257,6 @@
 		<Unit filename="deps/vec/vec.hpp" />
 		<Unit filename="design_editor.cpp" />
 		<Unit filename="design_editor.hpp" />
-		<Unit filename="entity.cpp" />
-		<Unit filename="entity.hpp" />
 		<Unit filename="file_editor.cpp" />
 		<Unit filename="file_editor.hpp" />
 		<Unit filename="fixed_clock.hpp" />

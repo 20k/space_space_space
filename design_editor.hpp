@@ -106,7 +106,7 @@ struct blueprint : serialisable, owned, free_function
 {
     std::vector<blueprint_node> nodes;
     std::string name;
-    float overall_size = 1;
+    int size_offset = 0;
     std::vector<std::string> tags;
 
     void add_component_at(const component& c, vec2f pos, float size);
@@ -121,6 +121,13 @@ struct blueprint : serialisable, owned, free_function
     void add_tag(const std::string& tg);
 
     std::string unbaked_tag;
+
+    float get_overall_size() const
+    {
+        int clamped = clamp(size_offset, 0, (int)blueprint_info::sizes.size()-1);
+
+        return blueprint_info::sizes[clamped];
+    }
 };
 
 struct build_in_progress : serialisable, free_function
@@ -175,7 +182,9 @@ struct blueprint_manager : serialisable, owned, free_function
 
         clean_blueprint_name(print.name);
 
-        print.overall_size = clamp(print.overall_size, 0.01, 100);
+        print.size_offset = clamp(print.size_offset, 0, (int)blueprint_info::names.size()-1);
+
+        //print.overall_size = clamp(print.overall_size, 0.01, 100);
 
         for(blueprint_node& n : print.nodes)
         {

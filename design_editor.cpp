@@ -123,7 +123,7 @@ void blueprint_node::render(design_editor& edit, blueprint& parent)
     float rad_mult = sqrt(size);
 
     my_comp = original;
-    my_comp.scale(size * parent.overall_size);
+    my_comp.scale(size * parent.get_overall_size());
 
     render_component_compact(my_comp, original._pid, rad_mult, size);
 
@@ -212,12 +212,12 @@ ship blueprint::to_ship() const
     for(blueprint_node c : nodes)
     {
         c.my_comp = c.original;
-        c.my_comp.scale(c.size * overall_size);
+        c.my_comp.scale(c.size * get_overall_size());
 
         nship.add(c.my_comp);
     }
 
-    nship.my_size = overall_size;
+    nship.my_size = get_overall_size();
     nship.is_ship = true;
     nship.blueprint_name = name;
     nship.blueprint_tags = tags;
@@ -458,6 +458,26 @@ void clean_blueprint_name(std::string& in)
     }
 }
 
+void size_dropdown(int& in)
+{
+    assert(blueprint_info::names.size() == blueprint_info::sizes.size());
+
+    std::string current_item = blueprint_info::names[in];
+
+    if (ImGui::BeginCombo("##combo", current_item.c_str()))
+    {
+        for (int n = 0; n < blueprint_info::names.size(); n++)
+        {
+            bool is_selected = (in == n);
+            if (ImGui::Selectable(blueprint_info::names[n].c_str(), is_selected))
+                in = n;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+}
+
 void design_editor::render(sf::RenderWindow& win)
 {
     if(!open)
@@ -579,9 +599,11 @@ void design_editor::render(sf::RenderWindow& win)
 
     clean_blueprint_name(cur.name);
 
-    ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.2f");
+    /*ImGui::InputFloat("Scale", &cur.overall_size, 0.1, 1, "%.2f");
 
-    cur.overall_size = clamp(cur.overall_size, 0.01, 100);
+    cur.overall_size = clamp(cur.overall_size, 0.01, 100);*/
+
+    size_dropdown(cur.size_offset);
 
     ImGui::PopItemWidth();
 

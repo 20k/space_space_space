@@ -435,7 +435,7 @@ DEFINE_SERIALISE_FUNCTION(blueprint)
 
     DO_FSERIALISE(nodes);
     DO_FSERIALISE(name);
-    DO_FSERIALISE(overall_size);
+    DO_FSERIALISE(size_offset);
     DO_FSERIALISE(tags);
 }
 
