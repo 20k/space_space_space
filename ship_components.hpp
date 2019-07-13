@@ -103,6 +103,34 @@ namespace component_info
     };
 }
 
+namespace component_class
+{
+    enum class_type
+    {
+        WEAPON,
+        UTILITY,
+        CPU,
+        SHIELD,
+        ENGINE,
+        RADAR,
+        SENSOR,
+        CARGO,
+        COUNT
+    };
+
+    static inline std::vector<std::string> class_names
+    {
+        "Weapon",
+        "Utility",
+        "CPU",
+        "Shield",
+        "Engine",
+        "Radar",
+        "Sensor",
+        "Cargo"
+    };
+}
+
 namespace tag_info
 {
     enum tag_type
