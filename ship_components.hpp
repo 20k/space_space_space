@@ -108,6 +108,7 @@ namespace component_class
     enum class_type
     {
         WEAPON,
+        POWER,
         UTILITY,
         CPU,
         SHIELD,
@@ -121,13 +122,14 @@ namespace component_class
     static inline std::vector<std::string> class_names
     {
         "Weapon",
+        "Power",
         "Utility",
         "CPU",
         "Shield",
         "Engine",
         "Radar",
         "Sensor",
-        "Cargo"
+        "Cargo",
     };
 }
 
@@ -245,6 +247,8 @@ struct component_fixed_properties : serialisable
 
     bool no_drain_on_full_production = false;
     bool complex_no_drain_on_full_production = false;
+
+    component_class::class_type c_class = component_class::UTILITY;
 
     std::string subtype;
 

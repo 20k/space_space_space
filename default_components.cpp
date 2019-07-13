@@ -28,7 +28,6 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::RADIATOR] = make_default("Radiator", "RAD");
     ret[component_type::POWER_GENERATOR] = make_default("Power", "PWR");
     //ret[component_type::CREW] = make_default("Crew", "CRW");
-    ret[component_type::MISSILE_CORE] = make_default("Missile AI", "MCRE");
     ret[component_type::DESTRUCT] = make_default("Destruct", "SDST");
     ret[component_type::CARGO_STORAGE] = make_default("Cargo", "CRG");
     ret[component_type::STORAGE_TANK] = make_default("Tank", "STNK");
@@ -73,7 +72,6 @@ std::array<component, component_type::COUNT> get_default_component_map()
     ret[component_type::RADIATOR].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::POWER_GENERATOR].add_composition_ratio({material_info::COPPER}, {1});
     //ret[component_type::CREW].add_composition_ratio({material_info::IRON}, {1});
-    ret[component_type::MISSILE_CORE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::DESTRUCT].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::CARGO_STORAGE].add_composition_ratio({material_info::IRON}, {1});
     ret[component_type::STORAGE_TANK].add_composition_ratio({material_info::IRON}, {1});
@@ -105,6 +103,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::SLIDER_ACTIVATION;
         p.base_volume = 1;
+        p.c_class = component_class::ENGINE;
     }
 
     {
@@ -118,6 +117,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(5); ///heat of 5 modules
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1.5;
+        p.c_class = component_class::ENGINE;
     }
 
     {
@@ -132,6 +132,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(5); ///heat of 5 modules
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1.5;
+        p.c_class = component_class::ENGINE;
     }
 
     {
@@ -145,6 +146,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(3); ///heat of 3 modules
         p.activation_type = component_info::SLIDER_ACTIVATION;
         p.base_volume = 1.1;
+        p.c_class = component_class::SHIELD;
     }
 
     {
@@ -166,6 +168,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.max_use_angle = M_PI;
         p.base_volume = 0.8;
+        p.c_class = component_class::WEAPON;
     }
 
     {
@@ -179,6 +182,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 0.5;
+        p.c_class = component_class::SENSOR;
     }
 
     /*{
@@ -202,6 +206,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1); ///5 armour modules emit as much heat as 1 regular
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 5;
+        p.c_class = component_class::UTILITY;
     }
 
     /*{
@@ -223,6 +228,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -235,6 +241,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_complex_no_drain_on_full_production();
         p.activation_type = component_info::SLIDER_ACTIVATION;
         p.base_volume = 1.5;
+        p.c_class = component_class::POWER;
     }
 
     /*{
@@ -251,20 +258,6 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
     }*/
 
     {
-        component_fixed_properties& p = ret[component_type::MISSILE_CORE];
-
-        p.add(component_info::HP, 0.0, 1);
-        ///hacky until we have the concept of control instead
-        //p.add(component_info::CREW, 0.01, 1);
-        //p.add(component_info::CREW, -0.01);
-        p.add(component_info::POWER, -1);
-        p.add(tag_info::TAG_MISSILE_BEHAVIOUR);
-        p.set_heat(1);
-        p.activation_type = component_info::NO_ACTIVATION;
-        p.base_volume = 0.5;
-    }
-
-    {
         component_fixed_properties& p = ret[component_type::DESTRUCT];
 
         p.add(component_info::HP, 0, 1);
@@ -272,6 +265,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         //p.set_internal_volume(1);
         p.activation_type = component_info::NO_ACTIVATION;
         p.base_volume = 1;
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -279,6 +273,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.add(component_info::HP, 0, 1);
         p.base_volume = 1;
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -287,6 +282,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.set_internal_volume(1);
         p.base_volume = 1;
+        p.c_class = component_class::CARGO;
     }
 
     {
@@ -295,6 +291,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.set_internal_volume(1);
         p.base_volume = 1;
+        p.c_class = component_class::CARGO;
     }
 
     {
@@ -304,6 +301,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_internal_volume(0.8);
         p.heat_sink = true;
         p.base_volume = 1;
+        p.c_class = component_class::CARGO;
     }
 
     {
@@ -313,6 +311,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.add(component_info::HP, 0, 1);
         p.heat_sink = true;
         p.base_volume = 1;
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -329,6 +328,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.set_internal_volume(1);
         p.base_volume = 1;
+        p.c_class = component_class::WEAPON;
     }
 
     {
@@ -348,6 +348,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.max_use_angle = M_PI;
 
         p.subtype = "mining";
+        p.c_class = component_class::WEAPON;
     }
 
     {
@@ -362,6 +363,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.base_volume = 1;
         p.set_internal_volume(1);
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -377,6 +379,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
 
         p.base_volume = 1;
         //p.set_internal_volume(1);
+        p.c_class = component_class::UTILITY;
     }
 
     {
@@ -388,6 +391,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(5);
         p.activation_type = component_info::SLIDER_ACTIVATION;
         p.base_volume = 1;
+        p.c_class = component_class::SENSOR;
     }
 
     {
@@ -399,6 +403,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(1);
         p.activation_type = component_info::TOGGLE_ACTIVATION;
         p.base_volume = 1;
+        p.c_class = component_class::CPU;
     }
 
     {
@@ -417,6 +422,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.max_use_angle = M_PI;
 
         p.subtype = "tractor";
+        p.c_class = component_class::WEAPON;
     }
 
     {
@@ -430,6 +436,7 @@ std::array<component_fixed_properties, component_type::COUNT> get_default_fixed_
         p.set_heat(20);
 
         p.activation_type = component_info::SLIDER_ACTIVATION;
+        p.c_class = component_class::UTILITY;
     }
 
     return ret;
